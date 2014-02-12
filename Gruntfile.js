@@ -50,13 +50,12 @@ module.exports = function (grunt) {
             },
             dev: {
                 files: {
-                    '.tmp/themproject.js': 'src/themproject.js'
+                    '.tmp/bikini.js': 'src/bikini.js'
                 }
             },
             dist: {
                 files: {
-                    'dist/themproject.js': 'src/themproject.js',
-                    'dist/themproject.bd.js': 'src/themproject.bd.js'
+                    'dist/bikini.js': 'src/bikini.js'
                 }
             }
         },
@@ -65,44 +64,19 @@ module.exports = function (grunt) {
                 preserveComments: 'some'
             },
             core: {
-                src: 'dist/themproject.js',
-                dest: 'dist/themproject.min.js',
+                src: 'dist/bikini.js',
+                dest: 'dist/bikini.min.js',
                 options: {
-                    sourceMap: 'dist/themproject.map',
-                    sourceMappingURL: 'themproject.map',
+                    sourceMap: 'dist/bikini.map',
+                    sourceMappingURL: 'bikini.map',
                     sourceMapPrefix: 1
                 }
-            },
-            bd: {
-                src: 'dist/themproject.bd.js',
-                dest: 'dist/themproject.bd.min.js',
-                options: {
-                    sourceMap: 'dist/themproject.bd.map',
-                    sourceMappingURL: 'themproject.bd.map',
-                    sourceMapPrefix: 1
-                }
-            }
-        },
-        cssmin: {
-            minify: {
-                expand: true,
-                cwd: 'dist/',
-                src: ['*.css', '!*.min.css'],
-                dest: 'dist/',
-                ext: '.min.css'
             }
         },
         watch: {
             js: {
                 files: ['src/**/*'],
                 tasks: ['build-js'],
-                options: {
-                    spawn: false
-                }
-            },
-            css: {
-                files: ['resources/**/*.{scss,sass,css}'],
-                tasks: ['build-css'],
                 options: {
                     spawn: false
                 }
@@ -115,34 +89,6 @@ module.exports = function (grunt) {
                 }
             }
         },
-        sass: {
-            dist: {                            // Target
-                options: {                       // Target options
-                    style: 'expanded',
-                    banner: '<%= meta.banner %>',
-                    loadPath: ['bower_components']
-                },
-                files: {
-                    'dist/themproject.css':'resources/sass/themproject.scss',
-                    'dist/themproject_android_dark.css':'resources/sass/themproject_android_dark.scss',
-                    'dist/themproject_android_light.css':'resources/sass/themproject_android_light.scss',
-                    'dist/themproject_ios.css':'resources/sass/themproject_ios.scss'
-                }
-            },
-            dev: {                            // Target
-                options: {                       // Target options
-                    style: 'expanded',
-                    loadPath: ['bower_components'],
-                    lineNumbers: true
-                },
-                files: {
-                    '.tmp/themproject.css':'resources/sass/themproject.scss',
-                    '.tmp/themproject_android_dark.css':'resources/sass/themproject_android_dark.scss',
-                    '.tmp/themproject_android_light.css':'resources/sass/themproject_android_light.scss',
-                    '.tmp/themproject_ios.css':'resources/sass/themproject_ios.scss'
-                }
-            }
-        },
         mocha: {
             options: {
                 bail: true,
@@ -150,19 +96,6 @@ module.exports = function (grunt) {
             },
             all: ['test/test.html']
         },
-        extractSassVars: {
-            all: {
-                files: {
-                    'src/ui/themevars.js': [
-                        'resources/sass/themes/default/_variables.scss',
-                        'resources/sass/themes/android_dark/_variables.scss',
-                        'resources/sass/themes/android_light/_variables.scss',
-                        'resources/sass/themes/ios/_variables.scss'
-                    ]
-                }
-            }
-        },
-
         jsdoc : {
             dist : {
                 src: ['doc-template/.tmp/index.md','src/connection/*.js','src/core/*.js','src/data/*.js','src/data/stores/*.js','src/interfaces/*.js','src/ui/*.js','src/ui/layouts/*.js','src/ui/views/*.js','src/utility/*.js'],
@@ -200,21 +133,15 @@ module.exports = function (grunt) {
 
     grunt.loadTasks('tasks');
 
-    grunt.registerTask('build-js', ['extractSassVars', 'compileTemplates', 'preprocess:dev']);
-    grunt.registerTask('build-css', ['sass:dev']);
-
-    grunt.registerTask('dist-js', ['extractSassVars', 'compileTemplates', 'preprocess:dist']);
-    grunt.registerTask('dist-css', ['sass:dist']);
-
-    grunt.registerTask('dev-js', ['default', 'watch:js']);
-    grunt.registerTask('dev-css', ['default', 'watch:css']);
+    grunt.registerTask('build', ['preprocess:dev']);
 
     grunt.registerTask('dev', ['default', 'watch']);
     grunt.registerTask('test', ['jshint', 'mocha']);
-    grunt.registerTask('dist', ['jshint', 'dist-js', 'dist-css', 'uglify', 'cssmin']);
+    grunt.registerTask('dist', ['jshint', 'preprocess:dist', 'uglify']);
     grunt.registerTask('precommit', ['travis']);
     grunt.registerTask('travis', ['jsonlint', 'default', 'test']);
-    grunt.registerTask('default', ['build-js', 'build-css']);
+    grunt.registerTask('default', ['build']);
 
     grunt.registerTask('build-doc', ['clean:md','curl-dir', 'rewriteMarkdownFiles', 'jsdoc', 'clean:md']);
+
 };

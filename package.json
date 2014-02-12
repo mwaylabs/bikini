@@ -1,9 +1,10 @@
 {
-  "name": "The-M-Project",
+  "name": "Bikini",
   "version": "2.0.0-beta3",
   "description": "",
   "keywords": [
     "the-m-project",
+    "bikini",
     "backbone",
     "framework",
     "mvc"
@@ -18,7 +19,6 @@
     "grunt": "0.4.2",
     "grunt-contrib-jshint": "~0.7.2",
     "grunt-contrib-uglify": "~0.2.7",
-    "grunt-contrib-cssmin": "~0.7.0",
     "grunt-contrib-watch": "~0.5.3",
     "grunt-contrib-copy": "~0.4.1",
     "load-grunt-tasks": "~0.2.0",
@@ -29,8 +29,7 @@
     "time-grunt": "~0.2.3",
     "grunt-jsdoc": "~0.4.2",
     "grunt-curl": "~1.2.1",
-    "grunt-contrib-clean": "~0.5.0",
-    "grunt-contrib-sass": "~0.5.1"
+    "grunt-contrib-clean": "~0.5.0"
   },
   "engines": {
     "node": ">=0.8.0",
