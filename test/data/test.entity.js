@@ -1,12 +1,12 @@
-describe('M.Entity', function() {
+describe('Bikini.Entity', function() {
 
     var TEST = {
         fields:  {
-            id:          { type: M.DATA.TYPE.STRING,  required: YES, index: YES },
-            sureName:    { name: 'USERNAME', type: M.DATA.TYPE.STRING,  required: YES, index: YES },
-            firstName:   { type: M.DATA.TYPE.STRING,  length: 200 },
-            age:         M.DATA.TYPE.INTEGER,
-            birthday:    M.DATA.TYPE.DATE
+            id:          { type: Bikini.DATA.TYPE.STRING,  required: YES, index: YES },
+            sureName:    { name: 'USERNAME', type: Bikini.DATA.TYPE.STRING,  required: YES, index: YES },
+            firstName:   { type: Bikini.DATA.TYPE.STRING,  length: 200 },
+            age:         Bikini.DATA.TYPE.INTEGER,
+            birthday:    Bikini.DATA.TYPE.DATE
         }
     }
 
@@ -19,7 +19,7 @@ describe('M.Entity', function() {
     }
 
     it('creating an entity', function() {
-        var entity = M.Entity.design({
+        var entity = Bikini.Entity.design({
             fields: TEST.fields
         });
         assert.isObject(entity, 'entity successfully created.');

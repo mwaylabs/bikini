@@ -3,14 +3,14 @@
 
 /**
  *
- * @module M.Date
+ * @module Bikini.Date
  *
- * @extends M.Object
+ * @extends Bikini.Object
  */
-M.Date = {
+Bikini.Date = {
 
     /**
-     * This method is used to create a new instance of M.Date based on the data
+     * This method is used to create a new instance of Bikini.Date based on the data
      * library moment.js.
      *
      * @returns {Object}

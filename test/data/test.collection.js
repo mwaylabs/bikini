@@ -1,10 +1,10 @@
-describe('M.Collection', function() {
+describe('Bikini.Collection', function() {
 
     var testConnection = function( callback, done ) {
         $.ajax({
             timeout: 3000,
             dataType: "json",
-            url: 'http://nerds.mway.io:8200/bikini/test/info',
+            url: serverUrl+'/bikini/test/info',
             success: function() {
                 callback();
             },
@@ -18,7 +18,7 @@ describe('M.Collection', function() {
 
     var TEST = {};
 
-    TEST.url = 'http://nerds.mway.io:8200/bikini/developers';
+    TEST.url = serverUrl+'/bikini/developers';
     TEST.data = [
         {
             sureName: 'Laubach',
@@ -48,44 +48,44 @@ describe('M.Collection', function() {
     ];
 
     it('basic', function() {
-        assert.isDefined(M.Collection);
-        assert.isDefined(M.Collection.design);
-        assert.isDefined(M.Collection.create);
-        assert.isDefined(M.Collection.extend);
+        assert.isDefined(Bikini.Collection);
+        assert.isDefined(Bikini.Collection.design);
+        assert.isDefined(Bikini.Collection.create);
+        assert.isDefined(Bikini.Collection.extend);
 
-        assert.isFunction(M.Collection);
-        assert.isFunction(M.Collection.design);
-        assert.isFunction(M.Collection.create);
-        assert.isFunction(M.Collection.extend);
+        assert.isFunction(Bikini.Collection);
+        assert.isFunction(Bikini.Collection.design);
+        assert.isFunction(Bikini.Collection.create);
+        assert.isFunction(Bikini.Collection.extend);
 
-        var instance = M.Collection.create();
+        var instance = Bikini.Collection.create();
         assert.isDefined(instance);
         assert.isObject(instance);
         assert.isDefined(instance._type);
         assert.isString(instance._type);
-        assert.equal(instance._type, 'M.Collection');
+        assert.equal(instance._type, 'Bikini.Collection');
     });
 
     it('creating collection', function() {
 
-        assert.typeOf(M.Collection, 'function', 'M.Collection is defined');
+        assert.typeOf(Bikini.Collection, 'function', 'Bikini.Collection is defined');
 
-        TEST.Developer = M.Model.extend({
+        TEST.Developer = Bikini.Model.extend({
             idAttribute: '_id',
             entity: {
                 name: 'Developer',
                 fields: {
-                    _id: { type: M.DATA.TYPE.STRING },
-                    sureName: { name: 'lastName', type: M.DATA.TYPE.STRING, required: YES, index: true },
-                    firstName: { type: M.DATA.TYPE.STRING, length: 200 },
-                    age: { type: M.DATA.TYPE.INTEGER }
+                    _id: { type: Bikini.DATA.TYPE.STRING },
+                    sureName: { name: 'lastName', type: Bikini.DATA.TYPE.STRING, required: YES, index: true },
+                    firstName: { type: Bikini.DATA.TYPE.STRING, length: 200 },
+                    age: { type: Bikini.DATA.TYPE.INTEGER }
                 }
             }
         });
 
         assert.ok(typeof TEST.Developer === 'function', 'Developer model successfully extended.');
 
-        TEST.DeveloperCollection = M.Collection.extend({
+        TEST.DeveloperCollection = Bikini.Collection.extend({
             url: TEST.url,
             model: TEST.Developer
         });
@@ -155,7 +155,7 @@ describe('M.Collection', function() {
 
         assert.ok(typeof result === 'object', 'Find for value has a response object.');
 
-        assert.ok(M.isCollection(result), 'The response is a M.Collection.');
+        assert.ok(Bikini.isCollection(result), 'The response is a Bikini.Collection.');
 
         assert.ok(result.length === 1, 'The response holds one record.');
 

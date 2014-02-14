@@ -3,11 +3,11 @@
 
 /**
  *
- * @module M.Security
+ * @module Bikini.Security
  *
  * @type {{logon: Function, logonBasicAuth: Function, logonMcapAuth: Function, getHost: Function}}
  */
-M.Security = M.Object.design({
+Bikini.Security = Bikini.Object.design({
 
 
     logon: function (options, callback) {
@@ -24,14 +24,14 @@ M.Security = M.Object.design({
     logonBasicAuth: function (options, callback) {
         var credentials = options.credentials;
         options.beforeSend = function (xhr) {
-            M.Security.setBasicAuth(xhr, credentials);
+            Bikini.Security.setBasicAuth(xhr, credentials);
         };
         this.handleCallback(callback);
     },
 
     setBasicAuth: function( xhr, credentials ) {
-        if( credentials && credentials.username && xhr && M.Base64 ) {
-            var basicAuth = M.Base64.encode(encodeURIComponent(credentials.username + ':' + (credentials.password || '')));
+        if( credentials && credentials.username && xhr && Bikini.Base64 ) {
+            var basicAuth = Bikini.Base64.encode(encodeURIComponent(credentials.username + ':' + (credentials.password || '')));
             xhr.setRequestHeader('Authorization', 'Basic ' + basicAuth);
         }
     }

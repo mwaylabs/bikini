@@ -2,20 +2,20 @@
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
 
 /**
- * The M.Collection can be used like a Backbone Collection,
+ * The Bikini.Collection can be used like a Backbone Collection,
  *
  * but there are some enhancements to fetch, save and delete the
  * contained models from or to other "data stores".
  *
  * see LocalStorageStore, WebSqlStore or BikiniStore for examples
  *
- * @module M.Collection
+ * @module Bikini.Collection
  *
  * @type {*}
  * @extends Backbone.Collection
  *
  */
-M.Collection = Backbone.Collection.extend({
+Bikini.Collection = Backbone.Collection.extend({
 
     constructor: function (options) {
         this.init(options);
@@ -23,22 +23,22 @@ M.Collection = Backbone.Collection.extend({
     }
 });
 
-M.Collection.create = M.create;
-M.Collection.design = M.design;
+Bikini.Collection.create = Bikini.create;
+Bikini.Collection.design = Bikini.design;
 
-_.extend(M.Collection.prototype, M.Object, {
+_.extend(Bikini.Collection.prototype, Bikini.Object, {
 
-    _type: 'M.Collection',
+    _type: 'Bikini.Collection',
 
     isCollection: YES,
 
-    model: M.Model,
+    model: Bikini.Model,
 
     entity: null,
 
     options: null,
 
-    logon: M.Security.logon,
+    logon: Bikini.Security.logon,
 
     init: function (options) {
         options = options || {};
@@ -48,7 +48,7 @@ _.extend(M.Collection.prototype, M.Object, {
 
         var entity = this.entity || this.entityFromUrl(this.url);
         if (entity) {
-            this.entity = M.Entity.from(entity, { model: this.model, typeMapping: options.typeMapping });
+            this.entity = Bikini.Entity.from(entity, { model: this.model, typeMapping: options.typeMapping });
         }
         this._updateUrl();
 
@@ -60,7 +60,7 @@ _.extend(M.Collection.prototype, M.Object, {
     entityFromUrl: function (url) {
         if (url) {
             // extract last path part as entity name
-            var parts = M.Request.getLocation(this.url).pathname.match(/([^\/]+)\/?$/);
+            var parts = Bikini.Request.getLocation(this.url).pathname.match(/([^\/]+)\/?$/);
             if (parts && parts.length > 1) {
                 return parts[1];
             }
@@ -69,17 +69,17 @@ _.extend(M.Collection.prototype, M.Object, {
 
     sort: function (options) {
         if (_.isObject(options && options.sort)) {
-            this.comparator = M.DataSelector.compileSort(options.sort);
+            this.comparator = Bikini.DataSelector.compileSort(options.sort);
         }
         Backbone.Collection.prototype.sort.apply(this, arguments);
     },
 
     select: function (options) {
-        var selector = options && options.query ? M.DataSelector.create(options.query) : null;
-        var collection = M.Collection.create(null, { model: this.model });
+        var selector = options && options.query ? Bikini.DataSelector.create(options.query) : null;
+        var collection = Bikini.Collection.create(null, { model: this.model });
 
         if (options && options.sort) {
-            collection.comparator = M.DataSelector.compileSort(options.sort);
+            collection.comparator = Bikini.DataSelector.compileSort(options.sort);
         }
 
         this.each(function (model) {

@@ -3,14 +3,14 @@
 
 /**
  *
- * @module M.SqlSelector
+ * @module Bikini.SqlSelector
  *
  * @type {*}
- * @extends M.DataSelector
+ * @extends Bikini.DataSelector
  */
-M.SqlSelector = M.DataSelector.design({
+Bikini.SqlSelector = Bikini.DataSelector.design({
 
-    _type: 'M.SqlSelector',
+    _type: 'Bikini.SqlSelector',
 
     _selector: null,
     _query: null,
@@ -55,7 +55,7 @@ M.SqlSelector = M.DataSelector.design({
         }
 
         // Top level can't be an array or true or binary.
-        if (_.isBoolean(selector) || _.isArray(selector) || M.DataField.isBinary(selector)) {
+        if (_.isBoolean(selector) || _.isArray(selector) || Bikini.DataField.isBinary(selector)) {
             throw new Error('Invalid selector: ' + selector);
         }
 

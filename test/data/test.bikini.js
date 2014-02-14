@@ -1,4 +1,4 @@
-describe('M.BikiniStore', function() {
+describe('Bikini.BikiniStore', function() {
 
     var TEST = {
         data : {
@@ -10,9 +10,11 @@ describe('M.BikiniStore', function() {
 
     it('creating bikini store', function() {
 
-        assert.isFunction(M.BikiniStore, 'M.BikiniStore is defined');
+        assert.isString(serverUrl, 'Server url is defined.');
 
-        TEST.store = M.BikiniStore.design({
+        assert.isFunction(Bikini.BikiniStore, 'Bikini.BikiniStore is defined');
+
+        TEST.store = Bikini.BikiniStore.design({
             useLocalStore: true,
             useSocketNotify: false
         });
@@ -22,26 +24,26 @@ describe('M.BikiniStore', function() {
 
     it('creating collection', function() {
 
-        assert.isFunction(M.Collection, 'M.Collection is defined');
+        assert.isFunction(Bikini.Collection, 'Bikini.Collection is defined');
 
-        TEST.TestModel = M.Model.extend({
+        TEST.TestModel = Bikini.Model.extend({
             idAttribute: '_id',
             entity: {
                 name: 'test',
                 fields:  {
-                    _id:         { type: M.DATA.TYPE.STRING,  required: YES, index: YES },
-                    sureName:    { name: 'USERNAME', type: M.DATA.TYPE.STRING,  required: YES, index: YES },
-                    firstName:   { type: M.DATA.TYPE.STRING,  length: 200 },
-                    age:         { type: M.DATA.TYPE.INTEGER }
+                    _id:         { type: Bikini.DATA.TYPE.STRING,  required: YES, index: YES },
+                    sureName:    { name: 'USERNAME', type: Bikini.DATA.TYPE.STRING,  required: YES, index: YES },
+                    firstName:   { type: Bikini.DATA.TYPE.STRING,  length: 200 },
+                    age:         { type: Bikini.DATA.TYPE.INTEGER }
                 }
             }
         });
 
         assert.isFunction(TEST.TestModel, 'TestModel model successfully extended.');
 
-        TEST.url = 'http://nerds.mway.io:8200/bikini/test';
+        TEST.url = serverUrl+'/bikini/test';
 
-        TEST.TestsModelCollection = M.Collection.extend({
+        TEST.TestsModelCollection = Bikini.Collection.extend({
             model: TEST.TestModel,
             url: TEST.url,
             store: TEST.store,
@@ -109,7 +111,7 @@ describe('M.BikiniStore', function() {
 
     it('fetching data with new model', function(done) {
 
-        TEST.TestModel2 = M.Model.extend({
+        TEST.TestModel2 = Bikini.Model.extend({
             url : TEST.url,
             idAttribute: '_id',
             store: TEST.store,

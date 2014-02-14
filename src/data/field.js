@@ -3,7 +3,7 @@
 
 /**
  *
- * @module M.Field
+ * @module Bikini.Field
  *
  */
 
@@ -15,23 +15,23 @@
  * @param options
  * @constructor
  */
-M.Field = function (options) {
+Bikini.Field = function (options) {
     this.merge(options);
     this.initialize.apply(this, arguments);
 };
 
-M.Field.extend = M.extend;
-M.Field.create = M.create;
-M.Field.design = M.design;
+Bikini.Field.extend = Bikini.extend;
+Bikini.Field.create = Bikini.create;
+Bikini.Field.design = Bikini.design;
 
-_.extend(M.Field.prototype, M.Object, {
+_.extend(Bikini.Field.prototype, Bikini.Object, {
 
     /**
      * The type of this object.
      *
      * @type String
      */
-    _type: 'M.Field',
+    _type: 'Bikini.Field',
 
     name: null,
 
@@ -80,30 +80,30 @@ _.extend(M.Field.prototype, M.Object, {
             if (_.isUndefined(value)) {
                 return this.defaultValue;
             }
-            if (type === M.DATA.TYPE.STRING || type === M.DATA.TYPE.TEXT) {
+            if (type === Bikini.DATA.TYPE.STRING || type === Bikini.DATA.TYPE.TEXT) {
                 if (_.isObject(value)) {
                     return JSON.stringify(value);
                 } else {
                     return _.isNull(value) ? 'null' : value.toString();
                 }
-            } else if (type === M.DATA.TYPE.INTEGER) {
+            } else if (type === Bikini.DATA.TYPE.INTEGER) {
                 return parseInt(value);
-            } else if (type === M.DATA.TYPE.BOOLEAN) {
+            } else if (type === Bikini.DATA.TYPE.BOOLEAN) {
                 return value === true || value === 'true'; // true, 1, "1" or "true"
-            } else if (type === M.DATA.TYPE.FLOAT) {
+            } else if (type === Bikini.DATA.TYPE.FLOAT) {
                 return parseFloat(value);
-            } else if (type === M.DATA.TYPE.OBJECT || type === M.DATA.TYPE.ARRAY) {
+            } else if (type === Bikini.DATA.TYPE.OBJECT || type === Bikini.DATA.TYPE.ARRAY) {
                 if (!_.isObject(value)) {
                     return _.isString(value) ? JSON.parse(value) : null;
                 }
-            } else if (type === M.DATA.TYPE.DATE) {
-                if (!M.Date.isPrototypeOf(value)) {
-                    var date = value ? M.Date.create(value) : null;
+            } else if (type === Bikini.DATA.TYPE.DATE) {
+                if (!Bikini.Date.isPrototypeOf(value)) {
+                    var date = value ? Bikini.Date.create(value) : null;
                     return date && date.isValid() ? date : null;
                 }
-            } else if (type === M.DATA.TYPE.OBJECTID) {
-                if (!M.ObjectID.prototype.isPrototypeOf(value)) {
-                    return _.isString(value) ? new M.ObjectID(value) : null;
+            } else if (type === Bikini.DATA.TYPE.OBJECTID) {
+                if (!Bikini.ObjectID.prototype.isPrototypeOf(value)) {
+                    return _.isString(value) ? new Bikini.ObjectID(value) : null;
                 }
             }
             return value;
@@ -143,30 +143,30 @@ _.extend(M.Field.prototype, M.Object, {
      */
     detectType: function (v) {
         if (_.isNumber(v)) {
-            return M.DATA.TYPE.FLOAT;
+            return Bikini.DATA.TYPE.FLOAT;
         }
         if (_.isString(v)) {
-            return M.DATA.TYPE.STRING;
+            return Bikini.DATA.TYPE.STRING;
         }
         if (_.isBoolean(v)) {
-            return M.DATA.TYPE.BOOLEAN;
+            return Bikini.DATA.TYPE.BOOLEAN;
         }
         if (_.isArray(v)) {
-            return M.DATA.TYPE.ARRAY;
+            return Bikini.DATA.TYPE.ARRAY;
         }
         if (_.isNull(v)) {
-            return M.DATA.TYPE.NULL;
+            return Bikini.DATA.TYPE.NULL;
         }
-        if (_.isDate(v) || M.Date.isPrototypeOf(v)) {
-            return M.DATA.TYPE.DATE;
+        if (_.isDate(v) || Bikini.Date.isPrototypeOf(v)) {
+            return Bikini.DATA.TYPE.DATE;
         }
-        if (M.ObjectID.prototype.isPrototypeOf(v)) {
-            return M.DATA.TYPE.OBJECTID;
+        if (Bikini.ObjectID.prototype.isPrototypeOf(v)) {
+            return Bikini.DATA.TYPE.OBJECTID;
         }
         if (this.isBinary(v)) {
-            return M.DATA.TYPE.BINARY;
+            return Bikini.DATA.TYPE.BINARY;
         }
-        return M.DATA.TYPE.OBJECT;
+        return Bikini.DATA.TYPE.OBJECT;
     },
 
     /**
@@ -177,19 +177,19 @@ _.extend(M.Field.prototype, M.Object, {
      */
     typeOrder: function (type) {
         switch (type) {
-            case M.DATA.TYPE.NULL   :
+            case Bikini.DATA.TYPE.NULL   :
                 return 0;
-            case M.DATA.TYPE.FLOAT  :
+            case Bikini.DATA.TYPE.FLOAT  :
                 return 1;
-            case M.DATA.TYPE.STRING :
+            case Bikini.DATA.TYPE.STRING :
                 return 2;
-            case M.DATA.TYPE.OBJECT :
+            case Bikini.DATA.TYPE.OBJECT :
                 return 3;
-            case M.DATA.TYPE.ARRAY  :
+            case Bikini.DATA.TYPE.ARRAY  :
                 return 4;
-            case M.DATA.TYPE.BINARY :
+            case Bikini.DATA.TYPE.BINARY :
                 return 5;
-            case M.DATA.TYPE.DATE   :
+            case Bikini.DATA.TYPE.DATE   :
                 return 6;
         }
         return -1;
@@ -311,19 +311,19 @@ _.extend(M.Field.prototype, M.Object, {
             a = a.toHexString();
             b = b.toHexString();
         }
-        if (ta === M.DATA.TYPE.DATE) {
+        if (ta === Bikini.DATA.TYPE.DATE) {
             // Convert to millis.
             ta = tb = 1;
             a = a.getTime();
             b = b.getTime();
         }
-        if (ta === M.DATA.TYPE.FLOAT) {
+        if (ta === Bikini.DATA.TYPE.FLOAT) {
             return a - b;
         }
-        if (tb === M.DATA.TYPE.STRING) {
+        if (tb === Bikini.DATA.TYPE.STRING) {
             return a < b ? -1 : (a === b ? 0 : 1);
         }
-        if (ta === M.DATA.TYPE.OBJECT) {
+        if (ta === Bikini.DATA.TYPE.OBJECT) {
             // this could be much more efficient in the expected case ...
             var toArray = function (obj) {
                 var ret = [];
@@ -335,7 +335,7 @@ _.extend(M.Field.prototype, M.Object, {
             };
             return this._cmp(toArray(a), toArray(b));
         }
-        if (ta === M.DATA.TYPE.ARRAY) { // Array
+        if (ta === Bikini.DATA.TYPE.ARRAY) { // Array
             for (i = 0; ; i++) {
                 if (i === a.length) {
                     return (i === b.length) ? 0 : -1;
@@ -349,7 +349,7 @@ _.extend(M.Field.prototype, M.Object, {
                 }
             }
         }
-        if (ta === M.DATA.TYPE.BINARY) {
+        if (ta === Bikini.DATA.TYPE.BINARY) {
             if (a.length !== b.length) {
                 return a.length - b.length;
             }
@@ -363,16 +363,16 @@ _.extend(M.Field.prototype, M.Object, {
             }
             return 0;
         }
-        if (ta === M.DATA.TYPE.BOOLEAN) {
+        if (ta === Bikini.DATA.TYPE.BOOLEAN) {
             if (a) {
                 return b ? 0 : 1;
             }
             return b ? -1 : 0;
         }
-        if (ta === M.DATA.TYPE.NULL) {
+        if (ta === Bikini.DATA.TYPE.NULL) {
             return 0;
         }
-//        if( ta === M.DATA.TYPE.REGEXP ) {
+//        if( ta === Bikini.DATA.TYPE.REGEXP ) {
 //            throw Error("Sorting not supported on regular expression");
 //        } // XXX
 //        if( ta === 13 ) // javascript code

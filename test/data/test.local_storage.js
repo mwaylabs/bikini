@@ -1,12 +1,12 @@
-describe('M.LocalStorageStore', function() {
+describe('Bikini.LocalStorageStore', function() {
 
     var TEST = {};
 
     it('creating local storage store', function() {
 
-        assert.typeOf(M.LocalStorageStore, 'function', 'M.LocalStorageStore is defined');
+        assert.typeOf(Bikini.LocalStorageStore, 'function', 'Bikini.LocalStorageStore is defined');
 
-        TEST.store = M.LocalStorageStore.design();
+        TEST.store = Bikini.LocalStorageStore.design();
 
         assert.typeOf(TEST.store, 'object', 'store successfully created.');
     });
@@ -29,8 +29,8 @@ describe('M.LocalStorageStore', function() {
 
     it('simple model with LocalStorageStore', function( done ) {
 
-        TEST.SimpleModel = M.Model.extend({
-            store: M.LocalStorageStore.create(),
+        TEST.SimpleModel = Bikini.Model.extend({
+            store: Bikini.LocalStorageStore.create(),
             entity: 'test'
         });
 
@@ -67,8 +67,8 @@ describe('M.LocalStorageStore', function() {
 
     it('simple collection with LocalStorageStore', function( done ) {
 
-        TEST.SimpleModelCollection = M.Collection.extend({
-            store: M.LocalStorageStore.create(),
+        TEST.SimpleModelCollection = Bikini.Collection.extend({
+            store: Bikini.LocalStorageStore.create(),
             entity: 'test'
         });
 
@@ -103,24 +103,24 @@ describe('M.LocalStorageStore', function() {
 
     it('creating collection', function() {
 
-        assert.typeOf(M.Collection, 'function', 'M.Collection is defined');
+        assert.typeOf(Bikini.Collection, 'function', 'Bikini.Collection is defined');
 
-        TEST.TestModel = M.Model.extend({
+        TEST.TestModel = Bikini.Model.extend({
             idAttribute: '_id',
             entity: {
                 name: 'test',
                 fields:  {
-                    _id:         { type: M.DATA.TYPE.STRING,  required: YES },
-                    sureName:    { name: 'USERNAME', type: M.DATA.TYPE.STRING,  required: YES },
-                    firstName:   { type: M.DATA.TYPE.STRING,  length: 200 },
-                    age:         { type: M.DATA.TYPE.INTEGER }
+                    _id:         { type: Bikini.DATA.TYPE.STRING,  required: YES },
+                    sureName:    { name: 'USERNAME', type: Bikini.DATA.TYPE.STRING,  required: YES },
+                    firstName:   { type: Bikini.DATA.TYPE.STRING,  length: 200 },
+                    age:         { type: Bikini.DATA.TYPE.INTEGER }
                 }
             }
         });
 
         assert.typeOf(TEST.TestModel, 'function', 'TestModel model successfully extended.');
 
-        TEST.TestModelCollection = M.Collection.extend({
+        TEST.TestModelCollection = Bikini.Collection.extend({
             model: TEST.TestModel,
             store: TEST.store
         });
@@ -177,7 +177,7 @@ describe('M.LocalStorageStore', function() {
 
     it('fetching data with new model', function(done) {
 
-        TEST.TestModel2 = M.Model.extend({
+        TEST.TestModel2 = Bikini.Model.extend({
             idAttribute: '_id',
             store: TEST.store,
             entity: {

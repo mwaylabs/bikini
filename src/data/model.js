@@ -3,24 +3,24 @@
 
 /**
  *
- * @module M.Model
+ * @module Bikini.Model
  *
  * @type {*}
  * @extends Backbone.Model
  */
-M.Model = Backbone.Model.extend({
+Bikini.Model = Backbone.Model.extend({
     constructor: function( attributes, options ) {
         this.init(attributes, options);
         Backbone.Model.apply(this, arguments);
     }
 });
 
-M.Model.create = M.create;
-M.Model.design = M.design;
+Bikini.Model.create = Bikini.create;
+Bikini.Model.design = Bikini.design;
 
-_.extend(M.Model.prototype, M.Object, {
+_.extend(Bikini.Model.prototype, Bikini.Object, {
 
-    _type: 'M.Model',
+    _type: 'Bikini.Model',
 
     isModel: YES,
 
@@ -30,7 +30,7 @@ _.extend(M.Model.prototype, M.Object, {
 
     changedSinceSync: {},
 
-    logon: M.Security.logon,
+    logon: Bikini.Security.logon,
 
     init: function( attributes, options ) {
         options = options || {};
@@ -43,7 +43,7 @@ _.extend(M.Model.prototype, M.Object, {
         }
         this.entity = this.entity || (this.collection ? this.collection.entity : null) || options.entity;
         if( this.entity ) {
-            this.entity = M.Entity.from(this.entity, { model: this.constructor, typeMapping: options.typeMapping });
+            this.entity = Bikini.Entity.from(this.entity, { model: this.constructor, typeMapping: options.typeMapping });
             this.idAttribute = this.entity.idAttribute || this.idAttribute;
         }
         this.credentials = this.credentials || (this.collection ? this.collection.credentials : null) || options.credentials;
@@ -98,7 +98,7 @@ _.extend(M.Model.prototype, M.Object, {
     toJSON: function( options ) {
         options = options || {};
         var entity = options.entity || this.entity;
-        if( M.isEntity(entity) ) {
+        if( Bikini.isEntity(entity) ) {
             return entity.fromAttributes(options.attrs || this.attributes);
         }
         return options.attrs || _.clone(this.attributes);
@@ -107,7 +107,7 @@ _.extend(M.Model.prototype, M.Object, {
     parse: function( resp, options ) {
         options = options || {};
         var entity = options.entity || this.entity;
-        if( M.isEntity(entity) ) {
+        if( Bikini.isEntity(entity) ) {
             return entity.toAttributes(resp);
         }
         return resp;

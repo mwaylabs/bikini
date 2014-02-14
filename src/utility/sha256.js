@@ -3,20 +3,20 @@
 
 /**
  * This prototype defines a hashing mechanism based on the SHA256 algorithm. You normally
- * don't call this object respectively its methods directly, but let M.Cypher handle
+ * don't call this object respectively its methods directly, but let Bikini.Cypher handle
  * this.
- * @module M.SHA256
+ * @module Bikini.SHA256
  *
- * @extends M.Object
+ * @extends Bikini.Object
  */
-M.SHA256 = M.Object.design(/** @scope M.SHA256.prototype */ {
+Bikini.SHA256 = Bikini.Object.design(/** @scope Bikini.SHA256.prototype */ {
 
         /**
          * The type of this object.
          *
          * @type String
          */
-        type: 'M.SHA256',
+        type: 'Bikini.SHA256',
 
         /**
          * Defines the bits per input character: 8 - ASCII, 16 - Unicode
@@ -40,7 +40,7 @@ M.SHA256 = M.Object.design(/** @scope M.SHA256.prototype */ {
          * @returns {String} The sha256 hashed string.
          */
         hash: function( input ) {
-            input = M.Cypher.utf8Encode(input);
+            input = Bikini.Cypher.utf8Encode(input);
             return this.binb2hex(this.coreSha256(this.str2binb(input), input.length * this.chrsz));
         },
 

@@ -2,28 +2,28 @@
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
 
 /**
- * The M.LocalStorageStore can be used to store model collection into
+ * The Bikini.LocalStorageStore can be used to store model collection into
  * the localStorage
  *
- * @module M.LocalStorageStore
+ * @module Bikini.LocalStorageStore
  *
  * @type {*}
- * @extends M.Store
+ * @extends Bikini.Store
  *
  * @example
  *
  * // The LocalStorageStore will save each model data as a json under his id,
  * // and keeps all id's under an extra key for faster access
  *
- * var MyCollection = M.Collection.extend({
- *      store: M.LocalStorageStore.create(),
+ * var MyCollection = Bikini.Collection.extend({
+ *      store: Bikini.LocalStorageStore.create(),
  *      entity: 'myEntityName'
  * });
  *
  */
-M.LocalStorageStore = M.Store.extend({
+Bikini.LocalStorageStore = Bikini.Store.extend({
 
-    _type: 'M.LocalStorageStore',
+    _type: 'Bikini.LocalStorageStore',
 
     ids: {},
 
@@ -33,7 +33,7 @@ M.LocalStorageStore = M.Store.extend({
         var entity = that.getEntity(model.entity || options.entity || this.entity);
         var attrs;
         if( that && entity && model ) {
-            var id = model.id || (method === 'create' ? new M.ObjectID().toHexString() : null);
+            var id = model.id || (method === 'create' ? new Bikini.ObjectID().toHexString() : null);
             attrs = options.attrs || model.toJSON(options);
             switch( method ) {
                 case 'patch':
@@ -71,7 +71,7 @@ M.LocalStorageStore = M.Store.extend({
         if( attrs ) {
             that.handleSuccess(options, attrs);
         } else {
-            that.handleError(options, M.Store.CONST.ERROR_NO_ENTITY);
+            that.handleError(options, Bikini.Store.CONST.ERROR_NO_ENTITY);
         }
     },
 
@@ -85,7 +85,7 @@ M.LocalStorageStore = M.Store.extend({
             localStorage.removeItem('__ids__' + entity.name);
             this.handleSuccess(options);
         } else {
-            this.handleError(options, M.Store.CONST.ERROR_NO_ENTITY);
+            this.handleError(options, Bikini.Store.CONST.ERROR_NO_ENTITY);
         }
     },
 
@@ -104,7 +104,7 @@ M.LocalStorageStore = M.Store.extend({
                     this._delItemId(id);
                 }
             } catch( e ) {
-                console.error(M.Store.CONST.ERROR_LOAD_DATA + e.message);
+                console.error(Bikini.Store.CONST.ERROR_LOAD_DATA + e.message);
             }
         }
         return attrs;
@@ -116,7 +116,7 @@ M.LocalStorageStore = M.Store.extend({
                 localStorage.setItem(this._getKey(entity, id), JSON.stringify(attrs));
                 this._addItemId(entity, id);
             } catch( e ) {
-                console.error(M.Store.CONST.ERROR_SAVE_DATA + e.message);
+                console.error(Bikini.Store.CONST.ERROR_SAVE_DATA + e.message);
             }
         }
     },
@@ -167,7 +167,7 @@ M.LocalStorageStore = M.Store.extend({
             }
             return this.ids[entity.name];
         } catch( e ) {
-            console.error(M.Store.CONST.ERROR_LOAD_IDS + e.message);
+            console.error(Bikini.Store.CONST.ERROR_LOAD_IDS + e.message);
         }
     },
 
@@ -176,7 +176,7 @@ M.LocalStorageStore = M.Store.extend({
             var key = '__ids__' + entity.name;
             localStorage.setItem(key, JSON.stringify(ids));
         } catch( e ) {
-            console.error(M.Store.CONST.ERROR_SAVE_IDS + e.message);
+            console.error(Bikini.Store.CONST.ERROR_SAVE_IDS + e.message);
         }
     }
 });

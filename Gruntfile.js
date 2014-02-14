@@ -5,6 +5,8 @@
 
 var _ = require('lodash');
 
+var path = require('path');
+
 module.exports = function (grunt) {
     // show elapsed time at the end
     require('time-grunt')(grunt);
@@ -15,7 +17,7 @@ module.exports = function (grunt) {
         'https://raw.github.com/mwaylabs/The-M-Project-Sample-Apps/master/README.md': 'Sample-Apps.md',
         'https://raw.github.com/mwaylabs/generator-m/master/README.md': 'Generator.md',
         'https://raw.github.com/mwaylabs/The-M-Project-Sample-Apps/master/demoapp/README.md': 'Demo-App.md'
-    }
+    };
 
     // Project configuration.
     grunt.initConfig({
@@ -37,7 +39,7 @@ module.exports = function (grunt) {
         jshint: {
             options: {
                 jshintrc: '.jshintrc',
-                ignores: ['src/_*.js', 'src/themproject*.js', 'src/ui/themevars.js']
+                ignores: ['src/_*.js', 'src/bikini*.js' ]
             },
             src: [ 'src/**/*.js' ]
         },
@@ -128,15 +130,25 @@ module.exports = function (grunt) {
                     'doc-template/.tmp/index.md'
                 ]
             }
+        },
+        express: {
+            test: {
+              options: {
+                script: './server/server.js'
+              }
+            }
         }
     });
 
+
     grunt.loadTasks('tasks');
+
+    grunt.loadNpmTasks('grunt-express-server');
 
     grunt.registerTask('build', ['preprocess:dev']);
 
     grunt.registerTask('dev', ['default', 'watch']);
-    grunt.registerTask('test', ['jshint', 'mocha']);
+    grunt.registerTask('test', ['jshint', /*'express:test',*/ 'mocha']);
     grunt.registerTask('dist', ['jshint', 'preprocess:dist', 'uglify']);
     grunt.registerTask('precommit', ['travis']);
     grunt.registerTask('travis', ['jsonlint', 'default', 'test']);

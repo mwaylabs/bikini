@@ -1,30 +1,28 @@
-describe('M.Object', function () {
+describe('Bikini.Object', function () {
 
     it('basic', function () {
-        assert.isDefined(M.Object);
-        assert.isDefined(M.Object._type);
+        assert.isDefined(Bikini.Object);
+        assert.isDefined(Bikini.Object._type);
 
-        assert.isObject(M.Object);
-        assert.isString(M.Object._type);
-        assert.equal(M.Object._type, 'M.Object');
+        assert.isObject(Bikini.Object);
+        assert.isString(Bikini.Object._type);
+        assert.equal(Bikini.Object._type, 'Bikini.Object');
     });
 
     it('methods', function () {
-        assert.isDefined(M.Object._create);
-        assert.isDefined(M.Object._normalize);
-        assert.isDefined(M.Object.include);
-        assert.isDefined(M.Object.design);
-        assert.isDefined(M.Object.bindToCaller);
-        assert.isDefined(M.Object.handleCallback);
+        assert.isDefined(Bikini.Object._create);
+        assert.isDefined(Bikini.Object._normalize);
+        assert.isDefined(Bikini.Object.include);
+        assert.isDefined(Bikini.Object.design);
+        assert.isDefined(Bikini.Object.bindToCaller);
+        assert.isDefined(Bikini.Object.handleCallback);
 
-        assert.isFunction(M.Object._create);
-        assert.isFunction(M.Object._normalize);
-        assert.isFunction(M.Object.include);
-        assert.isFunction(M.Object.design);
-        assert.isFunction(M.Object.bindToCaller);
-        assert.isFunction(M.Object.handleCallback);
-
+        assert.isFunction(Bikini.Object._create);
+        assert.isFunction(Bikini.Object._normalize);
+        assert.isFunction(Bikini.Object.include);
+        assert.isFunction(Bikini.Object.design);
+        assert.isFunction(Bikini.Object.bindToCaller);
+        assert.isFunction(Bikini.Object.handleCallback);
     });
-
 
 });

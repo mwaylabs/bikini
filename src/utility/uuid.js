@@ -5,12 +5,12 @@
 
 /**
  *
- * @module M.UniqueId
+ * @module Bikini.UniqueId
  *
  * @type {*}
- * @extends M.Object
+ * @extends Bikini.Object
  */
-M.UniqueId = M.Object.design({
+Bikini.UniqueId = Bikini.Object.design({
     uuid: function(len, radix) {
         // based on Robert Kieffer's randomUUID.js at http://www.broofa.com
         var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');

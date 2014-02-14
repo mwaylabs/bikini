@@ -2,43 +2,43 @@
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
 
 /**
- * The M.WebSqlStore can be used to store model collection into
+ * The Bikini.WebSqlStore can be used to store model collection into
  * the webSql database
  *
- * @module M.WebSqlStore
+ * @module Bikini.WebSqlStore
  *
  * @type {*}
- * @extends M.Store
+ * @extends Bikini.Store
  *
  * @example
  *
  * // The default configuration will save the complete model data as json
  * // into a database column with the name "data"
  *
- * var MyCollection = M.Collection.extend({
+ * var MyCollection = Bikini.Collection.extend({
  *      model: MyModel,
  *      entity: 'MyTableName',
- *      store: new M.WebSqlStorageStore()
+ *      store: new Bikini.WebSqlStorageStore()
  * });
  *
  * // If you want to use specific columns you can specify the fields
  * // in the entity of your model like this:
  *
- * var MyModel = M.Model.extend({
+ * var MyModel = Bikini.Model.extend({
  *      idAttribute: 'id',
  *      fields: {
- *          id:          { type: M.DATA.TYPE.STRING,  required: YES, index: YES },
- *          sureName:    { name: 'USERNAME', type: M.DATA.TYPE.STRING },
- *          firstName:   { type: M.DATA.TYPE.STRING,  length: 200 },
- *          age:         { type: M.DATA.TYPE.INTEGER }
+ *          id:          { type: Bikini.DATA.TYPE.STRING,  required: YES, index: YES },
+ *          sureName:    { name: 'USERNAME', type: Bikini.DATA.TYPE.STRING },
+ *          firstName:   { type: Bikini.DATA.TYPE.STRING,  length: 200 },
+ *          age:         { type: Bikini.DATA.TYPE.INTEGER }
  *      }
  * });
  *
  *
  */
-M.WebSqlStore = M.Store.extend({
+Bikini.WebSqlStore = Bikini.Store.extend({
 
-    _type: 'M.WebSqlStore',
+    _type: 'Bikini.WebSqlStore',
 
     _selector: null,
 
@@ -58,29 +58,29 @@ M.WebSqlStore = M.Store.extend({
 
     typeMapping: (function() {
         var map = {};
-        map [M.DATA.TYPE.OBJECTID] = M.DATA.TYPE.STRING;
-        map [M.DATA.TYPE.DATE] = M.DATA.TYPE.STRING;
-        map [M.DATA.TYPE.OBJECT] = M.DATA.TYPE.TEXT;
-        map [M.DATA.TYPE.ARRAY] = M.DATA.TYPE.TEXT;
-        map [M.DATA.TYPE.BINARY] = M.DATA.TYPE.TEXT;
+        map [Bikini.DATA.TYPE.OBJECTID] = Bikini.DATA.TYPE.STRING;
+        map [Bikini.DATA.TYPE.DATE] = Bikini.DATA.TYPE.STRING;
+        map [Bikini.DATA.TYPE.OBJECT] = Bikini.DATA.TYPE.TEXT;
+        map [Bikini.DATA.TYPE.ARRAY] = Bikini.DATA.TYPE.TEXT;
+        map [Bikini.DATA.TYPE.BINARY] = Bikini.DATA.TYPE.TEXT;
         return map;
     })(),
 
     sqlTypeMapping: (function() {
         var map = {};
-        map [M.DATA.TYPE.STRING] = 'varchar(255)';
-        map [M.DATA.TYPE.TEXT] = 'text';
-        map [M.DATA.TYPE.OBJECT] = 'text';
-        map [M.DATA.TYPE.ARRAY] = 'text';
-        map [M.DATA.TYPE.FLOAT] = 'float';
-        map [M.DATA.TYPE.INTEGER] = 'integer';
-        map [M.DATA.TYPE.DATE] = 'varchar(255)';
-        map [M.DATA.TYPE.BOOLEAN] = 'boolean';
+        map [Bikini.DATA.TYPE.STRING] = 'varchar(255)';
+        map [Bikini.DATA.TYPE.TEXT] = 'text';
+        map [Bikini.DATA.TYPE.OBJECT] = 'text';
+        map [Bikini.DATA.TYPE.ARRAY] = 'text';
+        map [Bikini.DATA.TYPE.FLOAT] = 'float';
+        map [Bikini.DATA.TYPE.INTEGER] = 'integer';
+        map [Bikini.DATA.TYPE.DATE] = 'varchar(255)';
+        map [Bikini.DATA.TYPE.BOOLEAN] = 'boolean';
         return map;
     })(),
 
     initialize: function( options ) {
-        M.Store.prototype.initialize.apply(this, arguments);
+        Bikini.Store.prototype.initialize.apply(this, arguments);
         this.options = this.options || {};
         this.options.name = this.name;
         this.options.size = this.size;
@@ -98,7 +98,7 @@ M.WebSqlStore = M.Store.extend({
 
     sync: function( method, model, options ) {
         var that = options.store || this.store;
-        var models = M.isCollection(model) ? model.models : [ model ];
+        var models = Bikini.isCollection(model) ? model.models : [ model ];
         options.entity = options.entity || this.entity;
         switch( method ) {
             case 'create':
@@ -234,7 +234,7 @@ M.WebSqlStore = M.Store.extend({
     _isAutoincrementKey: function( entity, key ) {
         if( entity && key ) {
             var column = this.getField(entity, key);
-            return column && column.type === M.DATA.TYPE.INTEGER;
+            return column && column.type === Bikini.DATA.TYPE.INTEGER;
         }
     },
 
@@ -301,7 +301,7 @@ M.WebSqlStore = M.Store.extend({
         if( _.isString(options.where) ) {
             sql = options.where;
         } else if( _.isObject(options.where) ) {
-            this._selector = M.SqlSelector.create(options.where, entity);
+            this._selector = Bikini.SqlSelector.create(options.where, entity);
             sql = this._selector.buildStatement();
         }
         return sql;
@@ -368,15 +368,15 @@ M.WebSqlStore = M.Store.extend({
     },
 
     _sqlValue: function( value, field ) {
-        var type = field && field.type ? field.type : M.Field.prototype.detectType(value);
-        if( type === M.DATA.TYPE.INTEGER || type === M.DATA.TYPE.FLOAT ) {
+        var type = field && field.type ? field.type : Bikini.Field.prototype.detectType(value);
+        if( type === Bikini.DATA.TYPE.INTEGER || type === Bikini.DATA.TYPE.FLOAT ) {
             return value;
-        } else if( type === M.DATA.TYPE.BOOLEAN ) {
+        } else if( type === Bikini.DATA.TYPE.BOOLEAN ) {
             return value ? '1' : '0';
-        } else if( type === M.DATA.TYPE.NULL ) {
+        } else if( type === Bikini.DATA.TYPE.NULL ) {
             return 'NULL';
         }
-        value = M.Field.prototype.transform(value, M.DATA.TYPE.STRING);
+        value = Bikini.Field.prototype.transform(value, Bikini.DATA.TYPE.STRING);
         value = value.replace(/"/g, '""');
         return '"' + value + '"';
     },
@@ -446,7 +446,7 @@ M.WebSqlStore = M.Store.extend({
                 var model = models[i];
                 var statement = ''; // the actual sql insert string with values
                 if( !isAutoInc && !model.id && model.idAttribute ) {
-                    model.set(model.idAttribute, new M.ObjectID().toHexString());
+                    model.set(model.idAttribute, new Bikini.ObjectID().toHexString());
                 }
                 var value = options.attrs || model.toJSON();
                 var args, keys;
@@ -474,7 +474,7 @@ M.WebSqlStore = M.Store.extend({
 
         if( this._checkDb(options) && this._checkEntity(options, entity) ) {
             var lastStatement;
-            var isCollection = M.isCollection(result);
+            var isCollection = Bikini.isCollection(result);
             if( isCollection ) {
                 result = [];
             } else {
@@ -606,4 +606,5 @@ M.WebSqlStore = M.Store.extend({
     getField: function( entity, key ) {
         return this.getFields(entity)[key];
     }
+
 });

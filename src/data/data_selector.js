@@ -1,21 +1,21 @@
 // Copyright (c) 2013 M-Way Solutions GmbH
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
 
-// M.DataSelector uses code from meteor.js
+// Bikini.DataSelector uses code from meteor.js
 // https://github.com/meteor/meteor/tree/master/packages/minimongo
 //
 // Thanks for sharing!
 
 /**
  *
- * @module M.DataSelector
+ * @module Bikini.DataSelector
  *
  * @type {*}
- * @extends M.Object
+ * @extends Bikini.Object
  */
-M.DataSelector = M.Object.design({
+Bikini.DataSelector = Bikini.Object.design({
 
-    _type: 'M.DataSelector',
+    _type: 'Bikini.DataSelector',
 
     _selector: null,
 
@@ -66,7 +66,7 @@ M.DataSelector = M.Object.design({
         if (this._selectorIsId(selector)) {
             return function (record) {
                 var id = _.isFunction(record.getId) ? record.getId() : (record._id || record.id);
-                return M.Field.prototype.equals(id, selector);
+                return Bikini.Field.prototype.equals(id, selector);
             };
         }
 
@@ -80,7 +80,7 @@ M.DataSelector = M.Object.design({
         }
 
         // Top level can't be an array or true or binary.
-        if (_.isBoolean(selector) || _.isArray(selector) || M.Field.prototype.isBinary(selector)) {
+        if (_.isBoolean(selector) || _.isArray(selector) || Bikini.Field.prototype.isBinary(selector)) {
             throw new Error('Invalid selector: ' + selector);
         }
 
@@ -89,7 +89,7 @@ M.DataSelector = M.Object.design({
 
     // The main compilation function for a given selector.
     compileDocSelector: function (docSelector) {
-        var that = M.DataSelector;
+        var that = Bikini.DataSelector;
         var perKeySelectors = [];
         _.each(docSelector, function (subSelector, key) {
             if (key.substr(0, 1) === '$') {
@@ -121,7 +121,7 @@ M.DataSelector = M.Object.design({
     },
 
     compileValueSelector: function (valueSelector) {
-        var that = M.DataSelector;
+        var that = Bikini.DataSelector;
         if (valueSelector === null) {  // undefined or null
             return function (value) {
                 return that._anyIfArray(value, function (x) {
@@ -270,11 +270,11 @@ M.DataSelector = M.Object.design({
 
     // deep equality test: use for literal document and array matches
     _equal: function (a, b) {
-        return M.Field.prototype._equals(a, b, true);
+        return Bikini.Field.prototype._equals(a, b, true);
     },
 
     _cmp: function (a, b) {
-        return M.Field.prototype._cmp(a, b);
+        return Bikini.Field.prototype._cmp(a, b);
     },
 
     LOGICAL_OPERATORS: {
@@ -282,7 +282,7 @@ M.DataSelector = M.Object.design({
             if (!_.isArray(subSelector) || _.isEmpty(subSelector)) {
                 throw new Error('$and/$or/$nor must be nonempty array');
             }
-            var subSelectorFunctions = _.map(subSelector, M.DataSelector.compileDocSelector);
+            var subSelectorFunctions = _.map(subSelector, Bikini.DataSelector.compileDocSelector);
             return function (doc) {
                 return _.all(subSelectorFunctions, function (f) {
                     return f(doc);
@@ -294,7 +294,7 @@ M.DataSelector = M.Object.design({
             if (!_.isArray(subSelector) || _.isEmpty(subSelector)) {
                 throw new Error('$and/$or/$nor must be nonempty array');
             }
-            var subSelectorFunctions = _.map(subSelector, M.DataSelector.compileDocSelector);
+            var subSelectorFunctions = _.map(subSelector, Bikini.DataSelector.compileDocSelector);
             return function (doc) {
                 return _.any(subSelectorFunctions, function (f) {
                     return f(doc);
@@ -306,7 +306,7 @@ M.DataSelector = M.Object.design({
             if (!_.isArray(subSelector) || _.isEmpty(subSelector)) {
                 throw new Error('$and/$or/$nor must be nonempty array');
             }
-            var subSelectorFunctions = _.map(subSelector, M.DataSelector.compileDocSelector);
+            var subSelectorFunctions = _.map(subSelector, Bikini.DataSelector.compileDocSelector);
             return function (doc) {
                 return _.all(subSelectorFunctions, function (f) {
                     return !f(doc);
@@ -331,9 +331,9 @@ M.DataSelector = M.Object.design({
                 throw new Error('Argument to $in must be array');
             }
             return function (value) {
-                return M.DataSelector._anyIfArrayPlus(value, function (x) {
+                return Bikini.DataSelector._anyIfArrayPlus(value, function (x) {
                     return _.any(operand, function (operandElt) {
-                        return M.DataSelector._equal(operandElt, x);
+                        return Bikini.DataSelector._equal(operandElt, x);
                     });
                 });
             };
@@ -349,7 +349,7 @@ M.DataSelector = M.Object.design({
                 }
                 return _.all(operand, function (operandElt) {
                     return _.any(value, function (valueElt) {
-                        return M.DataSelector._equal(operandElt, valueElt);
+                        return Bikini.DataSelector._equal(operandElt, valueElt);
                     });
                 });
             };
@@ -357,40 +357,40 @@ M.DataSelector = M.Object.design({
 
         '$lt': function (operand) {
             return function (value) {
-                return M.DataSelector._anyIfArray(value, function (x) {
-                    return M.DataSelector._cmp(x, operand) < 0;
+                return Bikini.DataSelector._anyIfArray(value, function (x) {
+                    return Bikini.DataSelector._cmp(x, operand) < 0;
                 });
             };
         },
 
         '$lte': function (operand) {
             return function (value) {
-                return M.DataSelector._anyIfArray(value, function (x) {
-                    return M.DataSelector._cmp(x, operand) <= 0;
+                return Bikini.DataSelector._anyIfArray(value, function (x) {
+                    return Bikini.DataSelector._cmp(x, operand) <= 0;
                 });
             };
         },
 
         '$gt': function (operand) {
             return function (value) {
-                return M.DataSelector._anyIfArray(value, function (x) {
-                    return M.DataSelector._cmp(x, operand) > 0;
+                return Bikini.DataSelector._anyIfArray(value, function (x) {
+                    return Bikini.DataSelector._cmp(x, operand) > 0;
                 });
             };
         },
 
         '$gte': function (operand) {
             return function (value) {
-                return M.DataSelector._anyIfArray(value, function (x) {
-                    return M.DataSelector._cmp(x, operand) >= 0;
+                return Bikini.DataSelector._anyIfArray(value, function (x) {
+                    return Bikini.DataSelector._cmp(x, operand) >= 0;
                 });
             };
         },
 
         '$ne': function (operand) {
             return function (value) {
-                return !M.DataSelector._anyIfArrayPlus(value, function (x) {
-                    return M.DataSelector._equal(x, operand);
+                return !Bikini.DataSelector._anyIfArrayPlus(value, function (x) {
+                    return Bikini.DataSelector._equal(x, operand);
                 });
             };
         },
@@ -417,7 +417,7 @@ M.DataSelector = M.Object.design({
         '$mod': function (operand) {
             var divisor = operand[0], remainder = operand[1];
             return function (value) {
-                return M.DataSelector._anyIfArray(value, function (x) {
+                return Bikini.DataSelector._anyIfArray(value, function (x) {
                     return x % divisor === remainder;
                 });
             };
@@ -435,8 +435,8 @@ M.DataSelector = M.Object.design({
                 if (_.isUndefined(value)) {
                     return false;
                 }
-                return M.DataSelector._anyIfArray(value, function (x) {
-                    return M.Field.prototype.detectType(x) === operand;
+                return Bikini.DataSelector._anyIfArray(value, function (x) {
+                    return Bikini.Field.prototype.detectType(x) === operand;
                 });
             };
         },
@@ -464,7 +464,7 @@ M.DataSelector = M.Object.design({
                 if (_.isUndefined(value)) {
                     return false;
                 }
-                return M.DataSelector._anyIfArray(value, function (x) {
+                return Bikini.DataSelector._anyIfArray(value, function (x) {
                     return operand.test(x);
                 });
             };
@@ -478,7 +478,7 @@ M.DataSelector = M.Object.design({
         },
 
         '$elemMatch': function (operand) {
-            var matcher = M.DataSelector.compileDocSelector(operand);
+            var matcher = Bikini.DataSelector.compileDocSelector(operand);
             return function (value) {
                 if (!_.isArray(value)) {
                     return false;
@@ -490,7 +490,7 @@ M.DataSelector = M.Object.design({
         },
 
         '$not': function (operand) {
-            var matcher = M.DataSelector.compileDocSelector(operand);
+            var matcher = Bikini.DataSelector.compileDocSelector(operand);
             return function (value) {
                 return !matcher(value);
             };
@@ -575,7 +575,7 @@ M.DataSelector = M.Object.design({
                         // Compare the value we found to the value we found so far, saving it
                         // if it's less (for an ascending sort) or more (for a descending
                         // sort).
-                        var cmp = M.DataSelector._cmp(reduced, value);
+                        var cmp = Bikini.DataSelector._cmp(reduced, value);
                         if ((findMin && cmp > 0) || (!findMin && cmp < 0)) {
                             reduced = value;
                         }
@@ -592,7 +592,7 @@ M.DataSelector = M.Object.design({
                 var specPart = sortSpecParts[i];
                 var aValue = reduceValue(specPart.lookup(a), specPart.ascending);
                 var bValue = reduceValue(specPart.lookup(b), specPart.ascending);
-                var compare = M.DataSelector._cmp(aValue, bValue);
+                var compare = Bikini.DataSelector._cmp(aValue, bValue);
                 if (compare !== 0) {
                     return specPart.ascending ? compare : -compare;
                 }

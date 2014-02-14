@@ -2,7 +2,7 @@
 * Project:   The M-Project - Mobile HTML5 Application Framework
 * Copyright: (c) 2014 M-Way Solutions GmbH.
 * Version:   2.0.0-beta3
-* Date:      Fri Feb 14 2014 11:42:27
+* Date:      Fri Feb 14 2014 17:44:36
 * License:   http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
 */
 
@@ -16,18 +16,18 @@
      *
      * @type {Object}
      */
-    var M = null;
+    var Bikini = null;
     if( typeof exports !== 'undefined' ) {
-        M = exports;
+        Bikini = exports;
     } else {
-        M = global.M = {};
+        Bikini = global.Bikini = {};
     }
     
     /**
      * Version number of current release
      * @type {String}
      */
-    M.Version = M.version = '2.0.0-beta3';
+    Bikini.Version = Bikini.version = '2.0.0-beta3';
     
     /**
      * Empty function to be used when
@@ -35,36 +35,36 @@
      *
      * @type {Function}
      */
-    M.f = function() {
+    Bikini.f = function() {
     };
     
-    M.create = function( args ) {
+    Bikini.create = function( args ) {
         return new this(args);
     };
     
-    M.design = function( obj ) {
+    Bikini.design = function( obj ) {
         var O = this.extend(obj || {});
         return new O();
     };
     
-    M.extend = Backbone.Model.extend;
+    Bikini.extend = Backbone.Model.extend;
     
-    M.isCollection = function( collection ) {
+    Bikini.isCollection = function( collection ) {
         return Backbone.Collection.prototype.isPrototypeOf(collection);
     };
     
-    M.isModel = function( model ) {
+    Bikini.isModel = function( model ) {
         return Backbone.Model.prototype.isPrototypeOf(model);
     };
     
-    M.isEntity = function( entity ) {
-        return M.Entity.prototype.isPrototypeOf(entity);
+    Bikini.isEntity = function( entity ) {
+        return Bikini.Entity.prototype.isPrototypeOf(entity);
     };
     
     /***
      * Data type Constants.
      */
-    M.DATA = {
+    Bikini.DATA = {
         TYPE: {
             INTEGER: 'integer',
     
@@ -90,36 +90,13 @@
         }
     };
     
-    /**
-     * Readable alias for true
-     *
-     * @type {Boolean}
-     */
-    YES = true;
-    
-    /**
-     * Readable alias for false
-     *
-     * @type {Boolean}
-     */
-    NO = false;
-    
-    // Copyright (c) 2013 M-Way Solutions GmbH
-    // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
-    
-    /**
-     *
-     * @module M.Object
-     *
-     * @type {Object}
-     **/
-    M.Object = {
+    Bikini.Object = {
         /**
          * The type of this object.
          *
          * @type String
          */
-        _type: 'M.Object',
+        _type: 'Bikini.Object',
     
         /**
          * Creates an object based on a passed prototype.
@@ -141,7 +118,7 @@
         include: function( properties ) {
             for( var prop in properties ) {
                 if( this.hasOwnProperty(prop) ) {
-                    throw M.Exception.RESERVED_WORD.getException();
+                    throw Bikini.Exception.RESERVED_WORD.getException();
                 }
                 this[prop] = properties[prop];
             }
@@ -158,7 +135,7 @@
          */
         design: function( properties ) {
             /* create the new object */
-            // var obj = M.Object._create(this);
+            // var obj = Bikini.Object._create(this);
             var obj = this._create(this);
     
             /* assign the properties passed with the arguments array */
@@ -179,7 +156,7 @@
         bindToCaller: function( caller, method, arg ) {
             return function() {
                 if( typeof method !== 'function' || typeof caller !== 'object' ) {
-                    throw M.Exception.INVALID_INPUT_PARAMETER.getException();
+                    throw Bikini.Exception.INVALID_INPUT_PARAMETER.getException();
                 }
                 if( Array.isArray(arg) ) {
                     return method.apply(caller, arg);
@@ -224,13 +201,28 @@
         }
     
     };
+    
+    /**
+     * Readable alias for true
+     *
+     * @type {Boolean}
+     */
+    YES = true;
+    
+    /**
+     * Readable alias for false
+     *
+     * @type {Boolean}
+     */
+    NO = false;
+    
 
     // Copyright (c) 2013 M-Way Solutions GmbH
     // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
     
     // ===========================================================================
     //
-    // M.ObjectId uses code from meteor.js
+    // Bikini.ObjectId uses code from meteor.js
     // https://github.com/meteor/meteor/blob/master/packages/minimongo
     //
     // Thanks for sharing!
@@ -240,21 +232,21 @@
     // m_require('core/foundation/object.js');
     /**
      *
-     * @module M.ObjectID
+     * @module Bikini.ObjectID
      *
      */
-    M.ObjectID = function( hexString ) {
-        M.ObjectID.counter   = M.ObjectID.counter   || parseInt(Math.random() * Math.pow(16, 6));
-        M.ObjectID.machineId = M.ObjectID.machineId || parseInt(Math.random() * Math.pow(16, 6));
-        M.ObjectID.processId = M.ObjectID.processId || parseInt(Math.random() * Math.pow(16, 4));
+    Bikini.ObjectID = function( hexString ) {
+        Bikini.ObjectID.counter   = Bikini.ObjectID.counter   || parseInt(Math.random() * Math.pow(16, 6));
+        Bikini.ObjectID.machineId = Bikini.ObjectID.machineId || parseInt(Math.random() * Math.pow(16, 6));
+        Bikini.ObjectID.processId = Bikini.ObjectID.processId || parseInt(Math.random() * Math.pow(16, 4));
         this._ObjectID(hexString);
     };
     
-    M.ObjectID._looksLikeObjectID = function( str ) {
+    Bikini.ObjectID._looksLikeObjectID = function( str ) {
         return str.length === 24 && str.match(/^[0-9a-f]*$/);
     };
     
-    _.extend(M.ObjectID.prototype, {
+    _.extend(Bikini.ObjectID.prototype, {
     
         _str: '',
     
@@ -262,7 +254,7 @@
             //random-based impl of Mongo ObjectID
             if( hexString ) {
                 hexString = hexString.toLowerCase();
-                if( !M.ObjectID._looksLikeObjectID(hexString) ) {
+                if( !Bikini.ObjectID._looksLikeObjectID(hexString) ) {
                     throw new Error('Invalid hexadecimal string for creating an ObjectID');
                 }
                 // meant to work with _.isEqual(), which relies on structural equality
@@ -271,9 +263,9 @@
     
                 this._str =
                     this._hexString(8, new Date().getTime()/1000) +     // a 4-byte value from the Unix timestamp
-                    this._hexString(6, M.ObjectID.machineId) +          // a 3-byte machine identifier
-                    this._hexString(4, M.ObjectID.processId) +          // a 2-byte process identifier
-                    this._hexString(6, M.ObjectID.counter++);   // a 3-byte counter, starting with a random value.
+                    this._hexString(6, Bikini.ObjectID.machineId) +          // a 3-byte machine identifier
+                    this._hexString(4, Bikini.ObjectID.processId) +          // a 2-byte process identifier
+                    this._hexString(6, Bikini.ObjectID.counter++);   // a 3-byte counter, starting with a random value.
             }
             return this._str;
         },
@@ -296,7 +288,7 @@
         },
     
         clone: function() {
-            return new M.ObjectID(this._str);
+            return new Bikini.ObjectID(this._str);
         },
     
         typeName: function() {
@@ -335,7 +327,7 @@
         _selectorIsId: function( selector ) {
             return (typeof selector === 'string') ||
                 (typeof selector === 'number') ||
-                selector instanceof M.ObjectId;
+                selector instanceof Bikini.ObjectId;
         },
     
         // Is the selector just lookup by _id (shorthand or not)?
@@ -392,12 +384,12 @@
     
     /**
      *
-     * @module M.UniqueId
+     * @module Bikini.UniqueId
      *
      * @type {*}
-     * @extends M.Object
+     * @extends Bikini.Object
      */
-    M.UniqueId = M.Object.design({
+    Bikini.UniqueId = Bikini.Object.design({
         uuid: function(len, radix) {
             // based on Robert Kieffer's randomUUID.js at http://www.broofa.com
             var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
@@ -435,20 +427,20 @@
     
     /**
      * This prototype defines decoding and encoding mechanisms based on the Base64 algorithm. You
-     * normally don't call this object respectively its methods directly, but let M.Cypher handle
+     * normally don't call this object respectively its methods directly, but let Bikini.Cypher handle
      * this.
-     * @module M.Base64
+     * @module Bikini.Base64
      *
-     * @extends M.Object
+     * @extends Bikini.Object
      */
-    M.Base64 = M.Object.design(/** @scope M.Base64.prototype */ {
+    Bikini.Base64 = Bikini.Object.design(/** @scope Bikini.Base64.prototype */ {
     
             /**
              * The type of this object.
              *
              * @type String
              */
-            type: 'M.Base64',
+            type: 'Bikini.Base64',
     
             /**
              * The key string for the base 64 decoding and encoding.
@@ -527,7 +519,7 @@
                 var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
                 var i = 0;
     
-                input = M.Cypher.utf8Encode(input);
+                input = Bikini.Cypher.utf8Encode(input);
     
                 while( i < input.length ) {
                     chr1 = input.charCodeAt(i++);
@@ -613,7 +605,7 @@
                     }
                 }
     
-                return M.Cypher.utf8Decode(output);
+                return Bikini.Cypher.utf8Decode(output);
             }
     
         });
@@ -622,20 +614,20 @@
     
     /**
      * This prototype defines a hashing mechanism based on the SHA256 algorithm. You normally
-     * don't call this object respectively its methods directly, but let M.Cypher handle
+     * don't call this object respectively its methods directly, but let Bikini.Cypher handle
      * this.
-     * @module M.SHA256
+     * @module Bikini.SHA256
      *
-     * @extends M.Object
+     * @extends Bikini.Object
      */
-    M.SHA256 = M.Object.design(/** @scope M.SHA256.prototype */ {
+    Bikini.SHA256 = Bikini.Object.design(/** @scope Bikini.SHA256.prototype */ {
     
             /**
              * The type of this object.
              *
              * @type String
              */
-            type: 'M.SHA256',
+            type: 'Bikini.SHA256',
     
             /**
              * Defines the bits per input character: 8 - ASCII, 16 - Unicode
@@ -659,7 +651,7 @@
              * @returns {String} The sha256 hashed string.
              */
             hash: function( input ) {
-                input = M.Cypher.utf8Encode(input);
+                input = Bikini.Cypher.utf8Encode(input);
                 return this.binb2hex(this.coreSha256(this.str2binb(input), input.length * this.chrsz));
             },
     
@@ -812,43 +804,43 @@
     // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
     
     /**
-     * M.Cypher defines a prototype for handling decoding, encoding and hashing of string
+     * Bikini.Cypher defines a prototype for handling decoding, encoding and hashing of string
      * based values.
-     * @module M.Cypher
+     * @module Bikini.Cypher
      *
-     * @extends M.Object
+     * @extends Bikini.Object
      */
-    M.Cypher = M.Object.design(/** @scope M.Cypher.prototype */ {
+    Bikini.Cypher = Bikini.Object.design(/** @scope Bikini.Cypher.prototype */ {
     
             /**
              * The type of this object.
              *
              * @type String
              */
-            type: 'M.Cypher',
+            type: 'Bikini.Cypher',
     
             /**
              * The default decoder.
              *
-             * @type M.Base64
+             * @type Bikini.Base64
              */
-            defaultDecoder: M.Base64,
+            defaultDecoder: Bikini.Base64,
     
             /**
              * The default encoder.
              *
-             * @type M.Base64
+             * @type Bikini.Base64
              */
     
-            defaultEncoder: M.Base64,
+            defaultEncoder: Bikini.Base64,
     
             /**
              * The default hash algorithm.
              *
-             * @type M.SHA256
+             * @type Bikini.SHA256
              */
     
-            defaultHasher: M.SHA256,
+            defaultHasher: Bikini.SHA256,
     
             /**
              * This method is the one that initiates the decoding of a given string, based on either
@@ -980,14 +972,14 @@
     
     /**
      *
-     * @module M.Date
+     * @module Bikini.Date
      *
-     * @extends M.Object
+     * @extends Bikini.Object
      */
-    M.Date = {
+    Bikini.Date = {
     
         /**
-         * This method is used to create a new instance of M.Date based on the data
+         * This method is used to create a new instance of Bikini.Date based on the data
          * library moment.js.
          *
          * @returns {Object}
@@ -1004,7 +996,7 @@
     
     /**
      *
-     * @module M.Field
+     * @module Bikini.Field
      *
      */
     
@@ -1016,23 +1008,23 @@
      * @param options
      * @constructor
      */
-    M.Field = function (options) {
+    Bikini.Field = function (options) {
         this.merge(options);
         this.initialize.apply(this, arguments);
     };
     
-    M.Field.extend = M.extend;
-    M.Field.create = M.create;
-    M.Field.design = M.design;
+    Bikini.Field.extend = Bikini.extend;
+    Bikini.Field.create = Bikini.create;
+    Bikini.Field.design = Bikini.design;
     
-    _.extend(M.Field.prototype, M.Object, {
+    _.extend(Bikini.Field.prototype, Bikini.Object, {
     
         /**
          * The type of this object.
          *
          * @type String
          */
-        _type: 'M.Field',
+        _type: 'Bikini.Field',
     
         name: null,
     
@@ -1081,30 +1073,30 @@
                 if (_.isUndefined(value)) {
                     return this.defaultValue;
                 }
-                if (type === M.DATA.TYPE.STRING || type === M.DATA.TYPE.TEXT) {
+                if (type === Bikini.DATA.TYPE.STRING || type === Bikini.DATA.TYPE.TEXT) {
                     if (_.isObject(value)) {
                         return JSON.stringify(value);
                     } else {
                         return _.isNull(value) ? 'null' : value.toString();
                     }
-                } else if (type === M.DATA.TYPE.INTEGER) {
+                } else if (type === Bikini.DATA.TYPE.INTEGER) {
                     return parseInt(value);
-                } else if (type === M.DATA.TYPE.BOOLEAN) {
+                } else if (type === Bikini.DATA.TYPE.BOOLEAN) {
                     return value === true || value === 'true'; // true, 1, "1" or "true"
-                } else if (type === M.DATA.TYPE.FLOAT) {
+                } else if (type === Bikini.DATA.TYPE.FLOAT) {
                     return parseFloat(value);
-                } else if (type === M.DATA.TYPE.OBJECT || type === M.DATA.TYPE.ARRAY) {
+                } else if (type === Bikini.DATA.TYPE.OBJECT || type === Bikini.DATA.TYPE.ARRAY) {
                     if (!_.isObject(value)) {
                         return _.isString(value) ? JSON.parse(value) : null;
                     }
-                } else if (type === M.DATA.TYPE.DATE) {
-                    if (!M.Date.isPrototypeOf(value)) {
-                        var date = value ? M.Date.create(value) : null;
+                } else if (type === Bikini.DATA.TYPE.DATE) {
+                    if (!Bikini.Date.isPrototypeOf(value)) {
+                        var date = value ? Bikini.Date.create(value) : null;
                         return date && date.isValid() ? date : null;
                     }
-                } else if (type === M.DATA.TYPE.OBJECTID) {
-                    if (!M.ObjectID.prototype.isPrototypeOf(value)) {
-                        return _.isString(value) ? new M.ObjectID(value) : null;
+                } else if (type === Bikini.DATA.TYPE.OBJECTID) {
+                    if (!Bikini.ObjectID.prototype.isPrototypeOf(value)) {
+                        return _.isString(value) ? new Bikini.ObjectID(value) : null;
                     }
                 }
                 return value;
@@ -1144,30 +1136,30 @@
          */
         detectType: function (v) {
             if (_.isNumber(v)) {
-                return M.DATA.TYPE.FLOAT;
+                return Bikini.DATA.TYPE.FLOAT;
             }
             if (_.isString(v)) {
-                return M.DATA.TYPE.STRING;
+                return Bikini.DATA.TYPE.STRING;
             }
             if (_.isBoolean(v)) {
-                return M.DATA.TYPE.BOOLEAN;
+                return Bikini.DATA.TYPE.BOOLEAN;
             }
             if (_.isArray(v)) {
-                return M.DATA.TYPE.ARRAY;
+                return Bikini.DATA.TYPE.ARRAY;
             }
             if (_.isNull(v)) {
-                return M.DATA.TYPE.NULL;
+                return Bikini.DATA.TYPE.NULL;
             }
-            if (_.isDate(v) || M.Date.isPrototypeOf(v)) {
-                return M.DATA.TYPE.DATE;
+            if (_.isDate(v) || Bikini.Date.isPrototypeOf(v)) {
+                return Bikini.DATA.TYPE.DATE;
             }
-            if (M.ObjectID.prototype.isPrototypeOf(v)) {
-                return M.DATA.TYPE.OBJECTID;
+            if (Bikini.ObjectID.prototype.isPrototypeOf(v)) {
+                return Bikini.DATA.TYPE.OBJECTID;
             }
             if (this.isBinary(v)) {
-                return M.DATA.TYPE.BINARY;
+                return Bikini.DATA.TYPE.BINARY;
             }
-            return M.DATA.TYPE.OBJECT;
+            return Bikini.DATA.TYPE.OBJECT;
         },
     
         /**
@@ -1178,19 +1170,19 @@
          */
         typeOrder: function (type) {
             switch (type) {
-                case M.DATA.TYPE.NULL   :
+                case Bikini.DATA.TYPE.NULL   :
                     return 0;
-                case M.DATA.TYPE.FLOAT  :
+                case Bikini.DATA.TYPE.FLOAT  :
                     return 1;
-                case M.DATA.TYPE.STRING :
+                case Bikini.DATA.TYPE.STRING :
                     return 2;
-                case M.DATA.TYPE.OBJECT :
+                case Bikini.DATA.TYPE.OBJECT :
                     return 3;
-                case M.DATA.TYPE.ARRAY  :
+                case Bikini.DATA.TYPE.ARRAY  :
                     return 4;
-                case M.DATA.TYPE.BINARY :
+                case Bikini.DATA.TYPE.BINARY :
                     return 5;
-                case M.DATA.TYPE.DATE   :
+                case Bikini.DATA.TYPE.DATE   :
                     return 6;
             }
             return -1;
@@ -1312,19 +1304,19 @@
                 a = a.toHexString();
                 b = b.toHexString();
             }
-            if (ta === M.DATA.TYPE.DATE) {
+            if (ta === Bikini.DATA.TYPE.DATE) {
                 // Convert to millis.
                 ta = tb = 1;
                 a = a.getTime();
                 b = b.getTime();
             }
-            if (ta === M.DATA.TYPE.FLOAT) {
+            if (ta === Bikini.DATA.TYPE.FLOAT) {
                 return a - b;
             }
-            if (tb === M.DATA.TYPE.STRING) {
+            if (tb === Bikini.DATA.TYPE.STRING) {
                 return a < b ? -1 : (a === b ? 0 : 1);
             }
-            if (ta === M.DATA.TYPE.OBJECT) {
+            if (ta === Bikini.DATA.TYPE.OBJECT) {
                 // this could be much more efficient in the expected case ...
                 var toArray = function (obj) {
                     var ret = [];
@@ -1336,7 +1328,7 @@
                 };
                 return this._cmp(toArray(a), toArray(b));
             }
-            if (ta === M.DATA.TYPE.ARRAY) { // Array
+            if (ta === Bikini.DATA.TYPE.ARRAY) { // Array
                 for (i = 0; ; i++) {
                     if (i === a.length) {
                         return (i === b.length) ? 0 : -1;
@@ -1350,7 +1342,7 @@
                     }
                 }
             }
-            if (ta === M.DATA.TYPE.BINARY) {
+            if (ta === Bikini.DATA.TYPE.BINARY) {
                 if (a.length !== b.length) {
                     return a.length - b.length;
                 }
@@ -1364,16 +1356,16 @@
                 }
                 return 0;
             }
-            if (ta === M.DATA.TYPE.BOOLEAN) {
+            if (ta === Bikini.DATA.TYPE.BOOLEAN) {
                 if (a) {
                     return b ? 0 : 1;
                 }
                 return b ? -1 : 0;
             }
-            if (ta === M.DATA.TYPE.NULL) {
+            if (ta === Bikini.DATA.TYPE.NULL) {
                 return 0;
             }
-    //        if( ta === M.DATA.TYPE.REGEXP ) {
+    //        if( ta === Bikini.DATA.TYPE.REGEXP ) {
     //            throw Error("Sorting not supported on regular expression");
     //        } // XXX
     //        if( ta === 13 ) // javascript code
@@ -1389,19 +1381,19 @@
     
     /**
      *
-     * @module M.Entity
+     * @module Bikini.Entity
      *
      */
     
     /**
      * Holds description about fields and other entity properties.
      * Also helper functions for field and transform operations
-     * @module M.Entity
+     * @module Bikini.Entity
      *
      * @param options
      * @constructor
      */
-    M.Entity = function (options) {
+    Bikini.Entity = function (options) {
         var fields = this.fields;
         this.fields = {};
         this._mergeFields(fields);
@@ -1424,12 +1416,12 @@
      * @param options
      * @returns {*}
      */
-    M.Entity.from = function (entity, options) {
-        // is not an instance of M.Entity
-        if (!M.Entity.prototype.isPrototypeOf(entity)) {
+    Bikini.Entity.from = function (entity, options) {
+        // is not an instance of Bikini.Entity
+        if (!Bikini.Entity.prototype.isPrototypeOf(entity)) {
             // if this is a prototype of an entity, create an instance
             if (_.isFunction(entity) &&
-                M.Entity.prototype.isPrototypeOf(entity.prototype)) {
+                Bikini.Entity.prototype.isPrototypeOf(entity.prototype)) {
                 var Entity = entity;
                 entity = new Entity(options);
             } else {
@@ -1439,7 +1431,7 @@
                     };
                 }
                 // if this is just a config create a new Entity
-                var E = M.Entity.extend(entity);
+                var E = Bikini.Entity.extend(entity);
                 entity = new E(options);
             }
         } else if (options && options.typeMapping) {
@@ -1448,18 +1440,18 @@
         return entity;
     };
     
-    M.Entity.extend = M.extend;
-    M.Entity.create = M.create;
-    M.Entity.design = M.design;
+    Bikini.Entity.extend = Bikini.extend;
+    Bikini.Entity.create = Bikini.create;
+    Bikini.Entity.design = Bikini.design;
     
-    _.extend(M.Entity.prototype, M.Object, {
+    _.extend(Bikini.Entity.prototype, Bikini.Object, {
     
         /**
          * The type of this object.
          *
          * @type String
          */
-        _type: 'M.Entity',
+        _type: 'Bikini.Entity',
     
         /**
          * Entity name, used for tables or collections
@@ -1501,7 +1493,7 @@
          * get a specified field from this entity
          *
          * @param fieldKey
-         * @returns M.Field instance
+         * @returns Bikini.Field instance
          */
         getField: function (fieldKey) {
             return this.fields[fieldKey];
@@ -1524,7 +1516,7 @@
          * @returns String
          */
         getKey: function () {
-            return this.idAttribute || M.Model.idAttribute;
+            return this.idAttribute || Bikini.Model.idAttribute;
         },
     
         /**
@@ -1568,7 +1560,7 @@
             if (_.isObject(newFields)) {
                 _.each(newFields, function (value, key) {
                     if (!that.fields[key]) {
-                        that.fields[key] = new M.Field(value);
+                        that.fields[key] = new Bikini.Field(value);
                     } else {
                         that.fields[key].merge(value);
                     }
@@ -1690,11 +1682,11 @@
     
     /**
      *
-     * @module M.Security
+     * @module Bikini.Security
      *
      * @type {{logon: Function, logonBasicAuth: Function, logonMcapAuth: Function, getHost: Function}}
      */
-    M.Security = M.Object.design({
+    Bikini.Security = Bikini.Object.design({
     
     
         logon: function (options, callback) {
@@ -1711,14 +1703,14 @@
         logonBasicAuth: function (options, callback) {
             var credentials = options.credentials;
             options.beforeSend = function (xhr) {
-                M.Security.setBasicAuth(xhr, credentials);
+                Bikini.Security.setBasicAuth(xhr, credentials);
             };
             this.handleCallback(callback);
         },
     
         setBasicAuth: function( xhr, credentials ) {
-            if( credentials && credentials.username && xhr && M.Base64 ) {
-                var basicAuth = M.Base64.encode(encodeURIComponent(credentials.username + ':' + (credentials.password || '')));
+            if( credentials && credentials.username && xhr && Bikini.Base64 ) {
+                var basicAuth = Bikini.Base64.encode(encodeURIComponent(credentials.username + ':' + (credentials.password || '')));
                 xhr.setRequestHeader('Authorization', 'Basic ' + basicAuth);
             }
         }
@@ -1730,24 +1722,24 @@
     
     /**
      *
-     * @module M.Model
+     * @module Bikini.Model
      *
      * @type {*}
      * @extends Backbone.Model
      */
-    M.Model = Backbone.Model.extend({
+    Bikini.Model = Backbone.Model.extend({
         constructor: function( attributes, options ) {
             this.init(attributes, options);
             Backbone.Model.apply(this, arguments);
         }
     });
     
-    M.Model.create = M.create;
-    M.Model.design = M.design;
+    Bikini.Model.create = Bikini.create;
+    Bikini.Model.design = Bikini.design;
     
-    _.extend(M.Model.prototype, M.Object, {
+    _.extend(Bikini.Model.prototype, Bikini.Object, {
     
-        _type: 'M.Model',
+        _type: 'Bikini.Model',
     
         isModel: YES,
     
@@ -1757,7 +1749,7 @@
     
         changedSinceSync: {},
     
-        logon: M.Security.logon,
+        logon: Bikini.Security.logon,
     
         init: function( attributes, options ) {
             options = options || {};
@@ -1770,7 +1762,7 @@
             }
             this.entity = this.entity || (this.collection ? this.collection.entity : null) || options.entity;
             if( this.entity ) {
-                this.entity = M.Entity.from(this.entity, { model: this.constructor, typeMapping: options.typeMapping });
+                this.entity = Bikini.Entity.from(this.entity, { model: this.constructor, typeMapping: options.typeMapping });
                 this.idAttribute = this.entity.idAttribute || this.idAttribute;
             }
             this.credentials = this.credentials || (this.collection ? this.collection.credentials : null) || options.credentials;
@@ -1825,7 +1817,7 @@
         toJSON: function( options ) {
             options = options || {};
             var entity = options.entity || this.entity;
-            if( M.isEntity(entity) ) {
+            if( Bikini.isEntity(entity) ) {
                 return entity.fromAttributes(options.attrs || this.attributes);
             }
             return options.attrs || _.clone(this.attributes);
@@ -1834,7 +1826,7 @@
         parse: function( resp, options ) {
             options = options || {};
             var entity = options.entity || this.entity;
-            if( M.isEntity(entity) ) {
+            if( Bikini.isEntity(entity) ) {
                 return entity.toAttributes(resp);
             }
             return resp;
@@ -1846,20 +1838,20 @@
     // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
     
     /**
-     * The M.Collection can be used like a Backbone Collection,
+     * The Bikini.Collection can be used like a Backbone Collection,
      *
      * but there are some enhancements to fetch, save and delete the
      * contained models from or to other "data stores".
      *
      * see LocalStorageStore, WebSqlStore or BikiniStore for examples
      *
-     * @module M.Collection
+     * @module Bikini.Collection
      *
      * @type {*}
      * @extends Backbone.Collection
      *
      */
-    M.Collection = Backbone.Collection.extend({
+    Bikini.Collection = Backbone.Collection.extend({
     
         constructor: function (options) {
             this.init(options);
@@ -1867,22 +1859,22 @@
         }
     });
     
-    M.Collection.create = M.create;
-    M.Collection.design = M.design;
+    Bikini.Collection.create = Bikini.create;
+    Bikini.Collection.design = Bikini.design;
     
-    _.extend(M.Collection.prototype, M.Object, {
+    _.extend(Bikini.Collection.prototype, Bikini.Object, {
     
-        _type: 'M.Collection',
+        _type: 'Bikini.Collection',
     
         isCollection: YES,
     
-        model: M.Model,
+        model: Bikini.Model,
     
         entity: null,
     
         options: null,
     
-        logon: M.Security.logon,
+        logon: Bikini.Security.logon,
     
         init: function (options) {
             options = options || {};
@@ -1892,7 +1884,7 @@
     
             var entity = this.entity || this.entityFromUrl(this.url);
             if (entity) {
-                this.entity = M.Entity.from(entity, { model: this.model, typeMapping: options.typeMapping });
+                this.entity = Bikini.Entity.from(entity, { model: this.model, typeMapping: options.typeMapping });
             }
             this._updateUrl();
     
@@ -1904,7 +1896,7 @@
         entityFromUrl: function (url) {
             if (url) {
                 // extract last path part as entity name
-                var parts = M.Request.getLocation(this.url).pathname.match(/([^\/]+)\/?$/);
+                var parts = Bikini.Request.getLocation(this.url).pathname.match(/([^\/]+)\/?$/);
                 if (parts && parts.length > 1) {
                     return parts[1];
                 }
@@ -1913,17 +1905,17 @@
     
         sort: function (options) {
             if (_.isObject(options && options.sort)) {
-                this.comparator = M.DataSelector.compileSort(options.sort);
+                this.comparator = Bikini.DataSelector.compileSort(options.sort);
             }
             Backbone.Collection.prototype.sort.apply(this, arguments);
         },
     
         select: function (options) {
-            var selector = options && options.query ? M.DataSelector.create(options.query) : null;
-            var collection = M.Collection.create(null, { model: this.model });
+            var selector = options && options.query ? Bikini.DataSelector.create(options.query) : null;
+            var collection = Bikini.Collection.create(null, { model: this.model });
     
             if (options && options.sort) {
-                collection.comparator = M.DataSelector.compileSort(options.sort);
+                collection.comparator = Bikini.DataSelector.compileSort(options.sort);
             }
     
             this.each(function (model) {
@@ -2033,21 +2025,21 @@
     // Copyright (c) 2013 M-Way Solutions GmbH
     // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
     
-    // M.DataSelector uses code from meteor.js
+    // Bikini.DataSelector uses code from meteor.js
     // https://github.com/meteor/meteor/tree/master/packages/minimongo
     //
     // Thanks for sharing!
     
     /**
      *
-     * @module M.DataSelector
+     * @module Bikini.DataSelector
      *
      * @type {*}
-     * @extends M.Object
+     * @extends Bikini.Object
      */
-    M.DataSelector = M.Object.design({
+    Bikini.DataSelector = Bikini.Object.design({
     
-        _type: 'M.DataSelector',
+        _type: 'Bikini.DataSelector',
     
         _selector: null,
     
@@ -2098,7 +2090,7 @@
             if (this._selectorIsId(selector)) {
                 return function (record) {
                     var id = _.isFunction(record.getId) ? record.getId() : (record._id || record.id);
-                    return M.Field.prototype.equals(id, selector);
+                    return Bikini.Field.prototype.equals(id, selector);
                 };
             }
     
@@ -2112,7 +2104,7 @@
             }
     
             // Top level can't be an array or true or binary.
-            if (_.isBoolean(selector) || _.isArray(selector) || M.Field.prototype.isBinary(selector)) {
+            if (_.isBoolean(selector) || _.isArray(selector) || Bikini.Field.prototype.isBinary(selector)) {
                 throw new Error('Invalid selector: ' + selector);
             }
     
@@ -2121,7 +2113,7 @@
     
         // The main compilation function for a given selector.
         compileDocSelector: function (docSelector) {
-            var that = M.DataSelector;
+            var that = Bikini.DataSelector;
             var perKeySelectors = [];
             _.each(docSelector, function (subSelector, key) {
                 if (key.substr(0, 1) === '$') {
@@ -2153,7 +2145,7 @@
         },
     
         compileValueSelector: function (valueSelector) {
-            var that = M.DataSelector;
+            var that = Bikini.DataSelector;
             if (valueSelector === null) {  // undefined or null
                 return function (value) {
                     return that._anyIfArray(value, function (x) {
@@ -2302,11 +2294,11 @@
     
         // deep equality test: use for literal document and array matches
         _equal: function (a, b) {
-            return M.Field.prototype._equals(a, b, true);
+            return Bikini.Field.prototype._equals(a, b, true);
         },
     
         _cmp: function (a, b) {
-            return M.Field.prototype._cmp(a, b);
+            return Bikini.Field.prototype._cmp(a, b);
         },
     
         LOGICAL_OPERATORS: {
@@ -2314,7 +2306,7 @@
                 if (!_.isArray(subSelector) || _.isEmpty(subSelector)) {
                     throw new Error('$and/$or/$nor must be nonempty array');
                 }
-                var subSelectorFunctions = _.map(subSelector, M.DataSelector.compileDocSelector);
+                var subSelectorFunctions = _.map(subSelector, Bikini.DataSelector.compileDocSelector);
                 return function (doc) {
                     return _.all(subSelectorFunctions, function (f) {
                         return f(doc);
@@ -2326,7 +2318,7 @@
                 if (!_.isArray(subSelector) || _.isEmpty(subSelector)) {
                     throw new Error('$and/$or/$nor must be nonempty array');
                 }
-                var subSelectorFunctions = _.map(subSelector, M.DataSelector.compileDocSelector);
+                var subSelectorFunctions = _.map(subSelector, Bikini.DataSelector.compileDocSelector);
                 return function (doc) {
                     return _.any(subSelectorFunctions, function (f) {
                         return f(doc);
@@ -2338,7 +2330,7 @@
                 if (!_.isArray(subSelector) || _.isEmpty(subSelector)) {
                     throw new Error('$and/$or/$nor must be nonempty array');
                 }
-                var subSelectorFunctions = _.map(subSelector, M.DataSelector.compileDocSelector);
+                var subSelectorFunctions = _.map(subSelector, Bikini.DataSelector.compileDocSelector);
                 return function (doc) {
                     return _.all(subSelectorFunctions, function (f) {
                         return !f(doc);
@@ -2363,9 +2355,9 @@
                     throw new Error('Argument to $in must be array');
                 }
                 return function (value) {
-                    return M.DataSelector._anyIfArrayPlus(value, function (x) {
+                    return Bikini.DataSelector._anyIfArrayPlus(value, function (x) {
                         return _.any(operand, function (operandElt) {
-                            return M.DataSelector._equal(operandElt, x);
+                            return Bikini.DataSelector._equal(operandElt, x);
                         });
                     });
                 };
@@ -2381,7 +2373,7 @@
                     }
                     return _.all(operand, function (operandElt) {
                         return _.any(value, function (valueElt) {
-                            return M.DataSelector._equal(operandElt, valueElt);
+                            return Bikini.DataSelector._equal(operandElt, valueElt);
                         });
                     });
                 };
@@ -2389,40 +2381,40 @@
     
             '$lt': function (operand) {
                 return function (value) {
-                    return M.DataSelector._anyIfArray(value, function (x) {
-                        return M.DataSelector._cmp(x, operand) < 0;
+                    return Bikini.DataSelector._anyIfArray(value, function (x) {
+                        return Bikini.DataSelector._cmp(x, operand) < 0;
                     });
                 };
             },
     
             '$lte': function (operand) {
                 return function (value) {
-                    return M.DataSelector._anyIfArray(value, function (x) {
-                        return M.DataSelector._cmp(x, operand) <= 0;
+                    return Bikini.DataSelector._anyIfArray(value, function (x) {
+                        return Bikini.DataSelector._cmp(x, operand) <= 0;
                     });
                 };
             },
     
             '$gt': function (operand) {
                 return function (value) {
-                    return M.DataSelector._anyIfArray(value, function (x) {
-                        return M.DataSelector._cmp(x, operand) > 0;
+                    return Bikini.DataSelector._anyIfArray(value, function (x) {
+                        return Bikini.DataSelector._cmp(x, operand) > 0;
                     });
                 };
             },
     
             '$gte': function (operand) {
                 return function (value) {
-                    return M.DataSelector._anyIfArray(value, function (x) {
-                        return M.DataSelector._cmp(x, operand) >= 0;
+                    return Bikini.DataSelector._anyIfArray(value, function (x) {
+                        return Bikini.DataSelector._cmp(x, operand) >= 0;
                     });
                 };
             },
     
             '$ne': function (operand) {
                 return function (value) {
-                    return !M.DataSelector._anyIfArrayPlus(value, function (x) {
-                        return M.DataSelector._equal(x, operand);
+                    return !Bikini.DataSelector._anyIfArrayPlus(value, function (x) {
+                        return Bikini.DataSelector._equal(x, operand);
                     });
                 };
             },
@@ -2449,7 +2441,7 @@
             '$mod': function (operand) {
                 var divisor = operand[0], remainder = operand[1];
                 return function (value) {
-                    return M.DataSelector._anyIfArray(value, function (x) {
+                    return Bikini.DataSelector._anyIfArray(value, function (x) {
                         return x % divisor === remainder;
                     });
                 };
@@ -2467,8 +2459,8 @@
                     if (_.isUndefined(value)) {
                         return false;
                     }
-                    return M.DataSelector._anyIfArray(value, function (x) {
-                        return M.Field.prototype.detectType(x) === operand;
+                    return Bikini.DataSelector._anyIfArray(value, function (x) {
+                        return Bikini.Field.prototype.detectType(x) === operand;
                     });
                 };
             },
@@ -2496,7 +2488,7 @@
                     if (_.isUndefined(value)) {
                         return false;
                     }
-                    return M.DataSelector._anyIfArray(value, function (x) {
+                    return Bikini.DataSelector._anyIfArray(value, function (x) {
                         return operand.test(x);
                     });
                 };
@@ -2510,7 +2502,7 @@
             },
     
             '$elemMatch': function (operand) {
-                var matcher = M.DataSelector.compileDocSelector(operand);
+                var matcher = Bikini.DataSelector.compileDocSelector(operand);
                 return function (value) {
                     if (!_.isArray(value)) {
                         return false;
@@ -2522,7 +2514,7 @@
             },
     
             '$not': function (operand) {
-                var matcher = M.DataSelector.compileDocSelector(operand);
+                var matcher = Bikini.DataSelector.compileDocSelector(operand);
                 return function (value) {
                     return !matcher(value);
                 };
@@ -2607,7 +2599,7 @@
                             // Compare the value we found to the value we found so far, saving it
                             // if it's less (for an ascending sort) or more (for a descending
                             // sort).
-                            var cmp = M.DataSelector._cmp(reduced, value);
+                            var cmp = Bikini.DataSelector._cmp(reduced, value);
                             if ((findMin && cmp > 0) || (!findMin && cmp < 0)) {
                                 reduced = value;
                             }
@@ -2624,7 +2616,7 @@
                     var specPart = sortSpecParts[i];
                     var aValue = reduceValue(specPart.lookup(a), specPart.ascending);
                     var bValue = reduceValue(specPart.lookup(b), specPart.ascending);
-                    var compare = M.DataSelector._cmp(aValue, bValue);
+                    var compare = Bikini.DataSelector._cmp(aValue, bValue);
                     if (compare !== 0) {
                         return specPart.ascending ? compare : -compare;
                     }
@@ -2640,14 +2632,14 @@
     
     /**
      *
-     * @module M.SqlSelector
+     * @module Bikini.SqlSelector
      *
      * @type {*}
-     * @extends M.DataSelector
+     * @extends Bikini.DataSelector
      */
-    M.SqlSelector = M.DataSelector.design({
+    Bikini.SqlSelector = Bikini.DataSelector.design({
     
-        _type: 'M.SqlSelector',
+        _type: 'Bikini.SqlSelector',
     
         _selector: null,
         _query: null,
@@ -2692,7 +2684,7 @@
             }
     
             // Top level can't be an array or true or binary.
-            if (_.isBoolean(selector) || _.isArray(selector) || M.DataField.isBinary(selector)) {
+            if (_.isBoolean(selector) || _.isArray(selector) || Bikini.DataField.isBinary(selector)) {
                 throw new Error('Invalid selector: ' + selector);
             }
     
@@ -2935,23 +2927,23 @@
     /**
      * Base class to build a custom data store.
      *
-     * See: M.LocalStorageStore, M.WebSqlStore and M.BikiniStore
+     * See: Bikini.LocalStorageStore, Bikini.WebSqlStore and Bikini.BikiniStore
      *
-     * @module M.Store
+     * @module Bikini.Store
      *
      */
-    M.Store = function() {
+    Bikini.Store = function() {
         this.initialize.apply(this, arguments);
     };
     
-    M.Store.extend = M.extend;
-    M.Store.create = M.create;
-    M.Store.design = M.design;
+    Bikini.Store.extend = Bikini.extend;
+    Bikini.Store.create = Bikini.create;
+    Bikini.Store.design = Bikini.design;
     
     // Attach all inheritable methods to the Connector prototype.
-    _.extend(M.Store.prototype, Backbone.Events, M.Object, {
+    _.extend(Bikini.Store.prototype, Backbone.Events, Bikini.Object, {
     
-        _type: 'M.Store',
+        _type: 'Bikini.Store',
     
         entities: null,
     
@@ -2961,9 +2953,9 @@
     
         typeMapping: (function() {
             var map = {};
-            map [M.DATA.TYPE.OBJECTID] = M.DATA.TYPE.STRING;
-            map [M.DATA.TYPE.DATE] = M.DATA.TYPE.STRING;
-            map [M.DATA.TYPE.BINARY] = M.DATA.TYPE.TEXT;
+            map [Bikini.DATA.TYPE.OBJECTID] = Bikini.DATA.TYPE.STRING;
+            map [Bikini.DATA.TYPE.DATE] = Bikini.DATA.TYPE.STRING;
+            map [Bikini.DATA.TYPE.BINARY] = Bikini.DATA.TYPE.TEXT;
             return map;
         })(),
     
@@ -2981,14 +2973,14 @@
         _setEntities: function( entities ) {
             this.entities = {};
             for( var name in entities ) {
-                var entity = M.Entity.from(entities[name], {
+                var entity = Bikini.Entity.from(entities[name], {
                     store: this,
                     typeMapping: this.options.typeMapping
                 });
                 entity.name = entity.name || name;
     
                 // connect collection and model to this store
-                var collection = entity.collection || M.Collection.extend({ model: M.Model.extend({}) });
+                var collection = entity.collection || Bikini.Collection.extend({ model: Bikini.Model.extend({}) });
                 var model = collection.prototype.model;
                 // set new entity and name
                 collection.prototype.entity = model.prototype.entity = name;
@@ -3013,7 +3005,7 @@
                 entity = this.entities[entity];
             }
             if( entity && entity.collection ) {
-                if( M.Collection.prototype.isPrototypeOf(entity.collection) ) {
+                if( Bikini.Collection.prototype.isPrototypeOf(entity.collection) ) {
                     return entity.collection;
                 } else {
                     return new entity.collection();
@@ -3036,7 +3028,7 @@
         getArray: function( data ) {
             if( _.isArray(data) ) {
                 return data;
-            } else if( M.isCollection(data) ) {
+            } else if( Bikini.isCollection(data) ) {
                 return data.models;
             }
             return _.isObject(data) ? [ data ] : [];
@@ -3133,8 +3125,8 @@
         },
     
         _checkEntity: function( obj, entity ) {
-            if( !M.isEntity(entity) ) {
-                var error = M.Store.CONST.ERROR_NO_ENTITY;
+            if( !Bikini.isEntity(entity) ) {
+                var error = Bikini.Store.CONST.ERROR_NO_ENTITY;
                 console.error(error);
                 this.handleCallback(obj.error, error);
                 this.handleCallback(obj.finish, error);
@@ -3145,7 +3137,7 @@
     
         _checkData: function( obj, data ) {
             if( (!_.isArray(data) || data.length === 0) && !_.isObject(data) ) {
-                var error = M.Store.CONST.ERROR_NO_DATA;
+                var error = Bikini.Store.CONST.ERROR_NO_DATA;
                 console.error(error);
                 this.handleCallback(obj.error, error);
                 this.handleCallback(obj.finish, error);
@@ -3189,28 +3181,28 @@
     // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
     
     /**
-     * The M.LocalStorageStore can be used to store model collection into
+     * The Bikini.LocalStorageStore can be used to store model collection into
      * the localStorage
      *
-     * @module M.LocalStorageStore
+     * @module Bikini.LocalStorageStore
      *
      * @type {*}
-     * @extends M.Store
+     * @extends Bikini.Store
      *
      * @example
      *
      * // The LocalStorageStore will save each model data as a json under his id,
      * // and keeps all id's under an extra key for faster access
      *
-     * var MyCollection = M.Collection.extend({
-     *      store: M.LocalStorageStore.create(),
+     * var MyCollection = Bikini.Collection.extend({
+     *      store: Bikini.LocalStorageStore.create(),
      *      entity: 'myEntityName'
      * });
      *
      */
-    M.LocalStorageStore = M.Store.extend({
+    Bikini.LocalStorageStore = Bikini.Store.extend({
     
-        _type: 'M.LocalStorageStore',
+        _type: 'Bikini.LocalStorageStore',
     
         ids: {},
     
@@ -3220,7 +3212,7 @@
             var entity = that.getEntity(model.entity || options.entity || this.entity);
             var attrs;
             if( that && entity && model ) {
-                var id = model.id || (method === 'create' ? new M.ObjectID().toHexString() : null);
+                var id = model.id || (method === 'create' ? new Bikini.ObjectID().toHexString() : null);
                 attrs = options.attrs || model.toJSON(options);
                 switch( method ) {
                     case 'patch':
@@ -3258,7 +3250,7 @@
             if( attrs ) {
                 that.handleSuccess(options, attrs);
             } else {
-                that.handleError(options, M.Store.CONST.ERROR_NO_ENTITY);
+                that.handleError(options, Bikini.Store.CONST.ERROR_NO_ENTITY);
             }
         },
     
@@ -3272,7 +3264,7 @@
                 localStorage.removeItem('__ids__' + entity.name);
                 this.handleSuccess(options);
             } else {
-                this.handleError(options, M.Store.CONST.ERROR_NO_ENTITY);
+                this.handleError(options, Bikini.Store.CONST.ERROR_NO_ENTITY);
             }
         },
     
@@ -3291,7 +3283,7 @@
                         this._delItemId(id);
                     }
                 } catch( e ) {
-                    console.error(M.Store.CONST.ERROR_LOAD_DATA + e.message);
+                    console.error(Bikini.Store.CONST.ERROR_LOAD_DATA + e.message);
                 }
             }
             return attrs;
@@ -3303,7 +3295,7 @@
                     localStorage.setItem(this._getKey(entity, id), JSON.stringify(attrs));
                     this._addItemId(entity, id);
                 } catch( e ) {
-                    console.error(M.Store.CONST.ERROR_SAVE_DATA + e.message);
+                    console.error(Bikini.Store.CONST.ERROR_SAVE_DATA + e.message);
                 }
             }
         },
@@ -3354,7 +3346,7 @@
                 }
                 return this.ids[entity.name];
             } catch( e ) {
-                console.error(M.Store.CONST.ERROR_LOAD_IDS + e.message);
+                console.error(Bikini.Store.CONST.ERROR_LOAD_IDS + e.message);
             }
         },
     
@@ -3363,7 +3355,7 @@
                 var key = '__ids__' + entity.name;
                 localStorage.setItem(key, JSON.stringify(ids));
             } catch( e ) {
-                console.error(M.Store.CONST.ERROR_SAVE_IDS + e.message);
+                console.error(Bikini.Store.CONST.ERROR_SAVE_IDS + e.message);
             }
         }
     });
@@ -3371,43 +3363,43 @@
     // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
     
     /**
-     * The M.WebSqlStore can be used to store model collection into
+     * The Bikini.WebSqlStore can be used to store model collection into
      * the webSql database
      *
-     * @module M.WebSqlStore
+     * @module Bikini.WebSqlStore
      *
      * @type {*}
-     * @extends M.Store
+     * @extends Bikini.Store
      *
      * @example
      *
      * // The default configuration will save the complete model data as json
      * // into a database column with the name "data"
      *
-     * var MyCollection = M.Collection.extend({
+     * var MyCollection = Bikini.Collection.extend({
      *      model: MyModel,
      *      entity: 'MyTableName',
-     *      store: new M.WebSqlStorageStore()
+     *      store: new Bikini.WebSqlStorageStore()
      * });
      *
      * // If you want to use specific columns you can specify the fields
      * // in the entity of your model like this:
      *
-     * var MyModel = M.Model.extend({
+     * var MyModel = Bikini.Model.extend({
      *      idAttribute: 'id',
      *      fields: {
-     *          id:          { type: M.DATA.TYPE.STRING,  required: YES, index: YES },
-     *          sureName:    { name: 'USERNAME', type: M.DATA.TYPE.STRING },
-     *          firstName:   { type: M.DATA.TYPE.STRING,  length: 200 },
-     *          age:         { type: M.DATA.TYPE.INTEGER }
+     *          id:          { type: Bikini.DATA.TYPE.STRING,  required: YES, index: YES },
+     *          sureName:    { name: 'USERNAME', type: Bikini.DATA.TYPE.STRING },
+     *          firstName:   { type: Bikini.DATA.TYPE.STRING,  length: 200 },
+     *          age:         { type: Bikini.DATA.TYPE.INTEGER }
      *      }
      * });
      *
      *
      */
-    M.WebSqlStore = M.Store.extend({
+    Bikini.WebSqlStore = Bikini.Store.extend({
     
-        _type: 'M.WebSqlStore',
+        _type: 'Bikini.WebSqlStore',
     
         _selector: null,
     
@@ -3427,29 +3419,29 @@
     
         typeMapping: (function() {
             var map = {};
-            map [M.DATA.TYPE.OBJECTID] = M.DATA.TYPE.STRING;
-            map [M.DATA.TYPE.DATE] = M.DATA.TYPE.STRING;
-            map [M.DATA.TYPE.OBJECT] = M.DATA.TYPE.TEXT;
-            map [M.DATA.TYPE.ARRAY] = M.DATA.TYPE.TEXT;
-            map [M.DATA.TYPE.BINARY] = M.DATA.TYPE.TEXT;
+            map [Bikini.DATA.TYPE.OBJECTID] = Bikini.DATA.TYPE.STRING;
+            map [Bikini.DATA.TYPE.DATE] = Bikini.DATA.TYPE.STRING;
+            map [Bikini.DATA.TYPE.OBJECT] = Bikini.DATA.TYPE.TEXT;
+            map [Bikini.DATA.TYPE.ARRAY] = Bikini.DATA.TYPE.TEXT;
+            map [Bikini.DATA.TYPE.BINARY] = Bikini.DATA.TYPE.TEXT;
             return map;
         })(),
     
         sqlTypeMapping: (function() {
             var map = {};
-            map [M.DATA.TYPE.STRING] = 'varchar(255)';
-            map [M.DATA.TYPE.TEXT] = 'text';
-            map [M.DATA.TYPE.OBJECT] = 'text';
-            map [M.DATA.TYPE.ARRAY] = 'text';
-            map [M.DATA.TYPE.FLOAT] = 'float';
-            map [M.DATA.TYPE.INTEGER] = 'integer';
-            map [M.DATA.TYPE.DATE] = 'varchar(255)';
-            map [M.DATA.TYPE.BOOLEAN] = 'boolean';
+            map [Bikini.DATA.TYPE.STRING] = 'varchar(255)';
+            map [Bikini.DATA.TYPE.TEXT] = 'text';
+            map [Bikini.DATA.TYPE.OBJECT] = 'text';
+            map [Bikini.DATA.TYPE.ARRAY] = 'text';
+            map [Bikini.DATA.TYPE.FLOAT] = 'float';
+            map [Bikini.DATA.TYPE.INTEGER] = 'integer';
+            map [Bikini.DATA.TYPE.DATE] = 'varchar(255)';
+            map [Bikini.DATA.TYPE.BOOLEAN] = 'boolean';
             return map;
         })(),
     
         initialize: function( options ) {
-            M.Store.prototype.initialize.apply(this, arguments);
+            Bikini.Store.prototype.initialize.apply(this, arguments);
             this.options = this.options || {};
             this.options.name = this.name;
             this.options.size = this.size;
@@ -3467,7 +3459,7 @@
     
         sync: function( method, model, options ) {
             var that = options.store || this.store;
-            var models = M.isCollection(model) ? model.models : [ model ];
+            var models = Bikini.isCollection(model) ? model.models : [ model ];
             options.entity = options.entity || this.entity;
             switch( method ) {
                 case 'create':
@@ -3603,7 +3595,7 @@
         _isAutoincrementKey: function( entity, key ) {
             if( entity && key ) {
                 var column = this.getField(entity, key);
-                return column && column.type === M.DATA.TYPE.INTEGER;
+                return column && column.type === Bikini.DATA.TYPE.INTEGER;
             }
         },
     
@@ -3670,7 +3662,7 @@
             if( _.isString(options.where) ) {
                 sql = options.where;
             } else if( _.isObject(options.where) ) {
-                this._selector = M.SqlSelector.create(options.where, entity);
+                this._selector = Bikini.SqlSelector.create(options.where, entity);
                 sql = this._selector.buildStatement();
             }
             return sql;
@@ -3737,15 +3729,15 @@
         },
     
         _sqlValue: function( value, field ) {
-            var type = field && field.type ? field.type : M.Field.prototype.detectType(value);
-            if( type === M.DATA.TYPE.INTEGER || type === M.DATA.TYPE.FLOAT ) {
+            var type = field && field.type ? field.type : Bikini.Field.prototype.detectType(value);
+            if( type === Bikini.DATA.TYPE.INTEGER || type === Bikini.DATA.TYPE.FLOAT ) {
                 return value;
-            } else if( type === M.DATA.TYPE.BOOLEAN ) {
+            } else if( type === Bikini.DATA.TYPE.BOOLEAN ) {
                 return value ? '1' : '0';
-            } else if( type === M.DATA.TYPE.NULL ) {
+            } else if( type === Bikini.DATA.TYPE.NULL ) {
                 return 'NULL';
             }
-            value = M.Field.prototype.transform(value, M.DATA.TYPE.STRING);
+            value = Bikini.Field.prototype.transform(value, Bikini.DATA.TYPE.STRING);
             value = value.replace(/"/g, '""');
             return '"' + value + '"';
         },
@@ -3815,7 +3807,7 @@
                     var model = models[i];
                     var statement = ''; // the actual sql insert string with values
                     if( !isAutoInc && !model.id && model.idAttribute ) {
-                        model.set(model.idAttribute, new M.ObjectID().toHexString());
+                        model.set(model.idAttribute, new Bikini.ObjectID().toHexString());
                     }
                     var value = options.attrs || model.toJSON();
                     var args, keys;
@@ -3843,7 +3835,7 @@
     
             if( this._checkDb(options) && this._checkEntity(options, entity) ) {
                 var lastStatement;
-                var isCollection = M.isCollection(result);
+                var isCollection = Bikini.isCollection(result);
                 if( isCollection ) {
                     result = [];
                 } else {
@@ -3975,20 +3967,21 @@
         getField: function( entity, key ) {
             return this.getFields(entity)[key];
         }
+    
     });
     // Copyright (c) 2013 M-Way Solutions GmbH
     // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
     
     /**
-     * The M.BikiniStore is used to connect a model collection to an
+     * The Bikini.BikiniStore is used to connect a model collection to an
      * bikini server.
      *
      * This will give you an online and offline store with live data updates.
      *
-     * @module M.BikiniStore
+     * @module Bikini.BikiniStore
      *
      * @type {*}
-     * @extends M.Store
+     * @extends Bikini.Store
      *
      * @example
      *
@@ -3996,10 +3989,10 @@
      * // and the offline change log to a local WebSql database, synchronize it
      * // trough REST calls with the server and receive live updates via a socket.io connection.
      *
-     * var MyCollection = M.Collection.extend({
+     * var MyCollection = Bikini.Collection.extend({
      *      model: MyModel,
      *      url: 'http://myBikiniServer.com:8200/bikini/myCollection',
-     *      store: new M.BikiniStore( {
+     *      store: new Bikini.BikiniStore( {
      *          useLocalStore:   YES, // (default) store the data for offline use
      *          useSocketNotify: YES, // (default) register at the server for live updates
      *          useOfflineChanges: YES // (default) allow changes to the offline data
@@ -4007,9 +4000,9 @@
      * });
      *
      */
-    M.BikiniStore = M.Store.extend({
+    Bikini.BikiniStore = Bikini.Store.extend({
     
-        _type: 'M.BikiniStore',
+        _type: 'Bikini.BikiniStore',
     
         _selector: null,
     
@@ -4017,7 +4010,7 @@
     
         options: null,
     
-        localStore: M.WebSqlStore,
+        localStore: Bikini.WebSqlStore,
     
         useLocalStore: YES,
     
@@ -4033,7 +4026,7 @@
         },
     
         initialize: function( options ) {
-            M.Store.prototype.initialize.apply(this, arguments);
+            Bikini.Store.prototype.initialize.apply(this, arguments);
             this.options = this.options || {};
             this.options.useLocalStore = this.useLocalStore;
             this.options.useSocketNotify = this.useSocketNotify;
@@ -4108,7 +4101,7 @@
     
         createMsgCollection: function( endpoint ) {
             if( this.options.useOfflineChanges && endpoint ) {
-                var messages = M.Collection.design({
+                var messages = Bikini.Collection.design({
                     url: endpoint.url,
                     entity: 'msg-' + endpoint.channel,
                     store: this.options.localStore.create()
@@ -4266,8 +4259,8 @@
             if( that && endpoint ) {
                 var channel = this.channel;
     
-                if( M.isModel(model) && !model.id ) {
-                    model.set(model.idAttribute, new M.ObjectID().toHexString());
+                if( Bikini.isModel(model) && !model.id ) {
+                    model.set(model.idAttribute, new Bikini.ObjectID().toHexString());
                 }
     
                 var time = that.getLastMessageTime(channel);
@@ -4333,7 +4326,7 @@
         emitMessage: function( endpoint, msg, options, model ) {
             var channel = endpoint.channel;
             var that = this;
-            var url = M.isModel(model) || msg.method !== 'read' ? endpoint.baseUrl : endpoint.readUrl;
+            var url = Bikini.isModel(model) || msg.method !== 'read' ? endpoint.baseUrl : endpoint.readUrl;
             if( msg.id && msg.method !== 'create' ) {
                 url += '/' + msg.id;
             }
@@ -4388,7 +4381,7 @@
             var channel = endpoint ? endpoint.channel : '';
             var time = that.getLastMessageTime(channel);
             if( endpoint && endpoint.baseUrl && channel && time ) {
-                var changes = new M.Collection({});
+                var changes = new Bikini.Collection({});
                 changes.fetch({
                     url: endpoint.baseUrl + '/changes/' + time,
                     success: function() {
@@ -4409,7 +4402,7 @@
         fetchServerInfo: function( endpoint ) {
             var that = this;
             if( endpoint && endpoint.baseUrl ) {
-                var info = new M.Model();
+                var info = new Bikini.Model();
                 var time = that.getLastMessageTime(endpoint.channel);
                 info.fetch({
                     url: endpoint.baseUrl + '/info',
@@ -4489,9 +4482,6 @@
             if( collection ) {
                 var endpoint = this.getEndpoint(collection.getUrlRoot());
                 if( endpoint ) {
-                    if( endpoint.localStore ) {
-                        endpoint.localStore.destroy();
-                    }
                     if( endpoint.messages ) {
                         endpoint.messages.destroy();
                     }

@@ -2,15 +2,15 @@
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
 
 /**
- * The M.BikiniStore is used to connect a model collection to an
+ * The Bikini.BikiniStore is used to connect a model collection to an
  * bikini server.
  *
  * This will give you an online and offline store with live data updates.
  *
- * @module M.BikiniStore
+ * @module Bikini.BikiniStore
  *
  * @type {*}
- * @extends M.Store
+ * @extends Bikini.Store
  *
  * @example
  *
@@ -18,10 +18,10 @@
  * // and the offline change log to a local WebSql database, synchronize it
  * // trough REST calls with the server and receive live updates via a socket.io connection.
  *
- * var MyCollection = M.Collection.extend({
+ * var MyCollection = Bikini.Collection.extend({
  *      model: MyModel,
  *      url: 'http://myBikiniServer.com:8200/bikini/myCollection',
- *      store: new M.BikiniStore( {
+ *      store: new Bikini.BikiniStore( {
  *          useLocalStore:   YES, // (default) store the data for offline use
  *          useSocketNotify: YES, // (default) register at the server for live updates
  *          useOfflineChanges: YES // (default) allow changes to the offline data
@@ -29,9 +29,9 @@
  * });
  *
  */
-M.BikiniStore = M.Store.extend({
+Bikini.BikiniStore = Bikini.Store.extend({
 
-    _type: 'M.BikiniStore',
+    _type: 'Bikini.BikiniStore',
 
     _selector: null,
 
@@ -39,7 +39,7 @@ M.BikiniStore = M.Store.extend({
 
     options: null,
 
-    localStore: M.WebSqlStore,
+    localStore: Bikini.WebSqlStore,
 
     useLocalStore: YES,
 
@@ -55,7 +55,7 @@ M.BikiniStore = M.Store.extend({
     },
 
     initialize: function( options ) {
-        M.Store.prototype.initialize.apply(this, arguments);
+        Bikini.Store.prototype.initialize.apply(this, arguments);
         this.options = this.options || {};
         this.options.useLocalStore = this.useLocalStore;
         this.options.useSocketNotify = this.useSocketNotify;
@@ -130,7 +130,7 @@ M.BikiniStore = M.Store.extend({
 
     createMsgCollection: function( endpoint ) {
         if( this.options.useOfflineChanges && endpoint ) {
-            var messages = M.Collection.design({
+            var messages = Bikini.Collection.design({
                 url: endpoint.url,
                 entity: 'msg-' + endpoint.channel,
                 store: this.options.localStore.create()
@@ -288,8 +288,8 @@ M.BikiniStore = M.Store.extend({
         if( that && endpoint ) {
             var channel = this.channel;
 
-            if( M.isModel(model) && !model.id ) {
-                model.set(model.idAttribute, new M.ObjectID().toHexString());
+            if( Bikini.isModel(model) && !model.id ) {
+                model.set(model.idAttribute, new Bikini.ObjectID().toHexString());
             }
 
             var time = that.getLastMessageTime(channel);
@@ -355,7 +355,7 @@ M.BikiniStore = M.Store.extend({
     emitMessage: function( endpoint, msg, options, model ) {
         var channel = endpoint.channel;
         var that = this;
-        var url = M.isModel(model) || msg.method !== 'read' ? endpoint.baseUrl : endpoint.readUrl;
+        var url = Bikini.isModel(model) || msg.method !== 'read' ? endpoint.baseUrl : endpoint.readUrl;
         if( msg.id && msg.method !== 'create' ) {
             url += '/' + msg.id;
         }
@@ -410,7 +410,7 @@ M.BikiniStore = M.Store.extend({
         var channel = endpoint ? endpoint.channel : '';
         var time = that.getLastMessageTime(channel);
         if( endpoint && endpoint.baseUrl && channel && time ) {
-            var changes = new M.Collection({});
+            var changes = new Bikini.Collection({});
             changes.fetch({
                 url: endpoint.baseUrl + '/changes/' + time,
                 success: function() {
@@ -431,7 +431,7 @@ M.BikiniStore = M.Store.extend({
     fetchServerInfo: function( endpoint ) {
         var that = this;
         if( endpoint && endpoint.baseUrl ) {
-            var info = new M.Model();
+            var info = new Bikini.Model();
             var time = that.getLastMessageTime(endpoint.channel);
             info.fetch({
                 url: endpoint.baseUrl + '/info',
@@ -511,9 +511,6 @@ M.BikiniStore = M.Store.extend({
         if( collection ) {
             var endpoint = this.getEndpoint(collection.getUrlRoot());
             if( endpoint ) {
-                if( endpoint.localStore ) {
-                    endpoint.localStore.destroy();
-                }
                 if( endpoint.messages ) {
                     endpoint.messages.destroy();
                 }

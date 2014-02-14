@@ -1,45 +1,45 @@
-describe('M.Field', function() {
+describe('Bikini.Field', function() {
 
     var TEST = {
         fields:  {
-            _id:         { type: M.DATA.TYPE.STRING,  required: YES, index: YES },
-            sureName:    { name: 'USERNAME', type: M.DATA.TYPE.STRING,  required: YES, index: YES },
-            firstName:   { type: M.DATA.TYPE.STRING,  length: 200 },
-            age:         M.DATA.TYPE.INTEGER,
-            birthday:    M.DATA.TYPE.DATE
+            _id:         { type: Bikini.DATA.TYPE.STRING,  required: YES, index: YES },
+            sureName:    { name: 'USERNAME', type: Bikini.DATA.TYPE.STRING,  required: YES, index: YES },
+            firstName:   { type: Bikini.DATA.TYPE.STRING,  length: 200 },
+            age:         Bikini.DATA.TYPE.INTEGER,
+            birthday:    Bikini.DATA.TYPE.DATE
         }
     }
 
     it('creating a field', function() {
-        var id          = M.Field.create( TEST.fields._id );
+        var id          = Bikini.Field.create( TEST.fields._id );
         assert.isObject(id, 'id field successfully created.');
         assert.equal(id.type,  TEST.fields._id.type, 'id field has correct type.');
         assert.ok(id.required,  'id field is required.');
         assert.ok(id.index, 'id field is index.');
         TEST.id = id;
 
-        var sureName    = M.Field.create( TEST.fields.sureName );
+        var sureName    = Bikini.Field.create( TEST.fields.sureName );
         assert.isObject(sureName, 'sureName field successfully created.');
         assert.equal(sureName.type,  TEST.fields.sureName.type, 'sureName field has correct type.');
         assert.ok(sureName.required,  'sureName field is required.');
         assert.ok(sureName.index, 'sureName field is index.');
         TEST.sureName = sureName;
 
-        var firstName   = M.Field.create( TEST.fields.firstName );
+        var firstName   = Bikini.Field.create( TEST.fields.firstName );
         assert.isObject(firstName, 'firstName field successfully created.');
         assert.equal(firstName.type,  TEST.fields.firstName.type, 'firstName field has correct type.');
         assert.ok(!firstName.required,  'firstName field is not required.');
         assert.ok(!firstName.index, 'firstName field is not index.');
         TEST.firstName = firstName;
 
-        var age         = M.Field.create( TEST.fields.age );
+        var age         = Bikini.Field.create( TEST.fields.age );
         assert.isObject(age, 'age field successfully created.');
         assert.equal(age.type,  TEST.fields.age, 'age field has correct type.');
         assert.ok(!age.required,  'age field is not required.');
         assert.ok(!age.index, 'age field is not index.');
         TEST.age = age;
 
-        var birthday    = M.Field.create( TEST.fields.birthday);
+        var birthday    = Bikini.Field.create( TEST.fields.birthday);
         assert.isObject(birthday, 'birthday field successfully created.');
         assert.equal(birthday.type,  TEST.fields.birthday, 'birthday field has correct type.');
         assert.ok(!birthday.required,  'birthday field is not required.');

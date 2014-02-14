@@ -29,7 +29,8 @@
     "time-grunt": "~0.2.3",
     "grunt-jsdoc": "~0.4.2",
     "grunt-curl": "~1.2.1",
-    "grunt-contrib-clean": "~0.5.0"
+    "grunt-contrib-clean": "~0.5.0",
+    "grunt-express-server": "~0.4.11"
   },
   "engines": {
     "node": ">=0.8.0",

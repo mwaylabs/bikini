@@ -4,23 +4,23 @@
 /**
  * Base class to build a custom data store.
  *
- * See: M.LocalStorageStore, M.WebSqlStore and M.BikiniStore
+ * See: Bikini.LocalStorageStore, Bikini.WebSqlStore and Bikini.BikiniStore
  *
- * @module M.Store
+ * @module Bikini.Store
  *
  */
-M.Store = function() {
+Bikini.Store = function() {
     this.initialize.apply(this, arguments);
 };
 
-M.Store.extend = M.extend;
-M.Store.create = M.create;
-M.Store.design = M.design;
+Bikini.Store.extend = Bikini.extend;
+Bikini.Store.create = Bikini.create;
+Bikini.Store.design = Bikini.design;
 
 // Attach all inheritable methods to the Connector prototype.
-_.extend(M.Store.prototype, Backbone.Events, M.Object, {
+_.extend(Bikini.Store.prototype, Backbone.Events, Bikini.Object, {
 
-    _type: 'M.Store',
+    _type: 'Bikini.Store',
 
     entities: null,
 
@@ -30,9 +30,9 @@ _.extend(M.Store.prototype, Backbone.Events, M.Object, {
 
     typeMapping: (function() {
         var map = {};
-        map [M.DATA.TYPE.OBJECTID] = M.DATA.TYPE.STRING;
-        map [M.DATA.TYPE.DATE] = M.DATA.TYPE.STRING;
-        map [M.DATA.TYPE.BINARY] = M.DATA.TYPE.TEXT;
+        map [Bikini.DATA.TYPE.OBJECTID] = Bikini.DATA.TYPE.STRING;
+        map [Bikini.DATA.TYPE.DATE] = Bikini.DATA.TYPE.STRING;
+        map [Bikini.DATA.TYPE.BINARY] = Bikini.DATA.TYPE.TEXT;
         return map;
     })(),
 
@@ -50,14 +50,14 @@ _.extend(M.Store.prototype, Backbone.Events, M.Object, {
     _setEntities: function( entities ) {
         this.entities = {};
         for( var name in entities ) {
-            var entity = M.Entity.from(entities[name], {
+            var entity = Bikini.Entity.from(entities[name], {
                 store: this,
                 typeMapping: this.options.typeMapping
             });
             entity.name = entity.name || name;
 
             // connect collection and model to this store
-            var collection = entity.collection || M.Collection.extend({ model: M.Model.extend({}) });
+            var collection = entity.collection || Bikini.Collection.extend({ model: Bikini.Model.extend({}) });
             var model = collection.prototype.model;
             // set new entity and name
             collection.prototype.entity = model.prototype.entity = name;
@@ -82,7 +82,7 @@ _.extend(M.Store.prototype, Backbone.Events, M.Object, {
             entity = this.entities[entity];
         }
         if( entity && entity.collection ) {
-            if( M.Collection.prototype.isPrototypeOf(entity.collection) ) {
+            if( Bikini.Collection.prototype.isPrototypeOf(entity.collection) ) {
                 return entity.collection;
             } else {
                 return new entity.collection();
@@ -105,7 +105,7 @@ _.extend(M.Store.prototype, Backbone.Events, M.Object, {
     getArray: function( data ) {
         if( _.isArray(data) ) {
             return data;
-        } else if( M.isCollection(data) ) {
+        } else if( Bikini.isCollection(data) ) {
             return data.models;
         }
         return _.isObject(data) ? [ data ] : [];
@@ -202,8 +202,8 @@ _.extend(M.Store.prototype, Backbone.Events, M.Object, {
     },
 
     _checkEntity: function( obj, entity ) {
-        if( !M.isEntity(entity) ) {
-            var error = M.Store.CONST.ERROR_NO_ENTITY;
+        if( !Bikini.isEntity(entity) ) {
+            var error = Bikini.Store.CONST.ERROR_NO_ENTITY;
             console.error(error);
             this.handleCallback(obj.error, error);
             this.handleCallback(obj.finish, error);
@@ -214,7 +214,7 @@ _.extend(M.Store.prototype, Backbone.Events, M.Object, {
 
     _checkData: function( obj, data ) {
         if( (!_.isArray(data) || data.length === 0) && !_.isObject(data) ) {
-            var error = M.Store.CONST.ERROR_NO_DATA;
+            var error = Bikini.Store.CONST.ERROR_NO_DATA;
             console.error(error);
             this.handleCallback(obj.error, error);
             this.handleCallback(obj.finish, error);

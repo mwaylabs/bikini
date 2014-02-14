@@ -3,19 +3,19 @@
 
 /**
  *
- * @module M.Entity
+ * @module Bikini.Entity
  *
  */
 
 /**
  * Holds description about fields and other entity properties.
  * Also helper functions for field and transform operations
- * @module M.Entity
+ * @module Bikini.Entity
  *
  * @param options
  * @constructor
  */
-M.Entity = function (options) {
+Bikini.Entity = function (options) {
     var fields = this.fields;
     this.fields = {};
     this._mergeFields(fields);
@@ -38,12 +38,12 @@ M.Entity = function (options) {
  * @param options
  * @returns {*}
  */
-M.Entity.from = function (entity, options) {
-    // is not an instance of M.Entity
-    if (!M.Entity.prototype.isPrototypeOf(entity)) {
+Bikini.Entity.from = function (entity, options) {
+    // is not an instance of Bikini.Entity
+    if (!Bikini.Entity.prototype.isPrototypeOf(entity)) {
         // if this is a prototype of an entity, create an instance
         if (_.isFunction(entity) &&
-            M.Entity.prototype.isPrototypeOf(entity.prototype)) {
+            Bikini.Entity.prototype.isPrototypeOf(entity.prototype)) {
             var Entity = entity;
             entity = new Entity(options);
         } else {
@@ -53,7 +53,7 @@ M.Entity.from = function (entity, options) {
                 };
             }
             // if this is just a config create a new Entity
-            var E = M.Entity.extend(entity);
+            var E = Bikini.Entity.extend(entity);
             entity = new E(options);
         }
     } else if (options && options.typeMapping) {
@@ -62,18 +62,18 @@ M.Entity.from = function (entity, options) {
     return entity;
 };
 
-M.Entity.extend = M.extend;
-M.Entity.create = M.create;
-M.Entity.design = M.design;
+Bikini.Entity.extend = Bikini.extend;
+Bikini.Entity.create = Bikini.create;
+Bikini.Entity.design = Bikini.design;
 
-_.extend(M.Entity.prototype, M.Object, {
+_.extend(Bikini.Entity.prototype, Bikini.Object, {
 
     /**
      * The type of this object.
      *
      * @type String
      */
-    _type: 'M.Entity',
+    _type: 'Bikini.Entity',
 
     /**
      * Entity name, used for tables or collections
@@ -115,7 +115,7 @@ _.extend(M.Entity.prototype, M.Object, {
      * get a specified field from this entity
      *
      * @param fieldKey
-     * @returns M.Field instance
+     * @returns Bikini.Field instance
      */
     getField: function (fieldKey) {
         return this.fields[fieldKey];
@@ -138,7 +138,7 @@ _.extend(M.Entity.prototype, M.Object, {
      * @returns String
      */
     getKey: function () {
-        return this.idAttribute || M.Model.idAttribute;
+        return this.idAttribute || Bikini.Model.idAttribute;
     },
 
     /**
@@ -182,7 +182,7 @@ _.extend(M.Entity.prototype, M.Object, {
         if (_.isObject(newFields)) {
             _.each(newFields, function (value, key) {
                 if (!that.fields[key]) {
-                    that.fields[key] = new M.Field(value);
+                    that.fields[key] = new Bikini.Field(value);
                 } else {
                     that.fields[key].merge(value);
                 }

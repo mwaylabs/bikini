@@ -3,20 +3,20 @@
 
 /**
  * This prototype defines decoding and encoding mechanisms based on the Base64 algorithm. You
- * normally don't call this object respectively its methods directly, but let M.Cypher handle
+ * normally don't call this object respectively its methods directly, but let Bikini.Cypher handle
  * this.
- * @module M.Base64
+ * @module Bikini.Base64
  *
- * @extends M.Object
+ * @extends Bikini.Object
  */
-M.Base64 = M.Object.design(/** @scope M.Base64.prototype */ {
+Bikini.Base64 = Bikini.Object.design(/** @scope Bikini.Base64.prototype */ {
 
         /**
          * The type of this object.
          *
          * @type String
          */
-        type: 'M.Base64',
+        type: 'Bikini.Base64',
 
         /**
          * The key string for the base 64 decoding and encoding.
@@ -95,7 +95,7 @@ M.Base64 = M.Object.design(/** @scope M.Base64.prototype */ {
             var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
             var i = 0;
 
-            input = M.Cypher.utf8Encode(input);
+            input = Bikini.Cypher.utf8Encode(input);
 
             while( i < input.length ) {
                 chr1 = input.charCodeAt(i++);
@@ -181,7 +181,7 @@ M.Base64 = M.Object.design(/** @scope M.Base64.prototype */ {
                 }
             }
 
-            return M.Cypher.utf8Decode(output);
+            return Bikini.Cypher.utf8Decode(output);
         }
 
     });

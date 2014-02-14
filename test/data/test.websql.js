@@ -1,4 +1,4 @@
-describe('M.WebSqlStore', function() {
+describe('Bikini.WebSqlStore', function() {
 
     var TEST = {
         data : {
@@ -12,9 +12,9 @@ describe('M.WebSqlStore', function() {
 
         assert.typeOf(window.openDatabase, 'function', 'Browser supports WebSql');
 
-        assert.typeOf(M.WebSqlStore, 'function', 'M.LocalStorageStore is defined');
+        assert.typeOf(Bikini.WebSqlStore, 'function', 'Bikini.LocalStorageStore is defined');
 
-        TEST.store = M.WebSqlStore.design();
+        TEST.store = Bikini.WebSqlStore.design();
 
         assert.typeOf(TEST.store, 'object', 'store successfully created.');
 
@@ -39,15 +39,15 @@ describe('M.WebSqlStore', function() {
 
     it('simple websql store', function( done ) {
 
-        TEST.SimpleModel = M.Model.extend({
+        TEST.SimpleModel = Bikini.Model.extend({
             idAttribute: '_id'
         });
 
         assert.typeOf(TEST.SimpleModel, 'function', 'SimpleModel model successfully extended.');
 
-        TEST.SimpleModelCollection = M.Collection.extend({
+        TEST.SimpleModelCollection = Bikini.Collection.extend({
             model: TEST.SimpleModel,
-            store: new M.WebSqlStore(),
+            store: new Bikini.WebSqlStore(),
             entity: 'test'
         });
 
@@ -81,24 +81,24 @@ describe('M.WebSqlStore', function() {
 
     it('creating collection', function() {
 
-        assert.typeOf(M.Collection, 'function', 'M.Collection is defined');
+        assert.typeOf(Bikini.Collection, 'function', 'Bikini.Collection is defined');
 
-        TEST.TestModel = M.Model.extend({
+        TEST.TestModel = Bikini.Model.extend({
             idAttribute: '_id',
             entity: {
                 name: 'test',
                 fields:  {
-                    _id:         { type: M.DATA.TYPE.STRING,  required: YES, index: YES },
-                    sureName:    { name: 'USERNAME', type: M.DATA.TYPE.STRING,  required: YES, index: YES },
-                    firstName:   { type: M.DATA.TYPE.STRING,  length: 200 },
-                    age:         { type: M.DATA.TYPE.INTEGER }
+                    _id:         { type: Bikini.DATA.TYPE.STRING,  required: YES, index: YES },
+                    sureName:    { name: 'USERNAME', type: Bikini.DATA.TYPE.STRING,  required: YES, index: YES },
+                    firstName:   { type: Bikini.DATA.TYPE.STRING,  length: 200 },
+                    age:         { type: Bikini.DATA.TYPE.INTEGER }
                 }
             }
         });
 
         assert.typeOf(TEST.TestModel, 'function', 'TestModel model successfully extended.');
 
-        TEST.TestModelCollection = M.Collection.extend({
+        TEST.TestModelCollection = Bikini.Collection.extend({
             model: TEST.TestModel,
             store: TEST.store
         });
@@ -168,7 +168,7 @@ describe('M.WebSqlStore', function() {
 
     it('fetching data with new model', function(done) {
 
-        TEST.TestModel2 = M.Model.extend({
+        TEST.TestModel2 = Bikini.Model.extend({
             idAttribute: '_id',
             store: TEST.store,
             entity: {
@@ -246,12 +246,12 @@ describe('M.WebSqlStore', function() {
 
     it('create record (no schema)', function(done) {
 
-        TEST.Tests2 = M.Collection.design({
+        TEST.Tests2 = Bikini.Collection.design({
              model: TEST.TestModel2,
              store: TEST.store
         });
 
-        assert.isObject(TEST.Tests2, "M.Collection.design created a new collection");
+        assert.isObject(TEST.Tests2, "Bikini.Collection.design created a new collection");
 
         TEST.data = {
             firstName: 'Max',

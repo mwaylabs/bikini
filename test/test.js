@@ -8,6 +8,8 @@ if ('undefined' != typeof require) {
     expect = chai.expect;
 }
 
+serverUrl = "http://localhost:8100";
+
 describe('Mocha', function() {
 
     it('assert samples', function() {

@@ -2,43 +2,43 @@
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
 
 /**
- * M.Cypher defines a prototype for handling decoding, encoding and hashing of string
+ * Bikini.Cypher defines a prototype for handling decoding, encoding and hashing of string
  * based values.
- * @module M.Cypher
+ * @module Bikini.Cypher
  *
- * @extends M.Object
+ * @extends Bikini.Object
  */
-M.Cypher = M.Object.design(/** @scope M.Cypher.prototype */ {
+Bikini.Cypher = Bikini.Object.design(/** @scope Bikini.Cypher.prototype */ {
 
         /**
          * The type of this object.
          *
          * @type String
          */
-        type: 'M.Cypher',
+        type: 'Bikini.Cypher',
 
         /**
          * The default decoder.
          *
-         * @type M.Base64
+         * @type Bikini.Base64
          */
-        defaultDecoder: M.Base64,
+        defaultDecoder: Bikini.Base64,
 
         /**
          * The default encoder.
          *
-         * @type M.Base64
+         * @type Bikini.Base64
          */
 
-        defaultEncoder: M.Base64,
+        defaultEncoder: Bikini.Base64,
 
         /**
          * The default hash algorithm.
          *
-         * @type M.SHA256
+         * @type Bikini.SHA256
          */
 
-        defaultHasher: M.SHA256,
+        defaultHasher: Bikini.SHA256,
 
         /**
          * This method is the one that initiates the decoding of a given string, based on either

@@ -2,18 +2,91 @@
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
 
 /**
- *
- * @module M.Object
+ * Defines the general namespace
  *
  * @type {Object}
- **/
-M.Object = {
+ */
+var Bikini = null;
+if( typeof exports !== 'undefined' ) {
+    Bikini = exports;
+} else {
+    Bikini = global.Bikini = {};
+}
+
+/**
+ * Version number of current release
+ * @type {String}
+ */
+Bikini.Version = Bikini.version = '/* @echo VERSION */';
+
+/**
+ * Empty function to be used when
+ * no functionality is needed
+ *
+ * @type {Function}
+ */
+Bikini.f = function() {
+};
+
+Bikini.create = function( args ) {
+    return new this(args);
+};
+
+Bikini.design = function( obj ) {
+    var O = this.extend(obj || {});
+    return new O();
+};
+
+Bikini.extend = Backbone.Model.extend;
+
+Bikini.isCollection = function( collection ) {
+    return Backbone.Collection.prototype.isPrototypeOf(collection);
+};
+
+Bikini.isModel = function( model ) {
+    return Backbone.Model.prototype.isPrototypeOf(model);
+};
+
+Bikini.isEntity = function( entity ) {
+    return Bikini.Entity.prototype.isPrototypeOf(entity);
+};
+
+/***
+ * Data type Constants.
+ */
+Bikini.DATA = {
+    TYPE: {
+        INTEGER: 'integer',
+
+        STRING: 'string',
+
+        TEXT: 'text',
+
+        DATE: 'date',
+
+        BOOLEAN: 'boolean',
+
+        FLOAT: 'float',
+
+        OBJECT: 'object',
+
+        ARRAY: 'array',
+
+        BINARY: 'binary',
+
+        OBJECTID: 'objectid',
+
+        NULL: 'null'
+    }
+};
+
+Bikini.Object = {
     /**
      * The type of this object.
      *
      * @type String
      */
-    _type: 'M.Object',
+    _type: 'Bikini.Object',
 
     /**
      * Creates an object based on a passed prototype.
@@ -35,7 +108,7 @@ M.Object = {
     include: function( properties ) {
         for( var prop in properties ) {
             if( this.hasOwnProperty(prop) ) {
-                throw M.Exception.RESERVED_WORD.getException();
+                throw Bikini.Exception.RESERVED_WORD.getException();
             }
             this[prop] = properties[prop];
         }
@@ -52,7 +125,7 @@ M.Object = {
      */
     design: function( properties ) {
         /* create the new object */
-        // var obj = M.Object._create(this);
+        // var obj = Bikini.Object._create(this);
         var obj = this._create(this);
 
         /* assign the properties passed with the arguments array */
@@ -73,7 +146,7 @@ M.Object = {
     bindToCaller: function( caller, method, arg ) {
         return function() {
             if( typeof method !== 'function' || typeof caller !== 'object' ) {
-                throw M.Exception.INVALID_INPUT_PARAMETER.getException();
+                throw Bikini.Exception.INVALID_INPUT_PARAMETER.getException();
             }
             if( Array.isArray(arg) ) {
                 return method.apply(caller, arg);
@@ -118,3 +191,17 @@ M.Object = {
     }
 
 };
+
+/**
+ * Readable alias for true
+ *
+ * @type {Boolean}
+ */
+YES = true;
+
+/**
+ * Readable alias for false
+ *
+ * @type {Boolean}
+ */
+NO = false;
