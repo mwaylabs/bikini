@@ -30,14 +30,14 @@ describe('M.Model', function() {
             entity: {
                 name:   'person',
                 fields:  {
-                    id:          { type: M.CONST.TYPE.INTEGER, required: YES },
-                    firstName:   { type: M.CONST.TYPE.STRING,  length: 200 },
-                    sureName:    { type: M.CONST.TYPE.STRING,  required: YES, index: true },
-                    birthDate:   { type: M.CONST.TYPE.DATE   },
-                    bmi:         { type: M.CONST.TYPE.FLOAT },
-                    notes:       { type: M.CONST.TYPE.TEXT   },
-                    address:     { type: M.CONST.TYPE.OBJECT },
-                    displayName: { type: M.CONST.TYPE.STRING, persistent: NO }
+                    id:          { type: M.DATA.TYPE.INTEGER, required: YES },
+                    firstName:   { type: M.DATA.TYPE.STRING,  length: 200 },
+                    sureName:    { type: M.DATA.TYPE.STRING,  required: YES, index: true },
+                    birthDate:   { type: M.DATA.TYPE.DATE   },
+                    bmi:         { type: M.DATA.TYPE.FLOAT },
+                    notes:       { type: M.DATA.TYPE.TEXT   },
+                    address:     { type: M.DATA.TYPE.OBJECT },
+                    displayName: { type: M.DATA.TYPE.STRING, persistent: NO }
                 }
             }
         });

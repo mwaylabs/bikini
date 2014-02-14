@@ -2,7 +2,7 @@
 * Project:   The M-Project - Mobile HTML5 Application Framework
 * Copyright: (c) 2014 M-Way Solutions GmbH.
 * Version:   2.0.0-beta3
-* Date:      Wed Feb 12 2014 11:54:52
+* Date:      Fri Feb 14 2014 11:42:27
 * License:   http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
 */
 
@@ -61,34 +61,34 @@
         return M.Entity.prototype.isPrototypeOf(entity);
     };
     
-    M.isI18NItem = function( entity ) {
-        return (entity && entity._type && entity._type === 'M.I18NItem') ? true : false;
-    };
-    
-    M.isController = function( entity ) {
-        return M.Controller.prototype.isPrototypeOf(entity);
-    };
-    
-    /**
-     *
-     * Check if the given object is a M.View
-     * @param {Object} Check this property if it inherits from M.View
-     * @returns {boolean}
+    /***
+     * Data type Constants.
      */
-    M.isView = function( view ) {
-        return M.View.prototype.isPrototypeOf(view);
-    };
+    M.DATA = {
+        TYPE: {
+            INTEGER: 'integer',
     
-    /**
-     * Extend a function with the given interfaces
-     * @param interfaces
-     * @returns {M}
-     */
-    M.implements = function( interfaces ) {
-        this.prototype._implementedInterfaces = interfaces;
-        return this;
-    };
+            STRING: 'string',
     
+            TEXT: 'text',
+    
+            DATE: 'date',
+    
+            BOOLEAN: 'boolean',
+    
+            FLOAT: 'float',
+    
+            OBJECT: 'object',
+    
+            ARRAY: 'array',
+    
+            BINARY: 'binary',
+    
+            OBJECTID: 'objectid',
+    
+            NULL: 'null'
+        }
+    };
     
     /**
      * Readable alias for true
@@ -111,8 +111,8 @@
      *
      * @module M.Object
      *
-     * @type {{_type: string, _implementedInterfaces: null, _create: Function, include: Function, design: Function, implement: Function, hasInterfaceImplementation: Function, bindToCaller: Function, _init: Function, _normalize: Function, handleCallback: Function, getObjectType: Function, _addInterfaces: Function}}
-     */
+     * @type {Object}
+     **/
     M.Object = {
         /**
          * The type of this object.
@@ -120,14 +120,6 @@
          * @type String
          */
         _type: 'M.Object',
-    
-        /**
-         * This property contains an array of interfaces the object implements. This
-         * is used internally for initializing the object properly.
-         *
-         * @type {Array}
-         */
-        _implementedInterfaces: null,
     
         /**
          * Creates an object based on a passed prototype.
@@ -172,63 +164,10 @@
             /* assign the properties passed with the arguments array */
             obj.include(this._normalize(properties));
     
-            /* call the new object's _init method to initialize it */
-            obj._init();
-    
-            /* check if the object implements an interface and init it properly */
-            _.each(obj._implementedInterfaces, function( i ) {
-                obj.bindToCaller(obj, i._init)();
-            }, obj);
-    
             /* return the new object */
             return obj;
         },
     
-        /**
-         * This method is used for adding a certain interface to an existing object. It
-         * therefore calls the getInterface() method of the given object and attaches the
-         * returned interface to the object. If there already is an implementation of a
-         * certain property or method, that one is skipped. So it is possible to overwrite
-         * interface suff within the object itself.
-         *
-         * @param {M.Interface} obj The interface to be implemented.
-         * @returns {Object}
-         */
-        implement: function( obj ) {
-            if( obj && obj.isMInterface ) {
-                var i = obj.getInterface(this);
-    
-                _.each(i, function( value, key ) {
-                    if( this[key] ) {
-                        i[key] = null;
-                        delete i[key];
-                    }
-                }, this);
-    
-                this.include(i);
-    
-                this._implementedInterfaces = this._implementedInterfaces || [];
-            }
-    
-            return this;
-        },
-    
-        /**
-         * This method checks whether an object implements a certain interface or not.
-         *
-         * @param {Object} obj The interface to check for.
-         * @returns {Boolean}
-         */
-        hasInterfaceImplementation: function( obj ) {
-            var hasInterfaceImplementation = NO;
-            _.each(this._implementedInterfaces, function( i ) {
-                if( obj === i ) {
-                    hasInterfaceImplementation = YES;
-                }
-            }, this);
-    
-            return hasInterfaceImplementation;
-        },
     
         /**
          * Binds a method to its caller, so it is always executed within the right scope.
@@ -247,16 +186,6 @@
                 }
                 return method.call(caller, arg);
             };
-        },
-    
-        /**
-         * This method is called right after the creation of a new object and can be used to
-         * initialize some internal properties.
-         *
-         * This implementation in M.Object only serves as some kind of 'interface' declaration.
-         */
-        _init: function() {
-    
         },
     
         /**
@@ -292,798 +221,9 @@
                     return this.bindToCaller(target, action, args)();
                 }
             }
-        },
-    
-        /**
-         * Returns the type of the object.
-         *
-         * @return {String}
-         */
-        getObjectType: function() {
-            return this._type;
-        },
-    
-        /**
-         * Loops over the registered interfaces and bind them to itself
-         * @private
-         */
-    
-        _addInterfaces: function() {
-            _.each(this._implementedInterfaces, function( value ) {
-                this.implement(value);
-            }, this);
-        },
-    
-        deepCopy: function( value ) {
-            return JSON.parse(JSON.stringify(value));
         }
     
     };
-    // Copyright (c) 2013 M-Way Solutions GmbH
-    // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
-    
-    /**
-     * M.CONST defines constants used all over the framework.
-     * @module M.CONST
-     *
-     */
-    
-    M.CONST = {
-    
-        LOGGER: {
-            /**
-             * Tag for all core framework related log messages
-             * @type String
-             */
-            TAG_FRAMEWORK_CORE: 'framework-core',
-    
-            /**
-             * Tag for all data related log messages
-             * @type String
-             */
-            TAG_FRAMEWORK_DATA: 'framework-data',
-    
-            /**
-             * Tag for all UI related log messages
-             * @type String
-             */
-            TAG_FRAMEWORK_UI: 'framework-ui',
-    
-            /**
-             * Tag for all utility related log messages
-             * @type String
-             */
-            TAG_FRAMEWORK_UTILITY: 'framework-utility',
-    
-            /**
-             * Tag for messages that should be shown always
-             * @type String
-             */
-            TAG_ALL: ''
-        },
-    
-        I18N: {
-            LOCALE_CHANGED: 'locale-changed'
-        },
-    
-        /***
-         * Data type Constants.
-         */
-        TYPE: {
-            INTEGER:    'integer',
-    
-            STRING:     'string',
-    
-            TEXT:       'text',
-    
-            DATE:       'date',
-    
-            BOOLEAN:    'boolean',
-    
-            FLOAT:      'float',
-    
-            OBJECT:     'object',
-    
-            ARRAY:      'array',
-    
-            BINARY:     'binary',
-    
-            OBJECTID:   'objectid',
-    
-            NULL:       'null'
-        },
-    
-        /***
-         * Sorting orders:
-         * ASC: Ascending
-         * DESC: Descending
-         */
-        ORDER: {
-            ASC: 'ASC',
-            DESC: 'DESC'
-        },
-    
-        /***
-         * Error Constants.
-         *
-         * 0-99:    general errors
-         *
-         * 100-199: Model and Validation errors
-         *
-         * 200-299:   WebSQL errors
-         *
-         * 300-400:   CouchDB errors
-         *
-         * M.CONST.ERROR.UNDEFINED                      0       The reason for the error could not be clarified.
-         * M.CONST.ERROR.CONNECTION                     1       A connection to an external service could not be established
-         *
-         * M.CONST.ERROR.VALIDATION_PRESENCE            100     A model record failed validation due to a property is not set but required to be.
-         * M.CONST.ERROR.VALIDATION_URL                 101     A model record failed validation due to a property does not represent a valid URL but is required to do so.
-         * M.CONST.ERROR.VALIDATION_PHONE               102     A model record failed validation due to a property does not represent a phone number but is required to do so.
-         * M.CONST.ERROR.VALIDATION_NUMBER              103     A model record failed validation due to a property is not of type number or represents a number but is required to do so.
-         * M.CONST.ERROR.VALIDATION_NOTMINUS            104     A model record failed validation due to a property contains a minus value but it is required to do not.
-         * M.CONST.ERROR.VALIDATION_EMAIL               105     A model record failed validation due to a property does not represent a valid eMail but is required to do so.
-         * M.CONST.ERROR.VALIDATION_DATE                106     A model record failed validation due to a property does not represent a valid date but is required to do so.
-         *
-         * M.CONST.ERROR.MODEL_PROVIDER_NOT_SET         120     A data provider has not been set.
-         *
-         * M.CONST.ERROR.WEBSQL_UNKNOWN                200     The transaction failed for reasons unrelated to the database itself and not covered by any other error code.
-         * M.CONST.ERROR.WEBSQL_DATABASE                201     The statement failed for database reasons not covered by any other error code.
-         * M.CONST.ERROR.WEBSQL_VERSION                 202     The operation failed because the actual database version was not what it should be. For example, a statement found that the actual database version no longer matched the expected version of the Database or DatabaseSync object, or the Database.changeVersion() or DatabaseSync.changeVersion() methods were passed a version that doesn't match the actual database version.
-         * M.CONST.ERROR.WEBSQL_TOO_LARGE               203     The statement failed because the data returned from the database was too large. The SQL 'LIMIT' modifier might be useful to reduce the size of the result set.
-         * M.CONST.ERROR.WEBSQL_QUOTA                   204     The statement failed because there was not enough remaining storage space, or the storage quota was reached and the user declined to give more space to the database.
-         * M.CONST.ERROR.WEBSQL_SYNTAX                  205     The statement failed because of a syntax error, or the number of arguments did not match the number of ? placeholders in the statement, or the statement tried to use a statement that is not allowed, such as BEGIN, COMMIT, or ROLLBACK, or the statement tried to use a verb that could modify the database but the transaction was read-only.
-         * M.CONST.ERROR.WEBSQL_CONSTRAINT              206     An INSERT, UPDATE, or REPLACE statement failed due to a constraint failure. For example, because a row was being inserted and the value given for the primary key column duplicated the value of an existing row.
-         * M.CONST.ERROR.WEBSQL_TIMEOUT                 207     A lock for the transaction could not be obtained in a reasonable time.
-         * M.CONST.ERROR.WEBSQL_PROVIDER_NO_DBHANDLER   208     No DBHandler, initialization did not take place or failed.
-         * M.CONST.ERROR.WEBSQL_BULK_NO_RECORDS         210     No Records given for bulk transaction
-         *
-         * M.CONST.ERROR.COUCHDB_CONFLICT               300     A conflict occured while saving a document in CouchDB, propably caused by duplicate IDs
-         * M.CONST.ERROR.COUCHDB_DBNOTFOUND             301     The provided database could not be found.
-         * M.CONST.ERROR.COUCHDB_DBEXISTS               302     The db already exists and therefor cannot be created again.
-         * M.CONST.ERROR.COUCHDB_DOCNOTFOUND            303     No document was found for the provided ID in the database.
-         *
-         */
-        ERROR: {
-            /**
-             * A constant value for an undefined error.
-             *
-             * @type Number
-             */
-            UNDEFINED: 0,
-    
-            /**
-             * A constant value for an error occuring when a connection to an external service could not be established.
-             *
-             * @type Number
-             */
-            CONNECTION: 1,
-    
-            /**
-             * A model record failed validation due to a property is not set but required to be.
-             *
-             * @type Number
-             */
-            VALIDATION_PRESENCE: 100,
-    
-            /**
-             * A model record failed validation due to a property does not represent a valid URL but is required to do so.
-             *
-             * @type Number
-             */
-            VALIDATION_URL: 101,
-    
-            /**
-             * A model record failed validation due to a property does not represent a phone number but is required to do so.
-             *
-             * @type Number
-             */
-            VALIDATION_PHONE: 102,
-    
-            /**
-             * A model record failed validation due to a property is not of type number or represents a number but is required to do so.
-             *
-             * @type Number
-             */
-            VALIDATION_NUMBER: 103,
-    
-            /**
-             * A model record failed validation due to a property contains a minus value but it is required to do not.
-             *
-             * @type Number
-             */
-            VALIDATION_NOTMINUS: 104,
-    
-            /**
-             * A model record failed validation due to a property does not represent a valid eMail but is required to do so.
-             *
-             * @type Number
-             */
-            VALIDATION_EMAIL: 105,
-    
-            /**
-             * A model record failed validation due to a property does not represent a valid eMail but is required to do so.
-             *
-             * @type Number
-             */
-            VALIDATION_DATE: 106,
-    
-            /**
-             * A Data Provider was not set for a model.
-             *
-             * @type Number
-             */
-            MODEL_PROVIDER_NOT_SET: 120,
-    
-    
-            /* WebSQL Error Codes (see e.g. http://www.w3.org/TR/webdatabase/) */
-            /**
-             * A constant value for an error occuring with WebSQL.
-             * 'The transaction failed for reasons unrelated to the database itself and not covered by any other error code.'
-             * Error code in WebSQL specification: 0
-             *
-             * @type Number
-             */
-            WEBSQL_UNKNOWN: 200,
-    
-            /**
-             * A constant value for an error occuring with WebSQL.
-             * 'The statement failed for database reasons not covered by any other error code.'
-             * Error code in WebSQL specification: 1
-             *
-             * @type Number
-             */
-            WEBSQL_DATABASE: 201,
-    
-            /**
-             * A constant value for an error occuring with WebSQL.
-             * 'The transaction failed for reasons unrelated to the database itself and not covered by any other error code.'
-             * Error code in WebSQL specification: 2
-             *
-             * @type Number
-             */
-            WEBSQL_VERSION: 202,
-    
-            /**
-             * A constant value for an error occuring with WebSQL.
-             * 'The statement failed because the data returned from the database was too large. The SQL 'LIMIT' modifier might be useful to reduce the size of the result set.'
-             * Error code in WebSQL specification: 3
-             *
-             * @type Number
-             */
-            WEBSQL_TOO_LARGE: 203,
-    
-            /**
-             * A constant value for an error occuring with WebSQL.
-             * 'The statement failed because there was not enough remaining storage space, or the storage quota was reached and the user declined to give more space to the database.'
-             * Error code in WebSQL specification: 4
-             *
-             * @type Number
-             */
-            WEBSQL_QUOTA: 204,
-    
-            /**
-             * A constant value for an error occuring with WebSQL.
-             * 'The statement failed because of a syntax error, or the number of arguments did not match the number of ? placeholders in the statement, or the statement tried to use a statement that is not allowed, such as BEGIN, COMMIT, or ROLLBACK, or the statement tried to use a verb that could modify the database but the transaction was read-only.'
-             * Error code in WebSQL specification: 5
-             *
-             * @type Number
-             */
-            WEBSQL_SYNTAX: 205,
-    
-            /**
-             * A constant value for an error occuring with WebSQL.
-             * 'An INSERT, UPDATE, or REPLACE statement failed due to a constraint failure. For example, because a row was being inserted and the value given for the primary key column duplicated the value of an existing row.'
-             * Error code in WebSQL specification: 6
-             *
-             * @type Number
-             */
-            WEBSQL_CONSTRAINT: 206,
-    
-            /**
-             * A constant value for an error occuring with WebSQL.
-             * 'A lock for the transaction could not be obtained in a reasonable time.'
-             * Error code in WebSQL specification: 7
-             *
-             * @type Number
-             */
-            WEBSQL_TIMEOUT: 207,
-    
-            /* following errors are WebSQL Data Provider errors. */
-    
-            /**
-             * A constant value for an error occuring when dbHandler does not exist in
-             * data provider. Reason: Initialization did not take place or failed.
-             *
-             * @type Number
-             */
-            WEBSQL_NO_DBHANDLER: 208,
-    
-            /**
-             * A constant value for an error occuring with bulkSave operation in dataprovider.
-             * The browser doe not support web sql databases.
-             *
-             * @type Number
-             */
-            WEBSQL_NOT_SUPPORTED: 209,
-    
-            /**
-             * A constant value for an error occuring with bulkSave operation in dataprovider.
-             * No Record array was passed to the method via the param obj.
-             *
-             * @type Number
-             */
-            WEBSQL_BULK_NO_RECORDS: 210,
-    
-    
-            /**
-             * A constant value for an error occuring when a conflict appears when saving a document in CouchDB. This is propably caused by duplicate IDs
-             *
-             * @type Number
-             */
-            COUCHDB_CONFLICT: 300,
-    
-            /**
-             * A constant value for an error occuring if the provided database could not be found
-             *
-             * @type Number
-             */
-            COUCHDB_DBNOTFOUND: 301,
-    
-            /**
-             * A constant value for an error occuring if a database that shall be created already exists
-             *
-             * @type Number
-             */
-            COUCHDB_DBEXISTS: 302,
-    
-            /**
-             * A constant value for an error occuring if a document could not be found
-             *
-             * @type Number
-             */
-            COUCHDB_DOCNOTFOUND: 303
-        },
-    
-        /**
-         * input type constants
-         */
-        INPUT: {
-            /**
-             * A constant value for input type text
-             *
-             * @type {String}
-             */
-            TEXT: 'text',
-    
-            /**
-             * A constant value for input type password
-             *
-             * @type {String}
-             */
-            PASSWORD: 'password',
-    
-            /**
-             * A constant value for input type number
-             *
-             * @type {String}
-             */
-            NUMBER: 'number',
-    
-            /**
-             * A constant value for input type telephone
-             *
-             * @type {String}
-             */
-            TELEPHONE: 'tel',
-    
-            /**
-             * A constant value for input type url
-             *
-             * @type {String}
-             */
-            URL: 'url',
-    
-            /**
-             * A constant value for input type email
-             *
-             * @type {String}
-             */
-            EMAIL: 'email',
-    
-            /**
-             * A constant value for input type time
-             *
-             * @type {String}
-             */
-            TIME: 'time',
-    
-            /**
-             * A constant value for input type date
-             *
-             * @type {String}
-             */
-            DATE: 'date',
-    
-            /**
-             * A constant value for input type datetime
-             *
-             * @type {String}
-             */
-            DATETIME: 'datetime',
-    
-            /**
-             * A constant value for input type month
-             *
-             * @type {String}
-             */
-            MONTH: 'month',
-    
-            /**
-             * A constant value for input type week
-             *
-             * @type {String}
-             */
-            WEEK: 'week'
-        },
-    
-        GRID: {
-            COLUMNS: 12
-        }
-    };
-    
-    // Copyright (c) 2013 M-Way Solutions GmbH
-    // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
-    
-    /**
-     * M.Logger defines the prototype for any logging object.
-     * It is used to log messages out of the application.
-     * @module M.Logger
-     *
-     * @extends M.Object
-     */
-    M.Logger = M.Object.design(/** @scope M.Logger.prototype */ {
-    
-        /**
-         * Specifies which tags are displayed in the console.
-         * Leave this properties empty to display all logs.
-         *
-         * M.Logger.filter('tag1');
-         *
-         * M.Logger.log('Init Module', 'tag1');               // will displayed
-         * M.Logger.log('Get environment', 'tag2');           // will not displayed
-         * M.Logger.log('Loading data', ['tag1', 'tag2']);    // will displayed
-         * M.Logger.log('Loading images', ['tag2', 'tag3']);  // will not displayed
-         *
-         * @type Array
-         */
-        filter: [],
-    
-        /**
-         * The type of this object.
-         *
-         * @type String
-         */
-        _type: 'M.Logger',
-    
-        /**
-         * A constant value for logging output: log.
-         *
-         * @type Number
-         * @private
-         */
-        _OUTPUT_LOG: 0,
-    
-        /**
-         * A constant value for logging output: warning.
-         *
-         * @type Number
-         * @private
-         */
-        _OUTPUT_DEBUG: 1,
-    
-        /**
-         * A constant value for logging output: warning.
-         *
-         * @type Number
-         * @private
-         */
-        _OUTPUT_WARN: 2,
-    
-        /**
-         * A constant value for logging output: error.
-         *
-         * @type Number
-         * @private
-         */
-        _OUTPUT_ERROR: 3,
-    
-        /**
-         * A constant value for logging level: timeEnd.
-         *
-         * @type Number
-         * @private
-         */
-        _LEVEL_TIME_END: 4,
-    
-        /**
-         * This property holds the fallback entries for _time() / _timeEnd()
-         *
-         * @type Array
-         */
-        _times: [],
-    
-        /**
-         * This property holds the fallback entries for _count()
-         *
-         * @type Array
-         */
-        _counts: [],
-    
-        /**
-         * This property holds the debugMode from the config
-         *
-         * @type Boolean
-         */
-        _appRunsInNotDebugMode: NO,
-    
-        /**
-         * Constructor method for M.Logger
-         */
-        _init: function() {
-    
-            // Prevent a console.log from blowing things up if we are on a browser that doesn't support this.
-            if( _.isUndefined(console) ) {
-                window.console = {};
-                console.log = console.debug = console.warn = console.error = function() {
-                };
-            }
-    
-            // Check if app runs in debug mode
-            // TODO: Get debugMode form config
-            this._appRunsInNotDebugMode = NO;
-        },
-    
-        /**
-         * This method is used to log a message on logging level debug.
-         *
-         * @param {String/Array} tag
-         * @param {...*} message The logging message.
-         */
-        log: function( ) {
-            this._print(this._OUTPUT_LOG, arguments);
-        },
-    
-        /**
-         * This method is used to log a message on logging level warning.
-         *
-         * @param {String/Array} tag
-         * @param {...*} message The logging message.
-         */
-        warn: function( ) {
-            this._print(this._OUTPUT_WARN, arguments);
-        },
-    
-        /**
-         * This method is used to log a message on logging level error.
-         *
-         * @param {String/Array} tag
-         * @param {...*} message The logging message.
-         */
-        error: function( tag, message ) {
-            this._print(this._OUTPUT_ERROR, message, tag);
-        },
-    
-        /**
-         * Starts a new timer with an associated label.
-         *
-         * @param {String}
-         */
-        time: function( label ) {
-    
-            // Are we in production mode, then do not throw any logs
-            if( this._appRunsInNotDebugMode ) {
-                return;
-            }
-    
-            // Fallback if the browser doesn't support time
-            if( _.isUndefined(console.time2) ) {
-                this._time(label);
-                return;
-            }
-            console.time(label);
-        },
-    
-        /**
-         * Stops the timer with the specified label and prints the elapsed time.
-         *
-         * @param {String}
-         */
-        timeEnd: function( label ) {
-    
-            // Are we in production mode, then do not throw any logs
-            if( this._appRunsInNotDebugMode ) {
-                return;
-            }
-    
-            // Fallback if the browser doesn't support timeEnd
-            if( _.isUndefined(console.timeEnd2) ) {
-                this._timeEnd(label);
-                return;
-            }
-            console.timeEnd(label);
-        },
-    
-        /**
-         *  Writes the number of times that count() has been invoked with the same label.
-         *
-         * @param {String}
-         */
-        count: function( label ) {
-    
-            // Are we in production mode, then do not throw any logs
-            if( this._appRunsInNotDebugMode ) {
-                return;
-            }
-    
-            // Fallback if the browser doesn't support count
-            if( _.isUndefined(console.count2) ) {
-                this._count(label);
-                return;
-            }
-            console.count(label);
-        },
-    
-        /**
-         * This method is used to log anything out of an application based on the given logging level.
-         *
-         * @param {String} message The logging message.
-         * @param {Number} output The logging level.
-         * @param {String/Array} tag
-         * @private
-         */
-        _print: function( output, args ) {
-    
-            // Are we in production mode, then do not throw any logs
-            if( this._appRunsInNotDebugMode ) {
-                return;
-            }
-    
-            // Assign default level if level is undefined
-            output = output || this._OUTPUT_LOG;
-    
-            args = Array.prototype.slice.call(args);
-    
-            // Assign default tag if tag is undefined
-            if( args.length === 1 ) {
-                args.splice(0, 0, M.CONST.LOGGER.TAG_ALL);
-            }
-    
-            var tags = args[0];
-    
-            if( this._preventOutputByTag(tags) ) {
-                return;
-            }
-    
-            var prettyTagName = '';
-            if( output < this._OUTPUT_ERROR ) {
-                if( _.isArray(tags) && this.filter.length > 0 ) {
-                    var tagString = _.without(this.filter, tags);
-                    prettyTagName = '[' + tagString + ']';
-                } else if( tags.length > 0 ) {
-                    prettyTagName = '[' + tags + ']';
-                }
-            }
-    
-            if( args.length > 1 ) {
-                if( prettyTagName === M.CONST.LOGGER.TAG_ALL ) {
-                    args.splice(0, 1);
-                } else {
-                    args[0] = prettyTagName;
-                }
-            }
-    
-            switch( output ) {
-                case this._OUTPUT_LOG:
-                    console.log.apply(console, args);
-                    break;
-                case this._OUTPUT_WARN:
-                    args.splice(0, 0, 'WARNING:');
-                    console.warn.apply(console, args);
-                    break;
-                case this._OUTPUT_ERROR:
-                    args.splice(0, 0, 'ERROR:');
-                    console.error.apply(console, args);
-                    break;
-                case this._OUTPUT_DEBUG:
-                    console.debug.apply(console, args);
-                    break;
-                default:
-                    console.log.apply(console, args);
-                    break;
-            }
-        },
-    
-        /**
-         * Fallback if the browser doesn't support time
-         *
-         * @private
-         */
-        _time: function( label ) {
-            var item = _.find(this._times, function( item ) {
-                return item.label === label;
-            });
-            if( !item ) {
-                this._times.push({
-                    label: label,
-                    time: new Date().getTime()
-                });
-            }
-        },
-    
-        /**
-         * Fallback if the browser doesn't support timeEnd
-         *
-         * @private
-         */
-        _timeEnd: function( label ) {
-            var item = _.find(this._times, function( item ) {
-                return item.label === label;
-            });
-            if( item ) {
-                var now = new Date().getTime();
-                var diff = (now - item.time) / 1000;
-                var index = this._times.indexOf(item);
-                this._print(this._OUTPUT_DEBUG, [item.label + ': ' + diff + 'ms']);
-                this._times.splice(index, 1);
-            }
-        },
-    
-        /**
-         * Fallback if the browser doesn't support count
-         *
-         * @private
-         */
-        _count: function( label ) {
-            var item = _.find(this._counts, function( item ) {
-                return item.label === label;
-            });
-            if( item === undefined ) {
-                this._counts.push({
-                    label: label,
-                    count: 1
-                });
-                item = _.last(this._counts);
-            } else {
-                item.count++;
-            }
-    
-            this._print(this._OUTPUT_DEBUG, [item.label + ': ' + item.count]);
-        },
-    
-        /**
-         * Prevent a print() call if the tag is not defined in filter.
-         *
-         * @param tag {String/Array}
-         * @returns {boolean}
-         * @private
-         */
-        _preventOutputByTag: function( tag ) {
-            if( this.filter.length > 0 && this.filter.indexOf(M.CONST.TAG_ALL) === -1 ) {
-                if( _.isString(tag) ) {
-                    if( this.filter.indexOf(tag) === -1 ) {
-                        return YES;
-                    }
-                } else if( _.isArray(tag) ) {
-                    if( _.difference(tag, this.filter).length === tag.length ) {
-                        return YES;
-                    }
-                }
-            }
-            return NO;
-        }
-    
-    });
 
     // Copyright (c) 2013 M-Way Solutions GmbH
     // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
@@ -1864,470 +1004,6 @@
     
     /**
      *
-     * @module M.Request
-     *
-     * @extends M.Object
-     */
-    M.Request = M.Object.design(/** @scope M.Request.prototype */{
-    
-        /**
-         * The type of this object.
-         *
-         * @type String
-         */
-        _type: 'M.Request',
-    
-        /**
-         * This property contains the requests unique ID that is generated
-         * when initializing a request object. It is used within an application
-         * to identify a request object.
-         */
-        _id: null,
-    
-        /**
-         * This property is used internally to store the jQuery request object.
-         *
-         * @type {Object}
-         */
-        _request: null,
-    
-        /**
-         * The http method to use for the request. Default is GET.
-         *
-         * @type {String}
-         */
-        method: null,
-    
-        /**
-         * The url to connect to. This property has to be set in order to init
-         * an instance of M.Request.
-         *
-         * @type {String}
-         */
-        url: null,
-    
-        /**
-         * The property can be used to specify a request timeout in milliseconds. By
-         * default, there will be no timeout.
-         *
-         * @type {Number}
-         */
-        timeout: null,
-    
-        /**
-         * The data property can be used to attach any kind of data to a request. This can
-         * either be a JSON object (key/value) or a string.
-         *
-         * @type {Object|String}
-         */
-        data: null,
-    
-        /**
-         * This method is based on M.Object's extend() but adds some request specific features.
-         * It creates a new instance of M.Request based on the given configuration properties.
-         *
-         * @param obj
-         * @returns {M.Request}
-         */
-        init: function( obj ) {
-            return this.design(obj);
-        },
-    
-        /**
-         * This method is used internally to process the configuration object for the request
-         * before handing it to the extend method. The job of this method is to make sure that
-         * the configuration object fits the requirements of the extend process.
-         *
-         * @param obj
-         * @returns Object
-         * @private
-         */
-        _normalize: function( obj ) {
-            obj = obj && typeof obj === 'object' ? obj : {};
-            obj.callbacks = obj.callbacks || {};
-    
-            return obj;
-        },
-    
-        /**
-         * M.Request's _init method.
-         *
-         * @private
-         */
-        _init: function() {
-            /* throw exception if this is an instance of M.Request and there is no URL given */
-            if( Object.getPrototypeOf(this) === M.Request && !this.url ) {
-                throw M.Exception.NO_REQUEST_URL_SPECIFIED.getException();
-            }
-    
-            /* generate the requests uuid */
-            this._id = M.UniqueId.uuid();
-    
-            /* check for method and eventually set to GET (default) */
-            this.method = this.method || 'GET';
-    
-            /* set the data property to what is given or empty string */
-            this.data = this.data || '';
-    
-            /* check for a timeout property and eventually remove it */
-            if( typeof this.timeout !== 'number' || this.timeout < 0 ) {
-                delete this.timeout;
-            }
-        },
-    
-        /**
-         * This method returns the request's unique ID. This ID is automatically generated
-         * on the initialization of the request.
-         *
-         * @returns {String}
-         */
-        getId: function() {
-            return this._id;
-        },
-    
-        send: function() {
-            this._request = $.ajax({
-                type: this.method,
-                url: this.url,
-                timeout: this.timeout,
-                data: this.data,
-                context: this,
-                beforeSend: this._handleBeforeSend,
-                success: this._handleSuccess,
-                error: this._handleError
-            });
-        },
-    
-        cancel: function() {
-            if( this._request ) {
-                this._request.abort();
-            }
-            this._request = null;
-        },
-    
-        /**
-         * This method is used internally to handle the before send callbacks. It
-         * automatically calls any registered before send handler.
-         *
-         * @param xhr
-         * @private
-         */
-        _handleBeforeSend: function( xhr ) {
-            this.handleCallback(this.callbacks.beforeSend, {
-                id: this.getId(),
-                xhr: xhr
-            });
-        },
-    
-        /**
-         * This method is used internally to handle the success callbacks. It
-         * automatically calls any registered success handler.
-         *
-         * @param data
-         * @param status
-         * @param xhr
-         * @private
-         */
-        _handleSuccess: function( data, status, xhr ) {
-            this.handleCallback(this.callbacks.success, {
-                id: this.getId(),
-                data: data,
-                status: status,
-                xhr: xhr
-            });
-    
-            this.cancel();
-        },
-    
-        /**
-         * This method is used internally to handle the error callbacks. It
-         * automatically calls any registered error handler.
-         *
-         * @param xhr
-         * @param status
-         * @param error
-         * @private
-         */
-        _handleError: function( xhr, status, error ) {
-            this.handleCallback(this.callbacks.error, {
-                id: this.getId(),
-                xhr: xhr,
-                status: status,
-                error: error
-            });
-    
-            this.cancel();
-        },
-    
-        /*
-         url = "http://example.com:3000/pathname/?search=test#hash";
-    
-         location.protocol; // => "http:"
-         location.host;     // => "example.com:3000"
-         location.hostname; // => "example.com"
-         location.port;     // => "3000"
-         location.pathname; // => "/pathname/"
-         location.hash;     // => "#hash"
-         location.search;   // => "?search=test"
-         */
-        getLocation: function( url ) {
-            var location = document.createElement('a');
-            location.href = url || this.url;
-            // IE doesn't populate all link properties when setting .href with a relative URL,
-            // however .href will return an absolute URL which then can be used on itself
-            // to populate these additional fields.
-            if( location.host === '' ) {
-                location.href = location.href;
-            }
-            return location;
-        }
-    
-    });
-    // Copyright (c) 2013 M-Way Solutions GmbH
-    // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
-    
-    /**
-     *
-     * @module M.RequestManager
-     *
-     * @extends M.Object
-     */
-    M.RequestManager = M.Object.design(/** @scope M.RequestManager.prototype */{
-    
-        /**
-         * The type of this object.
-         *
-         * @type String
-         */
-        _type: 'M.RequestManager',
-    
-        /**
-         * The url to connect to. This property has to be set in order to init
-         * an instance of M.RequestManager. It contains the base url for each
-         * request performed by this request manager.
-         *
-         * @type {String}
-         */
-        baseUrl: null,
-    
-        /**
-         * The http method to use for each request. This timeout will be used as
-         * the request manager's default value. It can be overwritten when
-         * calling makeRequest(). Default is GET.
-         *
-         * @type {String}
-         */
-        method: null,
-        /**
-         * The property can be used to specify a request timeout in milliseconds. This
-         * timeout will be used as the request manager's default value. It can be
-         * overwritten when calling makeRequest().
-         *
-         * @type {Number}
-         */
-        timeout: null,
-    
-        /**
-         * This property is used internally to store requests initialized out of the
-         * request manager. It is built as a hash map with the request's id as the key
-         * and the request object as the value.
-         *
-         * @type {Object}
-         */
-        _requests: null,
-    
-        /**
-         * This method is based on M.Object's design() but adds some request manager specific
-         * features. It creates a new instance of M.RequestManager based on the given
-         * configuration properties.
-         *
-         * @param obj
-         * @returns {M.RequestManager}
-         */
-        init: function( obj ) {
-            return this.design(obj);
-        },
-    
-        /**
-         * This method is used internally to process the configuration object for the request
-         * manager before handing it to the design method. The job of this method is to make
-         * sure that the configuration object fits the requirements of the design process.
-         *
-         * @param obj
-         * @returns Object
-         * @private
-         */
-        _normalize: function( obj ) {
-            obj = obj && typeof obj === 'object' ? obj : {};
-            obj.callbacks = obj.callbacks || {};
-            obj.baseUrl = obj.baseUrl || obj.url;
-    
-            return obj;
-        },
-    
-        /**
-         * M.RequestManager's _init method.
-         *
-         * @private
-         */
-        _init: function() {
-            /* throw exception if this is an instance of M.RequestManager and there is no URL given */
-            if( Object.getPrototypeOf(this) === M.RequestManager && !this.baseUrl ) {
-                throw M.Exception.NO_REQUEST_MANAGER_BASE_URL_SPECIFIED.getException();
-            }
-    
-            /* setup the internally used requests hash map */
-            this._requests = {};
-    
-            /* clean up the base url to not end with a '/' */
-            if( this.baseUrl && this.baseUrl.lastIndexOf('/') === (this.baseUrl.length - 1) ) {
-                this.baseUrl = this.baseUrl.substr(0, this.baseUrl.length - 1);
-            }
-    
-            /* remove possible url property (was already mapped to baseUrl before) */
-            if( this.url ) {
-                delete this.url;
-            }
-    
-            /* check for method and eventually set to GET (default) */
-            this.method = this.method || 'GET';
-    
-            /* check for a timeout property and eventually remove it */
-            if( typeof this.timeout !== 'number' || this.timeout < 0 ) {
-                delete this.timeout;
-            }
-        },
-    
-        /**
-         * This method initializes and then sends a request based on the request
-         * manager's configuration and the given parameters object. If callbacks
-         * are specified for this request handler (or via the passed configuration
-         * object), those callbacks are handed over to the request and will be
-         * called properly.
-         *
-         * @param obj
-         * @returns {M.Request} The request that was sent.
-         */
-        doRequest: function( obj ) {
-            obj = obj && typeof obj === 'object' ? obj : {};
-    
-            var request = M.Request.init({
-                url: this.getUrl(obj),
-                timeout: !isNaN(obj.timeout) ? obj.timeout : this.timeout,
-                method: obj.method ? obj.method : this.method,
-                data: obj.data ? obj.data : '',
-                callbacks: {
-                    beforeSend: {
-                        target: this,
-                        action: '_handleBeforeSend'
-                    },
-                    success: {
-                        target: this,
-                        action: '_handleSuccess'
-                    },
-                    error: {
-                        target: this,
-                        action: '_handleError'
-                    }
-                }
-            });
-    
-            this._requests[request.getId()] = request;
-    
-            request.send();
-    
-            return request;
-        },
-    
-        /**
-         * This method returns the request's url based on the base url of the request
-         * manager and a given path within the configuration object passed to the
-         * doRequest() method.
-         *
-         * @param obj
-         * @returns {String}
-         */
-        getUrl: function( obj ) {
-            /* clean up the path to start a '/' */
-            if( obj.path && obj.path[0] !== '/' ) {
-                obj.path = '/' + obj.path;
-            }
-    
-            return this.baseUrl + (obj.path ? obj.path : '');
-        },
-    
-        /**
-         * This method is used internally to handle the before send callbacks. It
-         * automatically calls any registered before send handler.
-         *
-         * @param obj
-         * @private
-         */
-        _handleBeforeSend: function( obj ) {
-            this.handleCallback(this.callbacks.beforeSend, obj);
-        },
-    
-        /**
-         * This method is used internally to handle the success callbacks. It
-         * automatically calls any registered success handler.
-         *
-         * @param obj
-         * @private
-         */
-        _handleSuccess: function( obj ) {
-            this.handleCallback(this.callbacks.success, obj);
-    
-            this.requestFinished(obj.id);
-        },
-    
-        /**
-         * This method is used internally to handle the error callbacks. It
-         * automatically calls any registered error handler.
-         *
-         * @param obj
-         * @private
-         */
-        _handleError: function( obj ) {
-            this.handleCallback(this.callbacks.error, obj);
-    
-            this.requestFinished(obj.id);
-        },
-    
-        requestFinished: function( id ) {
-            if( this._requests && this._requests[id] ) {
-                this._requests[id] = null;
-                delete this._requests[id];
-            }
-        },
-    
-        /**
-         * This method cancels a ongoing request based on its id.
-         *
-         * @param id
-         */
-        cancelRequest: function( id ) {
-            if( this._requests && this._requests[id] ) {
-                this._requests[id].cancel();
-                this.requestFinished(id);
-            }
-        },
-    
-        /**
-         * This method cancels all currently active requests of this request manager.
-         */
-        cancelAllRequest: function() {
-            _.each(this._requests, function( request, id ) {
-                this.cancelRequest(id);
-            }, this);
-        }
-    
-    });
-
-    // Copyright (c) 2013 M-Way Solutions GmbH
-    // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
-    
-    /**
-     *
      * @module M.Field
      *
      */
@@ -2405,35 +1081,35 @@
                 if (_.isUndefined(value)) {
                     return this.defaultValue;
                 }
-                if (type === M.CONST.TYPE.STRING || type === M.CONST.TYPE.TEXT) {
+                if (type === M.DATA.TYPE.STRING || type === M.DATA.TYPE.TEXT) {
                     if (_.isObject(value)) {
                         return JSON.stringify(value);
                     } else {
                         return _.isNull(value) ? 'null' : value.toString();
                     }
-                } else if (type === M.CONST.TYPE.INTEGER) {
+                } else if (type === M.DATA.TYPE.INTEGER) {
                     return parseInt(value);
-                } else if (type === M.CONST.TYPE.BOOLEAN) {
+                } else if (type === M.DATA.TYPE.BOOLEAN) {
                     return value === true || value === 'true'; // true, 1, "1" or "true"
-                } else if (type === M.CONST.TYPE.FLOAT) {
+                } else if (type === M.DATA.TYPE.FLOAT) {
                     return parseFloat(value);
-                } else if (type === M.CONST.TYPE.OBJECT || type === M.CONST.TYPE.ARRAY) {
+                } else if (type === M.DATA.TYPE.OBJECT || type === M.DATA.TYPE.ARRAY) {
                     if (!_.isObject(value)) {
                         return _.isString(value) ? JSON.parse(value) : null;
                     }
-                } else if (type === M.CONST.TYPE.DATE) {
+                } else if (type === M.DATA.TYPE.DATE) {
                     if (!M.Date.isPrototypeOf(value)) {
                         var date = value ? M.Date.create(value) : null;
                         return date && date.isValid() ? date : null;
                     }
-                } else if (type === M.CONST.TYPE.OBJECTID) {
+                } else if (type === M.DATA.TYPE.OBJECTID) {
                     if (!M.ObjectID.prototype.isPrototypeOf(value)) {
                         return _.isString(value) ? new M.ObjectID(value) : null;
                     }
                 }
                 return value;
             } catch (e) {
-                M.Logger.error(M.CONST.LOGGER.TAG_FRAMEWORK_DATA, 'Failed converting value! ' + e.message);
+                console.error('Failed converting value! ' + e.message);
             }
         },
     
@@ -2468,30 +1144,30 @@
          */
         detectType: function (v) {
             if (_.isNumber(v)) {
-                return M.CONST.TYPE.FLOAT;
+                return M.DATA.TYPE.FLOAT;
             }
             if (_.isString(v)) {
-                return M.CONST.TYPE.STRING;
+                return M.DATA.TYPE.STRING;
             }
             if (_.isBoolean(v)) {
-                return M.CONST.TYPE.BOOLEAN;
+                return M.DATA.TYPE.BOOLEAN;
             }
             if (_.isArray(v)) {
-                return M.CONST.TYPE.ARRAY;
+                return M.DATA.TYPE.ARRAY;
             }
             if (_.isNull(v)) {
-                return M.CONST.TYPE.NULL;
+                return M.DATA.TYPE.NULL;
             }
             if (_.isDate(v) || M.Date.isPrototypeOf(v)) {
-                return M.CONST.TYPE.DATE;
+                return M.DATA.TYPE.DATE;
             }
             if (M.ObjectID.prototype.isPrototypeOf(v)) {
-                return M.CONST.TYPE.OBJECTID;
+                return M.DATA.TYPE.OBJECTID;
             }
             if (this.isBinary(v)) {
-                return M.CONST.TYPE.BINARY;
+                return M.DATA.TYPE.BINARY;
             }
-            return M.CONST.TYPE.OBJECT;
+            return M.DATA.TYPE.OBJECT;
         },
     
         /**
@@ -2502,19 +1178,19 @@
          */
         typeOrder: function (type) {
             switch (type) {
-                case M.CONST.TYPE.NULL   :
+                case M.DATA.TYPE.NULL   :
                     return 0;
-                case M.CONST.TYPE.FLOAT  :
+                case M.DATA.TYPE.FLOAT  :
                     return 1;
-                case M.CONST.TYPE.STRING :
+                case M.DATA.TYPE.STRING :
                     return 2;
-                case M.CONST.TYPE.OBJECT :
+                case M.DATA.TYPE.OBJECT :
                     return 3;
-                case M.CONST.TYPE.ARRAY  :
+                case M.DATA.TYPE.ARRAY  :
                     return 4;
-                case M.CONST.TYPE.BINARY :
+                case M.DATA.TYPE.BINARY :
                     return 5;
-                case M.CONST.TYPE.DATE   :
+                case M.DATA.TYPE.DATE   :
                     return 6;
             }
             return -1;
@@ -2636,19 +1312,19 @@
                 a = a.toHexString();
                 b = b.toHexString();
             }
-            if (ta === M.CONST.TYPE.DATE) {
+            if (ta === M.DATA.TYPE.DATE) {
                 // Convert to millis.
                 ta = tb = 1;
                 a = a.getTime();
                 b = b.getTime();
             }
-            if (ta === M.CONST.TYPE.FLOAT) {
+            if (ta === M.DATA.TYPE.FLOAT) {
                 return a - b;
             }
-            if (tb === M.CONST.TYPE.STRING) {
+            if (tb === M.DATA.TYPE.STRING) {
                 return a < b ? -1 : (a === b ? 0 : 1);
             }
-            if (ta === M.CONST.TYPE.OBJECT) {
+            if (ta === M.DATA.TYPE.OBJECT) {
                 // this could be much more efficient in the expected case ...
                 var toArray = function (obj) {
                     var ret = [];
@@ -2660,7 +1336,7 @@
                 };
                 return this._cmp(toArray(a), toArray(b));
             }
-            if (ta === M.CONST.TYPE.ARRAY) { // Array
+            if (ta === M.DATA.TYPE.ARRAY) { // Array
                 for (i = 0; ; i++) {
                     if (i === a.length) {
                         return (i === b.length) ? 0 : -1;
@@ -2674,7 +1350,7 @@
                     }
                 }
             }
-            if (ta === M.CONST.TYPE.BINARY) {
+            if (ta === M.DATA.TYPE.BINARY) {
                 if (a.length !== b.length) {
                     return a.length - b.length;
                 }
@@ -2688,16 +1364,16 @@
                 }
                 return 0;
             }
-            if (ta === M.CONST.TYPE.BOOLEAN) {
+            if (ta === M.DATA.TYPE.BOOLEAN) {
                 if (a) {
                     return b ? 0 : 1;
                 }
                 return b ? -1 : 0;
             }
-            if (ta === M.CONST.TYPE.NULL) {
+            if (ta === M.DATA.TYPE.NULL) {
                 return 0;
             }
-    //        if( ta === M.CONST.TYPE.REGEXP ) {
+    //        if( ta === M.DATA.TYPE.REGEXP ) {
     //            throw Error("Sorting not supported on regular expression");
     //        } // XXX
     //        if( ta === 13 ) // javascript code
@@ -4285,9 +2961,9 @@
     
         typeMapping: (function() {
             var map = {};
-            map [M.CONST.TYPE.OBJECTID] = M.CONST.TYPE.STRING;
-            map [M.CONST.TYPE.DATE] = M.CONST.TYPE.STRING;
-            map [M.CONST.TYPE.BINARY] = M.CONST.TYPE.TEXT;
+            map [M.DATA.TYPE.OBJECTID] = M.DATA.TYPE.STRING;
+            map [M.DATA.TYPE.DATE] = M.DATA.TYPE.STRING;
+            map [M.DATA.TYPE.BINARY] = M.DATA.TYPE.TEXT;
             return map;
         })(),
     
@@ -4458,8 +3134,8 @@
     
         _checkEntity: function( obj, entity ) {
             if( !M.isEntity(entity) ) {
-                var error = 'No valid entity passed.';
-                M.Logger.error(M.CONST.ERROR.VALIDATION_PRESENCE, error);
+                var error = M.Store.CONST.ERROR_NO_ENTITY;
+                console.error(error);
                 this.handleCallback(obj.error, error);
                 this.handleCallback(obj.finish, error);
                 return false;
@@ -4469,8 +3145,8 @@
     
         _checkData: function( obj, data ) {
             if( (!_.isArray(data) || data.length === 0) && !_.isObject(data) ) {
-                var error = 'No data passed.';
-                M.Logger.error(M.CONST.ERROR.VALIDATION_PRESENCE, error);
+                var error = M.Store.CONST.ERROR_NO_DATA;
+                console.error(error);
                 this.handleCallback(obj.error, error);
                 this.handleCallback(obj.finish, error);
                 return false;
@@ -4499,11 +3175,12 @@
         },
     
         CONST: {
-            ERROR_NO_ENTITY: 'No valid entity specified',
-            ERROR_LOAD_DATA: 'Error while loading data from store',
-            ERROR_SAVE_DATA: 'Error while saving data to the store',
-            ERROR_LOAD_IDS:  'Error while loading ids from store',
-            ERROR_SAVE_IDS:  'Error while saving ids to the store'
+            ERROR_NO_ENTITY: 'No valid entity specified. ',
+            ERROR_NO_DATA:   'No data passed. ',
+            ERROR_LOAD_DATA: 'Error while loading data from store. ',
+            ERROR_SAVE_DATA: 'Error while saving data to the store. ',
+            ERROR_LOAD_IDS:  'Error while loading ids from store. ',
+            ERROR_SAVE_IDS:  'Error while saving ids to the store. '
         }
     
     });
@@ -4614,7 +3291,7 @@
                         this._delItemId(id);
                     }
                 } catch( e ) {
-                    M.Logger.error(M.CONST.LOGGER.TAG_FRAMEWORK_DATA, M.Store.CONST.ERROR_LOAD_DATA, e);
+                    console.error(M.Store.CONST.ERROR_LOAD_DATA + e.message);
                 }
             }
             return attrs;
@@ -4626,7 +3303,7 @@
                     localStorage.setItem(this._getKey(entity, id), JSON.stringify(attrs));
                     this._addItemId(entity, id);
                 } catch( e ) {
-                    M.Logger.error(M.CONST.LOGGER.TAG_FRAMEWORK_DATA, M.Store.CONST.ERROR_SAVE_DATA, e);
+                    console.error(M.Store.CONST.ERROR_SAVE_DATA + e.message);
                 }
             }
         },
@@ -4677,7 +3354,7 @@
                 }
                 return this.ids[entity.name];
             } catch( e ) {
-                M.Logger.error(M.CONST.LOGGER.TAG_FRAMEWORK_DATA, M.Store.CONST.ERROR_LOAD_IDS, e);
+                console.error(M.Store.CONST.ERROR_LOAD_IDS + e.message);
             }
         },
     
@@ -4686,7 +3363,7 @@
                 var key = '__ids__' + entity.name;
                 localStorage.setItem(key, JSON.stringify(ids));
             } catch( e ) {
-                M.Logger.error(M.CONST.LOGGER.TAG_FRAMEWORK_DATA, M.Store.CONST.ERROR_SAVE_IDS, e);
+                console.error(M.Store.CONST.ERROR_SAVE_IDS + e.message);
             }
         }
     });
@@ -4719,10 +3396,10 @@
      * var MyModel = M.Model.extend({
      *      idAttribute: 'id',
      *      fields: {
-     *          id:          { type: M.CONST.TYPE.STRING,  required: YES, index: YES },
-     *          sureName:    { name: 'USERNAME', type: M.CONST.TYPE.STRING },
-     *          firstName:   { type: M.CONST.TYPE.STRING,  length: 200 },
-     *          age:         { type: M.CONST.TYPE.INTEGER }
+     *          id:          { type: M.DATA.TYPE.STRING,  required: YES, index: YES },
+     *          sureName:    { name: 'USERNAME', type: M.DATA.TYPE.STRING },
+     *          firstName:   { type: M.DATA.TYPE.STRING,  length: 200 },
+     *          age:         { type: M.DATA.TYPE.INTEGER }
      *      }
      * });
      *
@@ -4750,24 +3427,24 @@
     
         typeMapping: (function() {
             var map = {};
-            map [M.CONST.TYPE.OBJECTID] = M.CONST.TYPE.STRING;
-            map [M.CONST.TYPE.DATE] = M.CONST.TYPE.STRING;
-            map [M.CONST.TYPE.OBJECT] = M.CONST.TYPE.TEXT;
-            map [M.CONST.TYPE.ARRAY] = M.CONST.TYPE.TEXT;
-            map [M.CONST.TYPE.BINARY] = M.CONST.TYPE.TEXT;
+            map [M.DATA.TYPE.OBJECTID] = M.DATA.TYPE.STRING;
+            map [M.DATA.TYPE.DATE] = M.DATA.TYPE.STRING;
+            map [M.DATA.TYPE.OBJECT] = M.DATA.TYPE.TEXT;
+            map [M.DATA.TYPE.ARRAY] = M.DATA.TYPE.TEXT;
+            map [M.DATA.TYPE.BINARY] = M.DATA.TYPE.TEXT;
             return map;
         })(),
     
         sqlTypeMapping: (function() {
             var map = {};
-            map [M.CONST.TYPE.STRING] = 'varchar(255)';
-            map [M.CONST.TYPE.TEXT] = 'text';
-            map [M.CONST.TYPE.OBJECT] = 'text';
-            map [M.CONST.TYPE.ARRAY] = 'text';
-            map [M.CONST.TYPE.FLOAT] = 'float';
-            map [M.CONST.TYPE.INTEGER] = 'integer';
-            map [M.CONST.TYPE.DATE] = 'varchar(255)';
-            map [M.CONST.TYPE.BOOLEAN] = 'boolean';
+            map [M.DATA.TYPE.STRING] = 'varchar(255)';
+            map [M.DATA.TYPE.TEXT] = 'text';
+            map [M.DATA.TYPE.OBJECT] = 'text';
+            map [M.DATA.TYPE.ARRAY] = 'text';
+            map [M.DATA.TYPE.FLOAT] = 'float';
+            map [M.DATA.TYPE.INTEGER] = 'integer';
+            map [M.DATA.TYPE.DATE] = 'varchar(255)';
+            map [M.DATA.TYPE.BOOLEAN] = 'boolean';
             return map;
         })(),
     
@@ -4783,7 +3460,7 @@
     
             this._openDb({
                 error: function( msg ) {
-                    M.Logger.error(M.CONST.LOGGER.TAG_FRAMEWORK_DATA, msg);
+                    console.error(msg);
                 }
             });
         },
@@ -4885,7 +3562,7 @@
                     var arSql = this._sqlUpdateDatabase(db.version, this.options.version);
                     db.changeVersion(db.version, this.options.version, function( tx ) {
                         _.each(arSql, function( sql ) {
-                            M.Logger.log(M.CONST.LOGGER.TAG_FRAMEWORK_DATA, 'SQL-Statement: ' + sql);
+                            console.log('sql statement: ' + sql);
                             lastSql = sql;
                             tx.executeSql(sql);
                         });
@@ -4896,7 +3573,7 @@
                     });
                 } catch( e ) {
                     error = e.message;
-                    M.Logger.error(M.CONST.LOGGER.TAG_FRAMEWORK_DATA, 'changeversion failed, DB-Version: ' + db.version);
+                    console.error('webSql change version failed, DB-Version: ' + db.version);
                 }
             } catch( e ) {
                 error = e.message;
@@ -4926,7 +3603,7 @@
         _isAutoincrementKey: function( entity, key ) {
             if( entity && key ) {
                 var column = this.getField(entity, key);
-                return column && column.type === M.CONST.TYPE.INTEGER;
+                return column && column.type === M.DATA.TYPE.INTEGER;
             }
         },
     
@@ -5061,14 +3738,14 @@
     
         _sqlValue: function( value, field ) {
             var type = field && field.type ? field.type : M.Field.prototype.detectType(value);
-            if( type === M.CONST.TYPE.INTEGER || type === M.CONST.TYPE.FLOAT ) {
+            if( type === M.DATA.TYPE.INTEGER || type === M.DATA.TYPE.FLOAT ) {
                 return value;
-            } else if( type === M.CONST.TYPE.BOOLEAN ) {
+            } else if( type === M.DATA.TYPE.BOOLEAN ) {
                 return value ? '1' : '0';
-            } else if( type === M.CONST.TYPE.NULL ) {
+            } else if( type === M.DATA.TYPE.NULL ) {
                 return 'NULL';
             }
-            value = M.Field.prototype.transform(value, M.CONST.TYPE.STRING);
+            value = M.Field.prototype.transform(value, M.DATA.TYPE.STRING);
             value = value.replace(/"/g, '""');
             return '"' + value + '"';
         },
@@ -5178,9 +3855,9 @@
                     var statement = stm.statement || stm;
                     var args = stm.arguments;
                     lastStatement = statement;
-                    M.Logger.log(M.CONST.LOGGER.TAG_FRAMEWORK_DATA, 'SQL-Statement: ' + statement);
+                    console.log('sql statement: ' + statement);
                     if( args ) {
-                        M.Logger.log(M.CONST.LOGGER.TAG_FRAMEWORK_DATA, '    Arguments: ' + JSON.stringify(args));
+                        console.log('    arguments: ' + JSON.stringify(args));
                     }
                     t.executeSql(statement, args, function( tx, res ) {
                         var len = res.rows.length;//, i;
@@ -5204,11 +3881,12 @@
                                 }
                             }
                         }
-                    }, function() {
-                        // M.Logger.log('Incorrect statement: ' + sql, M.ERR)
-                    }); // callbacks: SQLStatementErrorCallback
+                    }, function (t, e) {
+                        // error
+                        console.error('webSql error: ' + e.message);
+                    });
                 }, function( sqlError ) { // errorCallback
-                    M.Logger.error(M.CONST.ERROR.WEBSQL_SYNTAX, 'WebSql Syntax Error: ' + sqlError.message);
+                    console.error('WebSql Syntax Error: ' + sqlError.message);
                     that.handleError(options, sqlError.message, lastStatement);
                 }, function() { // voidCallback (success)
                     that.handleSuccess(options, result);
@@ -5244,20 +3922,20 @@
                             var statement = stm.statement || stm;
                             var args = stm.arguments;
                             lastStatement = statement;
-                            M.Logger.log(M.CONST.LOGGER.TAG_FRAMEWORK_DATA, 'SQL-Statement: ' + statement);
+                            console.log('sql statement: ' + statement);
                             if( args ) {
-                                M.Logger.log(M.CONST.LOGGER.TAG_FRAMEWORK_DATA, '    Arguments: ' + JSON.stringify(args));
+                                console.log('    arguments: ' + JSON.stringify(args));
                             }
                             t.executeSql(statement, args);
                         });
                     }, function( sqlError ) { // errorCallback
-                        M.Logger.error(M.CONST.ERROR.WEBSQL_SYNTAX, sqlError.message);
+                        console.error(sqlError.message);
                         that.handleError(options, sqlError.message, lastStatement);
                     }, function() {
                         that.handleSuccess(options);
                     });
                 } catch( e ) {
-                    M.Logger.error(M.CONST.ERROR.WEBSQL_UNKNOWN, e.message);
+                    console.error(e.message);
                 }
             }
             if( error ) {
@@ -5275,7 +3953,7 @@
             // has to be initialized first
             if( !this.db ) {
                 var error = 'db handler not initialized.';
-                M.Logger.error(M.CONST.ERROR.WEBSQL_NO_DBHANDLER, error);
+                console.error(error);
                 this.handleError(options, error);
                 return false;
             }
@@ -5387,7 +4065,7 @@
                 var that = this;
                 var endpoint = this.endpoints[hash];
                 if( !endpoint ) {
-                    var href = M.Request.getLocation(url);
+                    var href = this.getLocation(url);
                     endpoint = {};
                     endpoint.baseUrl = url;
                     endpoint.readUrl = collection.getUrl();
@@ -5821,6 +4499,29 @@
                     this.setLastMessageTime(endpoint.channel, '');
                 }
             }
+        },
+    
+       /*
+         url = "http://example.com:3000/pathname/?search=test#hash";
+    
+         location.protocol; // => "http:"
+         location.host;     // => "example.com:3000"
+         location.hostname; // => "example.com"
+         location.port;     // => "3000"
+         location.pathname; // => "/pathname/"
+         location.hash;     // => "#hash"
+         location.search;   // => "?search=test"
+         */
+        getLocation: function( url ) {
+            var location = document.createElement('a');
+            location.href = url || this.url;
+            // IE doesn't populate all link properties when setting .href with a relative URL,
+            // however .href will return an absolute URL which then can be used on itself
+            // to populate these additional fields.
+            if( location.host === '' ) {
+                location.href = location.href;
+            }
+            return location;
         }
     });
     

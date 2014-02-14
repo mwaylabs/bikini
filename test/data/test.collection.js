@@ -75,10 +75,10 @@ describe('M.Collection', function() {
             entity: {
                 name: 'Developer',
                 fields: {
-                    _id: { type: M.CONST.TYPE.STRING },
-                    sureName: { name: 'lastName', type: M.CONST.TYPE.STRING, required: YES, index: true },
-                    firstName: { type: M.CONST.TYPE.STRING, length: 200 },
-                    age: { type: M.CONST.TYPE.INTEGER }
+                    _id: { type: M.DATA.TYPE.STRING },
+                    sureName: { name: 'lastName', type: M.DATA.TYPE.STRING, required: YES, index: true },
+                    firstName: { type: M.DATA.TYPE.STRING, length: 200 },
+                    age: { type: M.DATA.TYPE.INTEGER }
                 }
             }
         });

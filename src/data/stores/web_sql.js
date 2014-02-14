@@ -27,10 +27,10 @@
  * var MyModel = M.Model.extend({
  *      idAttribute: 'id',
  *      fields: {
- *          id:          { type: M.CONST.TYPE.STRING,  required: YES, index: YES },
- *          sureName:    { name: 'USERNAME', type: M.CONST.TYPE.STRING },
- *          firstName:   { type: M.CONST.TYPE.STRING,  length: 200 },
- *          age:         { type: M.CONST.TYPE.INTEGER }
+ *          id:          { type: M.DATA.TYPE.STRING,  required: YES, index: YES },
+ *          sureName:    { name: 'USERNAME', type: M.DATA.TYPE.STRING },
+ *          firstName:   { type: M.DATA.TYPE.STRING,  length: 200 },
+ *          age:         { type: M.DATA.TYPE.INTEGER }
  *      }
  * });
  *
@@ -58,24 +58,24 @@ M.WebSqlStore = M.Store.extend({
 
     typeMapping: (function() {
         var map = {};
-        map [M.CONST.TYPE.OBJECTID] = M.CONST.TYPE.STRING;
-        map [M.CONST.TYPE.DATE] = M.CONST.TYPE.STRING;
-        map [M.CONST.TYPE.OBJECT] = M.CONST.TYPE.TEXT;
-        map [M.CONST.TYPE.ARRAY] = M.CONST.TYPE.TEXT;
-        map [M.CONST.TYPE.BINARY] = M.CONST.TYPE.TEXT;
+        map [M.DATA.TYPE.OBJECTID] = M.DATA.TYPE.STRING;
+        map [M.DATA.TYPE.DATE] = M.DATA.TYPE.STRING;
+        map [M.DATA.TYPE.OBJECT] = M.DATA.TYPE.TEXT;
+        map [M.DATA.TYPE.ARRAY] = M.DATA.TYPE.TEXT;
+        map [M.DATA.TYPE.BINARY] = M.DATA.TYPE.TEXT;
         return map;
     })(),
 
     sqlTypeMapping: (function() {
         var map = {};
-        map [M.CONST.TYPE.STRING] = 'varchar(255)';
-        map [M.CONST.TYPE.TEXT] = 'text';
-        map [M.CONST.TYPE.OBJECT] = 'text';
-        map [M.CONST.TYPE.ARRAY] = 'text';
-        map [M.CONST.TYPE.FLOAT] = 'float';
-        map [M.CONST.TYPE.INTEGER] = 'integer';
-        map [M.CONST.TYPE.DATE] = 'varchar(255)';
-        map [M.CONST.TYPE.BOOLEAN] = 'boolean';
+        map [M.DATA.TYPE.STRING] = 'varchar(255)';
+        map [M.DATA.TYPE.TEXT] = 'text';
+        map [M.DATA.TYPE.OBJECT] = 'text';
+        map [M.DATA.TYPE.ARRAY] = 'text';
+        map [M.DATA.TYPE.FLOAT] = 'float';
+        map [M.DATA.TYPE.INTEGER] = 'integer';
+        map [M.DATA.TYPE.DATE] = 'varchar(255)';
+        map [M.DATA.TYPE.BOOLEAN] = 'boolean';
         return map;
     })(),
 
@@ -91,7 +91,7 @@ M.WebSqlStore = M.Store.extend({
 
         this._openDb({
             error: function( msg ) {
-                M.Logger.error(M.CONST.LOGGER.TAG_FRAMEWORK_DATA, msg);
+                console.error(msg);
             }
         });
     },
@@ -193,7 +193,7 @@ M.WebSqlStore = M.Store.extend({
                 var arSql = this._sqlUpdateDatabase(db.version, this.options.version);
                 db.changeVersion(db.version, this.options.version, function( tx ) {
                     _.each(arSql, function( sql ) {
-                        M.Logger.log(M.CONST.LOGGER.TAG_FRAMEWORK_DATA, 'SQL-Statement: ' + sql);
+                        console.log('sql statement: ' + sql);
                         lastSql = sql;
                         tx.executeSql(sql);
                     });
@@ -204,7 +204,7 @@ M.WebSqlStore = M.Store.extend({
                 });
             } catch( e ) {
                 error = e.message;
-                M.Logger.error(M.CONST.LOGGER.TAG_FRAMEWORK_DATA, 'changeversion failed, DB-Version: ' + db.version);
+                console.error('webSql change version failed, DB-Version: ' + db.version);
             }
         } catch( e ) {
             error = e.message;
@@ -234,7 +234,7 @@ M.WebSqlStore = M.Store.extend({
     _isAutoincrementKey: function( entity, key ) {
         if( entity && key ) {
             var column = this.getField(entity, key);
-            return column && column.type === M.CONST.TYPE.INTEGER;
+            return column && column.type === M.DATA.TYPE.INTEGER;
         }
     },
 
@@ -369,14 +369,14 @@ M.WebSqlStore = M.Store.extend({
 
     _sqlValue: function( value, field ) {
         var type = field && field.type ? field.type : M.Field.prototype.detectType(value);
-        if( type === M.CONST.TYPE.INTEGER || type === M.CONST.TYPE.FLOAT ) {
+        if( type === M.DATA.TYPE.INTEGER || type === M.DATA.TYPE.FLOAT ) {
             return value;
-        } else if( type === M.CONST.TYPE.BOOLEAN ) {
+        } else if( type === M.DATA.TYPE.BOOLEAN ) {
             return value ? '1' : '0';
-        } else if( type === M.CONST.TYPE.NULL ) {
+        } else if( type === M.DATA.TYPE.NULL ) {
             return 'NULL';
         }
-        value = M.Field.prototype.transform(value, M.CONST.TYPE.STRING);
+        value = M.Field.prototype.transform(value, M.DATA.TYPE.STRING);
         value = value.replace(/"/g, '""');
         return '"' + value + '"';
     },
@@ -486,9 +486,9 @@ M.WebSqlStore = M.Store.extend({
                 var statement = stm.statement || stm;
                 var args = stm.arguments;
                 lastStatement = statement;
-                M.Logger.log(M.CONST.LOGGER.TAG_FRAMEWORK_DATA, 'SQL-Statement: ' + statement);
+                console.log('sql statement: ' + statement);
                 if( args ) {
-                    M.Logger.log(M.CONST.LOGGER.TAG_FRAMEWORK_DATA, '    Arguments: ' + JSON.stringify(args));
+                    console.log('    arguments: ' + JSON.stringify(args));
                 }
                 t.executeSql(statement, args, function( tx, res ) {
                     var len = res.rows.length;//, i;
@@ -512,11 +512,12 @@ M.WebSqlStore = M.Store.extend({
                             }
                         }
                     }
-                }, function() {
-                    // M.Logger.log('Incorrect statement: ' + sql, M.ERR)
-                }); // callbacks: SQLStatementErrorCallback
+                }, function (t, e) {
+                    // error
+                    console.error('webSql error: ' + e.message);
+                });
             }, function( sqlError ) { // errorCallback
-                M.Logger.error(M.CONST.ERROR.WEBSQL_SYNTAX, 'WebSql Syntax Error: ' + sqlError.message);
+                console.error('WebSql Syntax Error: ' + sqlError.message);
                 that.handleError(options, sqlError.message, lastStatement);
             }, function() { // voidCallback (success)
                 that.handleSuccess(options, result);
@@ -552,20 +553,20 @@ M.WebSqlStore = M.Store.extend({
                         var statement = stm.statement || stm;
                         var args = stm.arguments;
                         lastStatement = statement;
-                        M.Logger.log(M.CONST.LOGGER.TAG_FRAMEWORK_DATA, 'SQL-Statement: ' + statement);
+                        console.log('sql statement: ' + statement);
                         if( args ) {
-                            M.Logger.log(M.CONST.LOGGER.TAG_FRAMEWORK_DATA, '    Arguments: ' + JSON.stringify(args));
+                            console.log('    arguments: ' + JSON.stringify(args));
                         }
                         t.executeSql(statement, args);
                     });
                 }, function( sqlError ) { // errorCallback
-                    M.Logger.error(M.CONST.ERROR.WEBSQL_SYNTAX, sqlError.message);
+                    console.error(sqlError.message);
                     that.handleError(options, sqlError.message, lastStatement);
                 }, function() {
                     that.handleSuccess(options);
                 });
             } catch( e ) {
-                M.Logger.error(M.CONST.ERROR.WEBSQL_UNKNOWN, e.message);
+                console.error(e.message);
             }
         }
         if( error ) {
@@ -583,7 +584,7 @@ M.WebSqlStore = M.Store.extend({
         // has to be initialized first
         if( !this.db ) {
             var error = 'db handler not initialized.';
-            M.Logger.error(M.CONST.ERROR.WEBSQL_NO_DBHANDLER, error);
+            console.error(error);
             this.handleError(options, error);
             return false;
         }

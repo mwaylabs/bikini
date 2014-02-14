@@ -80,35 +80,35 @@ _.extend(M.Field.prototype, M.Object, {
             if (_.isUndefined(value)) {
                 return this.defaultValue;
             }
-            if (type === M.CONST.TYPE.STRING || type === M.CONST.TYPE.TEXT) {
+            if (type === M.DATA.TYPE.STRING || type === M.DATA.TYPE.TEXT) {
                 if (_.isObject(value)) {
                     return JSON.stringify(value);
                 } else {
                     return _.isNull(value) ? 'null' : value.toString();
                 }
-            } else if (type === M.CONST.TYPE.INTEGER) {
+            } else if (type === M.DATA.TYPE.INTEGER) {
                 return parseInt(value);
-            } else if (type === M.CONST.TYPE.BOOLEAN) {
+            } else if (type === M.DATA.TYPE.BOOLEAN) {
                 return value === true || value === 'true'; // true, 1, "1" or "true"
-            } else if (type === M.CONST.TYPE.FLOAT) {
+            } else if (type === M.DATA.TYPE.FLOAT) {
                 return parseFloat(value);
-            } else if (type === M.CONST.TYPE.OBJECT || type === M.CONST.TYPE.ARRAY) {
+            } else if (type === M.DATA.TYPE.OBJECT || type === M.DATA.TYPE.ARRAY) {
                 if (!_.isObject(value)) {
                     return _.isString(value) ? JSON.parse(value) : null;
                 }
-            } else if (type === M.CONST.TYPE.DATE) {
+            } else if (type === M.DATA.TYPE.DATE) {
                 if (!M.Date.isPrototypeOf(value)) {
                     var date = value ? M.Date.create(value) : null;
                     return date && date.isValid() ? date : null;
                 }
-            } else if (type === M.CONST.TYPE.OBJECTID) {
+            } else if (type === M.DATA.TYPE.OBJECTID) {
                 if (!M.ObjectID.prototype.isPrototypeOf(value)) {
                     return _.isString(value) ? new M.ObjectID(value) : null;
                 }
             }
             return value;
         } catch (e) {
-            M.Logger.error(M.CONST.LOGGER.TAG_FRAMEWORK_DATA, 'Failed converting value! ' + e.message);
+            console.error('Failed converting value! ' + e.message);
         }
     },
 
@@ -143,30 +143,30 @@ _.extend(M.Field.prototype, M.Object, {
      */
     detectType: function (v) {
         if (_.isNumber(v)) {
-            return M.CONST.TYPE.FLOAT;
+            return M.DATA.TYPE.FLOAT;
         }
         if (_.isString(v)) {
-            return M.CONST.TYPE.STRING;
+            return M.DATA.TYPE.STRING;
         }
         if (_.isBoolean(v)) {
-            return M.CONST.TYPE.BOOLEAN;
+            return M.DATA.TYPE.BOOLEAN;
         }
         if (_.isArray(v)) {
-            return M.CONST.TYPE.ARRAY;
+            return M.DATA.TYPE.ARRAY;
         }
         if (_.isNull(v)) {
-            return M.CONST.TYPE.NULL;
+            return M.DATA.TYPE.NULL;
         }
         if (_.isDate(v) || M.Date.isPrototypeOf(v)) {
-            return M.CONST.TYPE.DATE;
+            return M.DATA.TYPE.DATE;
         }
         if (M.ObjectID.prototype.isPrototypeOf(v)) {
-            return M.CONST.TYPE.OBJECTID;
+            return M.DATA.TYPE.OBJECTID;
         }
         if (this.isBinary(v)) {
-            return M.CONST.TYPE.BINARY;
+            return M.DATA.TYPE.BINARY;
         }
-        return M.CONST.TYPE.OBJECT;
+        return M.DATA.TYPE.OBJECT;
     },
 
     /**
@@ -177,19 +177,19 @@ _.extend(M.Field.prototype, M.Object, {
      */
     typeOrder: function (type) {
         switch (type) {
-            case M.CONST.TYPE.NULL   :
+            case M.DATA.TYPE.NULL   :
                 return 0;
-            case M.CONST.TYPE.FLOAT  :
+            case M.DATA.TYPE.FLOAT  :
                 return 1;
-            case M.CONST.TYPE.STRING :
+            case M.DATA.TYPE.STRING :
                 return 2;
-            case M.CONST.TYPE.OBJECT :
+            case M.DATA.TYPE.OBJECT :
                 return 3;
-            case M.CONST.TYPE.ARRAY  :
+            case M.DATA.TYPE.ARRAY  :
                 return 4;
-            case M.CONST.TYPE.BINARY :
+            case M.DATA.TYPE.BINARY :
                 return 5;
-            case M.CONST.TYPE.DATE   :
+            case M.DATA.TYPE.DATE   :
                 return 6;
         }
         return -1;
@@ -311,19 +311,19 @@ _.extend(M.Field.prototype, M.Object, {
             a = a.toHexString();
             b = b.toHexString();
         }
-        if (ta === M.CONST.TYPE.DATE) {
+        if (ta === M.DATA.TYPE.DATE) {
             // Convert to millis.
             ta = tb = 1;
             a = a.getTime();
             b = b.getTime();
         }
-        if (ta === M.CONST.TYPE.FLOAT) {
+        if (ta === M.DATA.TYPE.FLOAT) {
             return a - b;
         }
-        if (tb === M.CONST.TYPE.STRING) {
+        if (tb === M.DATA.TYPE.STRING) {
             return a < b ? -1 : (a === b ? 0 : 1);
         }
-        if (ta === M.CONST.TYPE.OBJECT) {
+        if (ta === M.DATA.TYPE.OBJECT) {
             // this could be much more efficient in the expected case ...
             var toArray = function (obj) {
                 var ret = [];
@@ -335,7 +335,7 @@ _.extend(M.Field.prototype, M.Object, {
             };
             return this._cmp(toArray(a), toArray(b));
         }
-        if (ta === M.CONST.TYPE.ARRAY) { // Array
+        if (ta === M.DATA.TYPE.ARRAY) { // Array
             for (i = 0; ; i++) {
                 if (i === a.length) {
                     return (i === b.length) ? 0 : -1;
@@ -349,7 +349,7 @@ _.extend(M.Field.prototype, M.Object, {
                 }
             }
         }
-        if (ta === M.CONST.TYPE.BINARY) {
+        if (ta === M.DATA.TYPE.BINARY) {
             if (a.length !== b.length) {
                 return a.length - b.length;
             }
@@ -363,16 +363,16 @@ _.extend(M.Field.prototype, M.Object, {
             }
             return 0;
         }
-        if (ta === M.CONST.TYPE.BOOLEAN) {
+        if (ta === M.DATA.TYPE.BOOLEAN) {
             if (a) {
                 return b ? 0 : 1;
             }
             return b ? -1 : 0;
         }
-        if (ta === M.CONST.TYPE.NULL) {
+        if (ta === M.DATA.TYPE.NULL) {
             return 0;
         }
-//        if( ta === M.CONST.TYPE.REGEXP ) {
+//        if( ta === M.DATA.TYPE.REGEXP ) {
 //            throw Error("Sorting not supported on regular expression");
 //        } // XXX
 //        if( ta === 13 ) // javascript code

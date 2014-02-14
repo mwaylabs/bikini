@@ -5,8 +5,8 @@
  *
  * @module M.Object
  *
- * @type {{_type: string, _implementedInterfaces: null, _create: Function, include: Function, design: Function, implement: Function, hasInterfaceImplementation: Function, bindToCaller: Function, _init: Function, _normalize: Function, handleCallback: Function, getObjectType: Function, _addInterfaces: Function}}
- */
+ * @type {Object}
+ **/
 M.Object = {
     /**
      * The type of this object.
@@ -14,14 +14,6 @@ M.Object = {
      * @type String
      */
     _type: 'M.Object',
-
-    /**
-     * This property contains an array of interfaces the object implements. This
-     * is used internally for initializing the object properly.
-     *
-     * @type {Array}
-     */
-    _implementedInterfaces: null,
 
     /**
      * Creates an object based on a passed prototype.
@@ -66,63 +58,10 @@ M.Object = {
         /* assign the properties passed with the arguments array */
         obj.include(this._normalize(properties));
 
-        /* call the new object's _init method to initialize it */
-        obj._init();
-
-        /* check if the object implements an interface and init it properly */
-        _.each(obj._implementedInterfaces, function( i ) {
-            obj.bindToCaller(obj, i._init)();
-        }, obj);
-
         /* return the new object */
         return obj;
     },
 
-    /**
-     * This method is used for adding a certain interface to an existing object. It
-     * therefore calls the getInterface() method of the given object and attaches the
-     * returned interface to the object. If there already is an implementation of a
-     * certain property or method, that one is skipped. So it is possible to overwrite
-     * interface suff within the object itself.
-     *
-     * @param {M.Interface} obj The interface to be implemented.
-     * @returns {Object}
-     */
-    implement: function( obj ) {
-        if( obj && obj.isMInterface ) {
-            var i = obj.getInterface(this);
-
-            _.each(i, function( value, key ) {
-                if( this[key] ) {
-                    i[key] = null;
-                    delete i[key];
-                }
-            }, this);
-
-            this.include(i);
-
-            this._implementedInterfaces = this._implementedInterfaces || [];
-        }
-
-        return this;
-    },
-
-    /**
-     * This method checks whether an object implements a certain interface or not.
-     *
-     * @param {Object} obj The interface to check for.
-     * @returns {Boolean}
-     */
-    hasInterfaceImplementation: function( obj ) {
-        var hasInterfaceImplementation = NO;
-        _.each(this._implementedInterfaces, function( i ) {
-            if( obj === i ) {
-                hasInterfaceImplementation = YES;
-            }
-        }, this);
-
-        return hasInterfaceImplementation;
-    },
 
     /**
      * Binds a method to its caller, so it is always executed within the right scope.
@@ -141,16 +80,6 @@ M.Object = {
             }
             return method.call(caller, arg);
         };
-    },
-
-    /**
-     * This method is called right after the creation of a new object and can be used to
-     * initialize some internal properties.
-     *
-     * This implementation in M.Object only serves as some kind of 'interface' declaration.
-     */
-    _init: function() {
-
     },
 
     /**
@@ -186,30 +115,6 @@ M.Object = {
                 return this.bindToCaller(target, action, args)();
             }
         }
-    },
-
-    /**
-     * Returns the type of the object.
-     *
-     * @return {String}
-     */
-    getObjectType: function() {
-        return this._type;
-    },
-
-    /**
-     * Loops over the registered interfaces and bind them to itself
-     * @private
-     */
-
-    _addInterfaces: function() {
-        _.each(this._implementedInterfaces, function( value ) {
-            this.implement(value);
-        }, this);
-    },
-
-    deepCopy: function( value ) {
-        return JSON.parse(JSON.stringify(value));
     }
 
 };

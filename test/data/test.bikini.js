@@ -1,4 +1,4 @@
-describe.skip('M.BikiniStore', function() {
+describe('M.BikiniStore', function() {
 
     var TEST = {
         data : {
@@ -29,10 +29,10 @@ describe.skip('M.BikiniStore', function() {
             entity: {
                 name: 'test',
                 fields:  {
-                    _id:         { type: M.CONST.TYPE.STRING,  required: YES, index: YES },
-                    sureName:    { name: 'USERNAME', type: M.CONST.TYPE.STRING,  required: YES, index: YES },
-                    firstName:   { type: M.CONST.TYPE.STRING,  length: 200 },
-                    age:         { type: M.CONST.TYPE.INTEGER }
+                    _id:         { type: M.DATA.TYPE.STRING,  required: YES, index: YES },
+                    sureName:    { name: 'USERNAME', type: M.DATA.TYPE.STRING,  required: YES, index: YES },
+                    firstName:   { type: M.DATA.TYPE.STRING,  length: 200 },
+                    age:         { type: M.DATA.TYPE.INTEGER }
                 }
             }
         });

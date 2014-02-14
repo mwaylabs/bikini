@@ -2,11 +2,11 @@ describe('M.Entity', function() {
 
     var TEST = {
         fields:  {
-            id:          { type: M.CONST.TYPE.STRING,  required: YES, index: YES },
-            sureName:    { name: 'USERNAME', type: M.CONST.TYPE.STRING,  required: YES, index: YES },
-            firstName:   { type: M.CONST.TYPE.STRING,  length: 200 },
-            age:         M.CONST.TYPE.INTEGER,
-            birthday:    M.CONST.TYPE.DATE
+            id:          { type: M.DATA.TYPE.STRING,  required: YES, index: YES },
+            sureName:    { name: 'USERNAME', type: M.DATA.TYPE.STRING,  required: YES, index: YES },
+            firstName:   { type: M.DATA.TYPE.STRING,  length: 200 },
+            age:         M.DATA.TYPE.INTEGER,
+            birthday:    M.DATA.TYPE.DATE
         }
     }
 

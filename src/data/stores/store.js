@@ -30,9 +30,9 @@ _.extend(M.Store.prototype, Backbone.Events, M.Object, {
 
     typeMapping: (function() {
         var map = {};
-        map [M.CONST.TYPE.OBJECTID] = M.CONST.TYPE.STRING;
-        map [M.CONST.TYPE.DATE] = M.CONST.TYPE.STRING;
-        map [M.CONST.TYPE.BINARY] = M.CONST.TYPE.TEXT;
+        map [M.DATA.TYPE.OBJECTID] = M.DATA.TYPE.STRING;
+        map [M.DATA.TYPE.DATE] = M.DATA.TYPE.STRING;
+        map [M.DATA.TYPE.BINARY] = M.DATA.TYPE.TEXT;
         return map;
     })(),
 
@@ -203,8 +203,8 @@ _.extend(M.Store.prototype, Backbone.Events, M.Object, {
 
     _checkEntity: function( obj, entity ) {
         if( !M.isEntity(entity) ) {
-            var error = 'No valid entity passed.';
-            M.Logger.error(M.CONST.ERROR.VALIDATION_PRESENCE, error);
+            var error = M.Store.CONST.ERROR_NO_ENTITY;
+            console.error(error);
             this.handleCallback(obj.error, error);
             this.handleCallback(obj.finish, error);
             return false;
@@ -214,8 +214,8 @@ _.extend(M.Store.prototype, Backbone.Events, M.Object, {
 
     _checkData: function( obj, data ) {
         if( (!_.isArray(data) || data.length === 0) && !_.isObject(data) ) {
-            var error = 'No data passed.';
-            M.Logger.error(M.CONST.ERROR.VALIDATION_PRESENCE, error);
+            var error = M.Store.CONST.ERROR_NO_DATA;
+            console.error(error);
             this.handleCallback(obj.error, error);
             this.handleCallback(obj.finish, error);
             return false;
@@ -244,11 +244,12 @@ _.extend(M.Store.prototype, Backbone.Events, M.Object, {
     },
 
     CONST: {
-        ERROR_NO_ENTITY: 'No valid entity specified',
-        ERROR_LOAD_DATA: 'Error while loading data from store',
-        ERROR_SAVE_DATA: 'Error while saving data to the store',
-        ERROR_LOAD_IDS:  'Error while loading ids from store',
-        ERROR_SAVE_IDS:  'Error while saving ids to the store'
+        ERROR_NO_ENTITY: 'No valid entity specified. ',
+        ERROR_NO_DATA:   'No data passed. ',
+        ERROR_LOAD_DATA: 'Error while loading data from store. ',
+        ERROR_SAVE_DATA: 'Error while saving data to the store. ',
+        ERROR_LOAD_IDS:  'Error while loading ids from store. ',
+        ERROR_SAVE_IDS:  'Error while saving ids to the store. '
     }
 
 });

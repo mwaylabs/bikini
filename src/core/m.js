@@ -51,34 +51,34 @@ M.isEntity = function( entity ) {
     return M.Entity.prototype.isPrototypeOf(entity);
 };
 
-M.isI18NItem = function( entity ) {
-    return (entity && entity._type && entity._type === 'M.I18NItem') ? true : false;
-};
-
-M.isController = function( entity ) {
-    return M.Controller.prototype.isPrototypeOf(entity);
-};
-
-/**
- *
- * Check if the given object is a M.View
- * @param {Object} Check this property if it inherits from M.View
- * @returns {boolean}
+/***
+ * Data type Constants.
  */
-M.isView = function( view ) {
-    return M.View.prototype.isPrototypeOf(view);
-};
+M.DATA = {
+    TYPE: {
+        INTEGER: 'integer',
 
-/**
- * Extend a function with the given interfaces
- * @param interfaces
- * @returns {M}
- */
-M.implements = function( interfaces ) {
-    this.prototype._implementedInterfaces = interfaces;
-    return this;
-};
+        STRING: 'string',
 
+        TEXT: 'text',
+
+        DATE: 'date',
+
+        BOOLEAN: 'boolean',
+
+        FLOAT: 'float',
+
+        OBJECT: 'object',
+
+        ARRAY: 'array',
+
+        BINARY: 'binary',
+
+        OBJECTID: 'objectid',
+
+        NULL: 'null'
+    }
+};
 
 /**
  * Readable alias for true

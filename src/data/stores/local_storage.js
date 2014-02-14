@@ -104,7 +104,7 @@ M.LocalStorageStore = M.Store.extend({
                     this._delItemId(id);
                 }
             } catch( e ) {
-                M.Logger.error(M.CONST.LOGGER.TAG_FRAMEWORK_DATA, M.Store.CONST.ERROR_LOAD_DATA, e);
+                console.error(M.Store.CONST.ERROR_LOAD_DATA + e.message);
             }
         }
         return attrs;
@@ -116,7 +116,7 @@ M.LocalStorageStore = M.Store.extend({
                 localStorage.setItem(this._getKey(entity, id), JSON.stringify(attrs));
                 this._addItemId(entity, id);
             } catch( e ) {
-                M.Logger.error(M.CONST.LOGGER.TAG_FRAMEWORK_DATA, M.Store.CONST.ERROR_SAVE_DATA, e);
+                console.error(M.Store.CONST.ERROR_SAVE_DATA + e.message);
             }
         }
     },
@@ -167,7 +167,7 @@ M.LocalStorageStore = M.Store.extend({
             }
             return this.ids[entity.name];
         } catch( e ) {
-            M.Logger.error(M.CONST.LOGGER.TAG_FRAMEWORK_DATA, M.Store.CONST.ERROR_LOAD_IDS, e);
+            console.error(M.Store.CONST.ERROR_LOAD_IDS + e.message);
         }
     },
 
@@ -176,7 +176,7 @@ M.LocalStorageStore = M.Store.extend({
             var key = '__ids__' + entity.name;
             localStorage.setItem(key, JSON.stringify(ids));
         } catch( e ) {
-            M.Logger.error(M.CONST.LOGGER.TAG_FRAMEWORK_DATA, M.Store.CONST.ERROR_SAVE_IDS, e);
+            console.error(M.Store.CONST.ERROR_SAVE_IDS + e.message);
         }
     }
 });
