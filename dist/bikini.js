@@ -1,8 +1,8 @@
 /*!
 * Project:   The M-Project - Mobile HTML5 Application Framework
 * Copyright: (c) 2014 M-Way Solutions GmbH.
-* Version:   2.0.0-beta3
-* Date:      Fri Feb 14 2014 17:44:36
+* Version:   0.5.0
+* Date:      Tue Mar 18 2014 17:16:14
 * License:   http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
 */
 
@@ -27,7 +27,7 @@
      * Version number of current release
      * @type {String}
      */
-    Bikini.Version = Bikini.version = '2.0.0-beta3';
+    Bikini.Version = Bikini.version = '0.5.0';
     
     /**
      * Empty function to be used when
