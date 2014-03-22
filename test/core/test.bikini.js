@@ -1,4 +1,3 @@
-
 describe('Bikini Namespace', function () {
 
     it('Bikini', function() {
@@ -9,7 +8,6 @@ describe('Bikini Namespace', function () {
     it('Bikini.Version', function() {
         assert.ok(Bikini.Version && Bikini.hasOwnProperty('Version'), 'Bikini.Version is defined');
         assert.ok(typeof Bikini.Version === 'string', 'Bikini.Version is a string');
-        assert.ok(parseInt(Bikini.Version.split('.')[0]) >= 2, 'old TMP version ');
     });
 
     it('Bikini.f', function() {
