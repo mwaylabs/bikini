@@ -3,6 +3,7 @@ var exec = require('child_process').exec;
 exec('mongod run --config /usr/local/etc/mongod.conf', function(){});
 
 var express      = require('express');
+var bodyParser   = require('body-parser')
 var server       = express();
 var http_server  = require('http').createServer(server);
 var socketPath   = '/bikini/live';
@@ -16,7 +17,7 @@ console.log('http://127.0.0.1:' + PORT);
 
 server.use(express.static(__dirname + '/public/'));
 server.use(express.static(__dirname + '/../framework/'));
-server.use(express.bodyParser());
+server.use(bodyParser());
 
 /* Allow Access-Control-Allow-Origin to everyone */
 server.use(function(req, res, next) {
@@ -101,4 +102,3 @@ sockets.handleMessage = function(entity, msg, callback) {
 sockets.readMessages = function(entity, time, callback) {
     rest.readMessages(entity, time, callback);
 };
-
