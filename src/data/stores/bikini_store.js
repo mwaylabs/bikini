@@ -357,7 +357,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
         var that = this;
         var url = Bikini.isModel(model) || msg.method !== 'read' ? endpoint.baseUrl : endpoint.readUrl;
         if( msg.id && msg.method !== 'create' ) {
-            url += '/' + msg.id;
+            url += (url.charAt(url.length - 1) === '/' ? '' : '/' ) + msg.id;
         }
         model.sync.apply(model, [msg.method, model, {
             url: url,
