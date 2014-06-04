@@ -2,7 +2,7 @@
 * Project:   The M-Project - Mobile HTML5 Application Framework
 * Copyright: (c) 2014 M-Way Solutions GmbH.
 * Version:   0.5.0
-* Date:      Tue Mar 18 2014 17:16:14
+* Date:      Wed Jun 04 2014 15:20:38
 * License:   http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
 */
 
@@ -4328,7 +4328,7 @@
             var that = this;
             var url = Bikini.isModel(model) || msg.method !== 'read' ? endpoint.baseUrl : endpoint.readUrl;
             if( msg.id && msg.method !== 'create' ) {
-                url += '/' + msg.id;
+                url += (url.charAt(url.length - 1) === '/' ? '' : '/' ) + msg.id;
             }
             model.sync.apply(model, [msg.method, model, {
                 url: url,
