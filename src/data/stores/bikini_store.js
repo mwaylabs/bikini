@@ -146,11 +146,12 @@ Bikini.BikiniStore = Bikini.Store.extend({
     },
 
     createSocket: function( endpoint, name ) {
-        if( this.options.useSocketNotify && endpoint.socketPath && endpoint ) {
+        if( this.options.useSocketNotify && endpoint && endpoint.socketPath) {
             var that = this;
             var url  = endpoint.host;
             var path = endpoint.path;
-            path = endpoint.socketPath || (path + (path.charAt(path.length - 1) === '/' ? '' : '/' ) + 'live');
+            //path = endpoint.socketPath || (path + (path.charAt(path.length - 1) === '/' ? '' : '/' ) + 'live');
+            path = endpoint.socketPath;
             // remove leading /
             var resource = (path && path.indexOf('/') === 0) ? path.substr(1) : path;
 
@@ -433,8 +434,11 @@ Bikini.BikiniStore = Bikini.Store.extend({
         if( endpoint && endpoint.baseUrl ) {
             var info = new Bikini.Model();
             var time = that.getLastMessageTime(endpoint.channel);
+            if (endpoint.baseUrl.charAt((endpoint.baseUrl.length - 1)) !== '/') {
+                endpoint.baseUrl += endpoint.baseUrl + '/';
+            }
             info.fetch({
-                url: endpoint.baseUrl + '/info',
+                url: endpoint.baseUrl + 'info',
                 success: function() {
                     if( !time && info.get('time') ) {
                         that.setLastMessageTime(endpoint.channel, info.get('time'));
