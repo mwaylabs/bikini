@@ -4,9 +4,9 @@
     "version": "0.0.1",
     "private": true,
     "dependencies": {
-        "express": "^4.2.0",
+        "express": "~3.5.0",
         "body-parser": "^1.2.0",
         "mongodb": "^1.4.4",
-        "socket.io": "^1.0.0-pre2"
+        "socket.io": "~0.9.0"
     }
 }
