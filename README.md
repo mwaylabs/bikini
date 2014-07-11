@@ -36,6 +36,7 @@ add the libraries to your `.html` file
 ```
 
 *now, let's set up the magic*
+
 first, we need to define our Model and the according Collection
 ```
 // Configure the Model
@@ -54,7 +55,7 @@ var MyBikiniServiceCollection = Bikini.Collection.extend({
 ```
 
 
-To fetch data, you simply can call the Backbonejs function fetch()
+To fetch data, you can simply call the Backbonejs function fetch()
 ```
 var myCollection = new MyBikiniServiceCollection();
 myBikiniServiceCollection.fetch();
