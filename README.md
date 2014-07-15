@@ -31,7 +31,7 @@ cd into your project
 bower install -S bikini
 ```
 add the libraries to your `.html` file
-```
+```html
 <script src="bower_components/jquery/jquery.js"></script>
 <script src="bower_components/underscore/underscore.js"></script>
 <script src="bower_components/socket.io-client/socket.io.js"></script>
