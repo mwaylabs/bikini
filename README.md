@@ -42,7 +42,7 @@ add the libraries to your `.html` file
 *now, let's set up the magic*
 
 first, we need to define our Model and the according Collection
-```
+```js
 // Configure the Model
 // Attribute key to identify the data
 var MyBikiniServiceModel = Bikini.Model.extend({
@@ -60,13 +60,13 @@ var MyBikiniServiceCollection = Bikini.Collection.extend({
 
 
 To fetch data, you can simply call the Backbonejs function fetch()
-```
+```js
 var myCollection = new MyBikiniServiceCollection();
 myBikiniServiceCollection.fetch();
 ```
 
 You can listen to all the common Backbonejs events such as `sync`.
-```
+```js
 myCollection.on('sync', function() {
     console.log(arguments);
 });
