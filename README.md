@@ -2,6 +2,8 @@
 
 **Everything a model needs.**
 
+[![Build Status](https://travis-ci.org/mwaylabs/bikini.svg?branch=v0.5.2)](https://travis-ci.org/mwaylabs/bikini)
+
 ## What is Bikini
 
 **Bikini** lets you treat  being **offline** as a status. Not as an error.
