@@ -134,7 +134,13 @@ module.exports = function (grunt) {
                 script: './server/server.js'
               }
             }
-        }
+        },
+        'gh-pages': {
+		    options: {
+		      base: 'doc'
+		    },
+		    src: ['**']
+		  }
     });
 
 
@@ -151,6 +157,6 @@ module.exports = function (grunt) {
     grunt.registerTask('travis', ['jsonlint', 'default', 'test']);
     grunt.registerTask('default', ['build']);
 
-    grunt.registerTask('build-doc', ['clean:md','curl-dir', 'rewriteMarkdownFiles', 'jsdoc', 'clean:md']);
+    grunt.registerTask('build-doc', ['clean:md','curl-dir', 'rewriteMarkdownFiles', 'jsdoc', 'clean:md', 'gh-pages']);
 
 };
