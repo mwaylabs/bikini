@@ -100,12 +100,9 @@ module.exports = function (grunt) {
         },
         jsdoc : {
             dist : {
-                src: ['doc-template/.tmp/index.md','src/connection/*.js','src/core/*.js','src/data/*.js','src/data/stores/*.js','src/interfaces/*.js','src/ui/*.js','src/ui/layouts/*.js','src/ui/views/*.js','src/utility/*.js'],
+                src: ['dist/bikini.js'],
                 options:{
                     destination: 'doc',
-                    template: "doc-template",
-                    configure: "doc-template/jsdoc.conf.json",
-                    tutorials: "doc-template/additional",
                     private: false
                 }
             }
