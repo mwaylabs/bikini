@@ -142,11 +142,11 @@ module.exports = function (grunt) {
 
     grunt.loadNpmTasks('grunt-express-server');
 
-    grunt.registerTask('build', ['preprocess:dev']);
+    grunt.registerTask('build', ['preprocess:dev', ]);
 
     grunt.registerTask('dev', ['default', 'watch']);
     grunt.registerTask('test', ['jshint', /*'express:test',*/ 'mocha']);
-    grunt.registerTask('dist', ['jshint', 'preprocess:dist', 'uglify']);
+    grunt.registerTask('dist', ['jshint', 'preprocess:dist', 'uglify', 'build-doc']);
     grunt.registerTask('precommit', ['travis']);
     grunt.registerTask('travis', ['jsonlint', 'default', 'test']);
     grunt.registerTask('default', ['build']);
