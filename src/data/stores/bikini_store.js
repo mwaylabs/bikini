@@ -150,6 +150,15 @@ Bikini.BikiniStore = Bikini.Store.extend({
             var that = this;
             var url  = endpoint.host;
             var path = endpoint.path;
+            var href = this.getLocation(url);
+            if(href.port === '') {
+                if(href.protocol === 'https:') {
+                    url += ':443';
+                } else if(href.protocol === 'http:') {
+                    url += ':80';
+                }
+            }
+
             //path = endpoint.socketPath || (path + (path.charAt(path.length - 1) === '/' ? '' : '/' ) + 'live');
             path = endpoint.socketPath;
             // remove leading /
