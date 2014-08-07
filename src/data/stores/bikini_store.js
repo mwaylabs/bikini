@@ -422,18 +422,18 @@ Bikini.BikiniStore = Bikini.Store.extend({
         if( endpoint && endpoint.baseUrl && channel && time ) {
             var changes = new Bikini.Collection({});
             changes.fetch({
-                url: endpoint.baseUrl + '/changes/' + time,
-                success: function() {
-                    changes.each(function( msg ) {
-                        if( msg.get('time') && msg.get('method') ) {
-                            if (that.options.useLocalStore) {
-                                that.setLastMessageTime(channel, msg.get('time'));
-                             }
-                            that.trigger(channel, msg);
-                        }
-                    });
-                },
-                credentials: endpoint.credentials
+            url: endpoint.baseUrl + '/changes/' + time,
+            success: function() {
+                changes.each(function( msg ) {
+                    if( msg.get('time') && msg.get('method') ) {
+                        if (that.options.useLocalStore) {
+                            that.setLastMessageTime(channel, msg.get('time'));
+                         }
+                        that.trigger(channel, msg);
+                    }
+                });
+            },
+            credentials: endpoint.credentials
             });
         }
     },
