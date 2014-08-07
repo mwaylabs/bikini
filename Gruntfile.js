@@ -151,7 +151,7 @@ module.exports = function (grunt) {
     grunt.registerTask('build', ['preprocess:dev', ]);
 
     grunt.registerTask('dev', ['default', 'watch']);
-    grunt.registerTask('test', ['jshint', /*'express:test',*/ 'mocha']);
+    grunt.registerTask('test', ['jshint', 'build',/*'express:test',*/ 'mocha']);
     grunt.registerTask('dist', ['jshint', 'preprocess:dist', 'uglify', 'build-doc']);
     grunt.registerTask('precommit', ['travis']);
     grunt.registerTask('travis', ['jsonlint', 'default', 'test']);
