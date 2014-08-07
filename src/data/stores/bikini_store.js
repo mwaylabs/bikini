@@ -439,32 +439,32 @@ Bikini.BikiniStore = Bikini.Store.extend({
     },
 
     fetchServerInfo: function( endpoint ) {
-                var that = this;
-                if( endpoint && endpoint.baseUrl ) {
-                    var info = new Bikini.Model();
-                    var time = that.getLastMessageTime(endpoint.channel);
-                    var url = endpoint.baseUrl;
-                    if (url.charAt((url.length - 1)) !== '/') {
-                        url += '/';
+        var that = this;
+        if( endpoint && endpoint.baseUrl ) {
+            var info = new Bikini.Model();
+            var time = that.getLastMessageTime(endpoint.channel);
+            var url = endpoint.baseUrl;
+            if (url.charAt((url.length - 1)) !== '/') {
+                url += '/';
+            }
+            info.fetch({
+                url: url + 'info',
+                success: function() {
+                    if( !time && info.get('time') ) {
+                        that.setLastMessageTime(endpoint.channel, info.get('time'));
                     }
-                    info.fetch({
-                        url: url + 'info',
-                        success: function() {
-                            if( !time && info.get('time') ) {
-                                that.setLastMessageTime(endpoint.channel, info.get('time'));
-                            }
-                            if( !endpoint.socketPath && info.get('socketPath') ) {
-                                endpoint.socketPath = info.get('socketPath');
-                                var name = info.get('entity') || endpoint.entity.name;
-                                if( that.options.useSocketNotify ) {
-                                    that.createSocket(endpoint, name);
-                                }
-                            }
-                        },
-                        credentials: endpoint.credentials
-                    });
-                }
-            },
+                    if( !endpoint.socketPath && info.get('socketPath') ) {
+                        endpoint.socketPath = info.get('socketPath');
+                        var name = info.get('entity') || endpoint.entity.name;
+                        if( that.options.useSocketNotify ) {
+                            that.createSocket(endpoint, name);
+                        }
+                    }
+                },
+                credentials: endpoint.credentials
+            });
+        }
+    },
 
     sendMessages: function( endpoint ) {
         if( endpoint && endpoint.messages ) {
