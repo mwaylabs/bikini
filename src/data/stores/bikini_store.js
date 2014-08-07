@@ -425,9 +425,9 @@ Bikini.BikiniStore = Bikini.Store.extend({
                 url: endpoint.baseUrl + '/changes/' + time,
                 success: function() {
                     changes.each(function( msg ) {
-                        if( msg.time && msg.method ) {
+                        if( msg.get('time') && msg.get('method') ) {
                             if (that.options.useLocalStore) {
-                                that.setLastMessageTime(channel, msg.time);
+                                that.setLastMessageTime(channel, msg.get('time'));
                             }
                             that.trigger(channel, msg);
                         }
