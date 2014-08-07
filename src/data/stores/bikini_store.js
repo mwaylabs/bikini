@@ -428,7 +428,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
                     if( msg.get('time') && msg.get('method') ) {
                         if (that.options.useLocalStore) {
                             that.setLastMessageTime(channel, msg.get('time'));
-                         }
+                        }
                         that.trigger(channel, msg);
                     }
                 });
