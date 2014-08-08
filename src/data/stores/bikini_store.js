@@ -237,56 +237,69 @@ Bikini.BikiniStore = Bikini.Store.extend({
     },
 
     onMessage: function( msg ) {
-        if( msg && msg.method ) {
-            var localStore = this.endpoint ? this.endpoint.localStore : null;
-            var options = {
-                store: localStore,
-                entity: this.entity,
-                merge: YES,
-                fromMessage: YES,
-                parse: YES
-            };
-            var attrs = msg.data;
+        if(!msg) {
+            return;
+        }
+        var localStore = this.endpoint ? this.endpoint.localStore : null;
+        var attrs = null;
+        var method = null;
+        var id = null;
+        var options = {
+            store: localStore,
+            entity: this.entity,
+            merge: YES,
+            fromMessage: YES,
+            parse: YES
+        };
+        if(msg.id && msg.method && msg.data){
+            attrs = msg.data;
+            method = msg.method;
+            id = msg.id;
+        } else {
+            attrs = msg.attributes.data;
+            method = msg.attributes.method;
+            id = msg.attributes.id;
+        }
 
-            switch( msg.method ) {
-                case 'patch':
-                case 'update':
-                case 'create':
-                    options.patch = msg.method === 'patch';
-                    var model = msg.id ? this.get(msg.id) : null;
-                    if( model ) {
-                        model.save(attrs, options);
+        switch(method) {
+            case 'patch':
+            case 'update':
+            case 'create':
+                options.patch = method === 'patch';
+                var model = id ? this.get(id) : null;
+                if( model ) {
+                    model.save(attrs, options);
+                } else {
+                    this.create(attrs, options);
+                }
+                break;
+            case 'delete':
+                if( msg.id || msg.attributes.id) {
+                    if( id === 'all' ) {
+                        while( (model = this.first()) ) {
+                            if( localStore ) {
+                                localStore.sync.apply(this, [
+                                    'delete',
+                                    model,
+                                    { store: localStore, fromMessage: YES }
+                                ]);
+                            }
+                            this.remove(model);
+                        }
+                        this.store.setLastMessageTime(this.endpoint.channel, '');
                     } else {
-                        this.create(attrs, options);
-                    }
-                    break;
-                case 'delete':
-                    if( msg.id ) {
-                        if( msg.id === 'all' ) {
-                            while( (model = this.first()) ) {
-                                if( localStore ) {
-                                    localStore.sync.apply(this, [
-                                        'delete',
-                                        model,
-                                        { store: localStore, fromMessage: YES }
-                                    ]);
-                                }
-                                this.remove(model);
-                            }
-                            this.store.setLastMessageTime(this.endpoint.channel, '');
-                        } else {
-                            var msgModel = this.get(msg.id);
-                            if( msgModel ) {
-                                msgModel.destroy(options);
-                            }
+                        var msgModel = this.get(id);
+                        if( msgModel ) {
+                            msgModel.destroy(options);
                         }
                     }
-                    break;
+                }
+                break;
 
-                default:
-                    break;
-            }
+            default:
+                break;
         }
+
     },
 
     sync: function( method, model, options ) {
@@ -439,32 +452,32 @@ Bikini.BikiniStore = Bikini.Store.extend({
     },
 
     fetchServerInfo: function( endpoint ) {
-                var that = this;
-                if( endpoint && endpoint.baseUrl ) {
-                    var info = new Bikini.Model();
-                    var time = that.getLastMessageTime(endpoint.channel);
-                    var url = endpoint.baseUrl;
-                    if (url.charAt((url.length - 1)) !== '/') {
-                        url += '/';
+        var that = this;
+        if( endpoint && endpoint.baseUrl ) {
+            var info = new Bikini.Model();
+            var time = that.getLastMessageTime(endpoint.channel);
+            var url = endpoint.baseUrl;
+            if (url.charAt((url.length - 1)) !== '/') {
+                url += '/';
+            }
+            info.fetch({
+                url: url + 'info',
+                success: function() {
+                    if( !time && info.get('time') ) {
+                        that.setLastMessageTime(endpoint.channel, info.get('time'));
                     }
-                    info.fetch({
-                        url: url + 'info',
-                        success: function() {
-                            if( !time && info.get('time') ) {
-                                that.setLastMessageTime(endpoint.channel, info.get('time'));
-                            }
-                            if( !endpoint.socketPath && info.get('socketPath') ) {
-                                endpoint.socketPath = info.get('socketPath');
-                                var name = info.get('entity') || endpoint.entity.name;
-                                if( that.options.useSocketNotify ) {
-                                    that.createSocket(endpoint, name);
-                                }
-                            }
-                        },
-                        credentials: endpoint.credentials
-                    });
-                }
-            },
+                    if( !endpoint.socketPath && info.get('socketPath') ) {
+                        endpoint.socketPath = info.get('socketPath');
+                        var name = info.get('entity') || endpoint.entity.name;
+                        if( that.options.useSocketNotify ) {
+                            that.createSocket(endpoint, name);
+                        }
+                    }
+                },
+                credentials: endpoint.credentials
+            });
+        }
+    },
 
     sendMessages: function( endpoint ) {
         if( endpoint && endpoint.messages ) {
