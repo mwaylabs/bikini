@@ -76,7 +76,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
     initCollection: function( collection ) {
         var url = collection.getUrlRoot();
         if(url.charAt(url.length) !== '/') {
-        	url += '/';
+            url += '/';
         }
         var entity = this.getEntity(collection.entity);
         if( url && entity ) {
