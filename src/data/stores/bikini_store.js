@@ -75,6 +75,9 @@ Bikini.BikiniStore = Bikini.Store.extend({
 
     initCollection: function( collection ) {
         var url = collection.getUrlRoot();
+        if(url.charAt(url.length) !== '/') {
+        	url += '/';
+        }
         var entity = this.getEntity(collection.entity);
         if( url && entity ) {
             var name = entity.name;
@@ -435,7 +438,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
         if( endpoint && endpoint.baseUrl && channel && time ) {
             var changes = new Bikini.Collection({});
             changes.fetch({
-                url: endpoint.baseUrl + '/changes/' + time,
+                url: endpoint.baseUrl + 'changes/' + time,
                 success: function() {
                     changes.each(function( msg ) {
                         if( msg.get('time') && msg.get('method') ) {
