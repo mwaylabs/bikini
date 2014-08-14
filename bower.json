@@ -26,10 +26,10 @@
   ],
   "dependencies": {
     "backbone": "~1.1.0",
-    "underscore": "~1.5.2",
-    "jquery": "~2.0.3",
+    "underscore": "~1.6.0",
+    "jquery": "~2.1.0",
     "socket.io-client": "~0.9.16",
-    "momentjs": "~2.4.0"
+    "momentjs": "~2.8.0"
   },
   "devDependencies": {
     "mocha": "~1.13.0",
