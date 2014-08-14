@@ -41,7 +41,7 @@ describe('Bikini.BikiniStore', function() {
 
         assert.isFunction(TEST.TestModel, 'TestModel model successfully extended.');
 
-        TEST.url = serverUrl+'/bikini/test';
+        TEST.url = serverUrl+'/bikini/test/';
 
         TEST.TestsModelCollection = Bikini.Collection.extend({
             model: TEST.TestModel,
