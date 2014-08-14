@@ -109,6 +109,17 @@ _.extend(Bikini.Collection.prototype, Bikini.Object, {
         }
     },
 
+    destroyLocal: function(){
+        var store = this.endpoint.localStore;
+        var that = this;
+        // DROP TABLE
+        store.drop(store.entities.Approval);
+        // RESET localStorage-entry
+        localStorage.setItem('__' + this.channel + 'last_msg_time', '');
+        this.store.endpoints = {};
+        this.reset();
+    },
+
     sync: function (method, model, options) {
         options = options || {};
         options.credentials = options.credentials || this.credentials;
