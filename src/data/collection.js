@@ -18,6 +18,9 @@
 Bikini.Collection = Backbone.Collection.extend({
 
     constructor: function (options) {
+        if(this.url && this.url.charAt(this.url.length - 1) !== '/') {
+            this.url += '/';
+        }
         this.init(options);
         Backbone.Collection.apply(this, arguments);
     }
