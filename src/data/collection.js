@@ -113,7 +113,9 @@ _.extend(Bikini.Collection.prototype, Bikini.Object, {
         var store = this.endpoint.localStore;
         var that = this;
         // DROP TABLE
-        store.drop(store.entities.Approval);
+        if(this.entity.name) {
+            store.drop(this.entity.name);
+        }
         // RESET localStorage-entry
         localStorage.setItem('__' + this.channel + 'last_msg_time', '');
         this.store.endpoints = {};
