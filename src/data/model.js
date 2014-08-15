@@ -10,6 +10,11 @@
  */
 Bikini.Model = Backbone.Model.extend({
     constructor: function( attributes, options ) {
+        if(this.url && typeof this.url === 'string') {
+            if(this.url.charAt(this.url.length - 1) !== '/') {
+                this.url += '/';
+            }
+        }
         this.init(attributes, options);
         Backbone.Model.apply(this, arguments);
     }
