@@ -99,6 +99,14 @@ Bikini.WebSqlStore = Bikini.Store.extend({
     sync: function( method, model, options ) {
         var that = options.store || this.store;
         var models = Bikini.isCollection(model) ? model.models : [ model ];
+        var q = new $.Deferred();
+        var _oldSuccess = options.success;
+        if(options.success) {
+            options.success = function(response) {
+                q.resolve(response);
+                _oldSuccess(response);
+            };
+        }
         options.entity = options.entity || this.entity;
         switch( method ) {
             case 'create':
@@ -125,6 +133,7 @@ Bikini.WebSqlStore = Bikini.Store.extend({
             default:
                 break;
         }
+        return q.promise();
     },
 
     select: function( options ) {

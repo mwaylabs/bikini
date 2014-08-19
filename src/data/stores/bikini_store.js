@@ -311,6 +311,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
             return that.handleCallback(options.success);
         }
         var endpoint = that.getEndpoint(this.getUrlRoot());
+        var promise = null;
         if( that && endpoint ) {
             var channel = this.channel;
 
@@ -323,15 +324,16 @@ Bikini.BikiniStore = Bikini.Store.extend({
             // or for initial load
             if( method !== 'read' || !endpoint.localStore || !time ) {
                 // do backbone rest
-                that.addMessage(method, model, // we don't need to call callbacks if an other store handle this
+                promise = that.addMessage(method, model, // we don't need to call callbacks if an other store handle this
                     endpoint.localStore ? {} : options, endpoint);
             } else if( method === 'read' ) {
-                that.fetchChanges(endpoint);
+                promise =that.fetchChanges(endpoint);
             }
             if( endpoint.localStore ) {
                 options.store = endpoint.localStore;
                 endpoint.localStore.sync.apply(this, arguments);
             }
+            return promise;
         }
     },
 
@@ -368,12 +370,12 @@ Bikini.BikiniStore = Bikini.Store.extend({
                 data: data
             };
             var emit = function( endpoint, msg ) {
-                that.emitMessage(endpoint, msg, options, model);
+                return that.emitMessage(endpoint, msg, options, model);
             };
             if( storeMsg ) {
                 this.storeMessage(endpoint, msg, emit);
             } else {
-                emit(endpoint, msg);
+                return emit(endpoint, msg);
             }
         }
     },
@@ -385,7 +387,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
         if( msg.id && msg.method !== 'create' ) {
             url += (url.charAt(url.length - 1) === '/' ? '' : '/' ) + msg.id;
         }
-        model.sync.apply(model, [msg.method, model, {
+        return model.sync.apply(model, [msg.method, model, {
             url: url,
             error: function( xhr, status ) {
                 if( !xhr.responseText && that.options.useOfflineChanges ) {
@@ -437,9 +439,9 @@ Bikini.BikiniStore = Bikini.Store.extend({
         var time = that.getLastMessageTime(channel);
         if( endpoint && endpoint.baseUrl && channel && time ) {
             var changes = new Bikini.Collection({});
-            changes.fetch({
+            return changes.fetch({
                 url: endpoint.baseUrl + 'changes/' + time,
-                success: function() {
+                success: function(a, b, response) {
                     changes.each(function( msg ) {
                         if( msg.get('time') && msg.get('method') ) {
                             if (that.options.useLocalStore) {
@@ -448,6 +450,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
                             that.trigger(channel, msg);
                         }
                     });
+                    return response.xhr;
                 },
                 credentials: endpoint.credentials
             });
@@ -463,9 +466,9 @@ Bikini.BikiniStore = Bikini.Store.extend({
             if (url.charAt((url.length - 1)) !== '/') {
                 url += '/';
             }
-            info.fetch({
+            return info.fetch({
                 url: url + 'info',
-                success: function() {
+                success: function(a, b, response) {
                     if( !time && info.get('time') ) {
                         that.setLastMessageTime(endpoint.channel, info.get('time'));
                     }
@@ -476,6 +479,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
                             that.createSocket(endpoint, name);
                         }
                     }
+                    return response.xhr;
                 },
                 credentials: endpoint.credentials
             });
