@@ -54,7 +54,7 @@ var MyBikiniServiceModel = Bikini.Model.extend({
 // Tell the collection the endpoint url and which model it should use.
 // The entity is used for retrieving local stored data
 var MyBikiniServiceCollection = Bikini.Collection.extend({
-    model: myBikiniServiceModel,
+    model: MyBikiniServiceModel,
     entity: 'myBikiniService',
     url: 'http://nerds.mway.io:8200/bikini/contacts',
 });
