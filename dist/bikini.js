@@ -1,9 +1,9 @@
 /*!
-* Project:   The M-Project - Mobile HTML5 Application Framework
+* Project:   Bikini - Everything a model needs
 * Copyright: (c) 2014 M-Way Solutions GmbH.
-* Version:   0.5.2
-* Date:      Tue Jul 15 2014 10:40:42
-* License:   http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
+* Version:   0.6.0
+* Date:      Mon Aug 25 2014 14:15:02
+* License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 
 (function (global, Backbone, _, $) {
@@ -27,7 +27,7 @@
      * Version number of current release
      * @type {String}
      */
-    Bikini.Version = Bikini.version = '0.5.2';
+    Bikini.Version = Bikini.version = '0.6.0';
     
     /**
      * Empty function to be used when
@@ -1697,7 +1697,7 @@
                         return this.logonBasicAuth(options, callback);
                 }
             }
-            this.handleCallback(callback);
+            return this.handleCallback(callback);
         },
     
         logonBasicAuth: function (options, callback) {
@@ -1705,7 +1705,7 @@
             options.beforeSend = function (xhr) {
                 Bikini.Security.setBasicAuth(xhr, credentials);
             };
-            this.handleCallback(callback);
+            return this.handleCallback(callback);
         },
     
         setBasicAuth: function( xhr, credentials ) {
@@ -1729,6 +1729,11 @@
      */
     Bikini.Model = Backbone.Model.extend({
         constructor: function( attributes, options ) {
+            if(this.url && typeof this.url === 'string') {
+                if(this.url.charAt(this.url.length - 1) !== '/') {
+                    this.url += '/';
+                }
+            }
             this.init(attributes, options);
             Backbone.Model.apply(this, arguments);
         }
@@ -1777,7 +1782,7 @@
             var that = this;
             var args = arguments;
     
-            this.logon(options, function( result ) {
+            return this.logon(options, function( result ) {
                 if( store && _.isFunction(store.sync) ) {
                     return store.sync.apply(that, args);
                 } else {
@@ -1854,6 +1859,9 @@
     Bikini.Collection = Backbone.Collection.extend({
     
         constructor: function (options) {
+            if(this.url && this.url.charAt(this.url.length - 1) !== '/') {
+                this.url += '/';
+            }
             this.init(options);
             Backbone.Collection.apply(this, arguments);
         }
@@ -1945,6 +1953,19 @@
             }
         },
     
+        destroyLocal: function(){
+            var store = this.endpoint.localStore;
+            var that = this;
+            // DROP TABLE
+            if(this.entity.name) {
+                store.drop(this.entity.name);
+            }
+            // RESET localStorage-entry
+            localStorage.setItem('__' + this.channel + 'last_msg_time', '');
+            this.store.endpoints = {};
+            this.reset();
+        },
+    
         sync: function (method, model, options) {
             options = options || {};
             options.credentials = options.credentials || this.credentials;
@@ -1952,7 +1973,7 @@
             var that = this;
             var args = arguments;
     
-            this.logon(options, function (result) {
+            return this.logon(options, function (result) {
                 if (store && _.isFunction(store.sync)) {
                     return store.sync.apply(that, args);
                 } else {
@@ -3085,7 +3106,7 @@
             }
             if( collection && collection.fetch ) {
                 var opts = _.extend({}, options || {}, { store: this });
-                collection.fetch(opts);
+                return collection.fetch(opts);
             }
         },
     
@@ -3405,7 +3426,7 @@
     
         options: null,
     
-        name: 'themproject',
+        name: 'bikini',
     
         size: 1024 * 1024, // 1 MB
     
@@ -3460,6 +3481,14 @@
         sync: function( method, model, options ) {
             var that = options.store || this.store;
             var models = Bikini.isCollection(model) ? model.models : [ model ];
+            var q = new $.Deferred();
+            var _oldSuccess = options.success;
+            if(options.success) {
+                options.success = function(response) {
+                    q.resolve(response);
+                    _oldSuccess(response);
+                };
+            }
             options.entity = options.entity || this.entity;
             switch( method ) {
                 case 'create':
@@ -3486,6 +3515,7 @@
                 default:
                     break;
             }
+            return q.promise();
         },
     
         select: function( options ) {
@@ -3969,6 +3999,7 @@
         }
     
     });
+    
     // Copyright (c) 2013 M-Way Solutions GmbH
     // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
     
@@ -4046,6 +4077,9 @@
     
         initCollection: function( collection ) {
             var url = collection.getUrlRoot();
+            if(url.charAt(url.length - 1) !== '/') {
+                url += '/';
+            }
             var entity = this.getEntity(collection.entity);
             if( url && entity ) {
                 var name = entity.name;
@@ -4121,6 +4155,15 @@
                 var that = this;
                 var url  = endpoint.host;
                 var path = endpoint.path;
+                var href = this.getLocation(url);
+                if(href.port === '') {
+                    if(href.protocol === 'https:') {
+                        url += ':443';
+                    } else if(href.protocol === 'http:') {
+                        url += ':80';
+                    }
+                }
+    
                 //path = endpoint.socketPath || (path + (path.charAt(path.length - 1) === '/' ? '' : '/' ) + 'live');
                 path = endpoint.socketPath;
                 // remove leading /
@@ -4199,56 +4242,69 @@
         },
     
         onMessage: function( msg ) {
-            if( msg && msg.method ) {
-                var localStore = this.endpoint ? this.endpoint.localStore : null;
-                var options = {
-                    store: localStore,
-                    entity: this.entity,
-                    merge: YES,
-                    fromMessage: YES,
-                    parse: YES
-                };
-                var attrs = msg.data;
+            if(!msg) {
+                return;
+            }
+            var localStore = this.endpoint ? this.endpoint.localStore : null;
+            var attrs = null;
+            var method = null;
+            var id = null;
+            var options = {
+                store: localStore,
+                entity: this.entity,
+                merge: YES,
+                fromMessage: YES,
+                parse: YES
+            };
+            if(msg.id && msg.method && msg.data){
+                attrs = msg.data;
+                method = msg.method;
+                id = msg.id;
+            } else {
+                attrs = msg.attributes.data;
+                method = msg.attributes.method;
+                id = msg.attributes.id;
+            }
     
-                switch( msg.method ) {
-                    case 'patch':
-                    case 'update':
-                    case 'create':
-                        options.patch = msg.method === 'patch';
-                        var model = msg.id ? this.get(msg.id) : null;
-                        if( model ) {
-                            model.save(attrs, options);
+            switch(method) {
+                case 'patch':
+                case 'update':
+                case 'create':
+                    options.patch = method === 'patch';
+                    var model = id ? this.get(id) : null;
+                    if( model ) {
+                        model.save(attrs, options);
+                    } else {
+                        this.create(attrs, options);
+                    }
+                    break;
+                case 'delete':
+                    if( msg.id || msg.attributes.id) {
+                        if( id === 'all' ) {
+                            while( (model = this.first()) ) {
+                                if( localStore ) {
+                                    localStore.sync.apply(this, [
+                                        'delete',
+                                        model,
+                                        { store: localStore, fromMessage: YES }
+                                    ]);
+                                }
+                                this.remove(model);
+                            }
+                            this.store.setLastMessageTime(this.endpoint.channel, '');
                         } else {
-                            this.create(attrs, options);
-                        }
-                        break;
-                    case 'delete':
-                        if( msg.id ) {
-                            if( msg.id === 'all' ) {
-                                while( (model = this.first()) ) {
-                                    if( localStore ) {
-                                        localStore.sync.apply(this, [
-                                            'delete',
-                                            model,
-                                            { store: localStore, fromMessage: YES }
-                                        ]);
-                                    }
-                                    this.remove(model);
-                                }
-                                this.store.setLastMessageTime(this.endpoint.channel, '');
-                            } else {
-                                var msgModel = this.get(msg.id);
-                                if( msgModel ) {
-                                    msgModel.destroy(options);
-                                }
+                            var msgModel = this.get(id);
+                            if( msgModel ) {
+                                msgModel.destroy(options);
                             }
                         }
-                        break;
+                    }
+                    break;
     
-                    default:
-                        break;
-                }
+                default:
+                    break;
             }
+    
         },
     
         sync: function( method, model, options ) {
@@ -4257,6 +4313,7 @@
                 return that.handleCallback(options.success);
             }
             var endpoint = that.getEndpoint(this.getUrlRoot());
+            var promise = null;
             if( that && endpoint ) {
                 var channel = this.channel;
     
@@ -4269,15 +4326,16 @@
                 // or for initial load
                 if( method !== 'read' || !endpoint.localStore || !time ) {
                     // do backbone rest
-                    that.addMessage(method, model, // we don't need to call callbacks if an other store handle this
+                    promise = that.addMessage(method, model, // we don't need to call callbacks if an other store handle this
                         endpoint.localStore ? {} : options, endpoint);
                 } else if( method === 'read' ) {
-                    that.fetchChanges(endpoint);
+                    promise =that.fetchChanges(endpoint);
                 }
                 if( endpoint.localStore ) {
                     options.store = endpoint.localStore;
                     endpoint.localStore.sync.apply(this, arguments);
                 }
+                return promise;
             }
         },
     
@@ -4314,12 +4372,12 @@
                     data: data
                 };
                 var emit = function( endpoint, msg ) {
-                    that.emitMessage(endpoint, msg, options, model);
+                    return that.emitMessage(endpoint, msg, options, model);
                 };
                 if( storeMsg ) {
                     this.storeMessage(endpoint, msg, emit);
                 } else {
-                    emit(endpoint, msg);
+                    return emit(endpoint, msg);
                 }
             }
         },
@@ -4331,7 +4389,7 @@
             if( msg.id && msg.method !== 'create' ) {
                 url += (url.charAt(url.length - 1) === '/' ? '' : '/' ) + msg.id;
             }
-            model.sync.apply(model, [msg.method, model, {
+            return model.sync.apply(model, [msg.method, model, {
                 url: url,
                 error: function( xhr, status ) {
                     if( !xhr.responseText && that.options.useOfflineChanges ) {
@@ -4383,17 +4441,18 @@
             var time = that.getLastMessageTime(channel);
             if( endpoint && endpoint.baseUrl && channel && time ) {
                 var changes = new Bikini.Collection({});
-                changes.fetch({
-                    url: endpoint.baseUrl + '/changes/' + time,
-                    success: function() {
+                return changes.fetch({
+                    url: endpoint.baseUrl + 'changes/' + time,
+                    success: function(a, b, response) {
                         changes.each(function( msg ) {
-                            if( msg.time && msg.method ) {
+                            if( msg.get('time') && msg.get('method') ) {
                                 if (that.options.useLocalStore) {
-                                    that.setLastMessageTime(channel, msg.time);
+                                    that.setLastMessageTime(channel, msg.get('time'));
                                 }
                                 that.trigger(channel, msg);
                             }
                         });
+                        return response.xhr;
                     },
                     credentials: endpoint.credentials
                 });
@@ -4405,12 +4464,13 @@
             if( endpoint && endpoint.baseUrl ) {
                 var info = new Bikini.Model();
                 var time = that.getLastMessageTime(endpoint.channel);
-                if (endpoint.baseUrl.charAt((endpoint.baseUrl.length - 1)) !== '/') {
-                    endpoint.baseUrl += endpoint.baseUrl + '/';
+                var url = endpoint.baseUrl;
+                if (url.charAt((url.length - 1)) !== '/') {
+                    url += '/';
                 }
-                info.fetch({
-                    url: endpoint.baseUrl + 'info',
-                    success: function() {
+                return info.fetch({
+                    url: url + 'info',
+                    success: function(a, b, response) {
                         if( !time && info.get('time') ) {
                             that.setLastMessageTime(endpoint.channel, info.get('time'));
                         }
@@ -4421,6 +4481,7 @@
                                 that.createSocket(endpoint, name);
                             }
                         }
+                        return response.xhr;
                     },
                     credentials: endpoint.credentials
                 });
