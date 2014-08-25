@@ -13,22 +13,18 @@ module.exports = function (grunt) {
     // load all grunt tasks
     require('load-grunt-tasks')(grunt);
 
-    var additionalMarkdownFiles = {
-        'https://raw.github.com/mwaylabs/The-M-Project-Sample-Apps/master/README.md': 'Sample-Apps.md',
-        'https://raw.github.com/mwaylabs/generator-m/master/README.md': 'Generator.md',
-        'https://raw.github.com/mwaylabs/The-M-Project-Sample-Apps/master/demoapp/README.md': 'Demo-App.md'
-    };
+    var additionalMarkdownFiles = {};
 
     // Project configuration.
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
         meta: {
             banner: '/*!\n' +
-                '* Project:   The M-Project - Mobile HTML5 Application Framework\n' +
+                '* Project:   Bikini - Everything a model needs\n' +
                 '* Copyright: (c) <%= grunt.template.today("yyyy") %> M-Way Solutions GmbH.\n' +
                 '* Version:   <%= pkg.version %>\n' +
                 '* Date:      <%= grunt.template.today() %>\n' +
-                '* License:   http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt\n' +
+                '* License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt\n' +
                 '*/'
         },
         jsonlint: {
@@ -57,7 +53,8 @@ module.exports = function (grunt) {
             },
             dist: {
                 files: {
-                    'dist/bikini.js': 'src/bikini.js'
+                    'dist/bikini.js': 'src/bikini.js',
+                    'dist/bikangular.js': 'bikangular/bikangular.js'
                 }
             }
         },
