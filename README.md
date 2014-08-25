@@ -8,7 +8,7 @@
 
 **Bikini** lets you treat  being **offline** as a status. Not as an error.
 
-You're developing a webapp for mobile browsers? You're damn right here! 
+You're developing a webapp for mobile browsers? You're damn right here!
 
 With Bikini the user won't even notice that he is offline.
 It also improves the user experience by decreasing response latency.
@@ -77,3 +77,20 @@ myCollection.on('sync', function() {
 ### Event reference
 See [backbonejs-events](http://backbonejs.org/#Events) for detailed information.
 
+## Using Bikini with AngularJS
+You are building your application with [AngularJS](https://angularjs.org/)? No problem. We provide a thin wrapper between Bikini and AngularJS.
+All you need to do is to insert "[bikangular.js](mwaylabs/bikini/blob/master/bikangular/bikangular.js)".
+
+```html
+<script src="bower_components/jquery/dist/jquery.js"></script>
+<script src="bower_components/angular/angular.js"></script>
+<script src="bower_components/underscore/underscore.js"></script>
+<script src="bower_components/socket.io-client/socket.io.js"></script>
+<script src="bower_components/backbone/backbone.js"></script>
+<script src="bower_components/bikini/dist/bikini.js"></script>
+<script src="bower_components/bikini/dist/bikangular.js"></script>
+```
+
+The reason for this wrapper is that if you are using AngularJS you are usally familiar with [Kris Kowal's Q-Promises](https://github.com/kriskowal/q). But since Bikini relies on Backbone, and Backbone uses jQuery to make requests, we get [jQuery-Promises](http://api.jquery.com/category/deferred-object/) if we make any requests. Also, AngularJS will not notice if any changes happend (2-way-binding).
+
+We were able to fix that by using Angulars `$http` to perform requests.
