@@ -25,26 +25,14 @@
         'MwModel',
         function(MwModel) {
             return Bikini.Collection.extend({
-                model: MwModel,
-                parse: function(response) {
-                    this.total = response.length;
-                    return response;
-                }
+                model: MwModel
             });
         }
     ]).factory('MwModel', [
         '$rootScope',
         function($rootScope) {
             return Bikini.Model.extend({
-                idAttribute: 'uuid',
-                initialize: function() {
-                    // When a model gets removed, make sure to decrement the total count on the collection
-                    this.on('destroy', function() {
-                        if (this.collection.total && this.collection.total > 0) {
-                            this.collection.total--;
-                        }
-                    }, this);
-                },
+                idAttribute: '_id',
                 set: function() {
                     var callSet = Backbone.Model.prototype.set.apply(this, arguments);
                     // Trigger digest cycle to make calls to set recognizable by angular
@@ -52,15 +40,6 @@
                         $rootScope.$apply();
                     }
                     return callSet;
-                },
-                selected: false,
-                toggleSelect: function() {
-                    if (!this.selectDisabled()) {
-                        this.selected = !this.selected;
-                    }
-                },
-                selectDisabled: function() {
-                    return false;
                 }
             });
         }
