@@ -1,6 +1,6 @@
 (function() {
     'use strict';
-    angular.module('mwCollection', []).run([
+    angular.module('bikangular', []).run([
         '$http',
         function($http) {
             Backbone.ajax = Bikini.ajax = function(options) {
@@ -21,14 +21,14 @@
                 return $http.apply(angular, [options]).success(options.success).error(options.error);
             };
         }
-    ]).factory('MwCollection', [
-        'MwModel',
+    ]).factory('BikangularCollection', [
+        'BikangularModel',
         function(MwModel) {
             return Bikini.Collection.extend({
                 model: MwModel
             });
         }
-    ]).factory('MwModel', [
+    ]).factory('BikangularModel', [
         '$rootScope',
         function($rootScope) {
             return Bikini.Model.extend({
