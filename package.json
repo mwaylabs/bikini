@@ -1,15 +1,16 @@
 {
   "name": "bikini",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "description": "",
   "keywords": [
-    "the-m-project",
     "bikini",
     "backbone",
     "framework",
+    "realtime",
+    "offline",
     "mvc"
   ],
-  "homepage": "http://the-m-project.org",
+  "homepage": "http://mwaysolutions.com",
   "author": "M-Way Solutions GmbH",
   "main": "Gruntfile.js",
   "scripts": {
