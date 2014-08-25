@@ -63,7 +63,7 @@ _.extend(Bikini.Model.prototype, Bikini.Object, {
         var that = this;
         var args = arguments;
 
-        this.logon(options, function( result ) {
+        return this.logon(options, function( result ) {
             if( store && _.isFunction(store.sync) ) {
                 return store.sync.apply(that, args);
             } else {

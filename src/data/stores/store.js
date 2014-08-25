@@ -162,7 +162,7 @@ _.extend(Bikini.Store.prototype, Backbone.Events, Bikini.Object, {
         }
         if( collection && collection.fetch ) {
             var opts = _.extend({}, options || {}, { store: this });
-            collection.fetch(opts);
+            return collection.fetch(opts);
         }
     },
 

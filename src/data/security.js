@@ -18,7 +18,7 @@ Bikini.Security = Bikini.Object.design({
                     return this.logonBasicAuth(options, callback);
             }
         }
-        this.handleCallback(callback);
+        return this.handleCallback(callback);
     },
 
     logonBasicAuth: function (options, callback) {
@@ -26,7 +26,7 @@ Bikini.Security = Bikini.Object.design({
         options.beforeSend = function (xhr) {
             Bikini.Security.setBasicAuth(xhr, credentials);
         };
-        this.handleCallback(callback);
+        return this.handleCallback(callback);
     },
 
     setBasicAuth: function( xhr, credentials ) {
