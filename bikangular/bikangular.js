@@ -11,6 +11,12 @@
 				}
                 // Set HTTP Verb as 'method'
                 options.method = options.type;
+
+                // Set headers
+                options.headers  = {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                };
                 // Use angulars $http implementation for requests
                 return $http.apply(angular, [options]).success(options.success).error(options.error);
             };
