@@ -44,7 +44,7 @@ Bikini.WebSqlStore = Bikini.Store.extend({
 
     options: null,
 
-    name: 'themproject',
+    name: 'bikini',
 
     size: 1024 * 1024, // 1 MB
 
