@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2014 M-Way Solutions GmbH.
 * Version:   0.6.1
-* Date:      Tue Aug 26 2014 13:36:33
+* Date:      Tue Aug 26 2014 14:26:32
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 
