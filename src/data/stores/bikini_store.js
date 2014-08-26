@@ -373,7 +373,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
                 return that.emitMessage(endpoint, msg, options, model);
             };
             if( storeMsg ) {
-                this.storeMessage(endpoint, msg, emit);
+                return this.storeMessage(endpoint, msg, emit);
             } else {
                 return emit(endpoint, msg);
             }
@@ -528,7 +528,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
                 });
             }
         }
-        callback(endpoint, msg);
+        return callback(endpoint, msg);
     },
 
     removeMessage: function( endpoint, msg, callback ) {
@@ -538,7 +538,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
                 message.destroy();
             }
         }
-        callback(endpoint, msg);
+        return callback(endpoint, msg);
     },
 
     clear: function( collection ) {

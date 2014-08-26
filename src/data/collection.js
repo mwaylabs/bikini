@@ -122,7 +122,7 @@ _.extend(Bikini.Collection.prototype, Bikini.Object, {
         // RESET localStorage-entry
         localStorage.setItem('__' + this.channel + 'last_msg_time', '');
         this.store.endpoints = {};
-        this.reset();
+        return this.reset();
     },
 
     sync: function (method, model, options) {
