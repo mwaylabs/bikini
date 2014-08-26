@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2014 M-Way Solutions GmbH.
 * Version:   0.6.0
-* Date:      Mon Aug 25 2014 14:15:02
+* Date:      Tue Aug 26 2014 11:45:47
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 
@@ -1963,7 +1963,7 @@
             // RESET localStorage-entry
             localStorage.setItem('__' + this.channel + 'last_msg_time', '');
             this.store.endpoints = {};
-            this.reset();
+            return this.reset();
         },
     
         sync: function (method, model, options) {
@@ -4256,11 +4256,11 @@
                 fromMessage: YES,
                 parse: YES
             };
-            if(msg.id && msg.method && msg.data){
-                attrs = msg.data;
+            if(msg.id && msg.method){
+                attrs = msg.data || {};
                 method = msg.method;
                 id = msg.id;
-            } else {
+            } else if(msg.attributes) {
                 attrs = msg.attributes.data;
                 method = msg.attributes.method;
                 id = msg.attributes.id;
@@ -4279,7 +4279,7 @@
                     }
                     break;
                 case 'delete':
-                    if( msg.id || msg.attributes.id) {
+                    if( id ) {
                         if( id === 'all' ) {
                             while( (model = this.first()) ) {
                                 if( localStore ) {
@@ -4375,7 +4375,7 @@
                     return that.emitMessage(endpoint, msg, options, model);
                 };
                 if( storeMsg ) {
-                    this.storeMessage(endpoint, msg, emit);
+                    return this.storeMessage(endpoint, msg, emit);
                 } else {
                     return emit(endpoint, msg);
                 }
@@ -4530,7 +4530,7 @@
                     });
                 }
             }
-            callback(endpoint, msg);
+            return callback(endpoint, msg);
         },
     
         removeMessage: function( endpoint, msg, callback ) {
@@ -4540,7 +4540,7 @@
                     message.destroy();
                 }
             }
-            callback(endpoint, msg);
+            return callback(endpoint, msg);
         },
     
         clear: function( collection ) {
