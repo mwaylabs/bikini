@@ -1,8 +1,8 @@
 /*!
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2014 M-Way Solutions GmbH.
-* Version:   0.6.0
-* Date:      Tue Aug 26 2014 11:45:47
+* Version:   0.6.1
+* Date:      Tue Aug 26 2014 13:36:33
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 
@@ -27,7 +27,7 @@
      * Version number of current release
      * @type {String}
      */
-    Bikini.Version = Bikini.version = '0.6.0';
+    Bikini.Version = Bikini.version = '0.6.1';
     
     /**
      * Empty function to be used when
