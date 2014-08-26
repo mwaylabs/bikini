@@ -1,6 +1,10 @@
 (function() {
     'use strict';
-    angular.module('bikangular', []).run([
+    angular.module('bikangular', [])
+    .config(
+    	function ( $httpProvider) {
+        	$httpProvider.defaults.withCredentials = true;
+    }).run([
         '$http',
         function($http) {
             Backbone.ajax = Bikini.ajax = function(options) {
