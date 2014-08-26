@@ -254,11 +254,11 @@ Bikini.BikiniStore = Bikini.Store.extend({
             fromMessage: YES,
             parse: YES
         };
-        if(msg.id && msg.method && msg.data){
-            attrs = msg.data;
+        if(msg.id && msg.method){
+            attrs = msg.data || {};
             method = msg.method;
             id = msg.id;
-        } else {
+        } else if(msg.attributes) {
             attrs = msg.attributes.data;
             method = msg.attributes.method;
             id = msg.attributes.id;
@@ -277,7 +277,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
                 }
                 break;
             case 'delete':
-                if( msg.id || msg.attributes.id) {
+                if( id ) {
                     if( id === 'all' ) {
                         while( (model = this.first()) ) {
                             if( localStore ) {
