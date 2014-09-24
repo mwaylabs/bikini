@@ -94,3 +94,28 @@ All you need to do is to insert "[bikangular.js](mwaylabs/bikini/blob/master/bik
 The reason for this wrapper is that if you are using AngularJS you are usally familiar with [Kris Kowal's Q-Promises](https://github.com/kriskowal/q). But since Bikini relies on Backbone, and Backbone uses jQuery to make requests, we get [jQuery-Promises](http://api.jquery.com/category/deferred-object/) if we make any requests. Also, AngularJS will not notice if any changes happend (2-way-binding).
 
 We were able to fix that by using Angulars `$http` to perform requests.
+
+## Contributing
+
+### Get the Code
+
+```bash
+
+git clone git@github.com:mwaylabs/bikini.git
+cd bikini
+```
+
+### Initialize Project
+
+The script basicly checks if node is installed. Then `npm install` and `bower install` is called followed by setup of git hooks.
+
+```bash
+./init-repo.sh
+```
+### Test if it works
+
+run the test command
+
+```bash
+npm test
+```
