@@ -1,8 +1,8 @@
 /*!
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2014 M-Way Solutions GmbH.
-* Version:   0.6.1
-* Date:      Tue Aug 26 2014 14:26:32
+* Version:   0.6.3
+* Date:      Wed Sep 24 2014 12:55:24
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 
@@ -27,7 +27,7 @@
      * Version number of current release
      * @type {String}
      */
-    Bikini.Version = Bikini.version = '0.6.1';
+    Bikini.Version = Bikini.version = '0.6.3';
     
     /**
      * Empty function to be used when
@@ -4083,7 +4083,7 @@
             var entity = this.getEntity(collection.entity);
             if( url && entity ) {
                 var name = entity.name;
-                var hash = this._hashCode(url);
+                var hash = this._locationBasedHashCode(url);
                 var credentials = entity.credentials || collection.credentials;
                 var user = credentials && credentials.username ? credentials.username : '';
                 var channel = name + user + hash;
@@ -4115,7 +4115,7 @@
     
         getEndpoint: function( url ) {
             if( url ) {
-                var hash = this._hashCode(url);
+                var hash = this._locationBasedHashCode(url);
                 return this.endpoints[hash];
             }
         },
@@ -4226,6 +4226,26 @@
                 hash |= 0; // Convert to 32bit integer
             }
             return hash;
+        },
+    
+        _locationBasedHashCode: function( str ){
+            return this._hashCode( this._getLocationUrl(str) );
+        },
+    
+        _getLocationUrl: function(str){
+            return this.getLocation(str).toString();
+        },
+    
+        _getLocation: function( url ) {
+            var location = document.createElement('a');
+            location.href = url || this.url;
+            // IE doesn't populate all link properties when setting .href with a relative URL,
+            // however .href will return an absolute URL which then can be used on itself
+            // to populate these additional fields.
+            if( location.host === '' ) {
+                location.href = location.href;
+            }
+            return location;
         },
     
         onConnect: function( endpoint ) {
