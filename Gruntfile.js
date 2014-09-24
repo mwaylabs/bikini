@@ -95,10 +95,10 @@ module.exports = function (grunt) {
             },
             all: ['test/test.html']
         },
-        jsdoc : {
-            dist : {
+        jsdoc: {
+            dist: {
                 src: ['dist/bikini.js'],
-                options:{
+                options: {
                     destination: 'doc',
                     private: false
                 }
@@ -106,7 +106,7 @@ module.exports = function (grunt) {
         },
         'curl-dir': {
             customFilepaths: {
-                src: (function() {
+                src: (function () {
                     return Object.keys(additionalMarkdownFiles);
                 })(),
                 router: function (url) {
@@ -127,17 +127,17 @@ module.exports = function (grunt) {
         },
         express: {
             test: {
-              options: {
-                script: './server/server.js'
-              }
+                options: {
+                    script: './server/server.js'
+                }
             }
         },
         'gh-pages': {
-		    options: {
-		      base: 'doc'
-		    },
-		    src: ['**']
-		  }
+            options: {
+                base: 'doc'
+            },
+            src: ['**']
+        }
     });
 
 
@@ -145,15 +145,15 @@ module.exports = function (grunt) {
 
     grunt.loadNpmTasks('grunt-express-server');
 
-    grunt.registerTask('build', ['preprocess:dev', ]);
+    grunt.registerTask('build', ['preprocess:dev']);
 
     grunt.registerTask('dev', ['default', 'watch']);
-    grunt.registerTask('test', ['jshint', 'build',/*'express:test',*/ 'mocha']);
+    grunt.registerTask('test', ['jshint', 'build', /*'express:test',*/ 'mocha']);
     grunt.registerTask('dist', ['jshint', 'preprocess:dist', 'uglify', 'build-doc']);
     grunt.registerTask('precommit', ['travis']);
     grunt.registerTask('travis', ['jsonlint', 'default', 'test']);
     grunt.registerTask('default', ['build']);
 
-    grunt.registerTask('build-doc', ['clean:md','curl-dir', 'rewriteMarkdownFiles', 'jsdoc', 'clean:md', 'gh-pages']);
+    grunt.registerTask('build-doc', ['clean:md', 'curl-dir', 'rewriteMarkdownFiles', 'jsdoc', 'clean:md', 'gh-pages']);
 
 };
