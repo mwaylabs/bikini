@@ -81,7 +81,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
         var entity = this.getEntity(collection.entity);
         if( url && entity ) {
             var name = entity.name;
-            var hash = this._hashCode(url);
+            var hash = this._locationBasedHashCode(url);
             var credentials = entity.credentials || collection.credentials;
             var user = credentials && credentials.username ? credentials.username : '';
             var channel = name + user + hash;
@@ -113,7 +113,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
 
     getEndpoint: function( url ) {
         if( url ) {
-            var hash = this._hashCode(url);
+            var hash = this._locationBasedHashCode(url);
             return this.endpoints[hash];
         }
     },
@@ -224,6 +224,26 @@ Bikini.BikiniStore = Bikini.Store.extend({
             hash |= 0; // Convert to 32bit integer
         }
         return hash;
+    },
+
+    _locationBasedHashCode: function( str ){
+        return this._hashCode( this._getLocationUrl(str) );
+    },
+
+    _getLocationUrl: function(str){
+        return this.getLocation(str).toString();
+    },
+
+    _getLocation: function( url ) {
+        var location = document.createElement('a');
+        location.href = url || this.url;
+        // IE doesn't populate all link properties when setting .href with a relative URL,
+        // however .href will return an absolute URL which then can be used on itself
+        // to populate these additional fields.
+        if( location.host === '' ) {
+            location.href = location.href;
+        }
+        return location;
     },
 
     onConnect: function( endpoint ) {

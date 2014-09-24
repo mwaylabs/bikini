@@ -81,4 +81,17 @@ describe('Bikini Namespace', function () {
         assert.isTrue(Bikini.isModel(Bikini.Model.extend().create()));
     });
 
+    it('Bikini.BikiniStore hashCode', function () {
+        var bs = new Bikini.BikiniStore();
+        assert.equal(bs._hashCode('api/dataSync/Todo'), 1108439963);
+        var a = bs._getLocation('api/dataSync/Todo');
+        assert.equal(typeof a, 'object');
+        assert.equal(typeof a.host, 'string');
+        assert.equal(typeof a.toString(), 'string');
+        var url = bs._getLocationUrl('api/dataSync/Todo');
+        assert.equal(typeof url, 'string');
+        var hash = bs._locationBasedHashCode('api/dataSync/Todo');
+        assert.equal(typeof hash, 'number');
+    });
+
 });
