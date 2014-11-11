@@ -127,7 +127,10 @@ Bikini.WebSqlStore = Bikini.Store.extend({
                 break;
 
             case 'read':
-                that._select(this, options);
+                var self = this;
+                that._checkTable(options, function() {
+                    that._select(self, options);
+                });
                 break;
 
             default:
