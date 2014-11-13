@@ -90,7 +90,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
             var that = this;
             var endpoint = this.endpoints[hash];
             if( !endpoint ) {
-                var href = this.getLocation(url);
+                var href = Bikini.URLUtil.getLocation(url);
                 endpoint = {};
                 endpoint.baseUrl = url;
                 endpoint.readUrl = collection.getUrl();
@@ -153,7 +153,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
             var that = this;
             var url  = endpoint.host;
             var path = endpoint.path;
-            var href = this.getLocation(url);
+            var href = Bikini.URLUtil.getLocation(url);
             if(href.port === '') {
                 if(href.protocol === 'https:') {
                     url += ':443';
@@ -231,7 +231,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
     },
 
     _getLocationUrl: function(str){
-        return this.getLocation(str).toString();
+        return Bikini.URLUtil.getLocation(str).toString();
     },
 
     _getLocation: function( url ) {
@@ -572,28 +572,5 @@ Bikini.BikiniStore = Bikini.Store.extend({
                 this.setLastMessageTime(endpoint.channel, '');
             }
         }
-    },
-
-   /*
-     url = "http://example.com:3000/pathname/?search=test#hash";
-
-     location.protocol; // => "http:"
-     location.host;     // => "example.com:3000"
-     location.hostname; // => "example.com"
-     location.port;     // => "3000"
-     location.pathname; // => "/pathname/"
-     location.hash;     // => "#hash"
-     location.search;   // => "?search=test"
-     */
-    getLocation: function( url ) {
-        var location = document.createElement('a');
-        location.href = url || this.url;
-        // IE doesn't populate all link properties when setting .href with a relative URL,
-        // however .href will return an absolute URL which then can be used on itself
-        // to populate these additional fields.
-        if( location.host === '' ) {
-            location.href = location.href;
-        }
-        return location;
     }
 });

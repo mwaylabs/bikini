@@ -65,7 +65,7 @@ _.extend(Bikini.Collection.prototype, Bikini.Object, {
     entityFromUrl: function (url) {
         if (url) {
             // extract last path part as entity name
-            var parts = Bikini.Request.getLocation(this.url).pathname.match(/([^\/]+)\/?$/);
+            var parts = Bikini.URLUtil.getLocation(this.url).pathname.match(/([^\/]+)\/?$/);
             if (parts && parts.length > 1) {
                 return parts[1];
             }
