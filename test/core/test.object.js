@@ -12,14 +12,14 @@ describe('Bikini.Object', function () {
     it('methods', function () {
         assert.isDefined(Bikini.Object._create);
         assert.isDefined(Bikini.Object._normalize);
-        assert.isDefined(Bikini.Object.include);
+        assert.isDefined(Bikini.Object.mergeProperties);
         assert.isDefined(Bikini.Object.design);
         assert.isDefined(Bikini.Object.bindToCaller);
         assert.isDefined(Bikini.Object.handleCallback);
 
         assert.isFunction(Bikini.Object._create);
         assert.isFunction(Bikini.Object._normalize);
-        assert.isFunction(Bikini.Object.include);
+        assert.isFunction(Bikini.Object.mergeProperties);
         assert.isFunction(Bikini.Object.design);
         assert.isFunction(Bikini.Object.bindToCaller);
         assert.isFunction(Bikini.Object.handleCallback);

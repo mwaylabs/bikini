@@ -105,10 +105,10 @@ Bikini.Object = {
      *
      * @param {Object} properties The properties to be included into the given object.
      */
-    include: function( properties ) {
+    mergeProperties: function( properties ) {
         for( var prop in properties ) {
             if( this.hasOwnProperty(prop) ) {
-                throw Bikini.Exception.RESERVED_WORD.getException();
+                throw new Error('Reserved word');
             }
             this[prop] = properties[prop];
         }
@@ -129,7 +129,7 @@ Bikini.Object = {
         var obj = this._create(this);
 
         /* assign the properties passed with the arguments array */
-        obj.include(this._normalize(properties));
+        obj.mergeProperties(this._normalize(properties));
 
         /* return the new object */
         return obj;
@@ -146,7 +146,7 @@ Bikini.Object = {
     bindToCaller: function( caller, method, arg ) {
         return function() {
             if( typeof method !== 'function' || typeof caller !== 'object' ) {
-                throw Bikini.Exception.INVALID_INPUT_PARAMETER.getException();
+                throw new Error('Invalid input parameter');
             }
             if( Array.isArray(arg) ) {
                 return method.apply(caller, arg);
