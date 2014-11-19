@@ -373,7 +373,9 @@ Bikini.BikiniStore = Bikini.Store.extend({
                     if( _.isEmpty(changes) ) {
                         return;
                     }
-                    data = model.toJSON({ attrs: changes });
+                    data = changes;
+                    console.log('model.changedAttributes', model.changedAttributes());
+                    console.log('changes', changes);
                     break;
 
                 case 'delete':
@@ -407,6 +409,18 @@ Bikini.BikiniStore = Bikini.Store.extend({
         if( msg.id && msg.method !== 'create' ) {
             url += (url.charAt(url.length - 1) === '/' ? '' : '/' ) + msg.id;
         }
+
+        if (msg.method === 'patch') {
+            // Create a temporary model to perfrom the patch request
+            var patchModel = that.createModel({ collection: endpoint.messages }, msg.data);
+
+            // Set id so the correct model will be patched
+            patchModel.idAttribute = model.idAttribute;
+            patchModel.set(patchModel.idAttribute, model.get(model.idAttribute));
+
+            model = patchModel;
+        }
+
         return model.sync.apply(model, [msg.method, model, {
             url: url,
             error: function( xhr, status ) {

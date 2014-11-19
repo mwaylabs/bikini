@@ -56,6 +56,28 @@ _.extend(Bikini.Model.prototype, Bikini.Object, {
         this.on('sync', this.onSync, this);
     },
 
+    save: function(key, val, options) {
+
+        // Handle both `"key", value` and `{key: value}` -style arguments.
+        if (key === null || typeof key === 'object') {
+            options = val;
+        }
+        options = options || {};
+
+        if ( !this.isNew() && options.patch === undefined) {
+            options.patch = true;
+        }
+
+        // Reassign the variables by that the next
+        // method save will be called with the correct order
+        if ( !key ) {
+            val = options;
+            options = undefined;
+        }
+
+        return Backbone.Model.prototype.save.apply(this, [key, val, options]);
+    },
+
     sync: function( method, model, options ) {
         options = options || {};
         options.credentials = options.credentials || this.credentials;
