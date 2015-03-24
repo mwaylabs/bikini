@@ -2,7 +2,8 @@
   "name": "bikini",
   "version": "0.6.3",
   "main": [
-    "./dist/*.js"
+    "./dist/bikini.js",
+    "./dist/bikangular.js"
   ],
   "ignore": [
     "**/.*",
