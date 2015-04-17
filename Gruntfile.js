@@ -75,7 +75,7 @@ module.exports = function (grunt) {
         watch: {
             js: {
                 files: ['src/**/*'],
-                tasks: ['build-js'],
+                tasks: ['preprocess:dist'],
                 options: {
                     spawn: false
                 }
