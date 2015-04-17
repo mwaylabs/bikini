@@ -456,7 +456,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
                 data = array[i];
                 if (data) {
                   that.trigger(channel, {
-                    id: data._id,
+                    id: data[endpoint.entity.idAttribute] || data._id,
                     method: 'update',
                     data: data
                   });

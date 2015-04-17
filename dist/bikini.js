@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.6.3
-* Date:      Fri Apr 17 2015 09:05:40
+* Date:      Fri Apr 17 2015 16:18:05
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 
@@ -4471,7 +4471,7 @@
                   data = array[i];
                   if (data) {
                     that.trigger(channel, {
-                      id: data._id,
+                      id: data[endpoint.entity.idAttribute] || data._id,
                       method: 'update',
                       data: data
                     });
