@@ -62,10 +62,19 @@ _.extend(Bikini.Collection.prototype, Bikini.Object, {
 
   entityFromUrl: function (url) {
     if (url) {
+      var location = document.createElement('a');
+      location.href = url || this.url;
+      // IE doesn't populate all link properties when setting .href with a relative URL,
+      // however .href will return an absolute URL which then can be used on itself
+      // to populate these additional fields.
+      if (location.host === '') {
+        location.href = location.href;
+      }
+
       // extract last path part as entity name
-      var parts = Bikini.Request.getLocation(this.url).pathname.match(/([^\/]+)\/?$/);
+      var parts = location.pathname.match(/([^\/]+)\/?$/);
       if (parts && parts.length > 1) {
-        return parts[1];
+        return parts[-1];
       }
     }
   },
