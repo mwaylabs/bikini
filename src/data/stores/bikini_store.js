@@ -137,18 +137,29 @@ Bikini.BikiniStore = Bikini.Store.extend({
       });
     }
   },
-
-  createMsgCollection: function (endpoint) {
-    console.log('Bikini.BikiniStore.createMsgCollection');
-    if (this.options.useOfflineChanges && endpoint) {
+  /**
+   * @description Here we save the changes in a Message local websql
+   * @param endpoint {string}
+   * @returns {*}
+   */
+  createMsgCollection: function( endpoint ) {
+    if( this.options.useOfflineChanges && endpoint ) {
+      var entity = 'msg-' + endpoint.channel;
+      var entities = {};
+      entities[entity] = {
+        name: entity,
+        idAttribute: 'id'
+      };
       var messages = Bikini.Collection.design({
         url: endpoint.url,
-        entity: 'msg-' + endpoint.channel,
-        store: this.options.localStore.create()
+        entity: entity,
+        store: this.options.localStore.create({
+          entities: entities
+        })
       });
       var that = this;
       messages.fetch({
-        success: function () {
+        success: function() {
           that.sendMessages(endpoint);
         }
       });
