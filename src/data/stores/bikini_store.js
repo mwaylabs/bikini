@@ -60,9 +60,11 @@ Bikini.BikiniStore = Bikini.Store.extend({
     console.log('Bikini.BikiniStore.initialize');
     Bikini.Store.prototype.initialize.apply(this, arguments);
     this.options = this.options || {};
+
     this.options.useLocalStore = this.useLocalStore;
     this.options.useSocketNotify = this.useSocketNotify;
     this.options.useOfflineChanges = this.useOfflineChanges;
+    this.options.query = options.query || false;
     this.options.socketPath = this.socketPath;
     this.options.localStore = this.localStore;
     this.options.typeMapping = this.typeMapping;
@@ -73,9 +75,9 @@ Bikini.BikiniStore = Bikini.Store.extend({
     _.extend(this.options, options || {});
   },
 
-  initModel: function (model) {
-    console.log('Bikini.BikiniStore.initModel');
-  },
+  //initModel: function (model) {
+  //  console.log('Bikini.BikiniStore.initModel');
+  //},
 
   initCollection: function (collection) {
     console.log('Bikini.BikiniStore.initCollection');
@@ -169,6 +171,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
 
   createSocket: function (endpoint, name) {
     console.log('Bikini.BikiniStore.createSocket');
+    //debugger;
     if (this.options.useSocketNotify && endpoint && endpoint.socketPath) {
       var that = this;
       var url = endpoint.host;
@@ -186,8 +189,13 @@ Bikini.BikiniStore = Bikini.Store.extend({
       path = endpoint.socketPath;
       // remove leading /
       var resource = (path && path.indexOf('/') === 0) ? path.substr(1) : path;
-
-      endpoint.socket = io.connect(url, {resource: resource});
+      var connectVo = {
+        resource: resource
+      };
+      if (this.options.query) {
+        connectVo.query = this.options.query;
+      }
+      endpoint.socket = io.connect(url, connectVo);
       endpoint.socket.on('connect', function () {
         that._bindChannel(endpoint, name);
         that.onConnect(endpoint);
@@ -355,6 +363,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
   },
 
   sync: function (method, model, options) {
+    //debugger;
     console.log('Bikini.BikiniStore.sync');
     var that = options.store || this.store;
     if (options.fromMessage) {

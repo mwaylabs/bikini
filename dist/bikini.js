@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.6.3
-* Date:      Thu May 07 2015 16:46:46
+* Date:      Mon May 11 2015 10:45:09
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 
@@ -1874,7 +1874,10 @@
   
   Bikini.Collection.create = Bikini.create;
   Bikini.Collection.design = Bikini.design;
-  
+  Bikini.Collection.prototype.on('remove', function (event) {
+    console.log(event);
+    //Bikini.Collection.prototype.trigger('remove', event);
+  });
   _.extend(Bikini.Collection.prototype, Bikini.Object, {
   
     _type: 'Bikini.Collection',
@@ -4084,9 +4087,11 @@
       console.log('Bikini.BikiniStore.initialize');
       Bikini.Store.prototype.initialize.apply(this, arguments);
       this.options = this.options || {};
+  
       this.options.useLocalStore = this.useLocalStore;
       this.options.useSocketNotify = this.useSocketNotify;
       this.options.useOfflineChanges = this.useOfflineChanges;
+      this.options.query = options.query || false;
       this.options.socketPath = this.socketPath;
       this.options.localStore = this.localStore;
       this.options.typeMapping = this.typeMapping;
@@ -4097,9 +4102,9 @@
       _.extend(this.options, options || {});
     },
   
-    initModel: function (model) {
-      console.log('Bikini.BikiniStore.initModel');
-    },
+    //initModel: function (model) {
+    //  console.log('Bikini.BikiniStore.initModel');
+    //},
   
     initCollection: function (collection) {
       console.log('Bikini.BikiniStore.initCollection');
@@ -4193,6 +4198,7 @@
   
     createSocket: function (endpoint, name) {
       console.log('Bikini.BikiniStore.createSocket');
+      //debugger;
       if (this.options.useSocketNotify && endpoint && endpoint.socketPath) {
         var that = this;
         var url = endpoint.host;
@@ -4210,8 +4216,13 @@
         path = endpoint.socketPath;
         // remove leading /
         var resource = (path && path.indexOf('/') === 0) ? path.substr(1) : path;
-  
-        endpoint.socket = io.connect(url, {resource: resource});
+        var connectVo = {
+          resource: resource
+        };
+        if (this.options.query) {
+          connectVo.query = this.options.query;
+        }
+        endpoint.socket = io.connect(url, connectVo);
         endpoint.socket.on('connect', function () {
           that._bindChannel(endpoint, name);
           that.onConnect(endpoint);
@@ -4379,6 +4390,7 @@
     },
   
     sync: function (method, model, options) {
+      //debugger;
       console.log('Bikini.BikiniStore.sync');
       var that = options.store || this.store;
       if (options.fromMessage) {
