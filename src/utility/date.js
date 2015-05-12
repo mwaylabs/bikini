@@ -9,14 +9,14 @@
  */
 Bikini.Date = {
 
-    /**
-     * This method is used to create a new instance of Bikini.Date based on the data
-     * library moment.js.
-     *
-     * @returns {Object}
-     */
-    create: function() {
-        var m = moment.apply(this, arguments);
-        return _.extend(m, this);
-    }
+  /**
+   * This method is used to create a new instance of Bikini.Date based on the data
+   * library moment.js.
+   *
+   * @returns {Object}
+   */
+  create: function () {
+    var m = moment.apply(this, arguments);
+    return _.extend(m, this);
+  }
 };

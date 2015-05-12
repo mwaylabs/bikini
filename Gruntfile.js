@@ -63,6 +63,9 @@ module.exports = function (grunt) {
                 preserveComments: 'some'
             },
             core: {
+                compress: {
+                  drop_console: true
+                },
                 src: 'dist/bikini.js',
                 dest: 'dist/bikini.min.js',
                 options: {
@@ -75,7 +78,7 @@ module.exports = function (grunt) {
         watch: {
             js: {
                 files: ['src/**/*'],
-                tasks: ['build-js'],
+                tasks: ['preprocess:dist'],
                 options: {
                     spawn: false
                 }
