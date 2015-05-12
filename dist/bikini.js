@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.6.3
-* Date:      Mon May 11 2015 10:45:09
+* Date:      Tue May 12 2015 09:32:55
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 
@@ -1874,10 +1874,7 @@
   
   Bikini.Collection.create = Bikini.create;
   Bikini.Collection.design = Bikini.design;
-  Bikini.Collection.prototype.on('remove', function (event) {
-    console.log(event);
-    //Bikini.Collection.prototype.trigger('remove', event);
-  });
+  
   _.extend(Bikini.Collection.prototype, Bikini.Object, {
   
     _type: 'Bikini.Collection',
@@ -4068,15 +4065,10 @@
     options: null,
   
     localStore: Bikini.WebSqlStore,
-  
     useLocalStore: true,
-  
     useSocketNotify: true,
-  
     useOfflineChanges: true,
-  
     isConnected: false,
-  
     typeMapping: {
       'binary': 'text',
       'date': 'string'
@@ -4219,8 +4211,9 @@
         var connectVo = {
           resource: resource
         };
-        if (this.options.query) {
-          connectVo.query = this.options.query;
+  
+        if (this.options.socketQuery) {
+          connectVo.query = this.options.socketQuery;
         }
         endpoint.socket = io.connect(url, connectVo);
         endpoint.socket.on('connect', function () {
@@ -4259,17 +4252,20 @@
       }
     },
     getLastMessageTime: function (channel) {
+      if(this.lastMesgTime !== undefined) {
+        return this.lastMesgTime;
+      }
       console.log('Bikini.BikiniStore.getLastMessageTime');
-      return localStorage.getItem('__' + channel + 'last_msg_time') || 0;
+      this.lastMesgTime = localStorage.getItem('__' + channel + 'lastMesgTime') || 0;
+      return this.lastMesgTime;
     },
-  
     setLastMessageTime: function (channel, time) {
-      console.log('Bikini.BikiniStore.setLastMessageTime');
-      if (time) {
-        localStorage.setItem('__' + channel + 'last_msg_time', time);
+      if (time && time > this.getLastMessageTime()) {
+        console.log('Bikini.BikiniStore.setLastMessageTime');
+        localStorage.setItem('__' + channel + 'lastMesgTime', time);
+        this.lastMesgTime = time;
       }
     },
-  
     _hashCode: function (str) {
       console.log('Bikini.BikiniStore._hashCode');
       var hash = 0, char;

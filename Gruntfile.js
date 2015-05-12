@@ -63,6 +63,9 @@ module.exports = function (grunt) {
                 preserveComments: 'some'
             },
             core: {
+                compress: {
+                  drop_console: true
+                },
                 src: 'dist/bikini.js',
                 dest: 'dist/bikini.min.js',
                 options: {

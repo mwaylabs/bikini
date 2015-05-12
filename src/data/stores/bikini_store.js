@@ -41,15 +41,10 @@ Bikini.BikiniStore = Bikini.Store.extend({
   options: null,
 
   localStore: Bikini.WebSqlStore,
-
   useLocalStore: true,
-
   useSocketNotify: true,
-
   useOfflineChanges: true,
-
   isConnected: false,
-
   typeMapping: {
     'binary': 'text',
     'date': 'string'
@@ -192,8 +187,9 @@ Bikini.BikiniStore = Bikini.Store.extend({
       var connectVo = {
         resource: resource
       };
-      if (this.options.query) {
-        connectVo.query = this.options.query;
+
+      if (this.options.socketQuery) {
+        connectVo.query = this.options.socketQuery;
       }
       endpoint.socket = io.connect(url, connectVo);
       endpoint.socket.on('connect', function () {
@@ -232,17 +228,20 @@ Bikini.BikiniStore = Bikini.Store.extend({
     }
   },
   getLastMessageTime: function (channel) {
+    if(this.lastMesgTime !== undefined) {
+      return this.lastMesgTime;
+    }
     console.log('Bikini.BikiniStore.getLastMessageTime');
-    return localStorage.getItem('__' + channel + 'last_msg_time') || 0;
+    this.lastMesgTime = localStorage.getItem('__' + channel + 'lastMesgTime') || 0;
+    return this.lastMesgTime;
   },
-
   setLastMessageTime: function (channel, time) {
-    console.log('Bikini.BikiniStore.setLastMessageTime');
-    if (time) {
-      localStorage.setItem('__' + channel + 'last_msg_time', time);
+    if (time && time > this.getLastMessageTime()) {
+      console.log('Bikini.BikiniStore.setLastMessageTime');
+      localStorage.setItem('__' + channel + 'lastMesgTime', time);
+      this.lastMesgTime = time;
     }
   },
-
   _hashCode: function (str) {
     console.log('Bikini.BikiniStore._hashCode');
     var hash = 0, char;
