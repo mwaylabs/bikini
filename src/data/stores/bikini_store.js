@@ -139,8 +139,8 @@ Bikini.BikiniStore = Bikini.Store.extend({
    * @param endpoint {string}
    * @returns {*}
    */
-  createMsgCollection: function( endpoint ) {
-    if( this.options.useOfflineChanges && endpoint ) {
+  createMsgCollection: function (endpoint) {
+    if (this.options.useOfflineChanges && endpoint) {
       var entity = 'msg-' + endpoint.channel;
       var entities = {};
       entities[entity] = {
@@ -156,7 +156,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
       });
       var that = this;
       messages.fetch({
-        success: function() {
+        success: function () {
           that.sendMessages(endpoint);
         }
       });
@@ -200,8 +200,8 @@ Bikini.BikiniStore = Bikini.Store.extend({
         console.log('socket.io: disconnect');
         that.onDisconnect(endpoint);
       });
-	  var channel = endpoint.channel;
-	  socket.socket.on(channel, function (msg) {
+      var channel = endpoint.channel;
+      endpoint.socket.on(channel, function (msg) {
         if (msg) {
           that.trigger(channel, msg);
           if (that.options.useLocalStore) {
@@ -230,7 +230,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
   },
 
   getLastMessageTime: function (channel) {
-    if(this.lastMesgTime !== undefined) {
+    if (this.lastMesgTime !== undefined) {
       return this.lastMesgTime;
     }
     console.log('Bikini.BikiniStore.getLastMessageTime');
@@ -471,7 +471,8 @@ Bikini.BikiniStore = Bikini.Store.extend({
           if (options.success) {
             var resp = data;
             that.handleCallback(options.success, resp);
-          } else {
+          } else if (data) {
+            // no data if server asks not to alter state
             // that.setLastMessageTime(channel, msg.time);
             if (msg.method === 'read') {
               var array = _.isArray(data) ? data : [data];

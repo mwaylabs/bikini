@@ -1,8 +1,8 @@
 /*!
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
-* Version:   0.6.3
-* Date:      Tue May 12 2015 09:32:55
+* Version:   0.7.2
+* Date:      Tue May 12 2015 16:00:45
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 
@@ -27,7 +27,7 @@
    * Version number of current release
    * @type {String}
    */
-  Bikini.Version = Bikini.version = '0.6.3';
+  Bikini.Version = Bikini.version = '0.7.2';
   
   /**
    * Empty function to be used when
@@ -4163,8 +4163,8 @@
      * @param endpoint {string}
      * @returns {*}
      */
-    createMsgCollection: function( endpoint ) {
-      if( this.options.useOfflineChanges && endpoint ) {
+    createMsgCollection: function (endpoint) {
+      if (this.options.useOfflineChanges && endpoint) {
         var entity = 'msg-' + endpoint.channel;
         var entities = {};
         entities[entity] = {
@@ -4180,7 +4180,7 @@
         });
         var that = this;
         messages.fetch({
-          success: function() {
+          success: function () {
             that.sendMessages(endpoint);
           }
         });
@@ -4224,6 +4224,15 @@
           console.log('socket.io: disconnect');
           that.onDisconnect(endpoint);
         });
+        var channel = endpoint.channel;
+        endpoint.socket.on(channel, function (msg) {
+          if (msg) {
+            that.trigger(channel, msg);
+            if (that.options.useLocalStore) {
+              that.setLastMessageTime(channel, msg.time);
+            }
+          }
+        });
         return endpoint.socket;
       }
     },
@@ -4236,14 +4245,6 @@
         var socket = endpoint.socket;
         var time = this.getLastMessageTime(channel);
         name = name || endpoint.entity.name;
-        socket.on(channel, function (msg) {
-          if (msg) {
-            that.trigger(channel, msg);
-            if (that.options.useLocalStore) {
-              that.setLastMessageTime(channel, msg.time);
-            }
-          }
-        });
         socket.emit('bind', {
           entity: name,
           channel: channel,
@@ -4251,14 +4252,16 @@
         });
       }
     },
+  
     getLastMessageTime: function (channel) {
-      if(this.lastMesgTime !== undefined) {
+      if (this.lastMesgTime !== undefined) {
         return this.lastMesgTime;
       }
       console.log('Bikini.BikiniStore.getLastMessageTime');
       this.lastMesgTime = localStorage.getItem('__' + channel + 'lastMesgTime') || 0;
       return this.lastMesgTime;
     },
+  
     setLastMessageTime: function (channel, time) {
       if (time && time > this.getLastMessageTime()) {
         console.log('Bikini.BikiniStore.setLastMessageTime');
@@ -4266,6 +4269,7 @@
         this.lastMesgTime = time;
       }
     },
+  
     _hashCode: function (str) {
       console.log('Bikini.BikiniStore._hashCode');
       var hash = 0, char;
@@ -4491,7 +4495,8 @@
             if (options.success) {
               var resp = data;
               that.handleCallback(options.success, resp);
-            } else {
+            } else if (data) {
+              // no data if server asks not to alter state
               // that.setLastMessageTime(channel, msg.time);
               if (msg.method === 'read') {
                 var array = _.isArray(data) ? data : [data];
