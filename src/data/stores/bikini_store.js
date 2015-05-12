@@ -200,6 +200,15 @@ Bikini.BikiniStore = Bikini.Store.extend({
         console.log('socket.io: disconnect');
         that.onDisconnect(endpoint);
       });
+	  var channel = endpoint.channel;
+	  socket.socket.on(channel, function (msg) {
+        if (msg) {
+          that.trigger(channel, msg);
+          if (that.options.useLocalStore) {
+            that.setLastMessageTime(channel, msg.time);
+          }
+        }
+      });
       return endpoint.socket;
     }
   },
@@ -212,14 +221,6 @@ Bikini.BikiniStore = Bikini.Store.extend({
       var socket = endpoint.socket;
       var time = this.getLastMessageTime(channel);
       name = name || endpoint.entity.name;
-      socket.on(channel, function (msg) {
-        if (msg) {
-          that.trigger(channel, msg);
-          if (that.options.useLocalStore) {
-            that.setLastMessageTime(channel, msg.time);
-          }
-        }
-      });
       socket.emit('bind', {
         entity: name,
         channel: channel,
@@ -227,6 +228,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
       });
     }
   },
+
   getLastMessageTime: function (channel) {
     if(this.lastMesgTime !== undefined) {
       return this.lastMesgTime;
@@ -235,6 +237,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
     this.lastMesgTime = localStorage.getItem('__' + channel + 'lastMesgTime') || 0;
     return this.lastMesgTime;
   },
+
   setLastMessageTime: function (channel, time) {
     if (time && time > this.getLastMessageTime()) {
       console.log('Bikini.BikiniStore.setLastMessageTime');
@@ -242,6 +245,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
       this.lastMesgTime = time;
     }
   },
+
   _hashCode: function (str) {
     console.log('Bikini.BikiniStore._hashCode');
     var hash = 0, char;
