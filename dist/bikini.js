@@ -1,8 +1,8 @@
 /*!
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
-* Version:   0.7.3
-* Date:      Wed May 13 2015 12:16:23
+* Version:   0.8.0
+* Date:      Wed May 13 2015 16:17:52
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 
@@ -27,7 +27,7 @@
    * Version number of current release
    * @type {String}
    */
-  Bikini.Version = Bikini.version = '0.7.3';
+  Bikini.Version = Bikini.version = '0.8.0';
   
   /**
    * Empty function to be used when
@@ -4481,10 +4481,51 @@
             that.onDisconnect(endpoint);
             that.handleCallback(options.success, msg.data);
           } else {
-            that.removeMessage(endpoint, msg, function (endpoint, msg) {
-              // Todo: revert changed data
-              that.handleCallback(options.error, status);
-            });
+            // some real error
+            var handleError = function () {
+              // called when we want to retry on reconnect/restart, aka. the message stays in the store for future delivery
+              return that.handleCallback(options.error, status);
+            };
+            var removeAndHandleError = function () {
+              // called when we do not want to retry on reconnect/restart, message is to be deleted
+              return that.removeMessage(endpoint, msg, handleError);
+            };
+            var deleteAndHandleError = function (model, fetchResp) {
+              // original request failed and the code below tried to revert the local modifications by reloading the data, which failed as well...
+              var status = fetchResp && fetchResp.status;
+              switch (status) {
+                case 404: // NOT FOUND
+                case 401: // UNAUTHORIZED
+                case 410: // GONE*
+                  // ...because the item is gone by now, maybe someone else changed it to be deleted
+                  model.destroy({
+                    // remove message to no longer retry on reconnect/restart
+                    error: removeAndHandleError,
+                    success: removeAndHandleError,
+                    // just affect local store
+                    store: endpoint.localStore
+                  });
+                  break;
+                default:
+                  // reattempt operation on reconnect/restart as we are off in undefined state,
+                  // data can not be reloaded and yet it was not deleted, so what to do...
+                  console.error('don`t know how to handle ' + status + ' here!');
+                  handleError();
+                  break;
+              }
+            };
+            if (msg.method !== 'read' && endpoint.localStore) {
+              // revert modification by reloading data
+              return model.fetch({
+                url: url,
+                error: deleteAndHandleError,
+                success: removeAndHandleError,
+                store: {} // really go to remote server
+              });
+            } else {
+              // just give up and forward the error
+              return removeAndHandleError();
+            }
           }
         },
         success: function (data) {

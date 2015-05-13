@@ -452,57 +452,56 @@ Bikini.BikiniStore = Bikini.Store.extend({
     return model.sync.apply(model, [msg.method, model, {
       url: url,
       error: function (xhr, status) {
-	    if (!xhr.responseText && that.options.useOfflineChanges) {
+        if (!xhr.responseText && that.options.useOfflineChanges) {
           // this seams to be only a connection problem, so we keep the message an call success
           that.onDisconnect(endpoint);
           that.handleCallback(options.success, msg.data);
         } else {
-			// some real error
-			var handleError = function() {
-			  // called when we want to retry on reconnect/restart, aka. the message stays in the store for future delivery
-			  return that.handleCallback(options.error, status);
-			};
-			var removeAndHandleError = function() {
-			  // called when we do not want to retry on reconnect/restart, message is to be deleted
-			  return that.removeMessage(endpoint, msg, handleError);
-			};
-			var deleteAndHandleError = function(model, fetchResp) {
-				// original request failed and the code below tried to revert the local modifications by reloading the data, which failed as well...
-				var status = fetchResp && fetchResp.status;
-				switch(status) {
-					case 404: // NOT FOUND
-					case 401: // UNAUTHORIZED
-					case 410: // GONE*
-						// ...because the item is gone by now, maybe someone else changed it to be deleted
-						model.destroy({
-							// remove message to no longer retry on reconnect/restart
-							error: removeAndHandleError,
-							success: removeAndHandleError,
-							// just affect local store
-							store: endpoint.localStore
-						});
-						break;
-					default:
-						// reattempt operation on reconnect/restart as we are off in undefined state,
-						// data can not be reloaded and yet it was not deleted, so what to do...
-						console.error("don't know how to handle " + status + " here!");
-						handleError();
-						break;
-				}
-			};
-		    if(msg.method !== 'read' && endpoint.localStore) {
-				// revert modification by reloading data
-				return model.fetch({
-				   url: url,
-				   error: deleteAndHandleError,
-				   success: removeAndHandleError,
-				   store: {} // really go to remote server
-			    });
-			} else {
-				// just give up and forward the error
-				return removeAndHandleError();
-			}
-          });
+          // some real error
+          var handleError = function () {
+            // called when we want to retry on reconnect/restart, aka. the message stays in the store for future delivery
+            return that.handleCallback(options.error, status);
+          };
+          var removeAndHandleError = function () {
+            // called when we do not want to retry on reconnect/restart, message is to be deleted
+            return that.removeMessage(endpoint, msg, handleError);
+          };
+          var deleteAndHandleError = function (model, fetchResp) {
+            // original request failed and the code below tried to revert the local modifications by reloading the data, which failed as well...
+            var status = fetchResp && fetchResp.status;
+            switch (status) {
+              case 404: // NOT FOUND
+              case 401: // UNAUTHORIZED
+              case 410: // GONE*
+                // ...because the item is gone by now, maybe someone else changed it to be deleted
+                model.destroy({
+                  // remove message to no longer retry on reconnect/restart
+                  error: removeAndHandleError,
+                  success: removeAndHandleError,
+                  // just affect local store
+                  store: endpoint.localStore
+                });
+                break;
+              default:
+                // reattempt operation on reconnect/restart as we are off in undefined state,
+                // data can not be reloaded and yet it was not deleted, so what to do...
+                console.error('don`t know how to handle ' + status + ' here!');
+                handleError();
+                break;
+            }
+          };
+          if (msg.method !== 'read' && endpoint.localStore) {
+            // revert modification by reloading data
+            return model.fetch({
+              url: url,
+              error: deleteAndHandleError,
+              success: removeAndHandleError,
+              store: {} // really go to remote server
+            });
+          } else {
+            // just give up and forward the error
+            return removeAndHandleError();
+          }
         }
       },
       success: function (data) {
