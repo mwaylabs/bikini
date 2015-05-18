@@ -1,12 +1,34 @@
+<<<<<<< HEAD
 # http://editorconfig.org
 root = true
 
 [*]
 indent_style = space
 indent_size = 2
+=======
+# EditorConfig helps developers define and maintain consistent
+# coding styles between different editors and IDEs
+# editorconfig.org
+
+root = true
+
+
+[*]
+
+# Change these settings to your own preference
+indent_style = space
+indent_size = 4
+
+# We recommend you to keep these unchanged
+end_of_line = lf
+>>>>>>> 1eec2a84a0e9338507fce5d05bef17d4cb9c557f
 charset = utf-8
 trim_trailing_whitespace = true
 insert_final_newline = true
 
 [*.md]
+<<<<<<< HEAD
 trim_trailing_whitespace = false
+=======
+trim_trailing_whitespace = false
+>>>>>>> 1eec2a84a0e9338507fce5d05bef17d4cb9c557f

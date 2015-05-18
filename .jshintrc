@@ -30,6 +30,9 @@
         "Modernizr": false,
         "Hammer": false,
         "FastClick": false,
-        "enquire": false
+        "enquire": false,
+        "describe": false,
+        "assert": false,
+        "it": false
     }
 }

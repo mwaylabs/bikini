@@ -1,21 +1,5 @@
 describe('Bikini.Collection', function() {
 
-    var testConnection = function( callback, done ) {
-        $.ajax({
-            timeout: 3000,
-            dataType: "json",
-            url: serverUrl+'/bikini/test/info',
-            success: function() {
-                callback();
-            },
-            error: function() {
-                assert.isTrue(YES);
-                console.log('timeout on Colletction test');
-                done();
-            }
-        });
-    }
-
     var TEST = {};
 
     TEST.url = serverUrl+'/bikini/developers';
@@ -195,80 +179,6 @@ describe('Bikini.Collection', function() {
 
         var d3 = result.at(2); // has to be Frank Stierle
         assert.equal(d3.get('sureName'), 'Stierle', 'The third developer field "sureName" has correct value.');
-
-    });
-
-    it('creating data (on server)', function( done ) {
-        this.timeout(4000);
-        TEST.Developers.reset();
-        assert.equal(TEST.Developers.length, 0, 'All records were removed.');
-
-        var callback = function(){
-            TEST.Developers.create(TEST.data[0], {
-                success: function( model ) {
-                    assert.isObject(model, 'data created on server');
-                    assert.equal(model.get('sureName'), TEST.data[0].sureName, 'sureName of created model has correct value');
-                    assert.equal(model.get('firstName'), TEST.data[0].firstName, 'firstName of created model has correct value');
-                    assert.equal(model.get('age'), TEST.data[0].age, 'age of created model has correct value');
-                    assert.ok(model.id, 'id of created model has been created');
-                    TEST.id = model.id;
-                    done();
-                },
-                error: function( error ) {
-                    assert.ok(false, 'creating data on server: ' + error);
-                    done();
-                }
-            });
-        };
-
-        testConnection(callback, done);
-    });
-
-    it('fetching data (from server)', function( done ) {
-        this.timeout(4000);
-        var callback = function(){
-            TEST.Developers.reset();
-            assert.equal(TEST.Developers.length, 0, 'All records were removed.');
-
-            TEST.Developers.fetch({
-                success: function( collection ) {
-                    assert.isObject(collection, 'collection returned in success');
-                    var model = collection.get(TEST.id);
-                    assert.isObject(model, 'data found on server');
-                    assert.equal(model.get('sureName'), TEST.data[0].sureName, 'sureName of created model has correct value');
-                    assert.equal(model.get('firstName'), TEST.data[0].firstName, 'firstName of created model has correct value');
-                    assert.equal(model.get('age'), TEST.data[0].age, 'age of created model has correct value');
-                    done();
-                },
-                error: function( error ) {
-                    assert.ok(false, 'collection fetched: ' + error);
-                    done();
-                }
-            });
-        }
-        testConnection(callback, done);
-    });
-
-    it('delete records (on server)', function( done ) {
-        this.timeout(4000);
-        var callback = function(){
-            if( TEST.Developers.length === 0 ) {
-                done();
-            } else {
-                TEST.Developers.on('destroy', function( event ) {
-                    if( TEST.Developers.length == 0 ) {
-                        assert.equal(TEST.Developers.length, 0, 'collection is empty');
-                        done();
-                    }
-                });
-                var model;
-                while( model = TEST.Developers.first() ) {
-                    model.destroy();
-                }
-            }
-        }
-
-        testConnection(callback, done);
 
     });
 
