@@ -239,7 +239,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
   },
 
   setLastMessageTime: function (channel, time) {
-    if (time && time > this.getLastMessageTime()) {
+    if (!time || time > this.getLastMessageTime()) {
       console.log('Bikini.BikiniStore.setLastMessageTime');
       localStorage.setItem('__' + channel + 'lastMesgTime', time);
       this.lastMesgTime = time;
