@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.0
-* Date:      Wed May 13 2015 16:17:52
+* Date:      Mon May 18 2015 15:03:56
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 
@@ -4263,7 +4263,7 @@
     },
   
     setLastMessageTime: function (channel, time) {
-      if (time && time > this.getLastMessageTime()) {
+      if (!time || time > this.getLastMessageTime()) {
         console.log('Bikini.BikiniStore.setLastMessageTime');
         localStorage.setItem('__' + channel + 'lastMesgTime', time);
         this.lastMesgTime = time;
