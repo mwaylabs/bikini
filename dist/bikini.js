@@ -1,8 +1,8 @@
 /*!
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
-* Version:   0.8.2
-* Date:      Tue May 19 2015 08:04:21
+* Version:   0.8.3
+* Date:      Tue May 19 2015 08:16:17
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 
@@ -27,7 +27,7 @@
    * Version number of current release
    * @type {String}
    */
-  Bikini.Version = Bikini.version = '0.8.2';
+  Bikini.Version = Bikini.version = '0.8.3';
   
   /**
    * Empty function to be used when
@@ -4181,7 +4181,9 @@
         var that = this;
         messages.fetch({
           success: function () {
-            that.sendMessages(endpoint);
+            if (that.isConnected) {
+              that.sendMessages(endpoint);
+            }
           }
         });
         return messages;
@@ -4309,16 +4311,20 @@
   
     onConnect: function (endpoint) {
       console.log('Bikini.BikiniStore.onConnect');
-      this.isConnected = true;
-      this.fetchChanges(endpoint);
-      this.sendMessages(endpoint);
+      if (!this.isConnected) {
+        this.isConnected = true;
+        this.fetchChanges(endpoint);
+        this.sendMessages(endpoint);
+      }
     },
   
     onDisconnect: function (endpoint) {
       console.log('Bikini.BikiniStore.onDisconnect');
-      this.isConnected = false;
-      if (endpoint.socket && endpoint.socket.socket) {
-        endpoint.socket.socket.onDisconnect();
+      if (this.isConnected) {
+        this.isConnected = false;
+        if (endpoint.socket && endpoint.socket.socket) {
+          endpoint.socket.socket.onDisconnect();
+        }
       }
     },
   
@@ -4484,11 +4490,32 @@
             // some real error
             var handleError = function () {
               // called when we want to retry on reconnect/restart, aka. the message stays in the store for future delivery
-              return that.handleCallback(options.error, status);
+              return that.handleCallback(options.error, model, xhr.responseJSON || new Error(status), options);
             };
             var removeAndHandleError = function () {
               // called when we do not want to retry on reconnect/restart, message is to be deleted
               return that.removeMessage(endpoint, msg, handleError);
+            };
+            var saveAndHandleError = function(model, data) {
+              // original request failed and the code below reloaded the data to revert the local modifications, which succeeded...
+              that.trigger(channel, {
+                _id: model.id,
+                id: model.id,
+                method: 'update',
+                data: data
+              });
+              removeAndHandleError();
+              // following does NOT work as this will NOT update the collection when sending messages on reconnect!
+              /*
+              return model.save(data, {
+                // remove message to no longer retry on reconnect/restart
+                error: removeAndHandleError,
+                success: removeAndHandleError,
+                // just affect local store
+                store: endpoint.localStore,
+                entity: endpoint.entity
+              });
+              */
             };
             var deleteAndHandleError = function (model, fetchResp) {
               // original request failed and the code below tried to revert the local modifications by reloading the data, which failed as well...
@@ -4498,13 +4525,23 @@
                 case 401: // UNAUTHORIZED
                 case 410: // GONE*
                   // ...because the item is gone by now, maybe someone else changed it to be deleted
+                  that.trigger(channel, {
+                    _id: model.id,
+                    id: model.id,
+                    method: 'delete'
+                  });
+                  removeAndHandleError();
+                  // following does NOT work as this will NOT update the collection when sending messages on reconnect!
+                  /*
                   model.destroy({
                     // remove message to no longer retry on reconnect/restart
                     error: removeAndHandleError,
                     success: removeAndHandleError,
                     // just affect local store
-                    store: endpoint.localStore
+                    store: endpoint.localStore,
+                    entity: endpoint.entity
                   });
+                  */
                   break;
                 default:
                   // reattempt operation on reconnect/restart as we are off in undefined state,
@@ -4519,7 +4556,7 @@
               return model.fetch({
                 url: url,
                 error: deleteAndHandleError,
-                success: removeAndHandleError,
+                success: saveAndHandleError,
                 store: {} // really go to remote server
               });
             } else {
@@ -4627,7 +4664,9 @@
           var channel = message.get('channel');
           if (msg && channel) {
             var model = that.createModel({collection: endpoint.messages}, msg.data);
-            that.emitMessage(endpoint, msg, {}, model);
+            that.emitMessage(endpoint, msg, {
+              error: that.options.error
+            }, model);
           } else {
             message.destroy();
           }
