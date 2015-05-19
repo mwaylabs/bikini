@@ -553,15 +553,56 @@ Bikini.BikiniStore = Bikini.Store.extend({
             // no data if server asks not to alter state
             // that.setLastMessageTime(channel, msg.time);
             if (msg.method === 'read') {
-              var array = _.isArray(data) ? data : [data];
-              for (var i = 0; i < array.length; i++) {
-                data = array[i];
-                if (data) {
+              if (Bikini.isCollection(model) && _.isArray(data)) {
+                // synchronize the collection contents with the data read
+                var ids = {};
+                model.models.forEach(function (m) {
+                  ids[m.id] = m;
+                });
+                data.forEach(function (d) {
+                  if (d) {
+                    var id = d[endpoint.entity.idAttribute] || d._id;
+                    var m = ids[id];
+                    if (m) {
+                      // update the item
+                      delete ids[id]; // so that it is deleted below
+                      if (!_.isEqual(_.pick.call(m, m.attributes, Object.keys(d)), d)) {
+                        // above checked that all attributes in d are in m with equal values and found some mismatch
+                        that.trigger(channel, {
+                          id: id,
+                          method: 'update',
+                          data: d
+                        });
+                      }
+                    } else {
+                      // create the item
+                      that.trigger(channel, {
+                        id: id,
+                        method: 'create',
+                        data: d
+                      });
+                    }
+                  }
+                });
+                Object.keys(ids).forEach(function (id) {
+                  // delete the item
                   that.trigger(channel, {
-                    id: data[endpoint.entity.idAttribute] || data._id,
-                    method: 'update',
-                    data: data
+                    id: id,
+                    method: 'delete'
                   });
+                });
+              } else {
+                // trigger an update to load the data read
+                var array = _.isArray(data) ? data : [data];
+                for (var i = 0; i < array.length; i++) {
+                  data = array[i];
+                  if (data) {
+                    that.trigger(channel, {
+                      id: data[endpoint.entity.idAttribute] || data._id,
+                      method: 'update',
+                      data: data
+                    });
+                  }
                 }
               }
             } else {
