@@ -85,7 +85,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
     var entity = this.getEntity(collection.entity);
     if (url && entity) {
       var name = entity.name;
-      var hash = this._locationBasedHashCode(url);
+      var hash = Bikini.URLUtil.hashLocation(url);
       var credentials = entity.credentials || collection.credentials;
       var user = credentials && credentials.username ? credentials.username : '';
       var channel = name + user + hash;
@@ -118,7 +118,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
   getEndpoint: function (url) {
     console.log('Bikini.BikiniStore.getEndpoint');
     if (url) {
-      var hash = this._locationBasedHashCode(url);
+      var hash = Bikini.URLUtil.hashLocation(url);
       return this.endpoints[hash];
     }
   },
@@ -248,43 +248,6 @@ Bikini.BikiniStore = Bikini.Store.extend({
       localStorage.setItem('__' + channel + 'lastMesgTime', time);
       this.lastMesgTime = time;
     }
-  },
-
-  _hashCode: function (str) {
-    console.log('Bikini.BikiniStore._hashCode');
-    var hash = 0, char;
-    if (str.length === 0) {
-      return hash;
-    }
-    for (var i = 0, l = str.length; i < l; i++) {
-      char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash |= 0; // Convert to 32bit integer
-    }
-    return hash;
-  },
-
-  _locationBasedHashCode: function (str) {
-    console.log('Bikini.BikiniStore._locationBasedHashCode');
-    return this._hashCode(this._getLocationUrl(str));
-  },
-
-  _getLocationUrl: function (str) {
-    console.log('Bikini.BikiniStore._getLocationUrl');
-    return this.getLocation(str).toString();
-  },
-
-  _getLocation: function (url) {
-    console.log('Bikini.BikiniStore._getLocation');
-    var location = document.createElement('a');
-    location.href = url || this.url;
-    // IE doesn't populate all link properties when setting .href with a relative URL,
-    // however .href will return an absolute URL which then can be used on itself
-    // to populate these additional fields.
-    if (location.host === '') {
-      location.href = location.href;
-    }
-    return location;
   },
 
   onConnect: function (endpoint) {

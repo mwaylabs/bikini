@@ -32,5 +32,26 @@ Bikini.URLUtil = Bikini.Object.design({
       location.href = location.href;
     }
     return location;
+  },
+
+  resolveLocation: function (str) {
+    return this.getLocation(str).toString();
+  },
+
+  hashLocation: function (str) {
+    return this._hashCode(this.resolveLocation(str));
+  },
+
+  _hashCode: function () {
+    var hash = 0;
+    for (var i = 0; i < arguments.length; ++i) {
+      var str = arguments[i] || '';
+      for (var j = 0, l = str.length; j < l; ++j) {
+        var char = str.charCodeAt(j);
+        hash = ((hash << 5) - hash) + char;
+        hash |= 0; // Convert to 32bit integer
+      }
+    }
+    return hash;
   }
 });

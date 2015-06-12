@@ -16,7 +16,7 @@ describe('Bikini Namespace', function () {
     });
 
     it('locale storage', function () {
-    
+
         var putSomethingToTheLocaleStorage = function () {
             Bikini.Application = Bikini.Application || {};
             Bikini.Application.name = Bikini.Application.name || 'test';
@@ -25,16 +25,16 @@ describe('Bikini Namespace', function () {
             localStorage.setItem(Bikini.LOCAL_STORAGE_PREFIX + Bikini.Application.name + Bikini.LOCAL_STORAGE_SUFFIX + 'test0', Bikini.LOCAL_STORAGE_PREFIX + Bikini.Application.name + Bikini.LOCAL_STORAGE_SUFFIX + 'test0');
             localStorage.setItem(Bikini.LOCAL_STORAGE_PREFIX + Bikini.Application.name + Bikini.LOCAL_STORAGE_SUFFIX + 'test1', Bikini.LOCAL_STORAGE_PREFIX + Bikini.Application.name + Bikini.LOCAL_STORAGE_SUFFIX + 'test1');
         };
-    
+
         assert.ok(window && window.localStorage, 'localStorage available');
         putSomethingToTheLocaleStorage();
         localStorage.clear('f');
         assert.equal(localStorage.length, 0, 'localStorage is available and the clear function works with the parameter "f"');
-    
+
         putSomethingToTheLocaleStorage();
         localStorage.clear();
         assert.equal(localStorage.length, 0, 'localStorage.clear() is implemented as anticipated in the spec');
-    
+
     });
 
     it('Bikini.isCollection', function () {
@@ -70,16 +70,16 @@ describe('Bikini Namespace', function () {
         assert.isTrue(Bikini.isModel(Bikini.Model.extend().create()));
     });
 
-    it('Bikini.BikiniStore hashCode', function () {
+    it('Bikini.URLUtil', function () {
         var bs = new Bikini.BikiniStore();
-        assert.equal(bs._hashCode('api/dataSync/Todo'), 1108439963);
-        var a = bs._getLocation('api/dataSync/Todo');
+        assert.equal(Bikini.URLUtil._hashCode('api/dataSync/Todo'), 1108439963);
+        var a = Bikini.URLUtil.getLocation('api/dataSync/Todo');
         assert.equal(typeof a, 'object');
         assert.equal(typeof a.host, 'string');
         assert.equal(typeof a.toString(), 'string');
-        var url = bs._getLocationUrl('api/dataSync/Todo');
+        var url = Bikini.URLUtil.resolveLocation('api/dataSync/Todo');
         assert.equal(typeof url, 'string');
-        var hash = bs._locationBasedHashCode('api/dataSync/Todo');
+        var hash = Bikini.URLUtil.hashLocation('api/dataSync/Todo');
         assert.equal(typeof hash, 'number');
     });
 

@@ -10,6 +10,7 @@
   // @include ./utility/sha256.js
   // @include ./utility/cypher.js
   // @include ./utility/date.js
+  // @include ./utility/url.js
 
   // @include ./data/field.js
   // @include ./data/entity.js
