@@ -30,14 +30,14 @@ describe('Bikini.Model', function() {
             entity: {
                 name:   'person',
                 fields:  {
-                    id:          { type: Bikini.DATA.TYPE.INTEGER, required: YES },
+                    id:          { type: Bikini.DATA.TYPE.INTEGER, required: true },
                     firstName:   { type: Bikini.DATA.TYPE.STRING,  length: 200 },
-                    sureName:    { type: Bikini.DATA.TYPE.STRING,  required: YES, index: true },
+                    sureName:    { type: Bikini.DATA.TYPE.STRING,  required: true, index: true },
                     birthDate:   { type: Bikini.DATA.TYPE.DATE   },
                     bmi:         { type: Bikini.DATA.TYPE.FLOAT },
                     notes:       { type: Bikini.DATA.TYPE.TEXT   },
                     address:     { type: Bikini.DATA.TYPE.OBJECT },
-                    displayName: { type: Bikini.DATA.TYPE.STRING, persistent: NO }
+                    displayName: { type: Bikini.DATA.TYPE.STRING, persistent: false }
                 }
             }
         });

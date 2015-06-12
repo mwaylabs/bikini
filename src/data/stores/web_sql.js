@@ -27,7 +27,7 @@
  * var MyModel = Bikini.Model.extend({
      *      idAttribute: 'id',
      *      fields: {
-     *          id:          { type: Bikini.DATA.TYPE.STRING,  required: YES, index: YES },
+     *          id:          { type: Bikini.DATA.TYPE.STRING,  required: true, index: true },
      *          sureName:    { name: 'USERNAME', type: Bikini.DATA.TYPE.STRING },
      *          firstName:   { type: Bikini.DATA.TYPE.STRING,  length: 200 },
      *          age:         { type: Bikini.DATA.TYPE.INTEGER }

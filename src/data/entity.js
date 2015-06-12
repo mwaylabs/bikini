@@ -199,8 +199,8 @@ _.extend(Bikini.Entity.prototype, Bikini.Object, {
   _updateFields: function (typeMapping) {
     var that = this;
     _.each(this.fields, function (value, key) {
-      // remove unused properties
-      if (value.persistent === NO) {
+      if (!value.persistent) {
+        // remove unused properties
         delete that.fields[key];
       } else {
         // add missing names

@@ -88,9 +88,9 @@ describe('Bikini.WebSqlStore', function() {
             entity: {
                 name: 'test',
                 fields:  {
-                    _id:         { type: Bikini.DATA.TYPE.STRING,  required: YES, index: YES },
-                    sureName:    { name: 'USERNAME', type: Bikini.DATA.TYPE.STRING,  required: YES, index: YES },
-                    firstName:   { type: Bikini.DATA.TYPE.STRING,  length: 200 },
+                    _id:         { type: Bikini.DATA.TYPE.STRING, required: true, index: true },
+                    sureName:    { name: 'USERNAME', type: Bikini.DATA.TYPE.STRING, required: true, index: true },
+                    firstName:   { type: Bikini.DATA.TYPE.STRING, length: 200 },
                     age:         { type: Bikini.DATA.TYPE.INTEGER }
                 }
             }

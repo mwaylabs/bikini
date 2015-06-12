@@ -191,17 +191,3 @@ Bikini.Object = {
   }
 
 };
-
-/**
- * Readable alias for true
- *
- * @type {Boolean}
- */
-YES = true;
-
-/**
- * Readable alias for false
- *
- * @type {Boolean}
- */
-NO = false;

@@ -110,8 +110,8 @@ describe('Bikini.LocalStorageStore', function() {
             entity: {
                 name: 'test',
                 fields:  {
-                    _id:         { type: Bikini.DATA.TYPE.STRING,  required: YES },
-                    sureName:    { name: 'USERNAME', type: Bikini.DATA.TYPE.STRING,  required: YES },
+                    _id:         { type: Bikini.DATA.TYPE.STRING,  required: true },
+                    sureName:    { name: 'USERNAME', type: Bikini.DATA.TYPE.STRING,  required: true },
                     firstName:   { type: Bikini.DATA.TYPE.STRING,  length: 200 },
                     age:         { type: Bikini.DATA.TYPE.INTEGER }
                 }

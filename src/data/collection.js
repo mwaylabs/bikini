@@ -33,7 +33,7 @@ _.extend(Bikini.Collection.prototype, Bikini.Object, {
 
   _type: 'Bikini.Collection',
 
-  isCollection: YES,
+  isCollection: true,
 
   model: Bikini.Model,
 

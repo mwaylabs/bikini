@@ -27,7 +27,7 @@ _.extend(Bikini.Model.prototype, Bikini.Object, {
 
   _type: 'Bikini.Model',
 
-  isModel: YES,
+  isModel: true,
 
   entity: null,
 

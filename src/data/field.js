@@ -43,9 +43,9 @@ _.extend(Bikini.Field.prototype, Bikini.Object, {
 
   length: null,
 
-  required: NO,
+  required: false,
 
-  persistent: YES,
+  persistent: true,
 
   initialize: function () {
   },

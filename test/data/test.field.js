@@ -2,8 +2,8 @@ describe('Bikini.Field', function() {
 
     var TEST = {
         fields:  {
-            _id:         { type: Bikini.DATA.TYPE.STRING,  required: YES, index: YES },
-            sureName:    { name: 'USERNAME', type: Bikini.DATA.TYPE.STRING,  required: YES, index: YES },
+            _id:         { type: Bikini.DATA.TYPE.STRING,  required: true, index: true },
+            sureName:    { name: 'USERNAME', type: Bikini.DATA.TYPE.STRING,  required: true, index: true },
             firstName:   { type: Bikini.DATA.TYPE.STRING,  length: 200 },
             age:         Bikini.DATA.TYPE.INTEGER,
             birthday:    Bikini.DATA.TYPE.DATE

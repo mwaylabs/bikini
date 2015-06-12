@@ -60,7 +60,7 @@ describe('Bikini.Collection', function() {
                 name: 'Developer',
                 fields: {
                     _id: { type: Bikini.DATA.TYPE.STRING },
-                    sureName: { name: 'lastName', type: Bikini.DATA.TYPE.STRING, required: YES, index: true },
+                    sureName: { name: 'lastName', type: Bikini.DATA.TYPE.STRING, required: true, index: true },
                     firstName: { type: Bikini.DATA.TYPE.STRING, length: 200 },
                     age: { type: Bikini.DATA.TYPE.INTEGER }
                 }

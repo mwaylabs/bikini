@@ -15,17 +15,6 @@ describe('Bikini Namespace', function () {
         assert.ok(typeof(Bikini.f) === 'function', 'Bikini.f is a function');
     });
 
-    it('YES / NO', function() {
-        assert.ok(!NO, 'NO is defined');
-
-        assert.ok(typeof NO === 'boolean', 'NO is a boolean');
-        assert.ok(NO === false, 'NO equals false');
-        assert.ok(YES, 'YES is defined');
-
-        assert.ok(typeof YES === 'boolean', 'YES is a boolean');
-        assert.ok(YES === true, 'YES equals true');
-    });
-    
     it('locale storage', function () {
     
         var putSomethingToTheLocaleStorage = function () {
