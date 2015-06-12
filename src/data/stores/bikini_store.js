@@ -41,7 +41,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
   options: null,
 
   localStore: Bikini.WebSqlStore,
-  
+
   useLocalStore: true,
   useSocketNotify: true,
   useOfflineChanges: true,

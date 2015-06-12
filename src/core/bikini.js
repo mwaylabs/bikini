@@ -124,14 +124,13 @@ Bikini.Object = {
    * @param {Object} properties The properties to be included into the given object.
    */
   design: function (properties) {
-    /* create the new object */
-    // var obj = Bikini.Object._create(this);
+    // create the new object
     var obj = this._create(this);
 
-    /* assign the properties passed with the arguments array */
-    obj.include(this._normalize(properties));
+    // assign the properties passed with the arguments array
+    obj.include(properties);
 
-    /* return the new object */
+    // return the new object
     return obj;
   },
 
@@ -153,20 +152,6 @@ Bikini.Object = {
       }
       return method.call(caller, arg);
     };
-  },
-
-  /**
-   * This method is used internally to normalize the properties object that is used
-   * for extending a given object.
-   *
-   * @param obj
-   * @returns {Object}
-   * @private
-   */
-  _normalize: function (obj) {
-    obj = obj && typeof obj === 'object' ? obj : {};
-
-    return obj;
   },
 
   /**
