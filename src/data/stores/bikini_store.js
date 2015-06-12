@@ -307,6 +307,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
   },
 
   onMessage: function (msg) {
+    // this is a collection listening on channel events of store here!
     console.log('Bikini.BikiniStore.onMessage');
     if (!msg) {
       return;
@@ -352,7 +353,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
                 localStore.sync.apply(this, [
                   'delete',
                   model,
-                  {store: localStore, fromMessage: true}
+                  {store: localStore, entity: this.entity, fromMessage: true}
                 ]);
               }
               this.remove(model);
@@ -474,7 +475,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
             // called when we do not want to retry on reconnect/restart, message is to be deleted
             return that.removeMessage(endpoint, msg, handleError);
           };
-          var saveAndHandleError = function(model, data) {
+          var saveAndHandleError = function (model, data) {
             // original request failed and the code below reloaded the data to revert the local modifications, which succeeded...
             that.trigger(channel, {
               _id: model.id,
