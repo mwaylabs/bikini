@@ -41,10 +41,13 @@ Bikini.BikiniStore = Bikini.Store.extend({
   options: null,
 
   localStore: Bikini.WebSqlStore,
+  
   useLocalStore: true,
   useSocketNotify: true,
   useOfflineChanges: true,
+
   isConnected: false,
+
   typeMapping: {
     'binary': 'text',
     'date': 'string'
@@ -59,7 +62,6 @@ Bikini.BikiniStore = Bikini.Store.extend({
     this.options.useLocalStore = this.useLocalStore;
     this.options.useSocketNotify = this.useSocketNotify;
     this.options.useOfflineChanges = this.useOfflineChanges;
-    this.options.query = options.query || false;
     this.options.socketPath = this.socketPath;
     this.options.localStore = this.localStore;
     this.options.typeMapping = this.typeMapping;
