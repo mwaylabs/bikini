@@ -275,14 +275,16 @@ Bikini.BikiniStore = Bikini.Store.extend({
     }
 
     var channel = endpoint.channel;
-    if (!endpoint.localStore) {
+    if (endpoint.localStore) {
       // first update the local store by forming a model and invoking sync
       var options = _.defaults({
         store: endpoint.localStore,
-        fromMessage: true
+        entity: endpoint.entity
       }, that.options);
       var model = new Bikini.Model(msg.data, options);
       var promise = endpoint.localStore.sync(msg.method, model, _.extend(options, {
+        merge: msg.method === 'patch',
+        fromMessage: true,
         success: function (result) {
           // update all collections listening
           that.trigger('sync:' + channel, msg); // onMessageCollection
@@ -348,24 +350,22 @@ Bikini.BikiniStore = Bikini.Store.extend({
     console.log('Bikini.BikiniStore.sync');
     var that = options.store || this.store;
     if (options.fromMessage) {
-      return that.handleCallback(options.success);
+      return that.handleSuccess(options);
     }
     var endpoint = that.getEndpoint(this.getUrlRoot());
     var promise;
     if (that && endpoint) {
-      var channel = this.channel;
-
       if (Bikini.isModel(model) && !model.id) {
         model.set(model.idAttribute, new Bikini.ObjectID().toHexString());
       }
 
+      var channel = this.channel;
       var time = that.getLastMessageTime(channel);
       // only send read messages if no other store can do this
       // or for initial load
       if (method !== 'read' || !endpoint.localStore || !time) {
         // do backbone rest
-        promise = that.addMessage(method, model, // we don't need to call callbacks if an other store handle this
-          endpoint.localStore ? {} : options, endpoint);
+        promise = that.addMessage(method, model, options, endpoint);
       } else {
         options.store = endpoint.localStore;
         promise = endpoint.localStore.sync.apply(this, arguments);
@@ -432,87 +432,87 @@ Bikini.BikiniStore = Bikini.Store.extend({
       url: url,
       error: function (xhr, status) {
         if (!xhr.responseText && that.options.useOfflineChanges) {
-          // this seams to be only a connection problem, so we keep the message an call success
+          // this seams to be only a connection problem, so we keep the message and call success
           that.onDisconnect(endpoint);
-          that.handleCallback(options.success, msg.data);
-        } else {
-          // some real error
-          var handleError = function () {
-            // called when we want to retry on reconnect/restart, aka. the message stays in the store for future delivery
-            return that.handleCallback(options.error, model, xhr.responseJSON || new Error(status), options);
-          };
-          var removeAndHandleError = function () {
-            // called when we do not want to retry on reconnect/restart, message is to be deleted
-            return that.removeMessage(endpoint, msg, handleError);
-          };
-          var saveAndHandleError = function (model, data) {
-            // original request failed and the code below reloaded the data to revert the local modifications, which succeeded...
-            that.trigger('sync:' + channel, {
-              _id: model.id,
-              id: model.id,
-              method: 'update',
-              data: data
-            });
-            removeAndHandleError();
-            // following does NOT work as this will NOT update the collection when sending messages on reconnect!
-            /*
-            return model.save(data, {
-              // remove message to no longer retry on reconnect/restart
-              error: removeAndHandleError,
-              success: removeAndHandleError,
-              // just affect local store
-              store: endpoint.localStore,
-              entity: endpoint.entity
-            });
-            */
-          };
-          var deleteAndHandleError = function (model, fetchResp) {
-            // original request failed and the code below tried to revert the local modifications by reloading the data, which failed as well...
-            var status = fetchResp && fetchResp.status;
-            switch (status) {
-              case 404: // NOT FOUND
-              case 401: // UNAUTHORIZED
-              case 410: // GONE*
-                // ...because the item is gone by now, maybe someone else changed it to be deleted
-                that.trigger('sync:' + channel, {
-                  _id: model.id,
-                  id: model.id,
-                  method: 'delete',
-                  data: model.attributes
-                });
-                removeAndHandleError();
-                // following does NOT work as this will NOT update the collection when sending messages on reconnect!
-                /*
-                model.destroy({
-                  // remove message to no longer retry on reconnect/restart
-                  error: removeAndHandleError,
-                  success: removeAndHandleError,
-                  // just affect local store
-                  store: endpoint.localStore,
-                  entity: endpoint.entity
-                });
-                */
-                break;
-              default:
-                // reattempt operation on reconnect/restart as we are off in undefined state,
-                // data can not be reloaded and yet it was not deleted, so what to do...
-                console.error('don`t know how to handle ' + status + ' here!');
-                handleError();
-                break;
-            }
-          };
-          if (msg.method !== 'read' && endpoint.localStore) {
-            // revert modification by reloading data
-            return model.fetch({
-              url: url,
-              error: deleteAndHandleError,
-              success: saveAndHandleError,
-              store: {} // really go to remote server
-            });
-          } else {
-            // just give up and forward the error
-            return removeAndHandleError();
+          return that.handleSuccess(options, msg.data);
+        }
+
+        // some real error
+        var handleError = function () {
+          // called when we want to retry on reconnect/restart, aka. the message stays in the store for future delivery
+          return that.handleError(options, model, xhr.responseJSON || new Error(status), options);
+        };
+        var removeAndHandleError = function () {
+          // called when we do not want to retry on reconnect/restart, message is to be deleted
+          return that.removeMessage(endpoint, msg, handleError);
+        };
+        var saveAndHandleError = function (model, data) {
+          // original request failed and the code below reloaded the data to revert the local modifications, which succeeded...
+          that.trigger('sync:' + channel, {
+            _id: model.id,
+            id: model.id,
+            method: 'update',
+            data: data
+          });
+          removeAndHandleError();
+          // following does NOT work as this will NOT update the collection when sending messages on reconnect!
+          /*
+          return model.save(data, {
+            // remove message to no longer retry on reconnect/restart
+            error: removeAndHandleError,
+            success: removeAndHandleError,
+            // just affect local store
+            store: endpoint.localStore,
+            entity: endpoint.entity
+          });
+          */
+        };
+        var deleteAndHandleError = function (model, fetchResp) {
+          // original request failed and the code below tried to revert the local modifications by reloading the data, which failed as well...
+          var status = fetchResp && fetchResp.status;
+          switch (status) {
+            case 404: // NOT FOUND
+            case 401: // UNAUTHORIZED
+            case 410: // GONE*
+              // ...because the item is gone by now, maybe someone else changed it to be deleted
+              that.trigger('sync:' + channel, {
+                _id: model.id,
+                id: model.id,
+                method: 'delete',
+                data: model.attributes
+              });
+              removeAndHandleError();
+              // following does NOT work as this will NOT update the collection when sending messages on reconnect!
+              /*
+              model.destroy({
+                // remove message to no longer retry on reconnect/restart
+                error: removeAndHandleError,
+                success: removeAndHandleError,
+                // just affect local store
+                store: endpoint.localStore,
+                entity: endpoint.entity
+              });
+              */
+              break;
+            default:
+              // reattempt operation on reconnect/restart as we are off in undefined state,
+              // data can not be reloaded and yet it was not deleted, so what to do...
+              console.error('don`t know how to handle ' + status + ' here!');
+              handleError();
+              break;
           }
+        };
+        if (msg.method !== 'read' && endpoint.localStore) {
+          // revert modification by reloading data
+          return model.fetch({
+            url: url,
+            error: deleteAndHandleError,
+            success: saveAndHandleError,
+            store: {} // really go to remote server
+          });
+        } else {
+          // just give up and forward the error
+          return removeAndHandleError();
         }
       },
       success: function (data) {
@@ -521,68 +521,69 @@ Bikini.BikiniStore = Bikini.Store.extend({
         }
         that.removeMessage(endpoint, msg, function (endpoint, msg) {
           if (options.success) {
+            // allow client code to proceed
             var resp = data;
-            that.handleCallback(options.success, resp);
-          } else if (data) {
+            that.handleSuccess(options, resp);
+          }
+
+          if (data) {
             // no data if server asks not to alter state
             // that.setLastMessageTime(channel, msg.time);
-            if (msg.method === 'read') {
-              if (Bikini.isCollection(model) && _.isArray(data)) {
-                // synchronize the collection contents with the data read
-                var ids = {};
-                model.models.forEach(function (m) {
-                  ids[m.id] = m;
-                });
-                data.forEach(function (d) {
-                  if (d) {
-                    var id = d[endpoint.entity.idAttribute] || d._id;
-                    var m = ids[id];
-                    if (m) {
-                      // update the item
-                      delete ids[id]; // so that it is deleted below
-                      if (!_.isEqual(_.pick.call(m, m.attributes, Object.keys(d)), d)) {
-                        // above checked that all attributes in d are in m with equal values and found some mismatch
-                        that.trigger('sync:' + channel, {
-                          id: id,
-                          method: 'update',
-                          data: d
-                        });
-                      }
-                    } else {
-                      // create the item
+            if (msg.method !== 'read') {
+              that.trigger('sync:' + channel, msg);
+            } else if (Bikini.isCollection(model) && _.isArray(data)) {
+              // synchronize the collection contents with the data read
+              var ids = {};
+              model.models.forEach(function (m) {
+                ids[m.id] = m;
+              });
+              data.forEach(function (d) {
+                if (d) {
+                  var id = d[endpoint.entity.idAttribute] || d._id;
+                  var m = ids[id];
+                  if (m) {
+                    // update the item
+                    delete ids[id]; // so that it is deleted below
+                    if (!_.isEqual(_.pick.call(m, m.attributes, Object.keys(d)), d)) {
+                      // above checked that all attributes in d are in m with equal values and found some mismatch
                       that.trigger('sync:' + channel, {
                         id: id,
-                        method: 'create',
+                        method: 'update',
                         data: d
                       });
                     }
-                  }
-                });
-                Object.keys(ids).forEach(function (id) {
-                  // delete the item
-                  var m = ids[id];
-                  that.trigger('sync:' + channel, {
-                    id: id,
-                    method: 'delete',
-                    data: m.attributes
-                  });
-                });
-              } else {
-                // trigger an update to load the data read
-                var array = _.isArray(data) ? data : [data];
-                for (var i = 0; i < array.length; i++) {
-                  data = array[i];
-                  if (data) {
+                  } else {
+                    // create the item
                     that.trigger('sync:' + channel, {
-                      id: data[endpoint.entity.idAttribute] || data._id,
-                      method: 'update',
-                      data: data
+                      id: id,
+                      method: 'create',
+                      data: d
                     });
                   }
                 }
-              }
+              });
+              Object.keys(ids).forEach(function (id) {
+                // delete the item
+                var m = ids[id];
+                that.trigger('sync:' + channel, {
+                  id: id,
+                  method: 'delete',
+                  data: m.attributes
+                });
+              });
             } else {
-              that.trigger('sync:' + channel, msg);
+              // trigger an update to load the data read
+              var array = _.isArray(data) ? data : [data];
+              for (var i = 0; i < array.length; i++) {
+                data = array[i];
+                if (data) {
+                  that.trigger('sync:' + channel, {
+                    id: data[endpoint.entity.idAttribute] || data._id,
+                    method: 'update',
+                    data: data
+                  });
+                }
+              }
             }
           }
         });

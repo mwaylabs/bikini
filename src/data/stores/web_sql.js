@@ -166,7 +166,6 @@ Bikini.WebSqlStore = Bikini.Store.extend({
     this._executeSql(options);
   },
 
-
   /**
    * @private
    */
