@@ -9,31 +9,22 @@
  */
 Bikini.Security = Bikini.Object.design({
 
-
-  logon: function (options, callback) {
-    var credentials = options ? options.credentials : null;
-    if (credentials) {
-      switch (credentials.type) {
-        case 'basic':
-          return this.logonBasicAuth(options, callback);
+  logon: _.extend(function logon(options) {
+    var credentials = options && options.credentials;
+    var type = credentials && credentials.type;
+    var auth = type && logon[type];
+    return auth ? auth.apply(this, arguments) : Q.resolve();
+  }, {
+    basic: function basic(options) {
+      var credentials = options.credentials;
+      var auth = credentials.username && Bikini.Base64.encode(encodeURIComponent(credentials.username + ':' + (credentials.password || '')));
+      if (auth) {
+        options.beforeSend = function (xhr) {
+          xhr.setRequestHeader('Authorization', 'Basic ' + auth);
+        };
       }
+      return Q.resolve();
     }
-    return this.handleCallback(callback);
-  },
-
-  logonBasicAuth: function (options, callback) {
-    var credentials = options.credentials;
-    options.beforeSend = function (xhr) {
-      Bikini.Security.setBasicAuth(xhr, credentials);
-    };
-    return this.handleCallback(callback);
-  },
-
-  setBasicAuth: function (xhr, credentials) {
-    if (credentials && credentials.username && xhr && Bikini.Base64) {
-      var basicAuth = Bikini.Base64.encode(encodeURIComponent(credentials.username + ':' + (credentials.password || '')));
-      xhr.setRequestHeader('Authorization', 'Basic ' + basicAuth);
-    }
-  }
+  })
 
 });

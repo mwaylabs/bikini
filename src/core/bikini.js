@@ -57,27 +57,48 @@ Bikini.isEntity = function (entity) {
 Bikini.DATA = {
   TYPE: {
     INTEGER: 'integer',
-
     STRING: 'string',
-
     TEXT: 'text',
-
     DATE: 'date',
-
     BOOLEAN: 'boolean',
-
     FLOAT: 'float',
-
     OBJECT: 'object',
-
     ARRAY: 'array',
-
     BINARY: 'binary',
-
     OBJECTID: 'objectid',
-
     NULL: 'null'
   }
+};
+
+Bikini.ajax = function ajax(url, options) {
+  var superAjax = this.super_ && this.super_.ajax || Backbone.ajax;
+  var xhr = superAjax.apply(this, arguments);
+  if (xhr) {
+    var q = Q.defer();
+    xhr.success(q.resolve.bind(q));
+    xhr.error(q.reject.bind(q));
+    q.promise.xhr = xhr;
+    return q.promise;
+  }
+};
+
+Bikini.logon = function logon(options) {
+  Bikini.logon = Bikini.Security.logon;
+  return Bikini.Security.logon.apply(this, arguments);
+};
+
+Bikini.sync = function sync(method, model, options) {
+  options = options || {};
+  var store = options.store || this.store;
+  options.credentials = options.credentials || this.credentials || store && store.credentials;
+  options.logon = options.logon || this.logon || store && store.logon || Bikini.logon;
+
+  var that = this;
+  var args = arguments;
+  var superSync = store && store.sync ? store.sync : this.super_ && this.super_.sync || Backbone.sync;
+  return options.logon.call(this, options).then(function innerSync(result) {
+    return superSync.apply(that, args) || result;
+  });
 };
 
 Bikini.Object = {

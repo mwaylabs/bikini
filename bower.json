@@ -30,6 +30,7 @@
   "dependencies": {
     "backbone": "~1.2.1",
     "underscore": "~1.8.3",
+    "q": "~1.4.1",
     "jquery": "~2.1.0",
     "socket.io-client": "~0.9.16",
     "momentjs": "~2.8.0"

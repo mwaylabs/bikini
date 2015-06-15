@@ -101,21 +101,21 @@ Bikini.WebSqlStore = Bikini.Store.extend({
   sync: function (method, model, options) {
     var that = options.store || this.store;
     var models = Bikini.isCollection(model) ? model.models : [model];
-    var q = new $.Deferred();
+    var q = new Q.defer();
     var opts = _.extend({
       entity: this.entity
     }, options || {}, {
       success: function (response) {
-        q.resolve(response);
         if (options && options.success) {
           options.success.apply(this, arguments);
         }
+        q.resolve(response);
       },
       error: function (error) {
-        q.reject(error);
         if (options && options.error) {
           options.error.apply(this, arguments);
         }
+        q.reject(error);
       }
     });
 
@@ -147,7 +147,7 @@ Bikini.WebSqlStore = Bikini.Store.extend({
       default:
         break;
     }
-    return q.promise();
+    return q.promise;
   },
 
   select: function (options) {

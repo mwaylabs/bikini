@@ -41,8 +41,6 @@ _.extend(Bikini.Collection.prototype, Bikini.Object, {
 
   options: null,
 
-  logon: Bikini.Security.logon,
-
   init: function (options) {
     options = options || {};
     this.store = options.store || this.store || (this.model ? this.model.prototype.store : null);
@@ -59,6 +57,10 @@ _.extend(Bikini.Collection.prototype, Bikini.Object, {
       this.store.initCollection(this, options);
     }
   },
+
+  ajax: Bikini.ajax,
+  logon: Bikini.logon,
+  sync: Bikini.sync,
 
   entityFromUrl: function (url) {
     if (url) {
@@ -132,22 +134,6 @@ _.extend(Bikini.Collection.prototype, Bikini.Object, {
     localStorage.setItem('__' + this.channel + 'last_msg_time', '');
     this.store.endpoints = {};
     return this.reset();
-  },
-
-  sync: function (method, model, options) {
-    options = options || {};
-    options.credentials = options.credentials || this.credentials;
-    var store = (options.store ? options.store : null) || this.store;
-    var that = this;
-    var args = arguments;
-
-    return this.logon(options, function (result) {
-      if (store && _.isFunction(store.sync)) {
-        return store.sync.apply(that, args);
-      } else {
-        return Backbone.sync.apply(that, args);
-      }
-    });
   },
 
   /**

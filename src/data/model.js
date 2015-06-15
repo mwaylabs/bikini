@@ -35,8 +35,6 @@ _.extend(Bikini.Model.prototype, Bikini.Object, {
 
   changedSinceSync: {},
 
-  logon: Bikini.Security.logon,
-
   init: function (attributes, options) {
     options = options || {};
 
@@ -56,21 +54,9 @@ _.extend(Bikini.Model.prototype, Bikini.Object, {
     this.on('sync', this.onSync, this);
   },
 
-  sync: function (method, model, options) {
-    options = options || {};
-    options.credentials = options.credentials || this.credentials;
-    var store = (options.store ? options.store : null) || this.store;
-    var that = this;
-    var args = arguments;
-
-    return this.logon(options, function (result) {
-      if (store && _.isFunction(store.sync)) {
-        return store.sync.apply(that, args);
-      } else {
-        return Backbone.sync.apply(that, args);
-      }
-    });
-  },
+  ajax: Bikini.ajax,
+  logon: Bikini.logon,
+  sync: Bikini.sync,
 
   onChange: function (model, options) {
     // For each `set` attribute, update or delete the current value.
