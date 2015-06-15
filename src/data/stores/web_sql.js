@@ -89,9 +89,11 @@ Bikini.WebSqlStore = Bikini.Store.extend({
     this.options.sqlTypeMapping = this.sqlTypeMapping;
     _.extend(this.options, options || {});
 
+    var that = this;
     this._openDb({
-      error: function (msg) {
-        console.error(msg);
+      error: function (error) {
+        console.error(error);
+        that.trigger('error', error);
       }
     });
   },
@@ -100,37 +102,45 @@ Bikini.WebSqlStore = Bikini.Store.extend({
     var that = options.store || this.store;
     var models = Bikini.isCollection(model) ? model.models : [model];
     var q = new $.Deferred();
-    var _oldSuccess = options.success;
-    if (options.success) {
-      options.success = function (response) {
+    var opts = _.extend({
+      entity: this.entity
+    }, options || {}, {
+      success: function (response) {
         q.resolve(response);
-        _oldSuccess(response);
-      };
-    }
-    //debugger;
-    options.entity = options.entity || this.entity;
+        if (options && options.success) {
+          options.success.apply(this, arguments);
+        }
+      },
+      error: function (error) {
+        q.reject(error);
+        if (options && options.error) {
+          options.error.apply(this, arguments);
+        }
+      }
+    });
+
     switch (method) {
       case 'create':
-        that._checkTable(options, function () {
-          that._insertOrReplace(models, options);
+        that._checkTable(opts, function () {
+          that._insertOrReplace(models, opts);
         });
         break;
 
       case 'update':
       case 'patch':
-        that._checkTable(options, function () {
-          that._insertOrReplace(models, options);
+        that._checkTable(opts, function () {
+          that._insertOrReplace(models, opts);
         });
         break;
 
       case 'delete':
-        that._delete(models, options);
+        that._delete(models, opts);
         break;
 
       case 'read':
         var self = this;
-        that._checkTable(options, function () {
-          that._select(self, options);
+        that._checkTable(opts, function () {
+          that._select(self, opts);
         });
         break;
 

@@ -94,7 +94,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
       var that = this;
       var endpoint = this.endpoints[hash];
       if (!endpoint) {
-        var href = this.getLocation(url);
+        var href = Bikini.URLUtil.getLocation(url);
         endpoint = {};
         endpoint.baseUrl = url;
         endpoint.readUrl = collection.getUrl();
@@ -111,7 +111,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
         that.endpoints[hash] = endpoint;
       }
       collection.endpoint = endpoint;
-      collection.listenTo(this, endpoint.channel, this.onMessage, collection);
+      collection.listenTo(this, 'sync:' + endpoint.channel, this.onMessageCollection, collection);
     }
   },
 
@@ -136,6 +136,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
       });
     }
   },
+
   /**
    * @description Here we save the changes in a Message local websql
    * @param endpoint {string}
@@ -175,7 +176,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
       var that = this;
       var url = endpoint.host;
       var path = endpoint.path;
-      var href = this.getLocation(url);
+      var href = Bikini.URLUtil.getLocation(url);
       if (href.port === '') {
         if (href.protocol === 'https:') {
           url += ':443';
@@ -204,15 +205,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
         console.log('socket.io: disconnect');
         that.onDisconnect(endpoint);
       });
-      var channel = endpoint.channel;
-      endpoint.socket.on(channel, function (msg) {
-        if (msg) {
-          that.trigger(channel, msg);
-          if (that.options.useLocalStore) {
-            that.setLastMessageTime(channel, msg.time);
-          }
-        }
-      });
+      endpoint.socket.on(endpoint.channel, that.onMessageStore.bind(that, endpoint));
       return endpoint.socket;
     }
   },
@@ -225,7 +218,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
       var socket = endpoint.socket;
       var time = this.getLastMessageTime(channel);
       name = name || endpoint.entity.name;
-      socket.emit('bind', {
+      socket.emit('bind:' + channel, {
         entity: name,
         channel: channel,
         time: time
@@ -234,24 +227,24 @@ Bikini.BikiniStore = Bikini.Store.extend({
   },
 
   getLastMessageTime: function (channel) {
-    if (this.lastMesgTime !== undefined) {
-      return this.lastMesgTime;
+    if (!this.lastMesgTime) {
+      this.lastMesgTime = {};
+    } else if (this.lastMesgTime[channel] !== undefined) {
+      return this.lastMesgTime[channel];
     }
-    console.log('Bikini.BikiniStore.getLastMessageTime');
-    this.lastMesgTime = localStorage.getItem('__' + channel + 'lastMesgTime') || 0;
-    return this.lastMesgTime;
+    var time = localStorage.getItem('__' + channel + 'lastMesgTime') || 0;
+    this.lastMesgTime[channel] = time;
+    return time;
   },
 
   setLastMessageTime: function (channel, time) {
-    if (!time || time > this.getLastMessageTime()) {
-      console.log('Bikini.BikiniStore.setLastMessageTime');
+    if (!time || time > this.getLastMessageTime(channel)) {
       localStorage.setItem('__' + channel + 'lastMesgTime', time);
-      this.lastMesgTime = time;
+      this.lastMesgTime[channel] = time;
     }
   },
 
   onConnect: function (endpoint) {
-    console.log('Bikini.BikiniStore.onConnect');
     if (!this.isConnected) {
       this.isConnected = true;
       this.fetchChanges(endpoint);
@@ -260,7 +253,6 @@ Bikini.BikiniStore = Bikini.Store.extend({
   },
 
   onDisconnect: function (endpoint) {
-    console.log('Bikini.BikiniStore.onDisconnect');
     if (this.isConnected) {
       this.isConnected = false;
       if (endpoint.socket && endpoint.socket.socket) {
@@ -269,83 +261,97 @@ Bikini.BikiniStore = Bikini.Store.extend({
     }
   },
 
-  onMessage: function (msg) {
-    // this is a collection listening on channel events of store here!
-    console.log('Bikini.BikiniStore.onMessage');
-    if (!msg) {
+  onMessageStore: function (endpoint, msg) {
+    // this is called by the store itself for a particular endpoint!
+    var that = this;
+    if (!msg || !msg.time || !msg.method) {
       return;
     }
-    var localStore = this.endpoint ? this.endpoint.localStore : null;
-    var attrs = null;
-    var method = null;
-    var id = null;
-    var options = {
-      store: localStore,
-      entity: this.entity,
-      merge: true,
-      fromMessage: true,
-      parse: true
-    };
-    if (msg.id && msg.method) {
-      attrs = msg.data || {};
-      method = msg.method;
-      id = msg.id;
-    } else if (msg.attributes) {
-      attrs = msg.attributes.data;
-      method = msg.attributes.method;
-      id = msg.attributes.id;
+    if (msg.data && !msg.data[endpoint.entity.idAttribute] && msg.data._id) {
+      msg.data[endpoint.entity.idAttribute] = msg.data._id; // server bug!
+    } else if (!msg.data && msg.method === 'delete' && msg[endpoint.entity.idAttribute]) {
+      msg.data = {};
+      msg.data[endpoint.entity.idAttribute] = msg[endpoint.entity.idAttribute]; // server bug!
     }
 
-    switch (method) {
-      case 'patch':
-      case 'update':
+    var channel = endpoint.channel;
+    if (!endpoint.localStore) {
+      // first update the local store by forming a model and invoking sync
+      var options = _.defaults({
+        store: endpoint.localStore,
+        fromMessage: true
+      }, that.options);
+      var model = new Bikini.Model(msg.data, options);
+      var promise = endpoint.localStore.sync(msg.method, model, _.extend(options, {
+        success: function (result) {
+          // update all collections listening
+          that.trigger('sync:' + channel, msg); // onMessageCollection
+        },
+        error: function (error) {
+          // report error as event on store
+          that.trigger('error:' + channel, error);
+        }
+      })).then(function () {
+        that.setLastMessageTime(channel, msg.time);
+      });
+    } else {
+      // just update all collections listening
+      that.trigger('sync:' + channel, msg); // onMessageCollection
+    }
+  },
+
+  onMessageCollection: function (msg) {
+    // this is a collection listening on channel events of store here!
+    var options = {
+      collection: this,
+      entity: this.entity,
+      merge: msg.method === 'patch',
+      fromMessage: true
+    };
+    var id = this.modelId(msg.data);
+    if (id === 'all') {
+      this.reset(msg.data || {}, options);
+      return;
+    }
+
+    var model = id && this.get(id);
+    switch (msg.method) {
       case 'create':
-        options.patch = method === 'patch';
-        var model = id ? this.get(id) : null;
+      case 'update':
+        if (!model) {
+          // create model in case it does not exist
+          model = new options.collection.model(msg.data, options);
+          if (model.validationError) {
+            this.trigger('invalid', this, model.validationError, options);
+          } else {
+            this.add(model, options);
+          }
+          break;
+        }
+        /* falls through */
+      case 'patch':
         if (model) {
-          model.save(attrs, options);
-        } else {
-          this.create(attrs, options);
+          // update model unless it is filtered
+          model.set(msg.data, options);
         }
         break;
       case 'delete':
-        if (id) {
-          if (id === 'all') {
-            while ((model = this.first())) {
-              if (localStore) {
-                localStore.sync.apply(this, [
-                  'delete',
-                  model,
-                  {store: localStore, entity: this.entity, fromMessage: true}
-                ]);
-              }
-              this.remove(model);
-            }
-            this.store.setLastMessageTime(this.endpoint.channel, '');
-          } else {
-            var msgModel = this.get(id);
-            if (msgModel) {
-              msgModel.destroy(options);
-            }
-          }
+        if (model) {
+          // remove model unless it is filtered
+          this.remove(model, options);
         }
         break;
-
-      default:
-        break;
     }
-
   },
 
   sync: function (method, model, options) {
-    //debugger;
     console.log('Bikini.BikiniStore.sync');
     var that = options.store || this.store;
     if (options.fromMessage) {
       return that.handleCallback(options.success);
     }
     var endpoint = that.getEndpoint(this.getUrlRoot());
-    var promise = null;
+    var promise;
     if (that && endpoint) {
       var channel = this.channel;
 
@@ -360,12 +366,13 @@ Bikini.BikiniStore = Bikini.Store.extend({
         // do backbone rest
         promise = that.addMessage(method, model, // we don't need to call callbacks if an other store handle this
           endpoint.localStore ? {} : options, endpoint);
-      } else if (method === 'read') {
-        promise = that.fetchChanges(endpoint);
-      }
-      if (endpoint.localStore) {
+      } else {
         options.store = endpoint.localStore;
-        endpoint.localStore.sync.apply(this, arguments);
+        promise = endpoint.localStore.sync.apply(this, arguments);
+        if (method === 'read') {
+          // TODO: callbacks should fire after fetching the changes, however they are when localStore sync completes
+          promise = promise.then(that.fetchChanges.bind(that, endpoint));
+        }
       }
       return promise;
     }
@@ -440,7 +447,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
           };
           var saveAndHandleError = function (model, data) {
             // original request failed and the code below reloaded the data to revert the local modifications, which succeeded...
-            that.trigger(channel, {
+            that.trigger('sync:' + channel, {
               _id: model.id,
               id: model.id,
               method: 'update',
@@ -467,10 +474,11 @@ Bikini.BikiniStore = Bikini.Store.extend({
               case 401: // UNAUTHORIZED
               case 410: // GONE*
                 // ...because the item is gone by now, maybe someone else changed it to be deleted
-                that.trigger(channel, {
+                that.trigger('sync:' + channel, {
                   _id: model.id,
                   id: model.id,
-                  method: 'delete'
+                  method: 'delete',
+                  data: model.attributes
                 });
                 removeAndHandleError();
                 // following does NOT work as this will NOT update the collection when sending messages on reconnect!
@@ -534,7 +542,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
                       delete ids[id]; // so that it is deleted below
                       if (!_.isEqual(_.pick.call(m, m.attributes, Object.keys(d)), d)) {
                         // above checked that all attributes in d are in m with equal values and found some mismatch
-                        that.trigger(channel, {
+                        that.trigger('sync:' + channel, {
                           id: id,
                           method: 'update',
                           data: d
@@ -542,7 +550,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
                       }
                     } else {
                       // create the item
-                      that.trigger(channel, {
+                      that.trigger('sync:' + channel, {
                         id: id,
                         method: 'create',
                         data: d
@@ -552,9 +560,11 @@ Bikini.BikiniStore = Bikini.Store.extend({
                 });
                 Object.keys(ids).forEach(function (id) {
                   // delete the item
-                  that.trigger(channel, {
+                  var m = ids[id];
+                  that.trigger('sync:' + channel, {
                     id: id,
-                    method: 'delete'
+                    method: 'delete',
+                    data: m.attributes
                   });
                 });
               } else {
@@ -563,7 +573,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
                 for (var i = 0; i < array.length; i++) {
                   data = array[i];
                   if (data) {
-                    that.trigger(channel, {
+                    that.trigger('sync:' + channel, {
                       id: data[endpoint.entity.idAttribute] || data._id,
                       method: 'update',
                       data: data
@@ -572,7 +582,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
                 }
               }
             } else {
-              that.trigger(channel, msg);
+              that.trigger('sync:' + channel, msg);
             }
           }
         });
@@ -590,13 +600,9 @@ Bikini.BikiniStore = Bikini.Store.extend({
       return changes.fetch({
         url: endpoint.baseUrl + 'changes/' + time,
         success: function (a, b, response) {
-          changes.each(function (msg) {
-            if (msg.get('time') && msg.get('method')) {
-              if (that.options.useLocalStore) {
-                that.setLastMessageTime(channel, msg.get('time'));
-              }
-              that.trigger(channel, msg);
-            }
+          changes.each(function (change) {
+            var msg = change.attributes;
+            that.onMessageStore(endpoint, msg);
           });
           return response.xhr;
         },
@@ -646,7 +652,9 @@ Bikini.BikiniStore = Bikini.Store.extend({
         }
         var channel = message.get('channel');
         if (msg && channel) {
-          var model = that.createModel({collection: endpoint.messages}, msg.data);
+          var model = that.createModel({
+            collection: endpoint.messages
+          }, msg.data);
           that.emitMessage(endpoint, msg, {
             error: that.options.error
           }, model);
@@ -703,28 +711,6 @@ Bikini.BikiniStore = Bikini.Store.extend({
         this.setLastMessageTime(endpoint.channel, '');
       }
     }
-  },
-
-  /*
-   url = "http://example.com:3000/pathname/?search=test#hash";
-
-   location.protocol; // => "http:"
-   location.host;     // => "example.com:3000"
-   location.hostname; // => "example.com"
-   location.port;     // => "3000"
-   location.pathname; // => "/pathname/"
-   location.hash;     // => "#hash"
-   location.search;   // => "?search=test"
-   */
-  getLocation: function (url) {
-    var location = document.createElement('a');
-    location.href = url || this.url;
-    // IE doesn't populate all link properties when setting .href with a relative URL,
-    // however .href will return an absolute URL which then can be used on itself
-    // to populate these additional fields.
-    if (location.host === '') {
-      location.href = location.href;
-    }
-    return location;
   }
+
 });
