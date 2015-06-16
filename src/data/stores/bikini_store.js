@@ -54,8 +54,6 @@ Bikini.BikiniStore = Bikini.Store.extend({
   },
 
   initialize: function (options) {
-    //debugger;
-    console.log('Bikini.BikiniStore.initialize');
     Bikini.Store.prototype.initialize.apply(this, arguments);
     this.options = this.options || {};
 
@@ -71,10 +69,6 @@ Bikini.BikiniStore = Bikini.Store.extend({
     }
     _.extend(this.options, options || {});
   },
-
-  //initModel: function (model) {
-  //  console.log('Bikini.BikiniStore.initModel');
-  //},
 
   initCollection: function (collection) {
     console.log('Bikini.BikiniStore.initCollection');
@@ -157,21 +151,15 @@ Bikini.BikiniStore = Bikini.Store.extend({
           entities: entities
         })
       });
-      var that = this;
-      messages.fetch({
-        success: function () {
-          if (that.isConnected) {
-            that.sendMessages(endpoint);
-          }
-        }
-      });
+      if (this.isConnected) {
+        this._sendMessages(endpoint);
+      }
       return messages;
     }
   },
 
   createSocket: function (endpoint, name) {
     console.log('Bikini.BikiniStore.createSocket');
-    //debugger;
     if (this.options.useSocketNotify && endpoint && endpoint.socketPath) {
       var that = this;
       var url = endpoint.host;
@@ -185,7 +173,6 @@ Bikini.BikiniStore = Bikini.Store.extend({
         }
       }
 
-      //path = endpoint.socketPath || (path + (path.charAt(path.length - 1) === '/' ? '' : '/' ) + 'live');
       path = endpoint.socketPath;
       // remove leading /
       var resource = (path && path.indexOf('/') === 0) ? path.substr(1) : path;
@@ -199,11 +186,11 @@ Bikini.BikiniStore = Bikini.Store.extend({
       endpoint.socket = io.connect(url, connectVo);
       endpoint.socket.on('connect', function () {
         that._bindChannel(endpoint, name);
-        that.onConnect(endpoint);
+        return that.onConnect(endpoint).done();
       });
       endpoint.socket.on('disconnect', function () {
         console.log('socket.io: disconnect');
-        that.onDisconnect(endpoint);
+        return that.onDisconnect(endpoint).done();
       });
       endpoint.socket.on(endpoint.channel, that.onMessageStore.bind(that, endpoint));
       return endpoint.socket;
@@ -218,7 +205,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
       var socket = endpoint.socket;
       var time = this.getLastMessageTime(channel);
       name = name || endpoint.entity.name;
-      socket.emit('bind:' + channel, {
+      socket.emit('bind', {
         entity: name,
         channel: channel,
         time: time
@@ -245,27 +232,35 @@ Bikini.BikiniStore = Bikini.Store.extend({
   },
 
   onConnect: function (endpoint) {
-    if (!this.isConnected) {
-      this.isConnected = true;
-      this.fetchChanges(endpoint);
-      this.sendMessages(endpoint);
+    if (this.isConnected) {
+      return Q.resolve();
     }
+
+    var that = this;
+    return this.fetchChanges(endpoint).then(function() {
+      that.isConnected = true;
+      return that._sendMessages(endpoint);
+    });
   },
 
   onDisconnect: function (endpoint) {
-    if (this.isConnected) {
+    if (!this.isConnected) {
+      return Q.resolve();
+    }
+
+    return Q.resolve(function () {
       this.isConnected = false;
       if (endpoint.socket && endpoint.socket.socket) {
         endpoint.socket.socket.onDisconnect();
       }
-    }
+    });
   },
 
   onMessageStore: function (endpoint, msg) {
     // this is called by the store itself for a particular endpoint!
     var that = this;
-    if (!msg || !msg.time || !msg.method) {
-      return;
+    if (!msg || !msg.method) {
+      return Q.reject('no message or method given');
     }
     if (msg.data && !msg.data[endpoint.entity.idAttribute] && msg.data._id) {
       msg.data[endpoint.entity.idAttribute] = msg.data._id; // server bug!
@@ -282,7 +277,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
         entity: endpoint.entity
       }, that.options);
       var model = new Bikini.Model(msg.data, options);
-      var promise = endpoint.localStore.sync(msg.method, model, _.extend(options, {
+      return endpoint.localStore.sync(msg.method, model, _.extend(options, {
         merge: msg.method === 'patch',
         fromMessage: true,
         success: function (result) {
@@ -294,11 +289,15 @@ Bikini.BikiniStore = Bikini.Store.extend({
           that.trigger('error:' + channel, error);
         }
       })).then(function () {
-        that.setLastMessageTime(channel, msg.time);
-      });
+        if (msg.time) {
+          that.setLastMessageTime(channel, msg.time);
+        }
+      }).thenResolve(msg);
     } else {
       // just update all collections listening
-      that.trigger('sync:' + channel, msg); // onMessageCollection
+      return Q.resolve(function () {
+        return that.trigger('sync:' + channel, msg); // onMessageCollection
+      });
     }
   },
 
@@ -352,6 +351,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
     if (options.fromMessage) {
       return that.handleSuccess(options);
     }
+
     var endpoint = that.getEndpoint(this.getUrlRoot());
     var promise;
     if (that && endpoint) {
@@ -361,24 +361,22 @@ Bikini.BikiniStore = Bikini.Store.extend({
 
       var channel = this.channel;
       var time = that.getLastMessageTime(channel);
-      // only send read messages if no other store can do this
-      // or for initial load
-      if (method !== 'read' || !endpoint.localStore || !time) {
-        // do backbone rest
-        promise = that.addMessage(method, model, options, endpoint);
-      } else {
+      // only send read messages if no other store can do this or for initial load
+      if (method === 'read' && endpoint.localStore && time) {
+        // read data from localStore and fetch changes remote
         options.store = endpoint.localStore;
         promise = endpoint.localStore.sync.apply(this, arguments);
-        if (method === 'read') {
-          // TODO: callbacks should fire after fetching the changes, however they are when localStore sync completes
-          promise = promise.then(that.fetchChanges.bind(that, endpoint));
-        }
+        // TODO: callbacks should fire after fetching the changes, however they are when localStore sync completes
+        promise = promise.then(that.fetchChanges.bind(that, endpoint));
+      } else {
+        // do backbone rest
+        promise = that._addMessage(method, model, options, endpoint);
       }
       return promise;
     }
   },
 
-  addMessage: function (method, model, options, endpoint) {
+  _addMessage: function (method, model, options, endpoint) {
     var that = this;
     if (method && model) {
       var changes = model.changedSinceSync;
@@ -408,188 +406,163 @@ Bikini.BikiniStore = Bikini.Store.extend({
         _id: model.id,
         id: model.id,
         method: method,
-        data: data
+        data: data,
+        channel: endpoint.channel
       };
-      var emit = function (endpoint, msg) {
-        return that.emitMessage(endpoint, msg, options, model);
-      };
+
+      var q = Q.resolve(msg);
+      var qMessage;
       if (storeMsg) {
-        return this.storeMessage(endpoint, msg, emit);
-      } else {
-        return emit(endpoint, msg);
+        // store and potentially merge message
+        qMessage = this.storeMessage(endpoint, q);
+        q = qMessage.then(function (message) {
+          // in case of merging, this result could be different
+          return message.attributes;
+        });
       }
+      return q.then(function (msg) {
+        // pass in qMessage so that deletion of stored message can be scheduled
+        return that._emitMessage(endpoint, msg, options, model, qMessage);
+      });
     }
   },
 
-  emitMessage: function (endpoint, msg, options, model) {
+  _emitMessage: function (endpoint, msg, options, model, qMessage) {
     var channel = endpoint.channel;
     var that = this;
     var url = Bikini.isModel(model) || msg.method !== 'read' ? endpoint.baseUrl : endpoint.readUrl;
     if (msg.id && msg.method !== 'create') {
       url += (url.charAt(url.length - 1) === '/' ? '' : '/' ) + msg.id;
     }
-    return model.sync.apply(model, [msg.method, model, {
-      url: url,
-      error: function (xhr, status) {
+    var qAjax = this._ajaxMessage(endpoint, msg, options, model);
+    var q = qAjax;
+    if (qMessage) {
+      // following takes care of offline change store
+      q = qAjax.then(function (data) {
+        // success, remove message stored, if any
+        return that.removeMessage(endpoint, msg, qMessage).then(data, function (error) {
+          that.trigger('error:' + channel, error); // can not do much about it...
+          return data;
+        }); // resolve again yielding data
+      }, function (xhr) {
+        // failure eventually caught by offline changes
         if (!xhr.responseText && that.options.useOfflineChanges) {
           // this seams to be only a connection problem, so we keep the message and call success
-          that.onDisconnect(endpoint);
-          return that.handleSuccess(options, msg.data);
-        }
-
-        // some real error
-        var handleError = function () {
-          // called when we want to retry on reconnect/restart, aka. the message stays in the store for future delivery
-          return that.handleError(options, model, xhr.responseJSON || new Error(status), options);
-        };
-        var removeAndHandleError = function () {
-          // called when we do not want to retry on reconnect/restart, message is to be deleted
-          return that.removeMessage(endpoint, msg, handleError);
-        };
-        var saveAndHandleError = function (model, data) {
-          // original request failed and the code below reloaded the data to revert the local modifications, which succeeded...
-          that.trigger('sync:' + channel, {
-            _id: model.id,
-            id: model.id,
-            method: 'update',
-            data: data
-          });
-          removeAndHandleError();
-          // following does NOT work as this will NOT update the collection when sending messages on reconnect!
-          /*
-          return model.save(data, {
-            // remove message to no longer retry on reconnect/restart
-            error: removeAndHandleError,
-            success: removeAndHandleError,
-            // just affect local store
-            store: endpoint.localStore,
-            entity: endpoint.entity
-          });
-          */
-        };
-        var deleteAndHandleError = function (model, fetchResp) {
-          // original request failed and the code below tried to revert the local modifications by reloading the data, which failed as well...
-          var status = fetchResp && fetchResp.status;
-          switch (status) {
-            case 404: // NOT FOUND
-            case 401: // UNAUTHORIZED
-            case 410: // GONE*
-              // ...because the item is gone by now, maybe someone else changed it to be deleted
-              that.trigger('sync:' + channel, {
-                _id: model.id,
-                id: model.id,
-                method: 'delete',
-                data: model.attributes
-              });
-              removeAndHandleError();
-              // following does NOT work as this will NOT update the collection when sending messages on reconnect!
-              /*
-              model.destroy({
-                // remove message to no longer retry on reconnect/restart
-                error: removeAndHandleError,
-                success: removeAndHandleError,
-                // just affect local store
-                store: endpoint.localStore,
-                entity: endpoint.entity
-              });
-              */
-              break;
-            default:
-              // reattempt operation on reconnect/restart as we are off in undefined state,
-              // data can not be reloaded and yet it was not deleted, so what to do...
-              console.error('don`t know how to handle ' + status + ' here!');
-              handleError();
-              break;
-          }
-        };
-        if (msg.method !== 'read' && endpoint.localStore) {
-          // revert modification by reloading data
-          return model.fetch({
-            url: url,
-            error: deleteAndHandleError,
-            success: saveAndHandleError,
-            store: {} // really go to remote server
-          });
+          return Q.resolve(msg.data);
         } else {
-          // just give up and forward the error
-          return removeAndHandleError();
+          // keep rejection as is
+          return Q.reject.apply(Q, arguments);
         }
-      },
-      success: function (data) {
+      });
+    }
+    q = this._applyResponse(q, endpoint, msg, options, model);
+    q.finally(function () {
+      // do some connection handling
+      return qAjax.then(function () {
+        // trigger reconnection when disconnected
         if (!that.isConnected) {
-          that.onConnect(endpoint);
+          return that.onConnect(endpoint);
         }
-        that.removeMessage(endpoint, msg, function (endpoint, msg) {
-          if (options.success) {
-            // allow client code to proceed
-            var resp = data;
-            that.handleSuccess(options, resp);
-          }
+      }, function (xhr) {
+        // trigger disconnection when disconnected
+        if (!xhr.responseText && that.isConnected) {
+          return that.onDisconnect(endpoint);
+        }
+      });
+    });
+  },
 
-          if (data) {
-            // no data if server asks not to alter state
-            // that.setLastMessageTime(channel, msg.time);
-            if (msg.method !== 'read') {
-              that.trigger('sync:' + channel, msg);
-            } else if (Bikini.isCollection(model) && _.isArray(data)) {
-              // synchronize the collection contents with the data read
-              var ids = {};
-              model.models.forEach(function (m) {
-                ids[m.id] = m;
-              });
-              data.forEach(function (d) {
-                if (d) {
-                  var id = d[endpoint.entity.idAttribute] || d._id;
-                  var m = ids[id];
-                  if (m) {
-                    // update the item
-                    delete ids[id]; // so that it is deleted below
-                    if (!_.isEqual(_.pick.call(m, m.attributes, Object.keys(d)), d)) {
-                      // above checked that all attributes in d are in m with equal values and found some mismatch
-                      that.trigger('sync:' + channel, {
-                        id: id,
-                        method: 'update',
-                        data: d
-                      });
-                    }
-                  } else {
-                    // create the item
-                    that.trigger('sync:' + channel, {
-                      id: id,
-                      method: 'create',
-                      data: d
-                    });
-                  }
-                }
-              });
-              Object.keys(ids).forEach(function (id) {
-                // delete the item
-                var m = ids[id];
-                that.trigger('sync:' + channel, {
-                  id: id,
-                  method: 'delete',
-                  data: m.attributes
-                });
-              });
-            } else {
-              // trigger an update to load the data read
-              var array = _.isArray(data) ? data : [data];
-              for (var i = 0; i < array.length; i++) {
-                data = array[i];
-                if (data) {
-                  that.trigger('sync:' + channel, {
-                    id: data[endpoint.entity.idAttribute] || data._id,
+  _ajaxMessage: function (endpoint, msg, options, model) {
+    var channel = endpoint.channel;
+    var that = this;
+    var url = Bikini.isModel(model) || msg.method !== 'read' ? endpoint.baseUrl : endpoint.readUrl;
+    if (msg.id && msg.method !== 'create') {
+      url += (url.charAt(url.length - 1) === '/' ? '' : '/' ) + msg.id;
+    }
+    return model.sync.call(model, msg.method, model, {
+      // must not take arbitrary options as these won't be replayed on reconnect
+      url: url,
+      attrs: msg.data,
+      store: {}
+    });
+  },
+
+  _applyResponse: function (qXHR, endpoint, msg, options, model) {
+    var channel = endpoint.channel;
+    var that = this;
+    return qXHR.tap(function (data) {
+      // update local store state
+      if (data) {
+        // no data if server asks not to alter state
+        // that.setLastMessageTime(channel, msg.time);
+        var promises = [];
+        if (msg.method !== 'read') {
+          promises.push(that.onMessageStore(endpoint, data === msg.data ? msg : _.defaults({
+            data: data
+          }, msg)));
+        } else if (Bikini.isCollection(model) && _.isArray(data)) {
+          // synchronize the collection contents with the data read
+          var ids = {};
+          model.models.forEach(function (m) {
+            ids[m.id] = m;
+          });
+          data.forEach(function (d) {
+            if (d) {
+              var id = d[endpoint.entity.idAttribute] || d._id;
+              var m = ids[id];
+              if (m) {
+                // update the item
+                delete ids[id]; // so that it is deleted below
+                if (!_.isEqual(_.pick.call(m, m.attributes, Object.keys(d)), d)) {
+                  // above checked that all attributes in d are in m with equal values and found some mismatch
+                  promises.push(that.onMessageStore(endpoint, {
+                    id: id,
                     method: 'update',
-                    data: data
-                  });
+                    data: d
+                  }));
                 }
+              } else {
+                // create the item
+                promises.push(that.onMessageStore(endpoint, {
+                  id: id,
+                  method: 'create',
+                  data: d
+                }));
               }
             }
+          });
+          Object.keys(ids).forEach(function (id) {
+            // delete the item
+            var m = ids[id];
+            promises.push(that.onMessageStore(endpoint, {
+              id: id,
+              method: 'delete',
+              data: m.attributes
+            }));
+          });
+        } else {
+          // trigger an update to load the data read
+          var array = _.isArray(data) ? data : [data];
+          for (var i = 0; i < array.length; i++) {
+            data = array[i];
+            if (data) {
+              promises.push(that.onMessageStore(endpoint, {
+                id: data[endpoint.entity.idAttribute] || data._id,
+                method: 'update',
+                data: data
+              }));
+            }
           }
-        });
-      },
-      store: {}
-    }]);
+        }
+        return Q.all(promises); // delayed till operations complete
+      }
+    }).then(function (resp) {
+      // invoke success callback, if any
+      return that.handleSuccess(options, resp) || resp;
+    }, function (xhr, status) {
+      // invoke error callback, if any
+      return that.handleError(options, model, xhr.responseJSON || new Error(status), options) || Q.reject(xhr);
+    });
   },
 
   fetchChanges: function (endpoint) {
@@ -609,6 +582,8 @@ Bikini.BikiniStore = Bikini.Store.extend({
         },
         credentials: endpoint.credentials
       });
+    } else {
+      return Q.resolve();
     }
   },
 
@@ -642,63 +617,115 @@ Bikini.BikiniStore = Bikini.Store.extend({
     }
   },
 
-  sendMessages: function (endpoint) {
-    if (endpoint && endpoint.messages) {
-      var that = this;
-      endpoint.messages.each(function (message) {
-        var msg;
-        try {
-          msg = JSON.parse(message.get('msg'));
-        } catch (e) {
+  _sendMessages: function (endpoint) {
+    if (!endpoint || !endpoint.messages) {
+      return Q.resolve();
+    }
+
+    var that = this;
+    return endpoint.messages.fetch().then(function next() {
+      if (endpoint.messages.models.length <= 0) {
+        return;
+      }
+
+      var message = endpoint.messages.models[0];
+      var msg = message.attributes;
+      var channel = message.get('channel');
+      if (!msg || !channel) {
+        return message.destroy();
+      }
+
+      var options = {
+        store: that,
+        entity: endpoint.entity,
+        error: that.options.error
+      };
+      var model = new Bikini.Model(msg.data, options);
+      return that._applyResponse(that._ajaxMessage(endpoint, msg, options, model), endpoint, msg, options, model).catch(function (error) {
+        // failed, eventually undo the modifications stored
+        if (!endpoint.localStore) {
+          return Q.reject(error);
         }
-        var channel = message.get('channel');
-        if (msg && channel) {
-          var model = that.createModel({
-            collection: endpoint.messages
-          }, msg.data);
-          that.emitMessage(endpoint, msg, {
-            error: that.options.error
-          }, model);
-        } else {
-          message.destroy();
-        }
+
+        // revert modification by reloading data
+        return model.fetch({
+          store: {} // really go to remote server
+        }).then(function (data) {
+          // original request failed and the code above reloaded the data to revert the local modifications, which succeeded...
+          return model.save(data, {
+            // just affect local store
+            store: endpoint.localStore,
+            entity: endpoint.entity
+          });
+        }, function (fetchResp) {
+          // original request failed and the code above tried to revert the local modifications by reloading the data, which failed as well...
+          var status = fetchResp && fetchResp.status;
+          switch (status) {
+            case 404: // NOT FOUND
+            case 401: // UNAUTHORIZED
+            case 410: // GONE*
+              // ...because the item is gone by now, maybe someone else changed it to be deleted
+              return model.destroy({
+                // just affect local store
+                store: endpoint.localStore,
+                entity: endpoint.entity
+              });
+            default:
+              return Q.reject(fetchResp);
+          }
+        });
+      }).then(function () {
+        // succeeded or reverted
+        return message.destroy();
+      }).then(function (result) {
+        return next(result);
       });
-    }
+    });
   },
 
-  mergeMessages: function (data, id) {
-    return data;
-  },
-
-  storeMessage: function (endpoint, msg, callback) {
-    if (endpoint && endpoint.messages && msg) {
-      var channel = endpoint.channel;
-      var message = endpoint.messages.get(msg._id);
+  storeMessage: function (endpoint, qMsg) {
+    return qMsg.then(function (msg) {
+      var options;
+      var id = endpoint.messages.modelId(msg);
+      var message = id && endpoint.messages.get(id);
       if (message) {
-        var oldMsg = JSON.parse(message.get('msg'));
-        message.save({
-          msg: JSON.stringify(_.extend(oldMsg, msg))
-        });
+        // use existing instance, should not be the case usually
+        options = {
+          merge: true
+        };
       } else {
-        endpoint.messages.create({
-          _id: msg._id,
-          id: msg.id,
-          msg: JSON.stringify(msg),
-          channel: channel
+        // instantiate new model, intentionally not added to collection
+        message = new endpoint.messages.model(msg, {
+          collection: endpoint.messages,
+          store: endpoint.messages.store
         });
       }
-    }
-    return callback(endpoint, msg);
+      return message.save(msg, options).thenResolve(message);
+    });
   },
 
-  removeMessage: function (endpoint, msg, callback) {
-    if (endpoint && endpoint.messages) {
-      var message = endpoint.messages.get(msg._id);
-      if (message) {
-        message.destroy();
+  removeMessage: function (endpoint, msg, qMessage) {
+    return qMessage.then(function (message) {
+      if (!message) {
+        var id = endpoint.messages.modelId(msg);
+        if (!id) {
+          // msg is not persistent
+          return Q.resolve();
+        }
+
+        message = endpoint.messages.get(id);
+        if (!message) {
+          message = new endpoint.messages.model({
+            _id: msg._id,
+            id: msg.id
+          }, {
+            collection: endpoint.messages,
+            store: endpoint.messages.store
+          });
+        }
       }
-    }
-    return callback(endpoint, msg);
+      return message.destroy();
+    });
   },
 
   clear: function (collection) {
