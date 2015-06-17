@@ -6,18 +6,19 @@
  *
  * @type {Object}
  */
-var Bikini = null;
+var Relution;
 if (typeof exports !== 'undefined') {
-  Bikini = exports;
+  Relution = {};
 } else {
-  Bikini = global.Bikini = {};
+  Relution = global.Relution = global.Relution || {};
 }
+Relution.LiveData = {};
 
 /**
  * Version number of current release
  * @type {String}
  */
-Bikini.Version = Bikini.version = '/* @echo VERSION */';
+Relution.LiveData.Version = Relution.LiveData.version = '/* @echo VERSION */';
 
 /**
  * Empty function to be used when
@@ -25,36 +26,36 @@ Bikini.Version = Bikini.version = '/* @echo VERSION */';
  *
  * @type {Function}
  */
-Bikini.f = function () {
+Relution.LiveData.f = function () {
 };
 
-Bikini.create = function (args) {
+Relution.LiveData.create = function (args) {
   return new this(args);
 };
 
-Bikini.design = function (obj) {
+Relution.LiveData.design = function (obj) {
   var O = this.extend(obj || {});
   return new O();
 };
 
-Bikini.extend = Backbone.Model.extend;
+Relution.LiveData.extend = Backbone.Model.extend;
 
-Bikini.isCollection = function (collection) {
+Relution.LiveData.isCollection = function (collection) {
   return Backbone.Collection.prototype.isPrototypeOf(collection);
 };
 
-Bikini.isModel = function (model) {
+Relution.LiveData.isModel = function (model) {
   return Backbone.Model.prototype.isPrototypeOf(model);
 };
 
-Bikini.isEntity = function (entity) {
-  return Bikini.Entity.prototype.isPrototypeOf(entity);
+Relution.LiveData.isEntity = function (entity) {
+  return Relution.LiveData.Entity.prototype.isPrototypeOf(entity);
 };
 
 /***
  * Data type Constants.
  */
-Bikini.DATA = {
+Relution.LiveData.DATA = {
   TYPE: {
     INTEGER: 'integer',
     STRING: 'string',
@@ -70,7 +71,7 @@ Bikini.DATA = {
   }
 };
 
-Bikini.ajax = function ajax(url, options) {
+Relution.LiveData.ajax = function ajax(url, options) {
   var superAjax = this.super_ && this.super_.ajax || Backbone.ajax;
   var xhr = superAjax.apply(this, arguments);
   if (xhr) {
@@ -82,16 +83,16 @@ Bikini.ajax = function ajax(url, options) {
   }
 };
 
-Bikini.logon = function logon(options) {
-  Bikini.logon = Bikini.Security.logon;
-  return Bikini.Security.logon.apply(this, arguments);
+Relution.LiveData.logon = function logon(options) {
+  Relution.LiveData.logon = Relution.LiveData.Security.logon;
+  return Relution.LiveData.Security.logon.apply(this, arguments);
 };
 
-Bikini.sync = function sync(method, model, options) {
+Relution.LiveData.sync = function sync(method, model, options) {
   options = options || {};
   var store = options.store || this.store;
   options.credentials = options.credentials || this.credentials || store && store.credentials;
-  options.logon = options.logon || this.logon || store && store.logon || Bikini.logon;
+  options.logon = options.logon || this.logon || store && store.logon || Relution.LiveData.logon;
 
   var that = this;
   var args = arguments;
@@ -102,13 +103,13 @@ Bikini.sync = function sync(method, model, options) {
   });
 };
 
-Bikini.Object = {
+Relution.LiveData.Object = {
   /**
    * The type of this object.
    *
    * @type String
    */
-  _type: 'Bikini.Object',
+  _type: 'Relution.LiveData.Object',
 
   /**
    * Creates an object based on a passed prototype.
@@ -130,7 +131,7 @@ Bikini.Object = {
   include: function (properties) {
     for (var prop in properties) {
       if (this.hasOwnProperty(prop)) {
-        throw Bikini.Exception.RESERVED_WORD.getException();
+        throw Relution.LiveData.Exception.RESERVED_WORD.getException();
       }
       this[prop] = properties[prop];
     }
@@ -167,7 +168,7 @@ Bikini.Object = {
   bindToCaller: function (caller, method, arg) {
     return function () {
       if (typeof method !== 'function' || typeof caller !== 'object') {
-        throw Bikini.Exception.INVALID_INPUT_PARAMETER.getException();
+        throw Relution.LiveData.Exception.INVALID_INPUT_PARAMETER.getException();
       }
       if (Array.isArray(arg)) {
         return method.apply(caller, arg);

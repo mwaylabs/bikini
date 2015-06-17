@@ -3,6 +3,7 @@
 (function (global, Backbone, _, $) {
 
   // @include ./core/livedata.js
+  // @include ./core/bikini.js
 
   // @include ./utility/objectid.js
   // @include ./utility/uuid.js

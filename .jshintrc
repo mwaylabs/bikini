@@ -20,6 +20,7 @@
     "smarttabs": true,
     "jquery": true,
     "globals": {
+        "Relution": true,
         "Bikini": true,
         "Backbone": false,
         "_": false,
