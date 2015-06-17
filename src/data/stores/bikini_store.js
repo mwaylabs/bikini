@@ -279,7 +279,6 @@ Bikini.BikiniStore = Bikini.Store.extend({
       var model = new Bikini.Model(msg.data, options);
       return endpoint.localStore.sync(msg.method, model, _.extend(options, {
         merge: msg.method === 'patch',
-        fromMessage: true,
         success: function (result) {
           // update all collections listening
           that.trigger('sync:' + channel, msg); // onMessageCollection
@@ -347,33 +346,42 @@ Bikini.BikiniStore = Bikini.Store.extend({
 
   sync: function (method, model, options) {
     console.log('Bikini.BikiniStore.sync');
+    options = options || {};
     var that = options.store || this.store;
-    if (options.fromMessage) {
-      return that.handleSuccess(options);
+    var endpoint = that && that.getEndpoint(this.getUrlRoot());
+    if (!endpoint) {
+      return;
     }
 
-    var endpoint = that.getEndpoint(this.getUrlRoot());
-    var promise;
-    if (that && endpoint) {
-      if (Bikini.isModel(model) && !model.id) {
-        model.set(model.idAttribute, new Bikini.ObjectID().toHexString());
-      }
-
-      var channel = this.channel;
-      var time = that.getLastMessageTime(channel);
-      // only send read messages if no other store can do this or for initial load
-      if (method === 'read' && endpoint.localStore && time) {
-        // read data from localStore and fetch changes remote
-        options.store = endpoint.localStore;
-        promise = endpoint.localStore.sync.apply(this, arguments);
-        // TODO: callbacks should fire after fetching the changes, however they are when localStore sync completes
-        promise = promise.then(that.fetchChanges.bind(that, endpoint));
-      } else {
-        // do backbone rest
-        promise = that._addMessage(method, model, options, endpoint);
-      }
-      return promise;
+    if (Bikini.isModel(model) && !model.id) {
+      model.set(model.idAttribute, new Bikini.ObjectID().toHexString());
     }
+
+    var channel = endpoint.channel;
+    var time = that.getLastMessageTime(channel);
+    // only send read messages if no other store can do this or for initial load
+    if (method === 'read' && endpoint.localStore && time && !options.reset) {
+      // read data from localStore and fetch changes remote
+      var opts = _.clone(options);
+      opts.store = endpoint.localStore;
+      opts.entity = endpoint.entity;
+      delete opts.success;
+      delete opts.error;
+      return endpoint.localStore.sync.call(this, method, model, opts).then(function (resp) {
+        // load changes only (will happen AFTER success callback is invoked,
+        // but returned promise will resolve only after changes were processed.
+        // This is because backbone success callback alters the collection...
+        return that.fetchChanges(endpoint).catch(function (error) {
+          that.trigger('error:' + channel, error); // can not do much about it...
+        }).thenResolve(that.handleSuccess(options, resp) || resp); // caller expects original XHR response as changes body data is NOT compatible
+      }, function () {
+        // fall-back to loading full data set
+        return that._addMessage(method, model, options, endpoint);
+      });
+    }
+
+    // do backbone rest
+    return that._addMessage(method, model, options, endpoint);
   },
 
   _addMessage: function (method, model, options, endpoint) {
