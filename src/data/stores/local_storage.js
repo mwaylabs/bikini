@@ -2,28 +2,28 @@
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
 
 /**
- * The Bikini.LocalStorageStore can be used to store model collection into
+ * The Relution.LiveData.LocalStorageStore can be used to store model collection into
  * the localStorage
  *
- * @module Bikini.LocalStorageStore
+ * @module Relution.LiveData.LocalStorageStore
  *
  * @type {*}
- * @extends Bikini.Store
+ * @extends Relution.LiveData.Store
  *
  * @example
  *
  * // The LocalStorageStore will save each model data as a json under his id,
  * // and keeps all id's under an extra key for faster access
  *
- * var MyCollection = Bikini.Collection.extend({
- *      store: Bikini.LocalStorageStore.create(),
+ * var MyCollection = Relution.LiveData.Collection.extend({
+ *      store: Relution.LiveData.LocalStorageStore.create(),
  *      entity: 'myEntityName'
  * });
  *
  */
-Bikini.LocalStorageStore = Bikini.Store.extend({
+Relution.LiveData.LocalStorageStore = Relution.LiveData.Store.extend({
 
-  _type: 'Bikini.LocalStorageStore',
+  _type: 'Relution.LiveData.LocalStorageStore',
 
   ids: {},
 
@@ -33,7 +33,7 @@ Bikini.LocalStorageStore = Bikini.Store.extend({
     var entity = that.getEntity(model.entity || options.entity || this.entity);
     var attrs;
     if (entity && model) {
-      var id = model.id || (method === 'create' ? new Bikini.ObjectID().toHexString() : null);
+      var id = model.id || (method === 'create' ? new Relution.LiveData.ObjectID().toHexString() : null);
       attrs = options.attrs || model.toJSON(options);
       switch (method) {
         case 'patch':
@@ -73,7 +73,7 @@ Bikini.LocalStorageStore = Bikini.Store.extend({
       if (attrs) {
         return that.handleSuccess(options, attrs) || attrs;
       } else {
-        return that.handleError(options, Bikini.Store.CONST.ERROR_NO_ENTITY) || Q.reject(Bikini.Store.CONST.ERROR_NO_ENTITY);
+        return that.handleError(options, Relution.LiveData.Store.CONST.ERROR_NO_ENTITY) || Q.reject(Relution.LiveData.Store.CONST.ERROR_NO_ENTITY);
       }
     });
   },
@@ -88,7 +88,7 @@ Bikini.LocalStorageStore = Bikini.Store.extend({
       localStorage.removeItem('__ids__' + entity.name);
       this.handleSuccess(options);
     } else {
-      this.handleError(options, Bikini.Store.CONST.ERROR_NO_ENTITY);
+      this.handleError(options, Relution.LiveData.Store.CONST.ERROR_NO_ENTITY);
     }
   },
 
@@ -107,7 +107,7 @@ Bikini.LocalStorageStore = Bikini.Store.extend({
           this._delItemId(id);
         }
       } catch (e) {
-        console.error(Bikini.Store.CONST.ERROR_LOAD_DATA + e.message);
+        console.error(Relution.LiveData.Store.CONST.ERROR_LOAD_DATA + e.message);
       }
     }
     return attrs;
@@ -119,7 +119,7 @@ Bikini.LocalStorageStore = Bikini.Store.extend({
         localStorage.setItem(this._getKey(entity, id), JSON.stringify(attrs));
         this._addItemId(entity, id);
       } catch (e) {
-        console.error(Bikini.Store.CONST.ERROR_SAVE_DATA + e.message);
+        console.error(Relution.LiveData.Store.CONST.ERROR_SAVE_DATA + e.message);
       }
     }
   },
@@ -170,7 +170,7 @@ Bikini.LocalStorageStore = Bikini.Store.extend({
       }
       return this.ids[entity.name];
     } catch (e) {
-      console.error(Bikini.Store.CONST.ERROR_LOAD_IDS + e.message);
+      console.error(Relution.LiveData.Store.CONST.ERROR_LOAD_IDS + e.message);
     }
   },
 
@@ -179,7 +179,7 @@ Bikini.LocalStorageStore = Bikini.Store.extend({
       var key = '__ids__' + entity.name;
       localStorage.setItem(key, JSON.stringify(ids));
     } catch (e) {
-      console.error(Bikini.Store.CONST.ERROR_SAVE_IDS + e.message);
+      console.error(Relution.LiveData.Store.CONST.ERROR_SAVE_IDS + e.message);
     }
   }
 });

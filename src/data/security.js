@@ -3,11 +3,11 @@
 
 /**
  *
- * @module Bikini.Security
+ * @module Relution.LiveData.Security
  *
  * @type {{logon: Function, logonBasicAuth: Function, logonMcapAuth: Function, getHost: Function}}
  */
-Bikini.Security = Bikini.Object.design({
+Relution.LiveData.Security = Relution.LiveData.Object.design({
 
   logon: _.extend(function logon(options) {
     var credentials = options && options.credentials;
@@ -17,7 +17,7 @@ Bikini.Security = Bikini.Object.design({
   }, {
     basic: function basic(options) {
       var credentials = options.credentials;
-      var auth = credentials.username && Bikini.Base64.encode(encodeURIComponent(credentials.username + ':' + (credentials.password || '')));
+      var auth = credentials.username && Relution.LiveData.Base64.encode(encodeURIComponent(credentials.username + ':' + (credentials.password || '')));
       if (auth) {
         options.beforeSend = function (xhr) {
           xhr.setRequestHeader('Authorization', 'Basic ' + auth);

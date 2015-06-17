@@ -2,43 +2,43 @@
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
 
 /**
- * The Bikini.WebSqlStore can be used to store model collection into
+ * The Relution.LiveData.WebSqlStore can be used to store model collection into
  * the webSql database
  *
- * @module Bikini.WebSqlStore
+ * @module Relution.LiveData.WebSqlStore
  *
  * @type {*}
- * @extends Bikini.Store
+ * @extends Relution.LiveData.Store
  *
  * @example
  *
  * // The default configuration will save the complete model data as json
  * // into a database column with the name "data"
  *
- * var MyCollection = Bikini.Collection.extend({
+ * var MyCollection = Relution.LiveData.Collection.extend({
      *      model: MyModel,
      *      entity: 'MyTableName',
-     *      store: new Bikini.WebSqlStorageStore()
+     *      store: new Relution.LiveData.WebSqlStorageStore()
      * });
  *
  * // If you want to use specific columns you can specify the fields
  * // in the entity of your model like this:
  *
- * var MyModel = Bikini.Model.extend({
+ * var MyModel = Relution.LiveData.Model.extend({
      *      idAttribute: 'id',
      *      fields: {
-     *          id:          { type: Bikini.DATA.TYPE.STRING,  required: true, index: true },
-     *          sureName:    { name: 'USERNAME', type: Bikini.DATA.TYPE.STRING },
-     *          firstName:   { type: Bikini.DATA.TYPE.STRING,  length: 200 },
-     *          age:         { type: Bikini.DATA.TYPE.INTEGER }
+     *          id:          { type: Relution.LiveData.DATA.TYPE.STRING,  required: true, index: true },
+     *          sureName:    { name: 'USERNAME', type: Relution.LiveData.DATA.TYPE.STRING },
+     *          firstName:   { type: Relution.LiveData.DATA.TYPE.STRING,  length: 200 },
+     *          age:         { type: Relution.LiveData.DATA.TYPE.INTEGER }
      *      }
      * });
  *
  *
  */
-Bikini.WebSqlStore = Bikini.Store.extend({
+Relution.LiveData.WebSqlStore = Relution.LiveData.Store.extend({
 
-  _type: 'Bikini.WebSqlStore',
+  _type: 'Relution.LiveData.WebSqlStore',
 
   _selector: null,
 
@@ -58,29 +58,29 @@ Bikini.WebSqlStore = Bikini.Store.extend({
 
   typeMapping: (function () {
     var map = {};
-    map [Bikini.DATA.TYPE.OBJECTID] = Bikini.DATA.TYPE.STRING;
-    map [Bikini.DATA.TYPE.DATE] = Bikini.DATA.TYPE.STRING;
-    map [Bikini.DATA.TYPE.OBJECT] = Bikini.DATA.TYPE.TEXT;
-    map [Bikini.DATA.TYPE.ARRAY] = Bikini.DATA.TYPE.TEXT;
-    map [Bikini.DATA.TYPE.BINARY] = Bikini.DATA.TYPE.TEXT;
+    map [Relution.LiveData.DATA.TYPE.OBJECTID] = Relution.LiveData.DATA.TYPE.STRING;
+    map [Relution.LiveData.DATA.TYPE.DATE] = Relution.LiveData.DATA.TYPE.STRING;
+    map [Relution.LiveData.DATA.TYPE.OBJECT] = Relution.LiveData.DATA.TYPE.TEXT;
+    map [Relution.LiveData.DATA.TYPE.ARRAY] = Relution.LiveData.DATA.TYPE.TEXT;
+    map [Relution.LiveData.DATA.TYPE.BINARY] = Relution.LiveData.DATA.TYPE.TEXT;
     return map;
   })(),
 
   sqlTypeMapping: (function () {
     var map = {};
-    map [Bikini.DATA.TYPE.STRING] = 'varchar(255)';
-    map [Bikini.DATA.TYPE.TEXT] = 'text';
-    map [Bikini.DATA.TYPE.OBJECT] = 'text';
-    map [Bikini.DATA.TYPE.ARRAY] = 'text';
-    map [Bikini.DATA.TYPE.FLOAT] = 'float';
-    map [Bikini.DATA.TYPE.INTEGER] = 'integer';
-    map [Bikini.DATA.TYPE.DATE] = 'varchar(255)';
-    map [Bikini.DATA.TYPE.BOOLEAN] = 'boolean';
+    map [Relution.LiveData.DATA.TYPE.STRING] = 'varchar(255)';
+    map [Relution.LiveData.DATA.TYPE.TEXT] = 'text';
+    map [Relution.LiveData.DATA.TYPE.OBJECT] = 'text';
+    map [Relution.LiveData.DATA.TYPE.ARRAY] = 'text';
+    map [Relution.LiveData.DATA.TYPE.FLOAT] = 'float';
+    map [Relution.LiveData.DATA.TYPE.INTEGER] = 'integer';
+    map [Relution.LiveData.DATA.TYPE.DATE] = 'varchar(255)';
+    map [Relution.LiveData.DATA.TYPE.BOOLEAN] = 'boolean';
     return map;
   })(),
 
   initialize: function (options) {
-    Bikini.Store.prototype.initialize.apply(this, arguments);
+    Relution.LiveData.Store.prototype.initialize.apply(this, arguments);
     this.options = this.options || {};
     this.options.name = this.name;
     this.options.size = this.size;
@@ -121,7 +121,7 @@ Bikini.WebSqlStore = Bikini.Store.extend({
       }
     });
 
-    var models = Bikini.isCollection(model) ? model.models : [model];
+    var models = Relution.LiveData.isCollection(model) ? model.models : [model];
     switch (method) {
       case 'create':
         that._checkTable(opts, function () {
@@ -258,7 +258,7 @@ Bikini.WebSqlStore = Bikini.Store.extend({
   _isAutoincrementKey: function (entity, key) {
     if (entity && key) {
       var column = this.getField(entity, key);
-      return column && column.type === Bikini.DATA.TYPE.INTEGER;
+      return column && column.type === Relution.LiveData.DATA.TYPE.INTEGER;
     }
   },
 
@@ -325,7 +325,7 @@ Bikini.WebSqlStore = Bikini.Store.extend({
     if (_.isString(options.where)) {
       sql = options.where;
     } else if (_.isObject(options.where)) {
-      this._selector = Bikini.SqlSelector.create(options.where, entity);
+      this._selector = Relution.LiveData.SqlSelector.create(options.where, entity);
       sql = this._selector.buildStatement();
     }
     return sql;
@@ -392,15 +392,15 @@ Bikini.WebSqlStore = Bikini.Store.extend({
   },
 
   _sqlValue: function (value, field) {
-    var type = field && field.type ? field.type : Bikini.Field.prototype.detectType(value);
-    if (type === Bikini.DATA.TYPE.INTEGER || type === Bikini.DATA.TYPE.FLOAT) {
+    var type = field && field.type ? field.type : Relution.LiveData.Field.prototype.detectType(value);
+    if (type === Relution.LiveData.DATA.TYPE.INTEGER || type === Relution.LiveData.DATA.TYPE.FLOAT) {
       return value;
-    } else if (type === Bikini.DATA.TYPE.BOOLEAN) {
+    } else if (type === Relution.LiveData.DATA.TYPE.BOOLEAN) {
       return value ? '1' : '0';
-    } else if (type === Bikini.DATA.TYPE.NULL) {
+    } else if (type === Relution.LiveData.DATA.TYPE.NULL) {
       return 'NULL';
     }
-    value = Bikini.Field.prototype.transform(value, Bikini.DATA.TYPE.STRING);
+    value = Relution.LiveData.Field.prototype.transform(value, Relution.LiveData.DATA.TYPE.STRING);
     value = value.replace(/"/g, '""');
     return '"' + value + '"';
   },
@@ -470,7 +470,7 @@ Bikini.WebSqlStore = Bikini.Store.extend({
         var model = models[i];
         var statement = ''; // the actual sql insert string with values
         if (!isAutoInc && !model.id && model.idAttribute) {
-          model.set(model.idAttribute, new Bikini.ObjectID().toHexString());
+          model.set(model.idAttribute, new Relution.LiveData.ObjectID().toHexString());
         }
         var value = options.attrs || model.toJSON();
         var args, keys;
@@ -496,7 +496,7 @@ Bikini.WebSqlStore = Bikini.Store.extend({
     var entity = this.getEntity(options);
     if (this._checkDb(options) && this._checkEntity(options, entity)) {
       var lastStatement;
-      var isCollection = !Bikini.isModel(model);
+      var isCollection = !Relution.LiveData.isModel(model);
       var result;
       if (isCollection) {
         result = [];

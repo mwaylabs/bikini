@@ -3,7 +3,7 @@
 
 /**
  *
- * @module Bikini.Field
+ * @module Relution.LiveData.Field
  *
  */
 
@@ -15,23 +15,23 @@
  * @param options
  * @constructor
  */
-Bikini.Field = function (options) {
+Relution.LiveData.Field = function (options) {
   this.merge(options);
   this.initialize.apply(this, arguments);
 };
 
-Bikini.Field.extend = Bikini.extend;
-Bikini.Field.create = Bikini.create;
-Bikini.Field.design = Bikini.design;
+Relution.LiveData.Field.extend = Relution.LiveData.extend;
+Relution.LiveData.Field.create = Relution.LiveData.create;
+Relution.LiveData.Field.design = Relution.LiveData.design;
 
-_.extend(Bikini.Field.prototype, Bikini.Object, {
+_.extend(Relution.LiveData.Field.prototype, Relution.LiveData.Object, {
 
   /**
    * The type of this object.
    *
    * @type String
    */
-  _type: 'Bikini.Field',
+  _type: 'Relution.LiveData.Field',
 
   name: null,
 
@@ -80,30 +80,30 @@ _.extend(Bikini.Field.prototype, Bikini.Object, {
       if (_.isUndefined(value)) {
         return this.defaultValue;
       }
-      if (type === Bikini.DATA.TYPE.STRING || type === Bikini.DATA.TYPE.TEXT) {
+      if (type === Relution.LiveData.DATA.TYPE.STRING || type === Relution.LiveData.DATA.TYPE.TEXT) {
         if (_.isObject(value)) {
           return JSON.stringify(value);
         } else {
           return _.isNull(value) ? 'null' : value.toString();
         }
-      } else if (type === Bikini.DATA.TYPE.INTEGER) {
+      } else if (type === Relution.LiveData.DATA.TYPE.INTEGER) {
         return parseInt(value);
-      } else if (type === Bikini.DATA.TYPE.BOOLEAN) {
+      } else if (type === Relution.LiveData.DATA.TYPE.BOOLEAN) {
         return value === true || value === 'true'; // true, 1, "1" or "true"
-      } else if (type === Bikini.DATA.TYPE.FLOAT) {
+      } else if (type === Relution.LiveData.DATA.TYPE.FLOAT) {
         return parseFloat(value);
-      } else if (type === Bikini.DATA.TYPE.OBJECT || type === Bikini.DATA.TYPE.ARRAY) {
+      } else if (type === Relution.LiveData.DATA.TYPE.OBJECT || type === Relution.LiveData.DATA.TYPE.ARRAY) {
         if (!_.isObject(value)) {
           return _.isString(value) ? JSON.parse(value) : null;
         }
-      } else if (type === Bikini.DATA.TYPE.DATE) {
-        if (!Bikini.Date.isPrototypeOf(value)) {
-          var date = value ? Bikini.Date.create(value) : null;
+      } else if (type === Relution.LiveData.DATA.TYPE.DATE) {
+        if (!Relution.LiveData.Date.isPrototypeOf(value)) {
+          var date = value ? Relution.LiveData.Date.create(value) : null;
           return date && date.isValid() ? date : null;
         }
-      } else if (type === Bikini.DATA.TYPE.OBJECTID) {
-        if (!Bikini.ObjectID.prototype.isPrototypeOf(value)) {
-          return _.isString(value) ? new Bikini.ObjectID(value) : null;
+      } else if (type === Relution.LiveData.DATA.TYPE.OBJECTID) {
+        if (!Relution.LiveData.ObjectID.prototype.isPrototypeOf(value)) {
+          return _.isString(value) ? new Relution.LiveData.ObjectID(value) : null;
         }
       }
       return value;
@@ -143,30 +143,30 @@ _.extend(Bikini.Field.prototype, Bikini.Object, {
    */
   detectType: function (v) {
     if (_.isNumber(v)) {
-      return Bikini.DATA.TYPE.FLOAT;
+      return Relution.LiveData.DATA.TYPE.FLOAT;
     }
     if (_.isString(v)) {
-      return Bikini.DATA.TYPE.STRING;
+      return Relution.LiveData.DATA.TYPE.STRING;
     }
     if (_.isBoolean(v)) {
-      return Bikini.DATA.TYPE.BOOLEAN;
+      return Relution.LiveData.DATA.TYPE.BOOLEAN;
     }
     if (_.isArray(v)) {
-      return Bikini.DATA.TYPE.ARRAY;
+      return Relution.LiveData.DATA.TYPE.ARRAY;
     }
     if (_.isNull(v)) {
-      return Bikini.DATA.TYPE.NULL;
+      return Relution.LiveData.DATA.TYPE.NULL;
     }
-    if (_.isDate(v) || Bikini.Date.isPrototypeOf(v)) {
-      return Bikini.DATA.TYPE.DATE;
+    if (_.isDate(v) || Relution.LiveData.Date.isPrototypeOf(v)) {
+      return Relution.LiveData.DATA.TYPE.DATE;
     }
-    if (Bikini.ObjectID.prototype.isPrototypeOf(v)) {
-      return Bikini.DATA.TYPE.OBJECTID;
+    if (Relution.LiveData.ObjectID.prototype.isPrototypeOf(v)) {
+      return Relution.LiveData.DATA.TYPE.OBJECTID;
     }
     if (this.isBinary(v)) {
-      return Bikini.DATA.TYPE.BINARY;
+      return Relution.LiveData.DATA.TYPE.BINARY;
     }
-    return Bikini.DATA.TYPE.OBJECT;
+    return Relution.LiveData.DATA.TYPE.OBJECT;
   },
 
   /**
@@ -177,19 +177,19 @@ _.extend(Bikini.Field.prototype, Bikini.Object, {
    */
   typeOrder: function (type) {
     switch (type) {
-      case Bikini.DATA.TYPE.NULL   :
+      case Relution.LiveData.DATA.TYPE.NULL   :
         return 0;
-      case Bikini.DATA.TYPE.FLOAT  :
+      case Relution.LiveData.DATA.TYPE.FLOAT  :
         return 1;
-      case Bikini.DATA.TYPE.STRING :
+      case Relution.LiveData.DATA.TYPE.STRING :
         return 2;
-      case Bikini.DATA.TYPE.OBJECT :
+      case Relution.LiveData.DATA.TYPE.OBJECT :
         return 3;
-      case Bikini.DATA.TYPE.ARRAY  :
+      case Relution.LiveData.DATA.TYPE.ARRAY  :
         return 4;
-      case Bikini.DATA.TYPE.BINARY :
+      case Relution.LiveData.DATA.TYPE.BINARY :
         return 5;
-      case Bikini.DATA.TYPE.DATE   :
+      case Relution.LiveData.DATA.TYPE.DATE   :
         return 6;
     }
     return -1;
@@ -311,19 +311,19 @@ _.extend(Bikini.Field.prototype, Bikini.Object, {
       a = a.toHexString();
       b = b.toHexString();
     }
-    if (ta === Bikini.DATA.TYPE.DATE) {
+    if (ta === Relution.LiveData.DATA.TYPE.DATE) {
       // Convert to millis.
       ta = tb = 1;
       a = a.getTime();
       b = b.getTime();
     }
-    if (ta === Bikini.DATA.TYPE.FLOAT) {
+    if (ta === Relution.LiveData.DATA.TYPE.FLOAT) {
       return a - b;
     }
-    if (tb === Bikini.DATA.TYPE.STRING) {
+    if (tb === Relution.LiveData.DATA.TYPE.STRING) {
       return a < b ? -1 : (a === b ? 0 : 1);
     }
-    if (ta === Bikini.DATA.TYPE.OBJECT) {
+    if (ta === Relution.LiveData.DATA.TYPE.OBJECT) {
       // this could be much more efficient in the expected case ...
       var toArray = function (obj) {
         var ret = [];
@@ -335,7 +335,7 @@ _.extend(Bikini.Field.prototype, Bikini.Object, {
       };
       return this._cmp(toArray(a), toArray(b));
     }
-    if (ta === Bikini.DATA.TYPE.ARRAY) { // Array
+    if (ta === Relution.LiveData.DATA.TYPE.ARRAY) { // Array
       for (i = 0; ; i++) {
         if (i === a.length) {
           return (i === b.length) ? 0 : -1;
@@ -349,7 +349,7 @@ _.extend(Bikini.Field.prototype, Bikini.Object, {
         }
       }
     }
-    if (ta === Bikini.DATA.TYPE.BINARY) {
+    if (ta === Relution.LiveData.DATA.TYPE.BINARY) {
       if (a.length !== b.length) {
         return a.length - b.length;
       }
@@ -363,16 +363,16 @@ _.extend(Bikini.Field.prototype, Bikini.Object, {
       }
       return 0;
     }
-    if (ta === Bikini.DATA.TYPE.BOOLEAN) {
+    if (ta === Relution.LiveData.DATA.TYPE.BOOLEAN) {
       if (a) {
         return b ? 0 : 1;
       }
       return b ? -1 : 0;
     }
-    if (ta === Bikini.DATA.TYPE.NULL) {
+    if (ta === Relution.LiveData.DATA.TYPE.NULL) {
       return 0;
     }
-//        if( ta === Bikini.DATA.TYPE.REGEXP ) {
+//        if( ta === Relution.LiveData.DATA.TYPE.REGEXP ) {
 //            throw Error("Sorting not supported on regular expression");
 //        } // XXX
 //        if( ta === 13 ) // javascript code

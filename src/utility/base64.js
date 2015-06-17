@@ -3,20 +3,20 @@
 
 /**
  * This prototype defines decoding and encoding mechanisms based on the Base64 algorithm. You
- * normally don't call this object respectively its methods directly, but let Bikini.Cypher handle
+ * normally don't call this object respectively its methods directly, but let Relution.LiveData.Cypher handle
  * this.
- * @module Bikini.Base64
+ * @module Relution.LiveData.Base64
  *
- * @extends Bikini.Object
+ * @extends Relution.LiveData.Object
  */
-Bikini.Base64 = Bikini.Object.design(/** @scope Bikini.Base64.prototype */ {
+Relution.LiveData.Base64 = Relution.LiveData.Object.design(/** @scope Relution.LiveData.Base64.prototype */ {
 
   /**
    * The type of this object.
    *
    * @type String
    */
-  type: 'Bikini.Base64',
+  type: 'Relution.LiveData.Base64',
 
   /**
    * The key string for the base 64 decoding and encoding.
@@ -95,7 +95,7 @@ Bikini.Base64 = Bikini.Object.design(/** @scope Bikini.Base64.prototype */ {
     var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
     var i = 0;
 
-    input = Bikini.Cypher.utf8Encode(input);
+    input = Relution.LiveData.Cypher.utf8Encode(input);
 
     while (i < input.length) {
       chr1 = input.charCodeAt(i++);
@@ -181,7 +181,7 @@ Bikini.Base64 = Bikini.Object.design(/** @scope Bikini.Base64.prototype */ {
       }
     }
 
-    return Bikini.Cypher.utf8Decode(output);
+    return Relution.LiveData.Cypher.utf8Decode(output);
   }
 
 });

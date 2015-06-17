@@ -2,15 +2,15 @@
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
 
 /**
- * The Bikini.BikiniStore is used to connect a model collection to an
+ * The Relution.LiveData.BikiniStore is used to connect a model collection to an
  * bikini server.
  *
  * This will give you an online and offline store with live data updates.
  *
- * @module Bikini.BikiniStore
+ * @module Relution.LiveData.BikiniStore
  *
  * @type {*}
- * @extends Bikini.Store
+ * @extends Relution.LiveData.Store
  *
  * @example
  *
@@ -18,10 +18,10 @@
  * // and the offline change log to a local WebSql database, synchronize it
  * // trough REST calls with the server and receive live updates via a socket.io connection.
  *
- * var MyCollection = Bikini.Collection.extend({
+ * var MyCollection = Relution.LiveData.Collection.extend({
  *      model: MyModel,
  *      url: 'http://myBikiniServer.com:8200/bikini/myCollection',
- *      store: new Bikini.BikiniStore( {
+ *      store: new Relution.LiveData.BikiniStore( {
  *          useLocalStore:   true, // (default) store the data for offline use
  *          useSocketNotify: true, // (default) register at the server for live updates
  *          useOfflineChanges: true // (default) allow changes to the offline data
@@ -30,9 +30,9 @@
  *
  */
 
-Bikini.BikiniStore = Bikini.Store.extend({
+Relution.LiveData.BikiniStore = Relution.LiveData.Store.extend({
 
-  _type: 'Bikini.BikiniStore',
+  _type: 'Relution.LiveData.BikiniStore',
 
   _selector: null,
 
@@ -40,7 +40,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
 
   options: null,
 
-  localStore: Bikini.WebSqlStore,
+  localStore: Relution.LiveData.WebSqlStore,
 
   useLocalStore: true,
   useSocketNotify: true,
@@ -52,7 +52,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
   },
 
   initialize: function (options) {
-    Bikini.Store.prototype.initialize.apply(this, arguments);
+    Relution.LiveData.Store.prototype.initialize.apply(this, arguments);
     this.options = this.options || {};
 
     this.options.useLocalStore = this.useLocalStore;
@@ -69,7 +69,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
   },
 
   initCollection: function (collection) {
-    console.log('Bikini.BikiniStore.initCollection');
+    console.log('Relution.LiveData.BikiniStore.initCollection');
     var url = collection.getUrlRoot();
     if (url.charAt(url.length - 1) !== '/') {
       url += '/';
@@ -77,7 +77,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
     var entity = this.getEntity(collection.entity);
     if (url && entity) {
       var name = entity.name;
-      var hash = Bikini.URLUtil.hashLocation(url);
+      var hash = Relution.LiveData.URLUtil.hashLocation(url);
       var credentials = entity.credentials || collection.credentials;
       var user = credentials && credentials.username ? credentials.username : '';
       var channel = name + user + hash;
@@ -86,7 +86,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
       // get or create endpoint for this url
       var endpoint = this.endpoints[hash];
       if (!endpoint) {
-        var href = Bikini.URLUtil.getLocation(url);
+        var href = Relution.LiveData.URLUtil.getLocation(url);
         endpoint = {};
         endpoint.isConnected = false;
         endpoint.baseUrl = url;
@@ -114,7 +114,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
 
   getEndpoint: function (url) {
     if (url) {
-      var hash = Bikini.URLUtil.hashLocation(url);
+      var hash = Relution.LiveData.URLUtil.hashLocation(url);
       return this.endpoints[hash];
     }
   },
@@ -122,7 +122,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
   createLocalStore: function (endpoint) {
     if (this.options.useLocalStore) {
       var entities = {};
-      entities[endpoint.entity.name] = _.extend(new Bikini.Entity(endpoint.entity), {
+      entities[endpoint.entity.name] = _.extend(new Relution.LiveData.Entity(endpoint.entity), {
         name: endpoint.channel
       });
       return this.options.localStore.create({
@@ -140,11 +140,11 @@ Bikini.BikiniStore = Bikini.Store.extend({
     if (this.options.useOfflineChanges) {
       var entity = 'msg-' + endpoint.channel;
       var entities = {};
-      entities[entity] = new Bikini.Entity({
+      entities[entity] = new Relution.LiveData.Entity({
         name: entity,
         idAttribute: 'id'
       });
-      var messages = Bikini.Collection.design({
+      var messages = Relution.LiveData.Collection.design({
         entity: entity,
         store: this.options.localStore.create({
           entities: entities
@@ -158,12 +158,12 @@ Bikini.BikiniStore = Bikini.Store.extend({
   },
 
   createSocket: function (endpoint, name) {
-    console.log('Bikini.BikiniStore.createSocket');
+    console.log('Relution.LiveData.BikiniStore.createSocket');
     if (this.options.useSocketNotify && endpoint && endpoint.socketPath) {
       var that = this;
       var url = endpoint.host;
       var path = endpoint.path;
-      var href = Bikini.URLUtil.getLocation(url);
+      var href = Relution.LiveData.URLUtil.getLocation(url);
       if (href.port === '') {
         if (href.protocol === 'https:') {
           url += ':443';
@@ -197,7 +197,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
   },
 
   _bindChannel: function (endpoint, name) {
-    console.log('Bikini.BikiniStore._bindChannel');
+    console.log('Relution.LiveData.BikiniStore._bindChannel');
     var that = this;
     if (endpoint && endpoint.socket) {
       var channel = endpoint.channel;
@@ -284,7 +284,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
         store: endpoint.localStore,
         entity: endpoint.entity
       }, that.options);
-      var model = new Bikini.Model(msg.data, options);
+      var model = new Relution.LiveData.Model(msg.data, options);
       return endpoint.localStore.sync(msg.method, model, _.extend(options, {
         merge: msg.method === 'patch',
         success: function (result) {
@@ -353,15 +353,15 @@ Bikini.BikiniStore = Bikini.Store.extend({
   },
 
   sync: function (method, model, options) {
-    console.log('Bikini.BikiniStore.sync');
+    console.log('Relution.LiveData.BikiniStore.sync');
     options = options || {};
     var endpoint = this.getEndpoint(model.getUrlRoot());
     if (!endpoint) {
       return;
     }
 
-    if (Bikini.isModel(model) && !model.id) {
-      model.set(model.idAttribute, new Bikini.ObjectID().toHexString());
+    if (Relution.LiveData.isModel(model) && !model.id) {
+      model.set(model.idAttribute, new Relution.LiveData.ObjectID().toHexString());
     }
 
     var channel = endpoint.channel;
@@ -446,7 +446,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
   _emitMessage: function (endpoint, msg, options, model, qMessage) {
     var channel = endpoint.channel;
     var that = this;
-    var url = Bikini.isModel(model) || msg.method !== 'read' ? endpoint.baseUrl : endpoint.readUrl;
+    var url = Relution.LiveData.isModel(model) || msg.method !== 'read' ? endpoint.baseUrl : endpoint.readUrl;
     if (msg.id && msg.method !== 'create') {
       url += (url.charAt(url.length - 1) === '/' ? '' : '/' ) + msg.id;
     }
@@ -491,7 +491,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
   _ajaxMessage: function (endpoint, msg, options, model) {
     var channel = endpoint.channel;
     var that = this;
-    var url = Bikini.isModel(model) || msg.method !== 'read' ? endpoint.baseUrl : endpoint.readUrl;
+    var url = Relution.LiveData.isModel(model) || msg.method !== 'read' ? endpoint.baseUrl : endpoint.readUrl;
     if (msg.id && msg.method !== 'create') {
       url += (url.charAt(url.length - 1) === '/' ? '' : '/' ) + msg.id;
     }
@@ -516,7 +516,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
           promises.push(that.onMessageStore(endpoint, data === msg.data ? msg : _.defaults({
             data: data
           }, msg)));
-        } else if (Bikini.isCollection(model) && _.isArray(data)) {
+        } else if (Relution.LiveData.isCollection(model) && _.isArray(data)) {
           // synchronize the collection contents with the data read
           var ids = {};
           model.models.forEach(function (m) {
@@ -586,7 +586,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
     var channel = endpoint ? endpoint.channel : '';
     var time = that.getLastMessageTime(channel);
     if (endpoint && endpoint.baseUrl && channel && time) {
-      var changes = new Bikini.Collection();
+      var changes = new Relution.LiveData.Collection();
       return changes.fetch({
         url: endpoint.baseUrl + 'changes/' + time,
         success: function (a, b, response) {
@@ -606,7 +606,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
   fetchServerInfo: function (endpoint) {
     var that = this;
     if (endpoint && endpoint.baseUrl) {
-      var info = new Bikini.Model();
+      var info = new Relution.LiveData.Model();
       var time = that.getLastMessageTime(endpoint.channel);
       var url = endpoint.baseUrl;
       if (url.charAt((url.length - 1)) !== '/') {
@@ -656,7 +656,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
         entity: endpoint.entity,
         error: that.options.error
       };
-      var model = new Bikini.Model(msg.data, options);
+      var model = new Relution.LiveData.Model(msg.data, options);
       return that._applyResponse(that._ajaxMessage(endpoint, msg, options, model), endpoint, msg, options, model).catch(function (error) {
         // failed, eventually undo the modifications stored
         if (!endpoint.localStore) {

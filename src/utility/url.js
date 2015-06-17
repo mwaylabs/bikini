@@ -5,12 +5,12 @@
 
 /**
  *
- * @module Bikini.URLUtil
+ * @module Relution.LiveData.URLUtil
  *
  * @type {*}
- * @extends Bikini.Object
+ * @extends Relution.LiveData.Object
  */
-Bikini.URLUtil = Bikini.Object.design({
+Relution.LiveData.URLUtil = Relution.LiveData.Object.design({
   /*
    url = "http://example.com:3000/pathname/?search=test#hash";
 

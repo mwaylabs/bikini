@@ -3,14 +3,14 @@
 
 /**
  *
- * @module Bikini.SqlSelector
+ * @module Relution.LiveData.SqlSelector
  *
  * @type {*}
- * @extends Bikini.DataSelector
+ * @extends Relution.LiveData.DataSelector
  */
-Bikini.SqlSelector = Bikini.DataSelector.design({
+Relution.LiveData.SqlSelector = Relution.LiveData.DataSelector.design({
 
-  _type: 'Bikini.SqlSelector',
+  _type: 'Relution.LiveData.SqlSelector',
 
   _selector: null,
   _query: null,
@@ -55,7 +55,7 @@ Bikini.SqlSelector = Bikini.DataSelector.design({
     }
 
     // Top level can't be an array or true or binary.
-    if (_.isBoolean(selector) || _.isArray(selector) || Bikini.DataField.isBinary(selector)) {
+    if (_.isBoolean(selector) || _.isArray(selector) || Relution.LiveData.DataField.isBinary(selector)) {
       throw new Error('Invalid selector: ' + selector);
     }
 

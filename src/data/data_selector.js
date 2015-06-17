@@ -1,21 +1,21 @@
 // Copyright (c) 2013 M-Way Solutions GmbH
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
 
-// Bikini.DataSelector uses code from meteor.js
+// Relution.LiveData.DataSelector uses code from meteor.js
 // https://github.com/meteor/meteor/tree/master/packages/minimongo
 //
 // Thanks for sharing!
 
 /**
  *
- * @module Bikini.DataSelector
+ * @module Relution.LiveData.DataSelector
  *
  * @type {*}
- * @extends Bikini.Object
+ * @extends Relution.LiveData.Object
  */
-Bikini.DataSelector = Bikini.Object.design({
+Relution.LiveData.DataSelector = Relution.LiveData.Object.design({
 
-  _type: 'Bikini.DataSelector',
+  _type: 'Relution.LiveData.DataSelector',
 
   _selector: null,
 
@@ -66,7 +66,7 @@ Bikini.DataSelector = Bikini.Object.design({
     if (this._selectorIsId(selector)) {
       return function (record) {
         var id = _.isFunction(record.getId) ? record.getId() : (record._id || record.id);
-        return Bikini.Field.prototype.equals(id, selector);
+        return Relution.LiveData.Field.prototype.equals(id, selector);
       };
     }
 
@@ -80,7 +80,7 @@ Bikini.DataSelector = Bikini.Object.design({
     }
 
     // Top level can't be an array or true or binary.
-    if (_.isBoolean(selector) || _.isArray(selector) || Bikini.Field.prototype.isBinary(selector)) {
+    if (_.isBoolean(selector) || _.isArray(selector) || Relution.LiveData.Field.prototype.isBinary(selector)) {
       throw new Error('Invalid selector: ' + selector);
     }
 
@@ -89,7 +89,7 @@ Bikini.DataSelector = Bikini.Object.design({
 
   // The main compilation function for a given selector.
   compileDocSelector: function (docSelector) {
-    var that = Bikini.DataSelector;
+    var that = Relution.LiveData.DataSelector;
     var perKeySelectors = [];
     _.each(docSelector, function (subSelector, key) {
       if (key.substr(0, 1) === '$') {
@@ -121,7 +121,7 @@ Bikini.DataSelector = Bikini.Object.design({
   },
 
   compileValueSelector: function (valueSelector) {
-    var that = Bikini.DataSelector;
+    var that = Relution.LiveData.DataSelector;
     if (valueSelector === null) {  // undefined or null
       return function (value) {
         return that._anyIfArray(value, function (x) {
@@ -270,11 +270,11 @@ Bikini.DataSelector = Bikini.Object.design({
 
   // deep equality test: use for literal document and array matches
   _equal: function (a, b) {
-    return Bikini.Field.prototype._equals(a, b, true);
+    return Relution.LiveData.Field.prototype._equals(a, b, true);
   },
 
   _cmp: function (a, b) {
-    return Bikini.Field.prototype._cmp(a, b);
+    return Relution.LiveData.Field.prototype._cmp(a, b);
   },
 
   LOGICAL_OPERATORS: {
@@ -282,7 +282,7 @@ Bikini.DataSelector = Bikini.Object.design({
       if (!_.isArray(subSelector) || _.isEmpty(subSelector)) {
         throw new Error('$and/$or/$nor must be nonempty array');
       }
-      var subSelectorFunctions = _.map(subSelector, Bikini.DataSelector.compileDocSelector);
+      var subSelectorFunctions = _.map(subSelector, Relution.LiveData.DataSelector.compileDocSelector);
       return function (doc) {
         return _.all(subSelectorFunctions, function (f) {
           return f(doc);
@@ -294,7 +294,7 @@ Bikini.DataSelector = Bikini.Object.design({
       if (!_.isArray(subSelector) || _.isEmpty(subSelector)) {
         throw new Error('$and/$or/$nor must be nonempty array');
       }
-      var subSelectorFunctions = _.map(subSelector, Bikini.DataSelector.compileDocSelector);
+      var subSelectorFunctions = _.map(subSelector, Relution.LiveData.DataSelector.compileDocSelector);
       return function (doc) {
         return _.any(subSelectorFunctions, function (f) {
           return f(doc);
@@ -306,7 +306,7 @@ Bikini.DataSelector = Bikini.Object.design({
       if (!_.isArray(subSelector) || _.isEmpty(subSelector)) {
         throw new Error('$and/$or/$nor must be nonempty array');
       }
-      var subSelectorFunctions = _.map(subSelector, Bikini.DataSelector.compileDocSelector);
+      var subSelectorFunctions = _.map(subSelector, Relution.LiveData.DataSelector.compileDocSelector);
       return function (doc) {
         return _.all(subSelectorFunctions, function (f) {
           return !f(doc);
@@ -333,9 +333,9 @@ Bikini.DataSelector = Bikini.Object.design({
         throw new Error('Argument to $in must be array');
       }
       return function (value) {
-        return Bikini.DataSelector._anyIfArrayPlus(value, function (x) {
+        return Relution.LiveData.DataSelector._anyIfArrayPlus(value, function (x) {
           return _.any(operand, function (operandElt) {
-            return Bikini.DataSelector._equal(operandElt, x);
+            return Relution.LiveData.DataSelector._equal(operandElt, x);
           });
         });
       };
@@ -351,7 +351,7 @@ Bikini.DataSelector = Bikini.Object.design({
         }
         return _.all(operand, function (operandElt) {
           return _.any(value, function (valueElt) {
-            return Bikini.DataSelector._equal(operandElt, valueElt);
+            return Relution.LiveData.DataSelector._equal(operandElt, valueElt);
           });
         });
       };
@@ -359,40 +359,40 @@ Bikini.DataSelector = Bikini.Object.design({
 
     '$lt': function (operand) {
       return function (value) {
-        return Bikini.DataSelector._anyIfArray(value, function (x) {
-          return Bikini.DataSelector._cmp(x, operand) < 0;
+        return Relution.LiveData.DataSelector._anyIfArray(value, function (x) {
+          return Relution.LiveData.DataSelector._cmp(x, operand) < 0;
         });
       };
     },
 
     '$lte': function (operand) {
       return function (value) {
-        return Bikini.DataSelector._anyIfArray(value, function (x) {
-          return Bikini.DataSelector._cmp(x, operand) <= 0;
+        return Relution.LiveData.DataSelector._anyIfArray(value, function (x) {
+          return Relution.LiveData.DataSelector._cmp(x, operand) <= 0;
         });
       };
     },
 
     '$gt': function (operand) {
       return function (value) {
-        return Bikini.DataSelector._anyIfArray(value, function (x) {
-          return Bikini.DataSelector._cmp(x, operand) > 0;
+        return Relution.LiveData.DataSelector._anyIfArray(value, function (x) {
+          return Relution.LiveData.DataSelector._cmp(x, operand) > 0;
         });
       };
     },
 
     '$gte': function (operand) {
       return function (value) {
-        return Bikini.DataSelector._anyIfArray(value, function (x) {
-          return Bikini.DataSelector._cmp(x, operand) >= 0;
+        return Relution.LiveData.DataSelector._anyIfArray(value, function (x) {
+          return Relution.LiveData.DataSelector._cmp(x, operand) >= 0;
         });
       };
     },
 
     '$ne': function (operand) {
       return function (value) {
-        return !Bikini.DataSelector._anyIfArrayPlus(value, function (x) {
-          return Bikini.DataSelector._equal(x, operand);
+        return !Relution.LiveData.DataSelector._anyIfArrayPlus(value, function (x) {
+          return Relution.LiveData.DataSelector._equal(x, operand);
         });
       };
     },
@@ -419,7 +419,7 @@ Bikini.DataSelector = Bikini.Object.design({
     '$mod': function (operand) {
       var divisor = operand[0], remainder = operand[1];
       return function (value) {
-        return Bikini.DataSelector._anyIfArray(value, function (x) {
+        return Relution.LiveData.DataSelector._anyIfArray(value, function (x) {
           return x % divisor === remainder;
         });
       };
@@ -437,8 +437,8 @@ Bikini.DataSelector = Bikini.Object.design({
         if (_.isUndefined(value)) {
           return false;
         }
-        return Bikini.DataSelector._anyIfArray(value, function (x) {
-          return Bikini.Field.prototype.detectType(x) === operand;
+        return Relution.LiveData.DataSelector._anyIfArray(value, function (x) {
+          return Relution.LiveData.Field.prototype.detectType(x) === operand;
         });
       };
     },
@@ -466,7 +466,7 @@ Bikini.DataSelector = Bikini.Object.design({
         if (_.isUndefined(value)) {
           return false;
         }
-        return Bikini.DataSelector._anyIfArray(value, function (x) {
+        return Relution.LiveData.DataSelector._anyIfArray(value, function (x) {
           return operand.test(x);
         });
       };
@@ -480,7 +480,7 @@ Bikini.DataSelector = Bikini.Object.design({
     },
 
     '$elemMatch': function (operand) {
-      var matcher = Bikini.DataSelector.compileDocSelector(operand);
+      var matcher = Relution.LiveData.DataSelector.compileDocSelector(operand);
       return function (value) {
         if (!_.isArray(value)) {
           return false;
@@ -492,7 +492,7 @@ Bikini.DataSelector = Bikini.Object.design({
     },
 
     '$not': function (operand) {
-      var matcher = Bikini.DataSelector.compileDocSelector(operand);
+      var matcher = Relution.LiveData.DataSelector.compileDocSelector(operand);
       return function (value) {
         return !matcher(value);
       };
@@ -577,7 +577,7 @@ Bikini.DataSelector = Bikini.Object.design({
             // Compare the value we found to the value we found so far, saving it
             // if it's less (for an ascending sort) or more (for a descending
             // sort).
-            var cmp = Bikini.DataSelector._cmp(reduced, value);
+            var cmp = Relution.LiveData.DataSelector._cmp(reduced, value);
             if ((findMin && cmp > 0) || (!findMin && cmp < 0)) {
               reduced = value;
             }
@@ -594,7 +594,7 @@ Bikini.DataSelector = Bikini.Object.design({
         var specPart = sortSpecParts[i];
         var aValue = reduceValue(specPart.lookup(a), specPart.ascending);
         var bValue = reduceValue(specPart.lookup(b), specPart.ascending);
-        var compare = Bikini.DataSelector._cmp(aValue, bValue);
+        var compare = Relution.LiveData.DataSelector._cmp(aValue, bValue);
         if (compare !== 0) {
           return specPart.ascending ? compare : -compare;
         }

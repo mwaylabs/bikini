@@ -4,23 +4,23 @@
 /**
  * Base class to build a custom data store.
  *
- * See: Bikini.LocalStorageStore, Bikini.WebSqlStore and Bikini.BikiniStore
+ * See: Relution.LiveData.LocalStorageStore, Relution.LiveData.WebSqlStore and Relution.LiveData.BikiniStore
  *
- * @module Bikini.Store
+ * @module Relution.LiveData.Store
  *
  */
-Bikini.Store = function () {
+Relution.LiveData.Store = function () {
   this.initialize.apply(this, arguments);
 };
 
-Bikini.Store.extend = Bikini.extend;
-Bikini.Store.create = Bikini.create;
-Bikini.Store.design = Bikini.design;
+Relution.LiveData.Store.extend = Relution.LiveData.extend;
+Relution.LiveData.Store.create = Relution.LiveData.create;
+Relution.LiveData.Store.design = Relution.LiveData.design;
 
 // Attach all inheritable methods to the Connector prototype.
-_.extend(Bikini.Store.prototype, Backbone.Events, Bikini.Object, {
+_.extend(Relution.LiveData.Store.prototype, Backbone.Events, Relution.LiveData.Object, {
 
-  _type: 'Bikini.Store',
+  _type: 'Relution.LiveData.Store',
 
   entities: null,
 
@@ -30,9 +30,9 @@ _.extend(Bikini.Store.prototype, Backbone.Events, Bikini.Object, {
 
   typeMapping: (function () {
     var map = {};
-    map [Bikini.DATA.TYPE.OBJECTID] = Bikini.DATA.TYPE.STRING;
-    map [Bikini.DATA.TYPE.DATE] = Bikini.DATA.TYPE.STRING;
-    map [Bikini.DATA.TYPE.BINARY] = Bikini.DATA.TYPE.TEXT;
+    map [Relution.LiveData.DATA.TYPE.OBJECTID] = Relution.LiveData.DATA.TYPE.STRING;
+    map [Relution.LiveData.DATA.TYPE.DATE] = Relution.LiveData.DATA.TYPE.STRING;
+    map [Relution.LiveData.DATA.TYPE.BINARY] = Relution.LiveData.DATA.TYPE.TEXT;
     return map;
   })(),
 
@@ -50,14 +50,14 @@ _.extend(Bikini.Store.prototype, Backbone.Events, Bikini.Object, {
   _setEntities: function (entities) {
     this.entities = {};
     for (var name in entities) {
-      var entity = Bikini.Entity.from(entities[name], {
+      var entity = Relution.LiveData.Entity.from(entities[name], {
         store: this,
         typeMapping: this.options.typeMapping
       });
       entity.name = entity.name || name;
 
       // connect collection and model to this store
-      var collection = entity.collection || Bikini.Collection.extend({model: Bikini.Model.extend({})});
+      var collection = entity.collection || Relution.LiveData.Collection.extend({model: Relution.LiveData.Model.extend({})});
       var model = collection.prototype.model;
       // set new entity and name
       collection.prototype.entity = model.prototype.entity = name;
@@ -82,7 +82,7 @@ _.extend(Bikini.Store.prototype, Backbone.Events, Bikini.Object, {
       entity = this.entities[entity];
     }
     if (entity && entity.collection) {
-      if (Bikini.Collection.prototype.isPrototypeOf(entity.collection)) {
+      if (Relution.LiveData.Collection.prototype.isPrototypeOf(entity.collection)) {
         return entity.collection;
       } else {
         return new entity.collection();
@@ -105,7 +105,7 @@ _.extend(Bikini.Store.prototype, Backbone.Events, Bikini.Object, {
   getArray: function (data) {
     if (_.isArray(data)) {
       return data;
-    } else if (Bikini.isCollection(data)) {
+    } else if (Relution.LiveData.isCollection(data)) {
       return data.models;
     }
     return _.isObject(data) ? [data] : [];
@@ -202,8 +202,8 @@ _.extend(Bikini.Store.prototype, Backbone.Events, Bikini.Object, {
   },
 
   _checkEntity: function (obj, entity) {
-    if (!Bikini.isEntity(entity)) {
-      var error = Bikini.Store.CONST.ERROR_NO_ENTITY;
+    if (!Relution.LiveData.isEntity(entity)) {
+      var error = Relution.LiveData.Store.CONST.ERROR_NO_ENTITY;
       console.error(error);
       this.handleCallback(obj.error, error);
       this.handleCallback(obj.finish, error);
@@ -214,7 +214,7 @@ _.extend(Bikini.Store.prototype, Backbone.Events, Bikini.Object, {
 
   _checkData: function (obj, data) {
     if ((!_.isArray(data) || data.length === 0) && !_.isObject(data)) {
-      var error = Bikini.Store.CONST.ERROR_NO_DATA;
+      var error = Relution.LiveData.Store.CONST.ERROR_NO_DATA;
       console.error(error);
       this.handleCallback(obj.error, error);
       this.handleCallback(obj.finish, error);
