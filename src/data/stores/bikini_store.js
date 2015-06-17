@@ -347,8 +347,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
   sync: function (method, model, options) {
     console.log('Bikini.BikiniStore.sync');
     options = options || {};
-    var that = options.store || this.store;
-    var endpoint = that && that.getEndpoint(this.getUrlRoot());
+    var endpoint = this.getEndpoint(model.getUrlRoot());
     if (!endpoint) {
       return;
     }
@@ -358,7 +357,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
     }
 
     var channel = endpoint.channel;
-    var time = that.getLastMessageTime(channel);
+    var time = this.getLastMessageTime(channel);
     // only send read messages if no other store can do this or for initial load
     if (method === 'read' && endpoint.localStore && time && !options.reset) {
       // read data from localStore and fetch changes remote
@@ -367,7 +366,8 @@ Bikini.BikiniStore = Bikini.Store.extend({
       opts.entity = endpoint.entity;
       delete opts.success;
       delete opts.error;
-      return endpoint.localStore.sync.call(this, method, model, opts).then(function (resp) {
+      var that = this;
+      return endpoint.localStore.sync(method, model, opts).then(function (resp) {
         // load changes only (will happen AFTER success callback is invoked,
         // but returned promise will resolve only after changes were processed.
         // This is because backbone success callback alters the collection...
@@ -381,7 +381,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
     }
 
     // do backbone rest
-    return that._addMessage(method, model, options, endpoint);
+    return this._addMessage(method, model, options, endpoint);
   },
 
   _addMessage: function (method, model, options, endpoint) {
@@ -487,7 +487,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
     if (msg.id && msg.method !== 'create') {
       url += (url.charAt(url.length - 1) === '/' ? '' : '/' ) + msg.id;
     }
-    return model.sync.call(model, msg.method, model, {
+    return model.sync(msg.method, model, {
       // must not take arbitrary options as these won't be replayed on reconnect
       url: url,
       attrs: msg.data,
@@ -578,7 +578,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
     var channel = endpoint ? endpoint.channel : '';
     var time = that.getLastMessageTime(channel);
     if (endpoint && endpoint.baseUrl && channel && time) {
-      var changes = new Bikini.Collection({});
+      var changes = new Bikini.Collection();
       return changes.fetch({
         url: endpoint.baseUrl + 'changes/' + time,
         success: function (a, b, response) {

@@ -99,26 +99,29 @@ Bikini.WebSqlStore = Bikini.Store.extend({
   },
 
   sync: function (method, model, options) {
-    var that = options.store || this.store;
-    var models = Bikini.isCollection(model) ? model.models : [model];
-    var q = new Q.defer();
+    options = options || {};
+    var that = this;
+    var q = Q.defer();
     var opts = _.extend({
-      entity: this.entity
+      entity: model.entity || options.entity || this.entity
     }, options || {}, {
       success: function (response) {
-        if (options && options.success) {
-          options.success.apply(this, arguments);
-        }
-        q.resolve(response);
+        var result = that.handleSuccess(options, response) || response;
+        q.resolve(result);
+        return result;
       },
       error: function (error) {
-        if (options && options.error) {
-          options.error.apply(this, arguments);
+        var result = that.handleError(options, error);
+        if (result) {
+          q.resolve(result);
+          return result;
+        } else {
+          q.reject(error);
         }
-        q.reject(error);
       }
     });
 
+    var models = Bikini.isCollection(model) ? model.models : [model];
     switch (method) {
       case 'create':
         that._checkTable(opts, function () {
@@ -138,9 +141,8 @@ Bikini.WebSqlStore = Bikini.Store.extend({
         break;
 
       case 'read':
-        var self = this;
         that._checkTable(opts, function () {
-          that._select(self, opts);
+          that._select(model, opts);
         });
         break;
 
@@ -490,17 +492,14 @@ Bikini.WebSqlStore = Bikini.Store.extend({
     }
   },
 
-  _select: function (result, options) {
-
+  _select: function (model, options) {
     var entity = this.getEntity(options);
-
     if (this._checkDb(options) && this._checkEntity(options, entity)) {
       var lastStatement;
-      var isCollection = Bikini.isCollection(result);
+      var isCollection = !Bikini.isModel(model);
+      var result;
       if (isCollection) {
         result = [];
-      } else {
-        options.models = [result];
       }
       var stm = this._sqlSelect(options, entity);
       var that = this;
@@ -542,7 +541,11 @@ Bikini.WebSqlStore = Bikini.Store.extend({
         console.error('WebSql Syntax Error: ' + sqlError.message);
         that.handleError(options, sqlError.message, lastStatement);
       }, function () { // voidCallback (success)
-        that.handleSuccess(options, result);
+        if (result) {
+          that.handleSuccess(options, result);
+        } else {
+          that.handleError(options, 'no result');
+        }
       });
     }
   },

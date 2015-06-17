@@ -29,10 +29,10 @@ Bikini.LocalStorageStore = Bikini.Store.extend({
 
   sync: function (method, model, options) {
     options = options || {};
-    var that = options.store || this.store;
+    var that = this;
     var entity = that.getEntity(model.entity || options.entity || this.entity);
     var attrs;
-    if (that && entity && model) {
+    if (entity && model) {
       var id = model.id || (method === 'create' ? new Bikini.ObjectID().toHexString() : null);
       attrs = options.attrs || model.toJSON(options);
       switch (method) {
@@ -68,11 +68,14 @@ Bikini.LocalStorageStore = Bikini.Store.extend({
           return;
       }
     }
-    if (attrs) {
-      that.handleSuccess(options, attrs);
-    } else {
-      that.handleError(options, Bikini.Store.CONST.ERROR_NO_ENTITY);
-    }
+
+    return Q.resolve(function () {
+      if (attrs) {
+        return that.handleSuccess(options, attrs) || attrs;
+      } else {
+        return that.handleError(options, Bikini.Store.CONST.ERROR_NO_ENTITY) || Q.reject(Bikini.Store.CONST.ERROR_NO_ENTITY);
+      }
+    });
   },
 
   drop: function (options) {
