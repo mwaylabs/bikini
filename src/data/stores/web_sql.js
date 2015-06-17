@@ -500,6 +500,8 @@ Relution.LiveData.WebSqlStore = Relution.LiveData.Store.extend({
       var result;
       if (isCollection) {
         result = [];
+      } else {
+        options.models = [model];
       }
       var stm = this._sqlSelect(options, entity);
       var that = this;
