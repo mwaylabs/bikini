@@ -2,7 +2,7 @@
 
 (function (global, Backbone, _, $) {
 
-  // @include ./core/bikini.js
+  // @include ./core/livedata.js
 
   // @include ./utility/objectid.js
   // @include ./utility/uuid.js
