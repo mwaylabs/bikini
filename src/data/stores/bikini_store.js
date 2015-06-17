@@ -117,14 +117,13 @@ Bikini.BikiniStore = Bikini.Store.extend({
     }
   },
 
-  createLocalStore: function (endpoint, idAttribute) {
+  createLocalStore: function (endpoint) {
     console.log('Bikini.BikiniStore.createLocalStore');
     if (this.options.useLocalStore && endpoint) {
       var entities = {};
-      entities[endpoint.entity.name] = {
-        name: endpoint.channel,
-        idAttribute: idAttribute
-      };
+      entities[endpoint.entity.name] = _.extend(new Bikini.Entity(endpoint.entity), {
+        name: endpoint.channel
+      });
       return this.options.localStore.create({
         entities: entities
       });
@@ -140,10 +139,10 @@ Bikini.BikiniStore = Bikini.Store.extend({
     if (this.options.useOfflineChanges && endpoint) {
       var entity = 'msg-' + endpoint.channel;
       var entities = {};
-      entities[entity] = {
+      entities[entity] = new Bikini.Entity({
         name: entity,
         idAttribute: 'id'
-      };
+      });
       var messages = Bikini.Collection.design({
         url: endpoint.url,
         entity: entity,
