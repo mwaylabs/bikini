@@ -110,7 +110,6 @@ Bikini.BikiniStore = Bikini.Store.extend({
   },
 
   getEndpoint: function (url) {
-    console.log('Bikini.BikiniStore.getEndpoint');
     if (url) {
       var hash = Bikini.URLUtil.hashLocation(url);
       return this.endpoints[hash];
@@ -118,7 +117,6 @@ Bikini.BikiniStore = Bikini.Store.extend({
   },
 
   createLocalStore: function (endpoint) {
-    console.log('Bikini.BikiniStore.createLocalStore');
     if (this.options.useLocalStore && endpoint) {
       var entities = {};
       entities[endpoint.entity.name] = _.extend(new Bikini.Entity(endpoint.entity), {
