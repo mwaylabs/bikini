@@ -1,43 +1,43 @@
-describe('Bikini.Model', function() {
+describe('Relution.LiveData.Model', function() {
 
     var TEST = {};
 
     it('basic', function () {
-        assert.isDefined(Bikini.Model);
-        assert.isDefined(Bikini.Model.design);
-        assert.isDefined(Bikini.Model.create);
-        assert.isDefined(Bikini.Model.extend);
+        assert.isDefined(Relution.LiveData.Model);
+        assert.isDefined(Relution.LiveData.Model.design);
+        assert.isDefined(Relution.LiveData.Model.create);
+        assert.isDefined(Relution.LiveData.Model.extend);
 
-        assert.isFunction(Bikini.Model.design);
-        assert.isFunction(Bikini.Model.create);
-        assert.isFunction(Bikini.Model.extend);
+        assert.isFunction(Relution.LiveData.Model.design);
+        assert.isFunction(Relution.LiveData.Model.create);
+        assert.isFunction(Relution.LiveData.Model.extend);
 
-        var instance = Bikini.Model.create();
+        var instance = Relution.LiveData.Model.create();
         assert.isDefined(instance);
         assert.isObject(instance);
         assert.isDefined(instance._type);
         assert.isString(instance._type);
-        assert.equal(instance._type, 'Bikini.Model');
+        assert.equal(instance._type, 'Relution.LiveData.Model');
     });
 
     it ('creating model', function() {
         
-        assert.typeOf(Bikini.Model, 'function', 'Bikini.Model is defined.');
+        assert.typeOf(Relution.LiveData.Model, 'function', 'Relution.LiveData.Model is defined.');
 
-        var Person = Bikini.Model.extend({
+        var Person = Relution.LiveData.Model.extend({
             idAttribute: 'id',
             defaults: { bmi: 0.0 },
             entity: {
                 name:   'person',
                 fields:  {
-                    id:          { type: Bikini.DATA.TYPE.INTEGER, required: true },
-                    firstName:   { type: Bikini.DATA.TYPE.STRING,  length: 200 },
-                    sureName:    { type: Bikini.DATA.TYPE.STRING,  required: true, index: true },
-                    birthDate:   { type: Bikini.DATA.TYPE.DATE   },
-                    bmi:         { type: Bikini.DATA.TYPE.FLOAT },
-                    notes:       { type: Bikini.DATA.TYPE.TEXT   },
-                    address:     { type: Bikini.DATA.TYPE.OBJECT },
-                    displayName: { type: Bikini.DATA.TYPE.STRING, persistent: false }
+                    id:          { type: Relution.LiveData.DATA.TYPE.INTEGER, required: true },
+                    firstName:   { type: Relution.LiveData.DATA.TYPE.STRING,  length: 200 },
+                    sureName:    { type: Relution.LiveData.DATA.TYPE.STRING,  required: true, index: true },
+                    birthDate:   { type: Relution.LiveData.DATA.TYPE.DATE   },
+                    bmi:         { type: Relution.LiveData.DATA.TYPE.FLOAT },
+                    notes:       { type: Relution.LiveData.DATA.TYPE.TEXT   },
+                    address:     { type: Relution.LiveData.DATA.TYPE.OBJECT },
+                    displayName: { type: Relution.LiveData.DATA.TYPE.STRING, persistent: false }
                 }
             }
         });
@@ -51,7 +51,7 @@ describe('Bikini.Model', function() {
         var p = Person.create({
             firstName: 'Max',
             sureName: 'Mustermann',
-            birthDate: Bikini.Date.create('01.02.2003'),
+            birthDate: Relution.LiveData.Date.create('01.02.2003'),
             notes: 'Notes to this person',
             address: { street: 'Leitzstraße', house_nr: 45, zip: '70469', city: 'Stuttgart' }
         });

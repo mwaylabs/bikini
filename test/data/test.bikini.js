@@ -1,4 +1,4 @@
-describe('Bikini.BikiniStore', function() {
+describe('Relution.LiveData.SyncStore', function() {
 
     var TEST = {
         data : {
@@ -8,13 +8,13 @@ describe('Bikini.BikiniStore', function() {
         }
     };
 
-    it('creating bikini store', function() {
+    it('creating store', function() {
 
         assert.isString(serverUrl, 'Server url is defined.');
 
-        assert.isFunction(Bikini.BikiniStore, 'Bikini.BikiniStore is defined');
+        assert.isFunction(Relution.LiveData.SyncStore, 'Relution.LiveData.SyncStore is defined');
 
-        TEST.store = Bikini.BikiniStore.design({
+        TEST.store = Relution.LiveData.SyncStore.design({
             useLocalStore: true,
             useSocketNotify: false
         });
@@ -24,26 +24,26 @@ describe('Bikini.BikiniStore', function() {
 
     it('creating collection', function() {
 
-        assert.isFunction(Bikini.Collection, 'Bikini.Collection is defined');
+        assert.isFunction(Relution.LiveData.Collection, 'Relution.LiveData.Collection is defined');
 
-        TEST.TestModel = Bikini.Model.extend({
+        TEST.TestModel = Relution.LiveData.Model.extend({
             idAttribute: '_id',
             entity: {
                 name: 'test',
                 fields:  {
-                    _id:         { type: Bikini.DATA.TYPE.STRING,  required: true, index: true },
-                    sureName:    { name: 'USERNAME', type: Bikini.DATA.TYPE.STRING,  required: true, index: true },
-                    firstName:   { type: Bikini.DATA.TYPE.STRING,  length: 200 },
-                    age:         { type: Bikini.DATA.TYPE.INTEGER }
+                    _id:         { type: Relution.LiveData.DATA.TYPE.STRING,  required: true, index: true },
+                    sureName:    { name: 'USERNAME', type: Relution.LiveData.DATA.TYPE.STRING,  required: true, index: true },
+                    firstName:   { type: Relution.LiveData.DATA.TYPE.STRING,  length: 200 },
+                    age:         { type: Relution.LiveData.DATA.TYPE.INTEGER }
                 }
             }
         });
 
         assert.isFunction(TEST.TestModel, 'TestModel model successfully extended.');
 
-        TEST.url = serverUrl+'/bikini/test/';
+        TEST.url = serverUrl + '/relution/livedata/test/';
 
-        TEST.TestsModelCollection = Bikini.Collection.extend({
+        TEST.TestsModelCollection = Relution.LiveData.Collection.extend({
             model: TEST.TestModel,
             url: TEST.url,
             store: TEST.store,
@@ -111,7 +111,7 @@ describe('Bikini.BikiniStore', function() {
 
     it('fetching data with new model', function(done) {
 
-        TEST.TestModel2 = Bikini.Model.extend({
+        TEST.TestModel2 = Relution.LiveData.Model.extend({
             url : TEST.url,
             idAttribute: '_id',
             store: TEST.store,
@@ -190,7 +190,7 @@ describe('Bikini.BikiniStore', function() {
         });
     });
 
-    it('cleanup records bikini', function(done) {
+    it('cleanup records', function(done) {
 
         if (TEST.Tests.length === 0) {
             done();
@@ -207,7 +207,7 @@ describe('Bikini.BikiniStore', function() {
                   },
                   error: function() {
                       hasError = isDone = true;
-                      assert.ok(false, 'cleanup records bikini error');
+                      assert.ok(false, 'cleanup records error');
                       done();
                   }
               });

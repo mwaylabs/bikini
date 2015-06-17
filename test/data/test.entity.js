@@ -1,12 +1,12 @@
-describe('Bikini.Entity', function() {
+describe('Relution.LiveData.Entity', function() {
 
     var TEST = {
         fields:  {
-            id:          { type: Bikini.DATA.TYPE.STRING,  required: true, index: true },
-            sureName:    { name: 'USERNAME', type: Bikini.DATA.TYPE.STRING,  required: true, index: true },
-            firstName:   { type: Bikini.DATA.TYPE.STRING,  length: 200 },
-            age:         Bikini.DATA.TYPE.INTEGER,
-            birthday:    Bikini.DATA.TYPE.DATE
+            id:          { type: Relution.LiveData.DATA.TYPE.STRING,  required: true, index: true },
+            sureName:    { name: 'USERNAME', type: Relution.LiveData.DATA.TYPE.STRING,  required: true, index: true },
+            firstName:   { type: Relution.LiveData.DATA.TYPE.STRING,  length: 200 },
+            age:         Relution.LiveData.DATA.TYPE.INTEGER,
+            birthday:    Relution.LiveData.DATA.TYPE.DATE
         }
     }
 
@@ -19,7 +19,7 @@ describe('Bikini.Entity', function() {
     }
 
     it('creating an entity', function() {
-        var entity = Bikini.Entity.design({
+        var entity = Relution.LiveData.Entity.design({
             fields: TEST.fields
         });
         assert.isObject(entity, 'entity successfully created.');

@@ -1,8 +1,8 @@
-describe('Bikini.Collection', function() {
+describe('Relution.LiveData.Collection', function() {
 
     var TEST = {};
 
-    TEST.url = serverUrl+'/bikini/developers';
+    TEST.url = serverUrl + '/relution/livedata/developers';
     TEST.data = [
         {
             sureName: 'Laubach',
@@ -32,44 +32,44 @@ describe('Bikini.Collection', function() {
     ];
 
     it('basic', function() {
-        assert.isDefined(Bikini.Collection);
-        assert.isDefined(Bikini.Collection.design);
-        assert.isDefined(Bikini.Collection.create);
-        assert.isDefined(Bikini.Collection.extend);
+        assert.isDefined(Relution.LiveData.Collection);
+        assert.isDefined(Relution.LiveData.Collection.design);
+        assert.isDefined(Relution.LiveData.Collection.create);
+        assert.isDefined(Relution.LiveData.Collection.extend);
 
-        assert.isFunction(Bikini.Collection);
-        assert.isFunction(Bikini.Collection.design);
-        assert.isFunction(Bikini.Collection.create);
-        assert.isFunction(Bikini.Collection.extend);
+        assert.isFunction(Relution.LiveData.Collection);
+        assert.isFunction(Relution.LiveData.Collection.design);
+        assert.isFunction(Relution.LiveData.Collection.create);
+        assert.isFunction(Relution.LiveData.Collection.extend);
 
-        var instance = Bikini.Collection.create();
+        var instance = Relution.LiveData.Collection.create();
         assert.isDefined(instance);
         assert.isObject(instance);
         assert.isDefined(instance._type);
         assert.isString(instance._type);
-        assert.equal(instance._type, 'Bikini.Collection');
+        assert.equal(instance._type, 'Relution.LiveData.Collection');
     });
 
     it('creating collection', function() {
 
-        assert.typeOf(Bikini.Collection, 'function', 'Bikini.Collection is defined');
+        assert.typeOf(Relution.LiveData.Collection, 'function', 'Relution.LiveData.Collection is defined');
 
-        TEST.Developer = Bikini.Model.extend({
+        TEST.Developer = Relution.LiveData.Model.extend({
             idAttribute: '_id',
             entity: {
                 name: 'Developer',
                 fields: {
-                    _id: { type: Bikini.DATA.TYPE.STRING },
-                    sureName: { name: 'lastName', type: Bikini.DATA.TYPE.STRING, required: true, index: true },
-                    firstName: { type: Bikini.DATA.TYPE.STRING, length: 200 },
-                    age: { type: Bikini.DATA.TYPE.INTEGER }
+                    _id: { type: Relution.LiveData.DATA.TYPE.STRING },
+                    sureName: { name: 'lastName', type: Relution.LiveData.DATA.TYPE.STRING, required: true, index: true },
+                    firstName: { type: Relution.LiveData.DATA.TYPE.STRING, length: 200 },
+                    age: { type: Relution.LiveData.DATA.TYPE.INTEGER }
                 }
             }
         });
 
         assert.ok(typeof TEST.Developer === 'function', 'Developer model successfully extended.');
 
-        TEST.DeveloperCollection = Bikini.Collection.extend({
+        TEST.DeveloperCollection = Relution.LiveData.Collection.extend({
             url: TEST.url,
             model: TEST.Developer
         });
@@ -139,7 +139,7 @@ describe('Bikini.Collection', function() {
 
         assert.ok(typeof result === 'object', 'Find for value has a response object.');
 
-        assert.ok(Bikini.isCollection(result), 'The response is a Bikini.Collection.');
+        assert.ok(Relution.LiveData.isCollection(result), 'The response is a Relution.LiveData.Collection.');
 
         assert.ok(result.length === 1, 'The response holds one record.');
 

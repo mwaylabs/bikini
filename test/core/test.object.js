@@ -1,24 +1,24 @@
-describe('Bikini.Object', function () {
+describe('Relution.LiveData.Object', function () {
 
     it('basic', function () {
-        assert.isDefined(Bikini.Object);
-        assert.isDefined(Bikini.Object._type);
+        assert.isDefined(Relution.LiveData.Object);
+        assert.isDefined(Relution.LiveData.Object._type);
 
-        assert.isObject(Bikini.Object);
-        assert.isString(Bikini.Object._type);
-        assert.equal(Bikini.Object._type, 'Bikini.Object');
+        assert.isObject(Relution.LiveData.Object);
+        assert.isString(Relution.LiveData.Object._type);
+        assert.equal(Relution.LiveData.Object._type, 'Relution.LiveData.Object');
     });
 
     it('methods', function () {
-        assert.isDefined(Bikini.Object._create);
-        assert.isDefined(Bikini.Object.design);
-        assert.isDefined(Bikini.Object.bindToCaller);
-        assert.isDefined(Bikini.Object.handleCallback);
+        assert.isDefined(Relution.LiveData.Object._create);
+        assert.isDefined(Relution.LiveData.Object.design);
+        assert.isDefined(Relution.LiveData.Object.bindToCaller);
+        assert.isDefined(Relution.LiveData.Object.handleCallback);
 
-        assert.isFunction(Bikini.Object._create);
-        assert.isFunction(Bikini.Object.design);
-        assert.isFunction(Bikini.Object.bindToCaller);
-        assert.isFunction(Bikini.Object.handleCallback);
+        assert.isFunction(Relution.LiveData.Object._create);
+        assert.isFunction(Relution.LiveData.Object.design);
+        assert.isFunction(Relution.LiveData.Object.bindToCaller);
+        assert.isFunction(Relution.LiveData.Object.handleCallback);
     });
 
 });

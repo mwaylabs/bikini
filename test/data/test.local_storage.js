@@ -1,12 +1,12 @@
-describe('Bikini.LocalStorageStore', function() {
+describe('Relution.LiveData.LocalStorageStore', function() {
 
     var TEST = {};
 
     it('creating local storage store', function() {
 
-        assert.typeOf(Bikini.LocalStorageStore, 'function', 'Bikini.LocalStorageStore is defined');
+        assert.typeOf(Relution.LiveData.LocalStorageStore, 'function', 'Relution.LiveData.LocalStorageStore is defined');
 
-        TEST.store = Bikini.LocalStorageStore.design();
+        TEST.store = Relution.LiveData.LocalStorageStore.design();
 
         assert.typeOf(TEST.store, 'object', 'store successfully created.');
     });
@@ -29,8 +29,8 @@ describe('Bikini.LocalStorageStore', function() {
 
     it('simple model with LocalStorageStore', function( done ) {
 
-        TEST.SimpleModel = Bikini.Model.extend({
-            store: Bikini.LocalStorageStore.create(),
+        TEST.SimpleModel = Relution.LiveData.Model.extend({
+            store: Relution.LiveData.LocalStorageStore.create(),
             entity: 'test'
         });
 
@@ -67,8 +67,8 @@ describe('Bikini.LocalStorageStore', function() {
 
     it('simple collection with LocalStorageStore', function( done ) {
 
-        TEST.SimpleModelCollection = Bikini.Collection.extend({
-            store: Bikini.LocalStorageStore.create(),
+        TEST.SimpleModelCollection = Relution.LiveData.Collection.extend({
+            store: Relution.LiveData.LocalStorageStore.create(),
             entity: 'test'
         });
 
@@ -103,24 +103,24 @@ describe('Bikini.LocalStorageStore', function() {
 
     it('creating collection', function() {
 
-        assert.typeOf(Bikini.Collection, 'function', 'Bikini.Collection is defined');
+        assert.typeOf(Relution.LiveData.Collection, 'function', 'Relution.LiveData.Collection is defined');
 
-        TEST.TestModel = Bikini.Model.extend({
+        TEST.TestModel = Relution.LiveData.Model.extend({
             idAttribute: '_id',
             entity: {
                 name: 'test',
                 fields:  {
-                    _id:         { type: Bikini.DATA.TYPE.STRING,  required: true },
-                    sureName:    { name: 'USERNAME', type: Bikini.DATA.TYPE.STRING,  required: true },
-                    firstName:   { type: Bikini.DATA.TYPE.STRING,  length: 200 },
-                    age:         { type: Bikini.DATA.TYPE.INTEGER }
+                    _id:         { type: Relution.LiveData.DATA.TYPE.STRING,  required: true },
+                    sureName:    { name: 'USERNAME', type: Relution.LiveData.DATA.TYPE.STRING,  required: true },
+                    firstName:   { type: Relution.LiveData.DATA.TYPE.STRING,  length: 200 },
+                    age:         { type: Relution.LiveData.DATA.TYPE.INTEGER }
                 }
             }
         });
 
         assert.typeOf(TEST.TestModel, 'function', 'TestModel model successfully extended.');
 
-        TEST.TestModelCollection = Bikini.Collection.extend({
+        TEST.TestModelCollection = Relution.LiveData.Collection.extend({
             model: TEST.TestModel,
             store: TEST.store
         });
@@ -177,7 +177,7 @@ describe('Bikini.LocalStorageStore', function() {
 
     it('fetching data with new model', function(done) {
 
-        TEST.TestModel2 = Bikini.Model.extend({
+        TEST.TestModel2 = Relution.LiveData.Model.extend({
             idAttribute: '_id',
             store: TEST.store,
             entity: {

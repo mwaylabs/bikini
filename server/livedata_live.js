@@ -10,7 +10,7 @@ exports.listen = function(server, resource) {
         'xhr-polling',
         'jsonp-polling'
     ]);
-    var bikini = {
+    var livedata = {
 
         io: io,
 
@@ -27,11 +27,11 @@ exports.listen = function(server, resource) {
                 if (binding && binding.entity && binding.channel) {
                     var entity  = binding.entity;
                     var channel = binding.channel;
-                    bikini.bindings[channel] = binding;
+                    livedata.bindings[channel] = binding;
 
                     // listen to this channel
                     socket.on(channel, function(msg, fn) {
-                        bikini.handleMessage(entity, msg, function(data, error) {
+                        livedata.handleMessage(entity, msg, function(data, error) {
 
                             // if the response is an object message has succeeded
                             if (typeof data === 'object') {
@@ -51,7 +51,7 @@ exports.listen = function(server, resource) {
 
                     // send update messages, saved since time
                     if (binding && binding.time) {
-                        bikini.readMessages(entity, binding.time, function(msg) {
+                        livedata.readMessages(entity, binding.time, function(msg) {
                             if (msg) {
                                 socket.emit(channel, msg);
                             }
@@ -71,8 +71,8 @@ exports.listen = function(server, resource) {
 
         sendMessage: function(entity, msg) {
             if (entity && msg && msg.method) {
-                for (var channel in bikini.bindings) {
-                    if (bikini.bindings[channel].entity === entity) {
+                for (var channel in livedata.bindings) {
+                    if (livedata.bindings[channel].entity === entity) {
                         io.sockets.emit(channel, msg);
                     }
                 }
@@ -83,5 +83,5 @@ exports.listen = function(server, resource) {
         }
     };
 
-    return bikini;
+    return livedata;
 };

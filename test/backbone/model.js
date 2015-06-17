@@ -1,12 +1,12 @@
 (function() {
 
-  var proxy = Bikini.Model.extend();
-  var klass = Bikini.Collection.extend({
+  var proxy = Relution.LiveData.Model.extend();
+  var klass = Relution.LiveData.Collection.extend({
     url : function() { return '/collection'; }
   });
   var doc, collection;
 
-  module("Bikini.Model", {
+  module("Relution.LiveData.Model", {
 
     setup: function() {
       doc = new proxy({
@@ -22,7 +22,7 @@
   });
 
   test("initialize", 3, function() {
-    var Model = Bikini.Model.extend({
+    var Model = Relution.LiveData.Model.extend({
       initialize: function() {
         this.one = 1;
         equal(this.collection, collection);
@@ -34,7 +34,7 @@
   });
 
   test("initialize with attributes and options", 1, function() {
-    var Model = Bikini.Model.extend({
+    var Model = Relution.LiveData.Model.extend({
       initialize: function(attributes, options) {
         this.one = options.one;
       }
@@ -44,7 +44,7 @@
   });
 
   test("initialize with parsed attributes", 1, function() {
-    var Model = Bikini.Model.extend({
+    var Model = Relution.LiveData.Model.extend({
       parse: function(attrs) {
         attrs.value += 1;
         return attrs;
@@ -55,7 +55,7 @@
   });
 
   test("initialize with defaults", 2, function() {
-    var Model = Bikini.Model.extend({
+    var Model = Relution.LiveData.Model.extend({
       defaults: {
         first_name: 'Unknown',
         last_name: 'Unknown'
@@ -67,7 +67,7 @@
   });
 
   test("parse can return null", 1, function() {
-    var Model = Bikini.Model.extend({
+    var Model = Relution.LiveData.Model.extend({
       parse: function(attrs) {
         attrs.value += 1;
         return null;
@@ -88,7 +88,7 @@
   });
 
   test("url when using urlRoot, and uri encoding", 2, function() {
-    var Model = Bikini.Model.extend({
+    var Model = Relution.LiveData.Model.extend({
       urlRoot: '/collection'
     });
     var model = new Model();
@@ -98,7 +98,7 @@
   });
 
   test("url when using urlRoot as a function to determine urlRoot at runtime", 2, function() {
-    var Model = Bikini.Model.extend({
+    var Model = Relution.LiveData.Model.extend({
       urlRoot: function() {
         return '/nested/' + this.get('parent_id') + '/collection';
       }
@@ -111,7 +111,7 @@
   });
 
   test("underscore methods", 5, function() {
-    var model = new Bikini.Model({ 'foo': 'a', 'bar': 'b', 'baz': 'c' });
+    var model = new Relution.LiveData.Model({ 'foo': 'a', 'bar': 'b', 'baz': 'c' });
     var model2 = model.clone();
     deepEqual(model.keys(), ['foo', 'bar', 'baz']);
     deepEqual(model.values(), ['a', 'b', 'c']);
@@ -121,12 +121,12 @@
   });
 
   test("chain", function() {
-    var model = new Bikini.Model({ a: 0, b: 1, c: 2 });
+    var model = new Relution.LiveData.Model({ a: 0, b: 1, c: 2 });
     deepEqual(model.chain().pick("a", "b", "c").values().compact().value(), [1, 2]);
   });
 
   test("clone", 10, function() {
-    var a = new Bikini.Model({ 'foo': 1, 'bar': 2, 'baz': 3});
+    var a = new Relution.LiveData.Model({ 'foo': 1, 'bar': 2, 'baz': 3});
     var b = a.clone();
     equal(a.get('foo'), 1);
     equal(a.get('bar'), 2);
@@ -138,23 +138,23 @@
     equal(a.get('foo'), 100);
     equal(b.get('foo'), 1, "Changing a parent attribute does not change the clone.");
 
-    var foo = new Bikini.Model({p: 1});
-    var bar = new Bikini.Model({p: 2});
+    var foo = new Relution.LiveData.Model({p: 1});
+    var bar = new Relution.LiveData.Model({p: 2});
     bar.set(foo.clone().attributes, {unset: true});
     equal(foo.get('p'), 1);
     equal(bar.get('p'), undefined);
   });
 
   test("isNew", 6, function() {
-    var a = new Bikini.Model({ 'foo': 1, 'bar': 2, 'baz': 3});
+    var a = new Relution.LiveData.Model({ 'foo': 1, 'bar': 2, 'baz': 3});
     ok(a.isNew(), "it should be new");
-    a = new Bikini.Model({ 'foo': 1, 'bar': 2, 'baz': 3, 'id': -5 });
+    a = new Relution.LiveData.Model({ 'foo': 1, 'bar': 2, 'baz': 3, 'id': -5 });
     ok(!a.isNew(), "any defined ID is legal, negative or positive");
-    a = new Bikini.Model({ 'foo': 1, 'bar': 2, 'baz': 3, 'id': 0 });
+    a = new Relution.LiveData.Model({ 'foo': 1, 'bar': 2, 'baz': 3, 'id': 0 });
     ok(!a.isNew(), "any defined ID is legal, including zero");
-    ok( new Bikini.Model({          }).isNew(), "is true when there is no id");
-    ok(!new Bikini.Model({ 'id': 2  }).isNew(), "is false for a positive integer");
-    ok(!new Bikini.Model({ 'id': -5 }).isNew(), "is false for a negative integer");
+    ok( new Relution.LiveData.Model({          }).isNew(), "is true when there is no id");
+    ok(!new Relution.LiveData.Model({ 'id': 2  }).isNew(), "is false for a positive integer");
+    ok(!new Relution.LiveData.Model({ 'id': -5 }).isNew(), "is false for a negative integer");
   });
 
   test("get", 2, function() {
@@ -175,7 +175,7 @@
   });
 
   test("has", 10, function() {
-    var model = new Bikini.Model();
+    var model = new Relution.LiveData.Model();
 
     strictEqual(model.has('name'), false);
 
@@ -205,7 +205,7 @@
   });
 
   test("set and unset", 8, function() {
-    var a = new Bikini.Model({id: 'id', foo: 1, bar: 2, baz: 3});
+    var a = new Relution.LiveData.Model({id: 'id', foo: 1, bar: 2, baz: 3});
     var changeCount = 0;
     a.on("change:foo", function() { changeCount += 1; });
     a.set({'foo': 2});
@@ -229,7 +229,7 @@
 
   test("#2030 - set with failed validate, followed by another set triggers change", function () {
     var attr = 0, main = 0, error = 0;
-    var Model = Bikini.Model.extend({
+    var Model = Relution.LiveData.Model.extend({
       validate: function (attr) {
         if (attr.x > 1) {
           error++;
@@ -247,7 +247,7 @@
 
   test("set triggers changes in the correct order", function() {
     var value = null;
-    var model = new Bikini.Model;
+    var model = new Relution.LiveData.Model;
     model.on('last', function(){ value = 'last'; });
     model.on('first', function(){ value = 'first'; });
     model.trigger('first');
@@ -256,7 +256,7 @@
   });
 
   test("set falsy values in the correct order", 2, function() {
-    var model = new Bikini.Model({result: 'result'});
+    var model = new Relution.LiveData.Model({result: 'result'});
     model.on('change', function() {
       equal(model.changed.result, void 0);
       equal(model.previous('result'), false);
@@ -268,7 +268,7 @@
   });
 
   test("nested set triggers with the correct options", function() {
-    var model = new Bikini.Model();
+    var model = new Relution.LiveData.Model();
     var o1 = {};
     var o2 = {};
     var o3 = {};
@@ -290,7 +290,7 @@
   test("multiple unsets", 1, function() {
     var i = 0;
     var counter = function(){ i++; };
-    var model = new Bikini.Model({a: 1});
+    var model = new Relution.LiveData.Model({a: 1});
     model.on("change:a", counter);
     model.set({a: 2});
     model.unset('a');
@@ -299,7 +299,7 @@
   });
 
   test("unset and changedAttributes", 1, function() {
-    var model = new Bikini.Model({a: 1});
+    var model = new Relution.LiveData.Model({a: 1});
     model.on('change', function() {
       ok('a' in model.changedAttributes(), 'changedAttributes should contain unset properties');
     });
@@ -307,7 +307,7 @@
   });
 
   test("using a non-default id attribute.", 5, function() {
-    var MongoModel = Bikini.Model.extend({idAttribute : '_id'});
+    var MongoModel = Relution.LiveData.Model.extend({idAttribute : '_id'});
     var model = new MongoModel({id: 'eye-dee', _id: 25, title: 'Model'});
     equal(model.get('id'), 'eye-dee');
     equal(model.id, 25);
@@ -318,13 +318,13 @@
   });
 
   test("set an empty string", 1, function() {
-    var model = new Bikini.Model({name : "Model"});
+    var model = new Relution.LiveData.Model({name : "Model"});
     model.set({name : ''});
     equal(model.get('name'), '');
   });
 
   test("setting an object", 1, function() {
-    var model = new Bikini.Model({
+    var model = new Relution.LiveData.Model({
       custom: { foo: 1 }
     });
     model.on('change', function() {
@@ -340,7 +340,7 @@
 
   test("clear", 3, function() {
     var changed;
-    var model = new Bikini.Model({id: 1, name : "Model"});
+    var model = new Relution.LiveData.Model({id: 1, name : "Model"});
     model.on("change:name", function(){ changed = true; });
     model.on("change", function() {
       var changedAttrs = model.changedAttributes();
@@ -352,7 +352,7 @@
   });
 
   test("defaults", 4, function() {
-    var Defaulted = Bikini.Model.extend({
+    var Defaulted = Relution.LiveData.Model.extend({
       defaults: {
         "one": 1,
         "two": 2
@@ -361,7 +361,7 @@
     var model = new Defaulted({two: undefined});
     equal(model.get('one'), 1);
     equal(model.get('two'), 2);
-    Defaulted = Bikini.Model.extend({
+    Defaulted = Relution.LiveData.Model.extend({
       defaults: function() {
         return {
           "one": 3,
@@ -375,7 +375,7 @@
   });
 
   test("change, hasChanged, changedAttributes, previous, previousAttributes", 9, function() {
-    var model = new Bikini.Model({name: "Tim", age: 10});
+    var model = new Relution.LiveData.Model({name: "Tim", age: 10});
     deepEqual(model.changedAttributes(), false);
     model.on('change', function() {
       ok(model.hasChanged('name'), 'name changed');
@@ -391,7 +391,7 @@
   });
 
   test("changedAttributes", 3, function() {
-    var model = new Bikini.Model({a: 'a', b: 'b'});
+    var model = new Relution.LiveData.Model({a: 'a', b: 'b'});
     deepEqual(model.changedAttributes(), false);
     equal(model.changedAttributes({a: 'a'}), false);
     equal(model.changedAttributes({a: 'b'}).a, 'b');
@@ -399,7 +399,7 @@
 
   test("change with options", 2, function() {
     var value;
-    var model = new Bikini.Model({name: 'Rob'});
+    var model = new Relution.LiveData.Model({name: 'Rob'});
     model.on('change', function(model, options) {
       value = options.prefix + model.get('name');
     });
@@ -412,7 +412,7 @@
   test("change after initialize", 1, function () {
     var changed = 0;
     var attrs = {id: 1, label: 'c'};
-    var obj = new Bikini.Model(attrs);
+    var obj = new Relution.LiveData.Model(attrs);
     obj.on('change', function() { changed += 1; });
     obj.set(attrs);
     equal(changed, 0);
@@ -420,7 +420,7 @@
 
   test("save within change event", 1, function () {
     var env = this;
-    var model = new Bikini.Model({firstName : "Taylor", lastName: "Swift"});
+    var model = new Relution.LiveData.Model({firstName : "Taylor", lastName: "Swift"});
     model.url = '/test';
     model.on('change', function () {
       model.save();
@@ -430,7 +430,7 @@
   });
 
   test("validate after save", 2, function() {
-    var lastError, model = new Bikini.Model();
+    var lastError, model = new Relution.LiveData.Model();
     model.validate = function(attrs) {
       if (attrs.admin) return "Can't change admin status.";
     };
@@ -453,7 +453,7 @@
   });
 
   test("save, fetch, destroy triggers error event when an error occurs", 3, function () {
-    var model = new Bikini.Model();
+    var model = new Relution.LiveData.Model();
     model.on('error', function () {
       ok(true);
     });
@@ -488,7 +488,7 @@
   });
 
   test("save in positional style", 1, function() {
-    var model = new Bikini.Model();
+    var model = new Relution.LiveData.Model();
     model.sync = function(method, model, options) {
       options.success();
     };
@@ -497,7 +497,7 @@
   });
 
   test("save with non-object success response", 2, function () {
-    var model = new Bikini.Model();
+    var model = new Relution.LiveData.Model();
     model.sync = function(method, model, options) {
       options.success('', options);
       options.success(null, options);
@@ -520,12 +520,12 @@
     equal(this.syncArgs.method, 'delete');
     ok(_.isEqual(this.syncArgs.model, doc));
 
-    var newModel = new Bikini.Model;
+    var newModel = new Relution.LiveData.Model;
     equal(newModel.destroy(), false);
   });
 
   test("non-persisted destroy", 1, function() {
-    var a = new Bikini.Model({ 'foo': 1, 'bar': 2, 'baz': 3});
+    var a = new Relution.LiveData.Model({ 'foo': 1, 'bar': 2, 'baz': 3});
     a.sync = function() { throw "should not be called"; };
     a.destroy();
     ok(true, "non-persisted model should not call sync");
@@ -533,7 +533,7 @@
 
   test("validate", function() {
     var lastError;
-    var model = new Bikini.Model();
+    var model = new Relution.LiveData.Model();
     model.validate = function(attrs) {
       if (attrs.admin != this.get('admin')) return "Can't change admin status.";
     };
@@ -554,7 +554,7 @@
 
   test("validate on unset and clear", 6, function() {
     var error;
-    var model = new Bikini.Model({name: "One"});
+    var model = new Relution.LiveData.Model({name: "One"});
     model.validate = function(attrs) {
       if (!attrs.name) {
         error = true;
@@ -576,7 +576,7 @@
 
   test("validate with error callback", 8, function() {
     var lastError, boundError;
-    var model = new Bikini.Model();
+    var model = new Relution.LiveData.Model();
     model.validate = function(attrs) {
       if (attrs.admin) return "Can't change admin status.";
     };
@@ -596,7 +596,7 @@
   });
 
   test("defaults always extend attrs (#459)", 2, function() {
-    var Defaulted = Bikini.Model.extend({
+    var Defaulted = Relution.LiveData.Model.extend({
       defaults: {one: 1},
       initialize : function(attrs, opts) {
         equal(this.attributes.one, 1);
@@ -607,7 +607,7 @@
   });
 
   test("Inherit class properties", 6, function() {
-    var Parent = Bikini.Model.extend({
+    var Parent = Relution.LiveData.Model.extend({
       instancePropSame: function() {},
       instancePropDiff: function() {}
     }, {
@@ -631,7 +631,7 @@
   });
 
   test("Nested change events don't clobber previous attributes", 4, function() {
-    new Bikini.Model()
+    new Relution.LiveData.Model()
     .on('change:state', function(model, newState) {
       equal(model.previous('state'), undefined);
       equal(newState, 'hello');
@@ -646,7 +646,7 @@
   });
 
   test("hasChanged/set should use same comparison", 2, function() {
-    var changed = 0, model = new Bikini.Model({a: null});
+    var changed = 0, model = new Relution.LiveData.Model({a: null});
     model.on('change', function() {
       ok(this.hasChanged('a'));
     })
@@ -658,7 +658,7 @@
   });
 
   test("#582, #425, change:attribute callbacks should fire after all changes have occurred", 9, function() {
-    var model = new Bikini.Model;
+    var model = new Relution.LiveData.Model;
 
     var assertion = function() {
       equal(model.get('a'), 'a');
@@ -674,38 +674,38 @@
   });
 
   test("#871, set with attributes property", 1, function() {
-    var model = new Bikini.Model();
+    var model = new Relution.LiveData.Model();
     model.set({attributes: true});
     ok(model.has('attributes'));
   });
 
   test("set value regardless of equality/change", 1, function() {
-    var model = new Bikini.Model({x: []});
+    var model = new Relution.LiveData.Model({x: []});
     var a = [];
     model.set({x: a});
     ok(model.get('x') === a);
   });
 
   test("set same value does not trigger change", 0, function() {
-    var model = new Bikini.Model({x: 1});
+    var model = new Relution.LiveData.Model({x: 1});
     model.on('change change:x', function() { ok(false); });
     model.set({x: 1});
     model.set({x: 1});
   });
 
   test("unset does not fire a change for undefined attributes", 0, function() {
-    var model = new Bikini.Model({x: undefined});
+    var model = new Relution.LiveData.Model({x: undefined});
     model.on('change:x', function(){ ok(false); });
     model.unset('x');
   });
 
   test("set: undefined values", 1, function() {
-    var model = new Bikini.Model({x: undefined});
+    var model = new Relution.LiveData.Model({x: undefined});
     ok('x' in model.attributes);
   });
 
   test("hasChanged works outside of change events, and true within", 6, function() {
-    var model = new Bikini.Model({x: 1});
+    var model = new Relution.LiveData.Model({x: 1});
     model.on('change:x', function() {
       ok(model.hasChanged('x'));
       equal(model.get('x'), 1);
@@ -719,7 +719,7 @@
   });
 
   test("hasChanged gets cleared on the following set", 4, function() {
-    var model = new Bikini.Model;
+    var model = new Relution.LiveData.Model;
     model.set({x: 1});
     ok(model.hasChanged());
     model.set({x: 1});
@@ -731,21 +731,21 @@
   });
 
   test("save with `wait` succeeds without `validate`", 1, function() {
-    var model = new Bikini.Model();
+    var model = new Relution.LiveData.Model();
     model.url = '/test';
     model.save({x: 1}, {wait: true});
     ok(this.syncArgs.model === model);
   });
 
   test("save without `wait` doesn't set invalid attributes", function () {
-    var model = new Bikini.Model();
+    var model = new Relution.LiveData.Model();
     model.validate = function () { return 1; }
     model.save({a: 1});
     equal(model.get('a'), void 0);
   });
 
   test("save doesn't validate twice", function () {
-    var model = new Bikini.Model();
+    var model = new Relution.LiveData.Model();
     var times = 0;
     model.sync = function () {};
     model.validate = function () { ++times; }
@@ -754,14 +754,14 @@
   });
 
   test("`hasChanged` for falsey keys", 2, function() {
-    var model = new Bikini.Model();
+    var model = new Relution.LiveData.Model();
     model.set({x: true}, {silent: true});
     ok(!model.hasChanged(0));
     ok(!model.hasChanged(''));
   });
 
   test("`previous` for falsey keys", 2, function() {
-    var model = new Bikini.Model({0: true, '': true});
+    var model = new Relution.LiveData.Model({0: true, '': true});
     model.set({0: false, '': false}, {silent: true});
     equal(model.previous(0), true);
     equal(model.previous(''), true);
@@ -769,7 +769,7 @@
 
   test("`save` with `wait` sends correct attributes", 5, function() {
     var changed = 0;
-    var model = new Bikini.Model({x: 1, y: 2});
+    var model = new Relution.LiveData.Model({x: 1, y: 2});
     model.url = '/test';
     model.on('change:x', function() { changed++; });
     model.save({x: 3}, {wait: true});
@@ -782,14 +782,14 @@
   });
 
   test("a failed `save` with `wait` doesn't leave attributes behind", 1, function() {
-    var model = new Bikini.Model;
+    var model = new Relution.LiveData.Model;
     model.url = '/test';
     model.save({x: 1}, {wait: true});
     equal(model.get('x'), void 0);
   });
 
   test("#1030 - `save` with `wait` results in correct attributes if success is called during sync", 2, function() {
-    var model = new Bikini.Model({x: 1, y: 2});
+    var model = new Relution.LiveData.Model({x: 1, y: 2});
     model.sync = function(method, model, options) {
       options.success();
     };
@@ -799,14 +799,14 @@
   });
 
   test("save with wait validates attributes", function() {
-    var model = new Bikini.Model();
+    var model = new Relution.LiveData.Model();
     model.url = '/test';
     model.validate = function() { ok(true); };
     model.save({x: 1}, {wait: true});
   });
 
   test("save turns on parse flag", function () {
-    var Model = Bikini.Model.extend({
+    var Model = Relution.LiveData.Model.extend({
       sync: function(method, model, options) { ok(options.parse); }
     });
     new Model().save();
@@ -814,7 +814,7 @@
 
   test("nested `set` during `'change:attr'`", 2, function() {
     var events = [];
-    var model = new Bikini.Model();
+    var model = new Relution.LiveData.Model();
     model.on('all', function(event) { events.push(event); });
     model.on('change', function() {
       model.set({z: true}, {silent:true});
@@ -830,7 +830,7 @@
   });
 
   test("nested `change` only fires once", 1, function() {
-    var model = new Bikini.Model();
+    var model = new Relution.LiveData.Model();
     model.on('change', function() {
       ok(true);
       model.set({x: true});
@@ -840,7 +840,7 @@
 
   test("nested `set` during `'change'`", 6, function() {
     var count = 0;
-    var model = new Bikini.Model();
+    var model = new Relution.LiveData.Model();
     model.on('change', function() {
       switch(count++) {
         case 0:
@@ -866,7 +866,7 @@
 
   test("nested `change` with silent", 3, function() {
     var count = 0;
-    var model = new Bikini.Model();
+    var model = new Relution.LiveData.Model();
     model.on('change:y', function() { ok(false); });
     model.on('change', function() {
       switch(count++) {
@@ -890,7 +890,7 @@
   });
 
   test("nested `change:attr` with silent", 0, function() {
-    var model = new Bikini.Model();
+    var model = new Relution.LiveData.Model();
     model.on('change:y', function(){ ok(false); });
     model.on('change', function() {
       model.set({y: true}, {silent: true});
@@ -900,7 +900,7 @@
   });
 
   test("multiple nested changes with silent", 1, function() {
-    var model = new Bikini.Model();
+    var model = new Relution.LiveData.Model();
     model.on('change:x', function() {
       model.set({y: 1}, {silent: true});
       model.set({y: 2});
@@ -913,7 +913,7 @@
 
   test("multiple nested changes with silent", 1, function() {
     var changes = [];
-    var model = new Bikini.Model();
+    var model = new Relution.LiveData.Model();
     model.on('change:b', function(model, val) { changes.push(val); });
     model.on('change', function() {
       model.set({b: 1});
@@ -923,7 +923,7 @@
   });
 
   test("basic silent change semantics", 1, function() {
-    var model = new Bikini.Model;
+    var model = new Relution.LiveData.Model;
     model.set({x: 1});
     model.on('change', function(){ ok(true); });
     model.set({x: 2}, {silent: true});
@@ -931,7 +931,7 @@
   });
 
   test("nested set multiple times", 1, function() {
-    var model = new Bikini.Model();
+    var model = new Relution.LiveData.Model();
     model.on('change:b', function() {
       ok(true);
     });
@@ -943,21 +943,21 @@
   });
 
   test("#1122 - clear does not alter options.", 1, function() {
-    var model = new Bikini.Model();
+    var model = new Relution.LiveData.Model();
     var options = {};
     model.clear(options);
     ok(!options.unset);
   });
 
   test("#1122 - unset does not alter options.", 1, function() {
-    var model = new Bikini.Model();
+    var model = new Relution.LiveData.Model();
     var options = {};
     model.unset('x', options);
     ok(!options.unset);
   });
 
   test("#1355 - `options` is passed to success callbacks", 3, function() {
-    var model = new Bikini.Model();
+    var model = new Relution.LiveData.Model();
     var opts = {
       success: function( model, resp, options ) {
         ok(options);
@@ -972,7 +972,7 @@
   });
 
   test("#1412 - Trigger 'sync' event.", 3, function() {
-    var model = new Bikini.Model({id: 1});
+    var model = new Relution.LiveData.Model({id: 1});
     model.sync = function (method, model, options) { options.success(); };
     model.on('sync', function(){ ok(true); });
     model.fetch();
@@ -981,21 +981,21 @@
   });
 
   test("#1365 - Destroy: New models execute success callback.", 2, function() {
-    new Bikini.Model()
+    new Relution.LiveData.Model()
     .on('sync', function() { ok(false); })
     .on('destroy', function(){ ok(true); })
     .destroy({ success: function(){ ok(true); }});
   });
 
   test("#1433 - Save: An invalid model cannot be persisted.", 1, function() {
-    var model = new Bikini.Model;
+    var model = new Relution.LiveData.Model;
     model.validate = function(){ return 'invalid'; };
     model.sync = function(){ ok(false); };
     strictEqual(model.save(), false);
   });
 
   test("#1377 - Save without attrs triggers 'error'.", 1, function() {
-    var Model = Bikini.Model.extend({
+    var Model = Relution.LiveData.Model.extend({
       url: '/test/',
       sync: function(method, model, options){ options.success(); },
       validate: function(){ return 'invalid'; }
@@ -1006,7 +1006,7 @@
   });
 
   test("#1545 - `undefined` can be passed to a model constructor without coersion", function() {
-    var Model = Bikini.Model.extend({
+    var Model = Relution.LiveData.Model.extend({
       defaults: { one: 1 },
       initialize : function(attrs, opts) {
         equal(attrs, undefined);
@@ -1017,7 +1017,7 @@
   });
 
   asyncTest("#1478 - Model `save` does not trigger change on unchanged attributes", 0, function() {
-    var Model = Bikini.Model.extend({
+    var Model = Relution.LiveData.Model.extend({
       sync: function(method, model, options) {
         setTimeout(function(){
           options.success();
@@ -1031,7 +1031,7 @@
   });
 
   test("#1664 - Changing from one value, silently to another, back to original triggers a change.", 1, function() {
-    var model = new Bikini.Model({x:1});
+    var model = new Relution.LiveData.Model({x:1});
     model.on('change:x', function() { ok(true); });
     model.set({x:2},{silent:true});
     model.set({x:3},{silent:true});
@@ -1040,7 +1040,7 @@
 
   test("#1664 - multiple silent changes nested inside a change event", 2, function() {
     var changes = [];
-    var model = new Bikini.Model();
+    var model = new Relution.LiveData.Model();
     model.on('change', function() {
       model.set({a:'c'}, {silent:true});
       model.set({b:2}, {silent:true});
@@ -1053,7 +1053,7 @@
   });
 
   test("#1791 - `attributes` is available for `parse`", function() {
-    var Model = Bikini.Model.extend({
+    var Model = Relution.LiveData.Model.extend({
       parse: function() { this.has('a'); } // shouldn't throw an error
     });
     var model = new Model(null, {parse: true});
@@ -1062,7 +1062,7 @@
 
   test("silent changes in last `change` event back to original triggers change", 2, function() {
     var changes = [];
-    var model = new Bikini.Model();
+    var model = new Relution.LiveData.Model();
     model.on('change:a change:b change:c', function(model, val) { changes.push(val); });
     model.on('change', function() {
       model.set({a:'c'}, {silent:true});
@@ -1074,13 +1074,13 @@
   });
 
   test("#1943 change calculations should use _.isEqual", function() {
-    var model = new Bikini.Model({a: {key: 'value'}});
+    var model = new Relution.LiveData.Model({a: {key: 'value'}});
     model.set('a', {key:'value'}, {silent:true});
     equal(model.changedAttributes(), false);
   });
 
   test("#1964 - final `change` event is always fired, regardless of interim changes", 1, function () {
-    var model = new Bikini.Model();
+    var model = new Relution.LiveData.Model();
     model.on('change:property', function() {
       model.set('property', 'bar');
     });
@@ -1091,7 +1091,7 @@
   });
 
   test("isValid", function() {
-    var model = new Bikini.Model({valid: true});
+    var model = new Relution.LiveData.Model({valid: true});
     model.validate = function(attrs) {
       if (!attrs.valid) return "invalid";
     };
@@ -1104,13 +1104,13 @@
   });
 
   test("#1179 - isValid returns true in the absence of validate.", 1, function() {
-    var model = new Bikini.Model();
+    var model = new Relution.LiveData.Model();
     model.validate = null;
     ok(model.isValid());
   });
 
   test("#1961 - Creating a model with {validate:true} will call validate and use the error callback", function () {
-    var Model = Bikini.Model.extend({
+    var Model = Relution.LiveData.Model.extend({
       validate: function (attrs) {
         if (attrs.id === 1) return "This shouldn't happen";
       }
@@ -1120,7 +1120,7 @@
   });
 
   test("toJSON receives attrs during save(..., {wait: true})", 1, function() {
-    var Model = Bikini.Model.extend({
+    var Model = Relution.LiveData.Model.extend({
       url: '/test',
       toJSON: function() {
         strictEqual(this.attributes.x, 1);
