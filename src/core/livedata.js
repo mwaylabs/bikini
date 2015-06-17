@@ -96,7 +96,7 @@ Relution.LiveData.sync = function sync(method, model, options) {
 
   var that = this;
   var args = arguments;
-  var superSync = store && store.sync ? store.sync.bind(store) : this.super_ && this.super_.sync || Backbone.sync;
+  var superSync = store && store.sync ? _.bind(store.sync, store) : this.super_ && this.super_.sync || Backbone.sync;
   return options.logon.call(this, options).then(function innerSync(result) {
     // when calling sync of store, the that argument is replaced by the store due to bind above
     return superSync.apply(that, args) || result;
