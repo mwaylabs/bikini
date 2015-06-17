@@ -82,8 +82,8 @@ Bikini.BikiniStore = Bikini.Store.extend({
       var user = credentials && credentials.username ? credentials.username : '';
       var channel = name + user + hash;
       collection.channel = channel;
+
       // get or create endpoint for this url
-      var that = this;
       var endpoint = this.endpoints[hash];
       if (!endpoint) {
         var href = Bikini.URLUtil.getLocation(url);
@@ -99,12 +99,16 @@ Bikini.BikiniStore = Bikini.Store.extend({
         endpoint.socketPath = this.options.socketPath;
         endpoint.localStore = this.createLocalStore(endpoint);
         endpoint.messages = this.createMsgCollection(endpoint);
-        endpoint.socket = this.createSocket(endpoint);
+        endpoint.socket = this.createSocket(endpoint, name);
         endpoint.info = this.fetchServerInfo(endpoint);
-        that.endpoints[hash] = endpoint;
+        this.endpoints[hash] = endpoint;
       }
       collection.endpoint = endpoint;
-      collection.listenTo(this, 'sync:' + endpoint.channel, this.onMessageCollection, collection);
+
+      if (this.options.useSocketNotify) {
+        // otherwise application code must fetch to update collection explicitly
+        collection.listenTo(this, 'sync:' + endpoint.channel, this.onMessageCollection, collection);
+      }
     }
   },
 
@@ -116,7 +120,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
   },
 
   createLocalStore: function (endpoint) {
-    if (this.options.useLocalStore && endpoint) {
+    if (this.options.useLocalStore) {
       var entities = {};
       entities[endpoint.entity.name] = _.extend(new Bikini.Entity(endpoint.entity), {
         name: endpoint.channel
@@ -133,7 +137,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
    * @returns {*}
    */
   createMsgCollection: function (endpoint) {
-    if (this.options.useOfflineChanges && endpoint) {
+    if (this.options.useOfflineChanges) {
       var entity = 'msg-' + endpoint.channel;
       var entities = {};
       entities[entity] = new Bikini.Entity({
@@ -141,7 +145,6 @@ Bikini.BikiniStore = Bikini.Store.extend({
         idAttribute: 'id'
       });
       var messages = Bikini.Collection.design({
-        url: endpoint.url,
         entity: entity,
         store: this.options.localStore.create({
           entities: entities
