@@ -4,4 +4,5 @@
 var Bikini = null;
 if (global.Relution) {
   Bikini = global.Bikini = Relution.LiveData;
+  Bikini.BikiniStore = Relution.LiveData.SyncStore;
 }

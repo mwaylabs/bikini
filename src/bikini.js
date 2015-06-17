@@ -3,7 +3,6 @@
 (function (global, Backbone, _, $) {
 
   // @include ./core/livedata.js
-  // @include ./core/bikini.js
 
   // @include ./utility/objectid.js
   // @include ./utility/uuid.js
@@ -23,6 +22,8 @@
   // @include ./data/stores/store.js
   // @include ./data/stores/local_storage.js
   // @include ./data/stores/web_sql.js
-  // @include ./data/stores/bikini_store.js
+  // @include ./data/stores/sync_store.js
+
+  // @include ./core/bikini.js
 
 })(this, Backbone, _, $);

@@ -2,12 +2,12 @@
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
 
 /**
- * The Relution.LiveData.BikiniStore is used to connect a model collection to an
- * bikini server.
+ * The Relution.LiveData.SyncStore is used to connect a model collection to an
+ * Relution server.
  *
  * This will give you an online and offline store with live data updates.
  *
- * @module Relution.LiveData.BikiniStore
+ * @module Relution.LiveData.SyncStore
  *
  * @type {*}
  * @extends Relution.LiveData.Store
@@ -20,8 +20,8 @@
  *
  * var MyCollection = Relution.LiveData.Collection.extend({
  *      model: MyModel,
- *      url: 'http://myBikiniServer.com:8200/bikini/myCollection',
- *      store: new Relution.LiveData.BikiniStore( {
+ *      url: 'http://myServer.io/myOrga/myApplication/myCollection',
+ *      store: new Relution.LiveData.SyncStore( {
  *          useLocalStore:   true, // (default) store the data for offline use
  *          useSocketNotify: true, // (default) register at the server for live updates
  *          useOfflineChanges: true // (default) allow changes to the offline data
@@ -30,9 +30,9 @@
  *
  */
 
-Relution.LiveData.BikiniStore = Relution.LiveData.Store.extend({
+Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
 
-  _type: 'Relution.LiveData.BikiniStore',
+  _type: 'Relution.LiveData.SyncStore',
 
   _selector: null,
 
@@ -69,7 +69,7 @@ Relution.LiveData.BikiniStore = Relution.LiveData.Store.extend({
   },
 
   initCollection: function (collection) {
-    console.log('Relution.LiveData.BikiniStore.initCollection');
+    console.log('Relution.LiveData.SyncStore.initCollection');
     var url = collection.getUrlRoot();
     if (url.charAt(url.length - 1) !== '/') {
       url += '/';
@@ -158,7 +158,7 @@ Relution.LiveData.BikiniStore = Relution.LiveData.Store.extend({
   },
 
   createSocket: function (endpoint, name) {
-    console.log('Relution.LiveData.BikiniStore.createSocket');
+    console.log('Relution.LiveData.SyncStore.createSocket');
     if (this.options.useSocketNotify && endpoint && endpoint.socketPath) {
       var that = this;
       var url = endpoint.host;
@@ -197,7 +197,7 @@ Relution.LiveData.BikiniStore = Relution.LiveData.Store.extend({
   },
 
   _bindChannel: function (endpoint, name) {
-    console.log('Relution.LiveData.BikiniStore._bindChannel');
+    console.log('Relution.LiveData.SyncStore._bindChannel');
     var that = this;
     if (endpoint && endpoint.socket) {
       var channel = endpoint.channel;
@@ -353,7 +353,7 @@ Relution.LiveData.BikiniStore = Relution.LiveData.Store.extend({
   },
 
   sync: function (method, model, options) {
-    console.log('Relution.LiveData.BikiniStore.sync');
+    console.log('Relution.LiveData.SyncStore.sync');
     options = options || {};
     var endpoint = this.getEndpoint(model.getUrlRoot());
     if (!endpoint) {

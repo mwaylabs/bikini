@@ -44,7 +44,7 @@ Relution.LiveData.WebSqlStore = Relution.LiveData.Store.extend({
 
   options: null,
 
-  name: 'bikini',
+  name: 'relution-livedata',
 
   size: 1024 * 1024, // 1 MB
 
