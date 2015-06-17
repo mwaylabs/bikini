@@ -46,8 +46,6 @@ Bikini.BikiniStore = Bikini.Store.extend({
   useSocketNotify: true,
   useOfflineChanges: true,
 
-  isConnected: false,
-
   typeMapping: {
     'binary': 'text',
     'date': 'string'
@@ -90,6 +88,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
       if (!endpoint) {
         var href = Bikini.URLUtil.getLocation(url);
         endpoint = {};
+        endpoint.isConnected = false;
         endpoint.baseUrl = url;
         endpoint.readUrl = collection.getUrl();
         endpoint.host = href.protocol + '//' + href.host;
@@ -148,7 +147,7 @@ Bikini.BikiniStore = Bikini.Store.extend({
           entities: entities
         })
       });
-      if (this.isConnected) {
+      if (endpoint.isConnected) {
         this._sendMessages(endpoint);
       }
       return messages;
@@ -229,26 +228,35 @@ Bikini.BikiniStore = Bikini.Store.extend({
   },
 
   onConnect: function (endpoint) {
-    if (this.isConnected) {
+    if (endpoint.isConnected) {
       return Q.resolve();
     }
 
+    endpoint.isConnected = true;
     var that = this;
-    return this.fetchChanges(endpoint).then(function() {
-      that.isConnected = true;
+    return this.fetchChanges(endpoint).then(function () {
       return that._sendMessages(endpoint);
+    }).finally(function () {
+      if (endpoint.isConnected) {
+        that.trigger('connect:' + endpoint.channel);
+      }
     });
   },
 
   onDisconnect: function (endpoint) {
-    if (!this.isConnected) {
+    if (!endpoint.isConnected) {
       return Q.resolve();
     }
 
+    endpoint.isConnected = false;
+    var that = this;
     return Q.resolve(function () {
-      this.isConnected = false;
       if (endpoint.socket && endpoint.socket.socket) {
         endpoint.socket.socket.onDisconnect();
+      }
+    }).finally(function () {
+      if (!endpoint.isConnected) {
+        that.trigger('disconnect:' + endpoint.channel);
       }
     });
   },
@@ -465,12 +473,12 @@ Bikini.BikiniStore = Bikini.Store.extend({
       // do some connection handling
       return qAjax.then(function () {
         // trigger reconnection when disconnected
-        if (!that.isConnected) {
+        if (!endpoint.isConnected) {
           return that.onConnect(endpoint);
         }
       }, function (xhr) {
         // trigger disconnection when disconnected
-        if (!xhr.responseText && that.isConnected) {
+        if (!xhr.responseText && endpoint.isConnected) {
           return that.onDisconnect(endpoint);
         }
       });
