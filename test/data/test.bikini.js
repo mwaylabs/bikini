@@ -90,8 +90,8 @@ describe('Relution.LiveData.SyncStore', function() {
                     assert.ok(TEST.id, 'new record has an id.');
                     done();
                 },
-                error: function() {
-                    assert.ok(false, 'new record created successfully.');
+                error: function(model, error) {
+                    assert.ok(false, 'new record created successfully: ' + error);
                     done();
                 }
             }
@@ -135,8 +135,8 @@ describe('Relution.LiveData.SyncStore', function() {
                 assert.equal(model.get('age'), TEST.data.age, "found record has the correct 'age' value");
                 done();
             },
-            error: function(error) {
-                assert.ok(false, 'model has been fetched.');
+            error: function(model, error) {
+                assert.ok(false, 'model has been fetched: ' + error);
                 done();
             }
         })
@@ -151,8 +151,8 @@ describe('Relution.LiveData.SyncStore', function() {
                 assert.isObject(TEST.Tests.get(TEST.id), 'The model is still there');
                 done();
             },
-            error: function() {
-                assert.ok(false, 'Test collection fetched successfully.');
+            error: function(model, error) {
+                assert.ok(false, 'Test collection fetched successfully: ' + error);
                 done();
             }
         });
@@ -183,8 +183,8 @@ describe('Relution.LiveData.SyncStore', function() {
                 assert.ok(true, 'record has been deleted.');
                 done();
             },
-            error: function() {
-                assert.ok(false, 'record has been deleted.');
+            error: function(model, error) {
+                assert.ok(false, 'record has been deleted: ' + error);
                 done();
             }
         });
@@ -205,9 +205,9 @@ describe('Relution.LiveData.SyncStore', function() {
                           done();
                       }
                   },
-                  error: function() {
+                  error: function(model, error) {
                       hasError = isDone = true;
-                      assert.ok(false, 'cleanup records error');
+                      assert.ok(false, 'cleanup records error: ' + error);
                       done();
                   }
               });

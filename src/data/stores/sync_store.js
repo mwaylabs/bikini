@@ -506,7 +506,7 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
   _applyResponse: function (qXHR, endpoint, msg, options, model) {
     var channel = endpoint.channel;
     var that = this;
-    return qXHR.tap(function (data) {
+    return qXHR.then(function (data) {
       // update local store state
       if (data) {
         // no data if server asks not to alter state
@@ -570,14 +570,14 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
             }
           }
         }
-        return Q.all(promises); // delayed till operations complete
+        return Q.all(promises).thenResolve(data); // delayed till operations complete
       }
-    }).then(function (resp) {
+    }).then(function (response) {
       // invoke success callback, if any
-      return that.handleSuccess(options, resp) || resp;
-    }, function (xhr, status) {
+      return that.handleSuccess(options, response) || response;
+    }, function (error) {
       // invoke error callback, if any
-      return that.handleError(options, model, xhr.responseJSON || new Error(status), options) || Q.reject(xhr);
+      return that.handleError(options, error) || Q.reject(error);
     });
   },
 
