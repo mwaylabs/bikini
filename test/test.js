@@ -3,12 +3,13 @@
  */
 
 if ('undefined' != typeof require) {
+    Q = require('q');
     chai = require('chai');
     assert = chai.assert;
     expect = chai.expect;
 }
 
-serverUrl = "http://localhost:8100";
+serverUrl = "http://localhost:8200";
 
 describe('Mocha', function() {
 
@@ -31,3 +32,11 @@ describe('Mocha', function() {
 
     });
 });
+
+Q.longStackSupport = true;
+
+function backbone_error(done) {
+  return function(model, error) {
+    done(error || new Error());
+  }
+}

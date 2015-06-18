@@ -69,7 +69,7 @@ Relution.LiveData.LocalStorageStore = Relution.LiveData.Store.extend({
       }
     }
 
-    return Q.resolve(function () {
+    return Q.resolve(attrs).then(function (attrs) {
       if (attrs) {
         return that.handleSuccess(options, attrs) || attrs;
       } else {

@@ -20,10 +20,7 @@ describe('Relution.LiveData.LocalStorageStore', function() {
                 assert.ok(true, 'drop table test');
                 done();
             },
-            error: function(error) {
-                assert.ok(false, 'drop table test: ' + error);
-                done();
-            }
+            error: backbone_error(done)
         });
     };
 
@@ -54,12 +51,7 @@ describe('Relution.LiveData.LocalStorageStore', function() {
 
                       done();
                   },
-                  error: function(model, error) {
-
-                      assert(false, 'error creating record: '+ error);
-
-                      done();
-                  }
+                  error: backbone_error(done)
               }
           );
     });
@@ -89,12 +81,7 @@ describe('Relution.LiveData.LocalStorageStore', function() {
 
                       done();
                   },
-                  error: function(model, error) {
-
-                      assert(false, 'error creating record: '+ error);
-
-                      done();
-                  }
+                  error: backbone_error(done)
               }
           );
     });
@@ -156,10 +143,7 @@ describe('Relution.LiveData.LocalStorageStore', function() {
 
                     done();
                 },
-                error: function() {
-                    assert.ok(false, 'new record created successfully.');
-                    done();
-                }
+                error: backbone_error(done)
             }
         );
     });
@@ -197,10 +181,7 @@ describe('Relution.LiveData.LocalStorageStore', function() {
                 assert.equal(model.get('age'), TEST.data.age, "found record has the correct 'age' value");
                 done();
             },
-            error: function(error) {
-                assert.ok(false, 'model has been fetched.');
-                done();
-            }
+            error: backbone_error(done)
         })
     });
 
@@ -211,10 +192,7 @@ describe('Relution.LiveData.LocalStorageStore', function() {
                     assert.ok(true, 'record has been deleted.');
                     done();
                 },
-                error: function() {
-                    assert.ok(false, 'record has been deleted.');
-                    done();
-                }
+                error: backbone_error(done)
             }
         );
     });
@@ -226,10 +204,7 @@ describe('Relution.LiveData.LocalStorageStore', function() {
                 TEST.count = TEST.Test.length;
                 done();
             },
-            error: function() {
-                assert.ok(false, 'Test collection fetched successfully.');
-                done();
-            }
+            error: backbone_error(done)
         });
     });
 

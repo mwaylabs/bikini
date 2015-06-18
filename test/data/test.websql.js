@@ -28,10 +28,7 @@ describe('Relution.LiveData.WebSqlStore', function() {
                 assert.ok(true, 'drop table test');
                 done();
             },
-            error: function(error) {
-                assert.ok(false, 'drop table test: ' + error);
-                done();
-            }
+            error: backbone_error(done)
         });
     };
 
@@ -68,10 +65,7 @@ describe('Relution.LiveData.WebSqlStore', function() {
 
                       done();
                   },
-                  error: function(error) {
-                      assert.ok(false, 'new record created: '+ JSON.stringify(error));
-                      done();
-                  }
+                  error: backbone_error(done)
               }
           );
     });
@@ -126,10 +120,7 @@ describe('Relution.LiveData.WebSqlStore', function() {
 
                     done();
                 },
-                error: function(error) {
-                    assert.ok(false, 'new record created: '+ JSON.stringify(error));
-                    done();
-                }
+                error: backbone_error(done)
             }
         );
     });
@@ -147,10 +138,7 @@ describe('Relution.LiveData.WebSqlStore', function() {
 
                     done();
                 },
-                error: function(error) {
-                    assert.ok(false, 'new record created: '+ JSON.stringify(error));
-                    done();
-                }
+                error: backbone_error(done)
             }
         );
     });
@@ -189,10 +177,7 @@ describe('Relution.LiveData.WebSqlStore', function() {
                 assert.equal(model.get('age'), TEST.data.age, "found record has the correct 'age' value");
                 done();
             },
-            error: function(error) {
-                assert.ok(false, 'model has been fetched.');
-                done();
-            }
+            error: backbone_error(done)
         })
     });
 
@@ -203,10 +188,7 @@ describe('Relution.LiveData.WebSqlStore', function() {
                     assert.ok(true, 'record has been deleted.');
                     done();
                 },
-                error: function() {
-                    assert.ok(false, 'record has been deleted.');
-                    done();
-                }
+                error: backbone_error(done)
             }
         );
     });
@@ -218,10 +200,7 @@ describe('Relution.LiveData.WebSqlStore', function() {
                 TEST.count = TEST.Tests.length;
                 done();
             },
-            error: function() {
-                assert.ok(false, 'Test collection fetched successfully.');
-                done();
-            }
+            error: backbone_error(done)
         });
     });
 
@@ -270,10 +249,7 @@ describe('Relution.LiveData.WebSqlStore', function() {
 
                     done();
                 },
-                error: function(error) {
-                    assert.ok(false, 'new record created: ' + error);
-                    done();
-                }
+                error: backbone_error(done)
             }
         );
     });

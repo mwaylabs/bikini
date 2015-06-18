@@ -137,7 +137,9 @@ Relution.LiveData.WebSqlStore = Relution.LiveData.Store.extend({
         break;
 
       case 'delete':
-        that._delete(models, opts);
+        that._checkTable(opts, function () {
+          that._delete(models, opts);
+        });
         break;
 
       case 'read':

@@ -284,7 +284,9 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
         store: endpoint.localStore,
         entity: endpoint.entity
       }, that.options);
-      var model = new Relution.LiveData.Model(msg.data, options);
+      var model = new Relution.LiveData.Model(msg.data, _.extend({
+        parse: true
+      }, options));
       return endpoint.localStore.sync(msg.method, model, _.extend(options, {
         merge: msg.method === 'patch',
         success: function (result) {
@@ -314,6 +316,7 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
       collection: this,
       entity: this.entity,
       merge: msg.method === 'patch',
+      parse: true,
       fromMessage: true
     };
     var id = this.modelId(msg.data);
@@ -355,9 +358,15 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
   sync: function (method, model, options) {
     console.log('Relution.LiveData.SyncStore.sync');
     options = options || {};
-    var endpoint = this.getEndpoint(model.getUrlRoot());
-    if (!endpoint) {
-      return;
+
+    var endpoint;
+    try {
+      endpoint = this.getEndpoint(model.getUrlRoot() /*throws urlError*/);
+      if (!endpoint) {
+        throw new Error('no endpoint');
+      }
+    } catch(error) {
+      return Q.reject(this.handleError(options, error) || error);
     }
 
     if (Relution.LiveData.isModel(model) && !model.id) {
