@@ -137,15 +137,20 @@ _.extend(Relution.LiveData.Store.prototype, Backbone.Events, Relution.LiveData.O
   },
 
   initModel: function (model) {
+    // may be overwritten
   },
 
   initCollection: function (collection) {
+    // may be overwritten
   },
 
   initEntity: function (entity) {
+    // may be overwritten
   },
 
   sync: function (method, model, options) {
+    // must be overwritten
+    return Q.reject(new Error('not implemented!')); // purely abstract
   },
 
   /**

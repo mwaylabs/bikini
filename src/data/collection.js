@@ -59,7 +59,6 @@ _.extend(Relution.LiveData.Collection.prototype, Relution.LiveData.Object, {
   },
 
   ajax: Relution.LiveData.ajax,
-  logon: Relution.LiveData.logon,
   sync: Relution.LiveData.sync,
 
   entityFromUrl: function (url) {

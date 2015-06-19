@@ -1,4 +1,5 @@
 describe('Relution.LiveData.SyncStore', function() {
+  this.timeout(5000);
 
     var TEST = {
         data : {
@@ -90,10 +91,7 @@ describe('Relution.LiveData.SyncStore', function() {
                     assert.ok(TEST.id, 'new record has an id.');
                     done();
                 },
-                error: function(model, error) {
-                    assert.ok(false, 'new record created successfully: ' + error);
-                    done();
-                }
+                error: backbone_error(done)
             }
         );
     });
@@ -135,10 +133,7 @@ describe('Relution.LiveData.SyncStore', function() {
                 assert.equal(model.get('age'), TEST.data.age, "found record has the correct 'age' value");
                 done();
             },
-            error: function(model, error) {
-                assert.ok(false, 'model has been fetched: ' + error);
-                done();
-            }
+            error: backbone_error(done)
         })
     });
 
@@ -151,10 +146,7 @@ describe('Relution.LiveData.SyncStore', function() {
                 assert.isObject(TEST.Tests.get(TEST.id), 'The model is still there');
                 done();
             },
-            error: function(model, error) {
-                assert.ok(false, 'Test collection fetched successfully: ' + error);
-                done();
-            }
+            error: backbone_error(done)
         });
     });
 
@@ -183,10 +175,7 @@ describe('Relution.LiveData.SyncStore', function() {
                 assert.ok(true, 'record has been deleted.');
                 done();
             },
-            error: function(model, error) {
-                assert.ok(false, 'record has been deleted: ' + error);
-                done();
-            }
+            error: backbone_error(done)
         });
     });
 
@@ -207,8 +196,7 @@ describe('Relution.LiveData.SyncStore', function() {
                   },
                   error: function(model, error) {
                       hasError = isDone = true;
-                      assert.ok(false, 'cleanup records error: ' + error);
-                      done();
+                      backbone_error(done).apply(this, arguments);
                   }
               });
             }

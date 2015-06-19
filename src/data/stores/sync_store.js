@@ -264,18 +264,22 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
     });
   },
 
-  onMessageStore: function (endpoint, msg) {
-    // this is called by the store itself for a particular endpoint!
-    var that = this;
-    if (!msg || !msg.method) {
-      return Q.reject('no message or method given');
-    }
+  _fixMessage: function (endpoint, msg) {
     if (msg.data && !msg.data[endpoint.entity.idAttribute] && msg.data._id) {
       msg.data[endpoint.entity.idAttribute] = msg.data._id; // server bug!
     } else if (!msg.data && msg.method === 'delete' && msg[endpoint.entity.idAttribute]) {
       msg.data = {};
       msg.data[endpoint.entity.idAttribute] = msg[endpoint.entity.idAttribute]; // server bug!
     }
+  },
+
+  onMessageStore: function (endpoint, msg) {
+    // this is called by the store itself for a particular endpoint!
+    var that = this;
+    if (!msg || !msg.method) {
+      return Q.reject('no message or method given');
+    }
+    this._fixMessage(endpoint, msg);
 
     var channel = endpoint.channel;
     if (endpoint.localStore) {
@@ -453,22 +457,19 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
   },
 
   _emitMessage: function (endpoint, msg, options, model, qMessage) {
-    var channel = endpoint.channel;
     var that = this;
-    var url = Relution.LiveData.isModel(model) || msg.method !== 'read' ? endpoint.baseUrl : endpoint.readUrl;
-    if (msg.id && msg.method !== 'create') {
-      url += (url.charAt(url.length - 1) === '/' ? '' : '/' ) + msg.id;
-    }
+    var channel = endpoint.channel;
     var qAjax = this._ajaxMessage(endpoint, msg, options, model);
     var q = qAjax;
+
     if (qMessage) {
       // following takes care of offline change store
-      q = qAjax.then(function (data) {
+      q = q.then(function (data) {
         // success, remove message stored, if any
         return that.removeMessage(endpoint, msg, qMessage).then(data, function (error) {
           that.trigger('error:' + channel, error); // can not do much about it...
           return data;
-        }); // resolve again yielding data
+        }).thenResolve(data); // resolve again yielding data
       }, function (xhr) {
         // failure eventually caught by offline changes
         if (!xhr.responseText && that.options.useOfflineChanges) {
@@ -480,7 +481,9 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
         }
       });
     }
+
     q = this._applyResponse(q, endpoint, msg, options, model);
+
     q.finally(function () {
       // do some connection handling
       return qAjax.then(function () {
@@ -504,11 +507,14 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
     if (msg.id && msg.method !== 'create') {
       url += (url.charAt(url.length - 1) === '/' ? '' : '/' ) + msg.id;
     }
+    console.log('ajaxMessage ' + msg.method + ' ' + url);
     return model.sync(msg.method, model, {
       // must not take arbitrary options as these won't be replayed on reconnect
       url: url,
       attrs: msg.data,
-      store: {}
+      store: {},
+      // error propagation
+      error: that.options.error
     });
   },
 
@@ -516,6 +522,11 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
     var channel = endpoint.channel;
     var that = this;
     return qXHR.then(function (data) {
+      // delete on server does not respond a body
+      if(!data && msg.method === 'delete') {
+        data = msg.data;
+      }
+
       // update local store state
       if (data) {
         // no data if server asks not to alter state
@@ -523,7 +534,7 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
         var promises = [];
         if (msg.method !== 'read') {
           promises.push(that.onMessageStore(endpoint, data === msg.data ? msg : _.defaults({
-            data: data
+            data: data // just accepts new data
           }, msg)));
         } else if (Relution.LiveData.isCollection(model) && _.isArray(data)) {
           // synchronize the collection contents with the data read
@@ -598,12 +609,12 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
       var changes = new Relution.LiveData.Collection();
       return changes.fetch({
         url: endpoint.baseUrl + 'changes/' + time,
-        success: function (a, b, response) {
+        success: function (model, response, options) {
           changes.each(function (change) {
             var msg = change.attributes;
             that.onMessageStore(endpoint, msg);
           });
-          return response.xhr;
+          return response || options.xhr;
         },
         credentials: endpoint.credentials
       });
@@ -623,7 +634,7 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
       }
       return info.fetch({
         url: url + 'info',
-        success: function (a, b, response) {
+        success: function (model, response, options) {
           //@todo why we set a server time here ?
           if (!time && info.get('time')) {
             that.setLastMessageTime(endpoint.channel, info.get('time'));
@@ -635,7 +646,7 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
               endpoint.socket = that.createSocket(endpoint, name);
             }
           }
-          return response.xhr;
+          return response || options.xhr;
         },
         credentials: endpoint.credentials
       });
@@ -659,29 +670,34 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
       if (!msg || !channel) {
         return message.destroy();
       }
+      that._fixMessage(endpoint, msg);
 
-      var options = {
-        store: that,
-        entity: endpoint.entity,
-        error: that.options.error
+      var remoteOptions = {
+        urlRoot: endpoint.baseUrl,
+        store: {} // really go to remote server
       };
-      var model = new Relution.LiveData.Model(msg.data, options);
-      return that._applyResponse(that._ajaxMessage(endpoint, msg, options, model), endpoint, msg, options, model).catch(function (error) {
+      var localOptions = {
+        // just affect local store
+        store: endpoint.localStore
+      };
+      var model = new Relution.LiveData.Model(msg.data, {
+        idAttribute: endpoint.entity.idAttribute,
+        entity: endpoint.entity,
+      });
+      console.log('sendMessage ' + model.id);
+      return that._applyResponse(that._ajaxMessage(endpoint, msg, remoteOptions, model), endpoint, msg, remoteOptions, model).catch(function (error) {
         // failed, eventually undo the modifications stored
         if (!endpoint.localStore) {
           return Q.reject(error);
         }
 
         // revert modification by reloading data
-        return model.fetch({
-          store: {} // really go to remote server
-        }).then(function (data) {
+        if (msg.id) {
+          remoteOptions.url = remoteOptions.urlRoot + (remoteOptions.urlRoot.charAt(remoteOptions.urlRoot.length - 1) === '/' ? '' : '/' ) + msg.id;
+        }
+        return model.fetch(remoteOptions).then(function (data) {
           // original request failed and the code above reloaded the data to revert the local modifications, which succeeded...
-          return model.save(data, {
-            // just affect local store
-            store: endpoint.localStore,
-            entity: endpoint.entity
-          });
+          return model.save(data, localOptions);
         }, function (fetchResp) {
           // original request failed and the code above tried to revert the local modifications by reloading the data, which failed as well...
           var status = fetchResp && fetchResp.status;
@@ -690,11 +706,7 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
             case 401: // UNAUTHORIZED
             case 410: // GONE*
               // ...because the item is gone by now, maybe someone else changed it to be deleted
-              return model.destroy({
-                // just affect local store
-                store: endpoint.localStore,
-                entity: endpoint.entity
-              });
+              return model.destroy(localOptions);
             default:
               return Q.reject(fetchResp);
           }
@@ -712,6 +724,7 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
     return qMsg.then(function (msg) {
       var options;
       var id = endpoint.messages.modelId(msg);
+      console.log('storeMessage ' + id);
       var message = id && endpoint.messages.get(id);
       if (message) {
         // use existing instance, should not be the case usually
@@ -749,6 +762,7 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
           });
         }
       }
+      console.log('removeMessage ' + message.id);
       return message.destroy();
     });
   },

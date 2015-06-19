@@ -71,36 +71,49 @@ Relution.LiveData.DATA = {
   }
 };
 
-Relution.LiveData.ajax = function ajax(url, options) {
-  var superAjax = this.super_ && this.super_.ajax || Backbone.ajax;
-  var xhr = superAjax.apply(this, arguments);
-  if (xhr) {
-    var q = Q.defer();
-    xhr.success(q.resolve.bind(q));
-    xhr.error(q.reject.bind(q));
-    q.promise.xhr = xhr;
-    return q.promise;
-  }
+Relution.LiveData.http = Backbone.ajax;
+
+Backbone.ajax = function ajax(options) {
+  var superAjax = options && options.ajax || Relution.LiveData.http;
+  return superAjax.apply(this, arguments);
 };
 
-Relution.LiveData.logon = function logon(options) {
-  Relution.LiveData.logon = Relution.LiveData.Security.logon;
-  return Relution.LiveData.Security.logon.apply(this, arguments);
+Relution.LiveData.ajax = function ajax(url, options) {
+  var that = this;
+  var args = arguments;
+  return Relution.LiveData.Security.logon.apply(this, arguments).then(function () {
+    var superAjax = that.super_ && that.super_.ajax || Relution.LiveData.http;
+    var xhr = superAjax.apply(that, args);
+    if (xhr) {
+      var q = Q.defer();
+      xhr.success(_.bind(q.resolve, q));
+      xhr.error(_.bind(q.reject, q));
+      q.promise.xhr = xhr;
+      return q.promise;
+    } else {
+      return Q.reject(new Error('ajax failed'));
+    }
+  });
 };
 
 Relution.LiveData.sync = function sync(method, model, options) {
   options = options || {};
   var store = options.store || this.store;
   options.credentials = options.credentials || this.credentials || store && store.credentials;
-  options.logon = options.logon || this.logon || store && store.logon || Relution.LiveData.logon;
 
-  var that = this;
-  var args = arguments;
-  var superSync = store && store.sync ? _.bind(store.sync, store) : this.super_ && this.super_.sync || Backbone.sync;
-  return options.logon.call(this, options).then(function innerSync(result) {
-    // when calling sync of store, the that argument is replaced by the store due to bind above
-    return superSync.apply(that, args) || result;
-  });
+  console.log('Relution.LiveData.sync ' + method + ' ' + model.id);
+  if(store && store.sync) {
+    // store access (this is redundant model argument)
+    var storeAjax = store.ajax && _.bind(store.ajax, store);
+    options.ajax = options.ajax ||  storeAjax || this.ajax || Relution.LiveData.ajax;
+    options.promise = store.sync.apply(store, arguments);
+    return options.promise;
+  } else {
+    // direct access (goes via Backbone)
+    var superSync = this.super_ && this.super_.sync || Backbone.sync;
+    options.ajax = options.ajax ||  this.ajax || Relution.LiveData.http;
+    return superSync.apply(this, arguments);
+  }
 };
 
 Relution.LiveData.Object = {

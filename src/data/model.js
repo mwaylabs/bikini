@@ -55,7 +55,6 @@ _.extend(Relution.LiveData.Model.prototype, Relution.LiveData.Object, {
   },
 
   ajax: Relution.LiveData.ajax,
-  logon: Relution.LiveData.logon,
   sync: Relution.LiveData.sync,
 
   onChange: function (model, options) {
