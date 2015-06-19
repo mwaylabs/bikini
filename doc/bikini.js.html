@@ -29,7 +29,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Tue May 19 2015 11:02:12
+* Date:      Fri Jun 19 2015 12:06:57
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 
@@ -43,18 +43,19 @@
    *
    * @type {Object}
    */
-  var Bikini = null;
+  var Relution;
   if (typeof exports !== 'undefined') {
-    Bikini = exports;
+    Relution = {};
   } else {
-    Bikini = global.Bikini = {};
+    Relution = global.Relution = global.Relution || {};
   }
+  Relution.LiveData = {};
   
   /**
    * Version number of current release
    * @type {String}
    */
-  Bikini.Version = Bikini.version = '0.8.4';
+  Relution.LiveData.Version = Relution.LiveData.version = '0.8.4';
   
   /**
    * Empty function to be used when
@@ -62,68 +63,103 @@
    *
    * @type {Function}
    */
-  Bikini.f = function () {
+  Relution.LiveData.f = function () {
   };
   
-  Bikini.create = function (args) {
+  Relution.LiveData.create = function (args) {
     return new this(args);
   };
   
-  Bikini.design = function (obj) {
+  Relution.LiveData.design = function (obj) {
     var O = this.extend(obj || {});
     return new O();
   };
   
-  Bikini.extend = Backbone.Model.extend;
+  Relution.LiveData.extend = Backbone.Model.extend;
   
-  Bikini.isCollection = function (collection) {
+  Relution.LiveData.isCollection = function (collection) {
     return Backbone.Collection.prototype.isPrototypeOf(collection);
   };
   
-  Bikini.isModel = function (model) {
+  Relution.LiveData.isModel = function (model) {
     return Backbone.Model.prototype.isPrototypeOf(model);
   };
   
-  Bikini.isEntity = function (entity) {
-    return Bikini.Entity.prototype.isPrototypeOf(entity);
+  Relution.LiveData.isEntity = function (entity) {
+    return Relution.LiveData.Entity.prototype.isPrototypeOf(entity);
   };
   
   /***
    * Data type Constants.
    */
-  Bikini.DATA = {
+  Relution.LiveData.DATA = {
     TYPE: {
       INTEGER: 'integer',
-  
       STRING: 'string',
-  
       TEXT: 'text',
-  
       DATE: 'date',
-  
       BOOLEAN: 'boolean',
-  
       FLOAT: 'float',
-  
       OBJECT: 'object',
-  
       ARRAY: 'array',
-  
       BINARY: 'binary',
-  
       OBJECTID: 'objectid',
-  
       NULL: 'null'
     }
   };
   
-  Bikini.Object = {
+  Relution.LiveData.http = Backbone.ajax;
+  
+  Backbone.ajax = function ajax(options) {
+    var superAjax = options && options.ajax || Relution.LiveData.http;
+    return superAjax.apply(this, arguments);
+  };
+  
+  Relution.LiveData.ajax = function ajax(url, options) {
+    var that = this;
+    var args = arguments;
+    return Relution.LiveData.Security.logon.apply(this, arguments).then(function () {
+      var superAjax = that.super_ && that.super_.ajax || Relution.LiveData.http;
+      var xhr = superAjax.apply(that, args);
+      if (xhr) {
+        var q = Q.defer();
+        xhr.success(_.bind(q.resolve, q));
+        xhr.error(_.bind(q.reject, q));
+        q.promise.xhr = xhr;
+        return q.promise;
+      } else {
+        return Q.reject(new Error('ajax failed'));
+      }
+    });
+  };
+  
+  Relution.LiveData.sync = function sync(method, model, options) {
+    options = options || {};
+    var store = options.store || this.store;
+    options.credentials = options.credentials || this.credentials || store && store.credentials;
+  
+    console.log('Relution.LiveData.sync ' + method + ' ' + model.id);
+    if(store && store.sync) {
+      // store access (this is redundant model argument)
+      var storeAjax = store.ajax && _.bind(store.ajax, store);
+      options.ajax = options.ajax ||  storeAjax || this.ajax || Relution.LiveData.ajax;
+      options.promise = store.sync.apply(store, arguments);
+      return options.promise;
+    } else {
+      // direct access (goes via Backbone)
+      var superSync = this.super_ && this.super_.sync || Backbone.sync;
+      options.ajax = options.ajax ||  this.ajax || Relution.LiveData.http;
+      return superSync.apply(this, arguments);
+    }
+  };
+  
+  Relution.LiveData.Object = {
     /**
      * The type of this object.
      *
      * @type String
      */
-    _type: 'Bikini.Object',
+    _type: 'Relution.LiveData.Object',
   
     /**
      * Creates an object based on a passed prototype.
@@ -145,7 +181,7 @@
     include: function (properties) {
       for (var prop in properties) {
         if (this.hasOwnProperty(prop)) {
-          throw Bikini.Exception.RESERVED_WORD.getException();
+          throw Relution.LiveData.Exception.RESERVED_WORD.getException();
         }
         this[prop] = properties[prop];
       }
@@ -161,14 +197,13 @@
      * @param {Object} properties The properties to be included into the given object.
      */
     design: function (properties) {
-      /* create the new object */
-      // var obj = Bikini.Object._create(this);
+      // create the new object
       var obj = this._create(this);
   
-      /* assign the properties passed with the arguments array */
-      obj.include(this._normalize(properties));
+      // assign the properties passed with the arguments array
+      obj.include(properties);
   
-      /* return the new object */
+      // return the new object
       return obj;
     },
   
@@ -183,27 +218,13 @@
     bindToCaller: function (caller, method, arg) {
       return function () {
         if (typeof method !== 'function' || typeof caller !== 'object') {
-          throw Bikini.Exception.INVALID_INPUT_PARAMETER.getException();
+          throw Relution.LiveData.Exception.INVALID_INPUT_PARAMETER.getException();
         }
         if (Array.isArray(arg)) {
           return method.apply(caller, arg);
         }
         return method.call(caller, arg);
       };
-    },
-  
-    /**
-     * This method is used internally to normalize the properties object that is used
-     * for extending a given object.
-     *
-     * @param obj
-     * @returns {Object}
-     * @private
-     */
-    _normalize: function (obj) {
-      obj = obj && typeof obj === 'object' ? obj : {};
-  
-      return obj;
     },
   
     /**
@@ -229,27 +250,13 @@
   
   };
   
-  /**
-   * Readable alias for true
-   *
-   * @type {Boolean}
-   */
-  YES = true;
-  
-  /**
-   * Readable alias for false
-   *
-   * @type {Boolean}
-   */
-  NO = false;
-  
 
   // Copyright (c) 2013 M-Way Solutions GmbH
   // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
   
   // ===========================================================================
   //
-  // Bikini.ObjectId uses code from meteor.js
+  // Relution.LiveData.ObjectId uses code from meteor.js
   // https://github.com/meteor/meteor/blob/master/packages/minimongo
   //
   // Thanks for sharing!
@@ -259,21 +266,21 @@
   // m_require('core/foundation/object.js');
   /**
    *
-   * @module Bikini.ObjectID
+   * @module Relution.LiveData.ObjectID
    *
    */
-  Bikini.ObjectID = function (hexString) {
-    Bikini.ObjectID.counter = Bikini.ObjectID.counter || parseInt(Math.random() * Math.pow(16, 6));
-    Bikini.ObjectID.machineId = Bikini.ObjectID.machineId || parseInt(Math.random() * Math.pow(16, 6));
-    Bikini.ObjectID.processId = Bikini.ObjectID.processId || parseInt(Math.random() * Math.pow(16, 4));
+  Relution.LiveData.ObjectID = function (hexString) {
+    Relution.LiveData.ObjectID.counter = Relution.LiveData.ObjectID.counter || parseInt(Math.random() * Math.pow(16, 6));
+    Relution.LiveData.ObjectID.machineId = Relution.LiveData.ObjectID.machineId || parseInt(Math.random() * Math.pow(16, 6));
+    Relution.LiveData.ObjectID.processId = Relution.LiveData.ObjectID.processId || parseInt(Math.random() * Math.pow(16, 4));
     this._ObjectID(hexString);
   };
   
-  Bikini.ObjectID._looksLikeObjectID = function (str) {
+  Relution.LiveData.ObjectID._looksLikeObjectID = function (str) {
     return str.length === 24 && str.match(/^[0-9a-f]*$/);
   };
   
-  _.extend(Bikini.ObjectID.prototype, {
+  _.extend(Relution.LiveData.ObjectID.prototype, {
   
     _str: '',
   
@@ -281,7 +288,7 @@
       //random-based impl of Mongo ObjectID
       if (hexString) {
         hexString = hexString.toLowerCase();
-        if (!Bikini.ObjectID._looksLikeObjectID(hexString)) {
+        if (!Relution.LiveData.ObjectID._looksLikeObjectID(hexString)) {
           throw new Error('Invalid hexadecimal string for creating an ObjectID');
         }
         // meant to work with _.isEqual(), which relies on structural equality
@@ -290,9 +297,9 @@
   
         this._str =
           this._hexString(8, new Date().getTime() / 1000) +     // a 4-byte value from the Unix timestamp
-          this._hexString(6, Bikini.ObjectID.machineId) +          // a 3-byte machine identifier
-          this._hexString(4, Bikini.ObjectID.processId) +          // a 2-byte process identifier
-          this._hexString(6, Bikini.ObjectID.counter++);   // a 3-byte counter, starting with a random value.
+          this._hexString(6, Relution.LiveData.ObjectID.machineId) +          // a 3-byte machine identifier
+          this._hexString(4, Relution.LiveData.ObjectID.processId) +          // a 2-byte process identifier
+          this._hexString(6, Relution.LiveData.ObjectID.counter++);   // a 3-byte counter, starting with a random value.
       }
       return this._str;
     },
@@ -315,7 +322,7 @@
     },
   
     clone: function () {
-      return new Bikini.ObjectID(this._str);
+      return new Relution.LiveData.ObjectID(this._str);
     },
   
     typeName: function () {
@@ -354,7 +361,7 @@
     _selectorIsId: function (selector) {
       return (typeof selector === 'string') ||
         (typeof selector === 'number') ||
-        selector instanceof Bikini.ObjectId;
+        selector instanceof Relution.LiveData.ObjectId;
     },
   
     // Is the selector just lookup by _id (shorthand or not)?
@@ -412,12 +419,12 @@
   
   /**
    *
-   * @module Bikini.UniqueId
+   * @module Relution.LiveData.UniqueId
    *
    * @type {*}
-   * @extends Bikini.Object
+   * @extends Relution.LiveData.Object
    */
-  Bikini.UniqueId = Bikini.Object.design({
+  Relution.LiveData.UniqueId = Relution.LiveData.Object.design({
     uuid: function (len, radix) {
       // based on Robert Kieffer's randomUUID.js at http://www.broofa.com
       var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
@@ -456,20 +463,20 @@
   
   /**
    * This prototype defines decoding and encoding mechanisms based on the Base64 algorithm. You
-   * normally don't call this object respectively its methods directly, but let Bikini.Cypher handle
+   * normally don't call this object respectively its methods directly, but let Relution.LiveData.Cypher handle
    * this.
-   * @module Bikini.Base64
+   * @module Relution.LiveData.Base64
    *
-   * @extends Bikini.Object
+   * @extends Relution.LiveData.Object
    */
-  Bikini.Base64 = Bikini.Object.design(/** @scope Bikini.Base64.prototype */ {
+  Relution.LiveData.Base64 = Relution.LiveData.Object.design(/** @scope Relution.LiveData.Base64.prototype */ {
   
     /**
      * The type of this object.
      *
      * @type String
      */
-    type: 'Bikini.Base64',
+    type: 'Relution.LiveData.Base64',
   
     /**
      * The key string for the base 64 decoding and encoding.
@@ -548,7 +555,7 @@
       var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
       var i = 0;
   
-      input = Bikini.Cypher.utf8Encode(input);
+      input = Relution.LiveData.Cypher.utf8Encode(input);
   
       while (i &lt; input.length) {
         chr1 = input.charCodeAt(i++);
@@ -634,7 +641,7 @@
         }
       }
   
-      return Bikini.Cypher.utf8Decode(output);
+      return Relution.LiveData.Cypher.utf8Decode(output);
     }
   
   });
@@ -644,20 +651,20 @@
   
   /**
    * This prototype defines a hashing mechanism based on the SHA256 algorithm. You normally
-   * don't call this object respectively its methods directly, but let Bikini.Cypher handle
+   * don't call this object respectively its methods directly, but let Relution.LiveData.Cypher handle
    * this.
-   * @module Bikini.SHA256
+   * @module Relution.LiveData.SHA256
    *
-   * @extends Bikini.Object
+   * @extends Relution.LiveData.Object
    */
-  Bikini.SHA256 = Bikini.Object.design(/** @scope Bikini.SHA256.prototype */ {
+  Relution.LiveData.SHA256 = Relution.LiveData.Object.design(/** @scope Relution.LiveData.SHA256.prototype */ {
   
     /**
      * The type of this object.
      *
      * @type String
      */
-    type: 'Bikini.SHA256',
+    type: 'Relution.LiveData.SHA256',
   
     /**
      * Defines the bits per input character: 8 - ASCII, 16 - Unicode
@@ -681,7 +688,7 @@
      * @returns {String} The sha256 hashed string.
      */
     hash: function (input) {
-      input = Bikini.Cypher.utf8Encode(input);
+      input = Relution.LiveData.Cypher.utf8Encode(input);
       return this.binb2hex(this.coreSha256(this.str2binb(input), input.length * this.chrsz));
     },
   
@@ -835,43 +842,43 @@
   // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
   
   /**
-   * Bikini.Cypher defines a prototype for handling decoding, encoding and hashing of string
+   * Relution.LiveData.Cypher defines a prototype for handling decoding, encoding and hashing of string
    * based values.
-   * @module Bikini.Cypher
+   * @module Relution.LiveData.Cypher
    *
-   * @extends Bikini.Object
+   * @extends Relution.LiveData.Object
    */
-  Bikini.Cypher = Bikini.Object.design(/** @scope Bikini.Cypher.prototype */ {
+  Relution.LiveData.Cypher = Relution.LiveData.Object.design(/** @scope Relution.LiveData.Cypher.prototype */ {
   
     /**
      * The type of this object.
      *
      * @type String
      */
-    type: 'Bikini.Cypher',
+    type: 'Relution.LiveData.Cypher',
   
     /**
      * The default decoder.
      *
-     * @type Bikini.Base64
+     * @type Relution.LiveData.Base64
      */
-    defaultDecoder: Bikini.Base64,
+    defaultDecoder: Relution.LiveData.Base64,
   
     /**
      * The default encoder.
      *
-     * @type Bikini.Base64
+     * @type Relution.LiveData.Base64
      */
   
-    defaultEncoder: Bikini.Base64,
+    defaultEncoder: Relution.LiveData.Base64,
   
     /**
      * The default hash algorithm.
      *
-     * @type Bikini.SHA256
+     * @type Relution.LiveData.SHA256
      */
   
-    defaultHasher: Bikini.SHA256,
+    defaultHasher: Relution.LiveData.SHA256,
   
     /**
      * This method is the one that initiates the decoding of a given string, based on either
@@ -1004,14 +1011,14 @@
   
   /**
    *
-   * @module Bikini.Date
+   * @module Relution.LiveData.Date
    *
-   * @extends Bikini.Object
+   * @extends Relution.LiveData.Object
    */
-  Bikini.Date = {
+  Relution.LiveData.Date = {
   
     /**
-     * This method is used to create a new instance of Bikini.Date based on the data
+     * This method is used to create a new instance of Relution.LiveData.Date based on the data
      * library moment.js.
      *
      * @returns {Object}
@@ -1022,13 +1029,71 @@
     }
   };
   
+  // Copyright (c) 2013 M-Way Solutions GmbH
+  // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
+  
+  // Returns a unique identifier
+  
+  /**
+   *
+   * @module Relution.LiveData.URLUtil
+   *
+   * @type {*}
+   * @extends Relution.LiveData.Object
+   */
+  Relution.LiveData.URLUtil = Relution.LiveData.Object.design({
+    /*
+     url = "http://example.com:3000/pathname/?search=test#hash";
+  
+     location.protocol; // => "http:"
+     location.host;     // => "example.com:3000"
+     location.hostname; // => "example.com"
+     location.port;     // => "3000"
+     location.pathname; // => "/pathname/"
+     location.hash;     // => "#hash"
+     location.search;   // => "?search=test"
+     */
+    getLocation: function (url) {
+      var location = document.createElement('a');
+      location.href = url || this.url;
+      // IE doesn't populate all link properties when setting .href with a relative URL,
+      // however .href will return an absolute URL which then can be used on itself
+      // to populate these additional fields.
+      if (location.host === '') {
+        location.href = location.href;
+      }
+      return location;
+    },
+  
+    resolveLocation: function (str) {
+      return this.getLocation(str).toString();
+    },
+  
+    hashLocation: function (str) {
+      return this._hashCode(this.resolveLocation(str));
+    },
+  
+    _hashCode: function () {
+      var hash = 0;
+      for (var i = 0; i &lt; arguments.length; ++i) {
+        var str = arguments[i] || '';
+        for (var j = 0, l = str.length; j &lt; l; ++j) {
+          var char = str.charCodeAt(j);
+          hash = ((hash &lt;&lt; 5) - hash) + char;
+          hash |= 0; // Convert to 32bit integer
+        }
+      }
+      return hash;
+    }
+  });
+  
 
   // Copyright (c) 2013 M-Way Solutions GmbH
   // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
   
   /**
    *
-   * @module Bikini.Field
+   * @module Relution.LiveData.Field
    *
    */
   
@@ -1040,23 +1105,23 @@
    * @param options
    * @constructor
    */
-  Bikini.Field = function (options) {
+  Relution.LiveData.Field = function (options) {
     this.merge(options);
     this.initialize.apply(this, arguments);
   };
   
-  Bikini.Field.extend = Bikini.extend;
-  Bikini.Field.create = Bikini.create;
-  Bikini.Field.design = Bikini.design;
+  Relution.LiveData.Field.extend = Relution.LiveData.extend;
+  Relution.LiveData.Field.create = Relution.LiveData.create;
+  Relution.LiveData.Field.design = Relution.LiveData.design;
   
-  _.extend(Bikini.Field.prototype, Bikini.Object, {
+  _.extend(Relution.LiveData.Field.prototype, Relution.LiveData.Object, {
   
     /**
      * The type of this object.
      *
      * @type String
      */
-    _type: 'Bikini.Field',
+    _type: 'Relution.LiveData.Field',
   
     name: null,
   
@@ -1068,9 +1133,9 @@
   
     length: null,
   
-    required: NO,
+    required: false,
   
-    persistent: YES,
+    persistent: true,
   
     initialize: function () {
     },
@@ -1105,30 +1170,30 @@
         if (_.isUndefined(value)) {
           return this.defaultValue;
         }
-        if (type === Bikini.DATA.TYPE.STRING || type === Bikini.DATA.TYPE.TEXT) {
+        if (type === Relution.LiveData.DATA.TYPE.STRING || type === Relution.LiveData.DATA.TYPE.TEXT) {
           if (_.isObject(value)) {
             return JSON.stringify(value);
           } else {
             return _.isNull(value) ? 'null' : value.toString();
           }
-        } else if (type === Bikini.DATA.TYPE.INTEGER) {
+        } else if (type === Relution.LiveData.DATA.TYPE.INTEGER) {
           return parseInt(value);
-        } else if (type === Bikini.DATA.TYPE.BOOLEAN) {
+        } else if (type === Relution.LiveData.DATA.TYPE.BOOLEAN) {
           return value === true || value === 'true'; // true, 1, "1" or "true"
-        } else if (type === Bikini.DATA.TYPE.FLOAT) {
+        } else if (type === Relution.LiveData.DATA.TYPE.FLOAT) {
           return parseFloat(value);
-        } else if (type === Bikini.DATA.TYPE.OBJECT || type === Bikini.DATA.TYPE.ARRAY) {
+        } else if (type === Relution.LiveData.DATA.TYPE.OBJECT || type === Relution.LiveData.DATA.TYPE.ARRAY) {
           if (!_.isObject(value)) {
             return _.isString(value) ? JSON.parse(value) : null;
           }
-        } else if (type === Bikini.DATA.TYPE.DATE) {
-          if (!Bikini.Date.isPrototypeOf(value)) {
-            var date = value ? Bikini.Date.create(value) : null;
+        } else if (type === Relution.LiveData.DATA.TYPE.DATE) {
+          if (!Relution.LiveData.Date.isPrototypeOf(value)) {
+            var date = value ? Relution.LiveData.Date.create(value) : null;
             return date && date.isValid() ? date : null;
           }
-        } else if (type === Bikini.DATA.TYPE.OBJECTID) {
-          if (!Bikini.ObjectID.prototype.isPrototypeOf(value)) {
-            return _.isString(value) ? new Bikini.ObjectID(value) : null;
+        } else if (type === Relution.LiveData.DATA.TYPE.OBJECTID) {
+          if (!Relution.LiveData.ObjectID.prototype.isPrototypeOf(value)) {
+            return _.isString(value) ? new Relution.LiveData.ObjectID(value) : null;
           }
         }
         return value;
@@ -1168,30 +1233,30 @@
      */
     detectType: function (v) {
       if (_.isNumber(v)) {
-        return Bikini.DATA.TYPE.FLOAT;
+        return Relution.LiveData.DATA.TYPE.FLOAT;
       }
       if (_.isString(v)) {
-        return Bikini.DATA.TYPE.STRING;
+        return Relution.LiveData.DATA.TYPE.STRING;
       }
       if (_.isBoolean(v)) {
-        return Bikini.DATA.TYPE.BOOLEAN;
+        return Relution.LiveData.DATA.TYPE.BOOLEAN;
       }
       if (_.isArray(v)) {
-        return Bikini.DATA.TYPE.ARRAY;
+        return Relution.LiveData.DATA.TYPE.ARRAY;
       }
       if (_.isNull(v)) {
-        return Bikini.DATA.TYPE.NULL;
+        return Relution.LiveData.DATA.TYPE.NULL;
       }
-      if (_.isDate(v) || Bikini.Date.isPrototypeOf(v)) {
-        return Bikini.DATA.TYPE.DATE;
+      if (_.isDate(v) || Relution.LiveData.Date.isPrototypeOf(v)) {
+        return Relution.LiveData.DATA.TYPE.DATE;
       }
-      if (Bikini.ObjectID.prototype.isPrototypeOf(v)) {
-        return Bikini.DATA.TYPE.OBJECTID;
+      if (Relution.LiveData.ObjectID.prototype.isPrototypeOf(v)) {
+        return Relution.LiveData.DATA.TYPE.OBJECTID;
       }
       if (this.isBinary(v)) {
-        return Bikini.DATA.TYPE.BINARY;
+        return Relution.LiveData.DATA.TYPE.BINARY;
       }
-      return Bikini.DATA.TYPE.OBJECT;
+      return Relution.LiveData.DATA.TYPE.OBJECT;
     },
   
     /**
@@ -1202,19 +1267,19 @@
      */
     typeOrder: function (type) {
       switch (type) {
-        case Bikini.DATA.TYPE.NULL   :
+        case Relution.LiveData.DATA.TYPE.NULL   :
           return 0;
-        case Bikini.DATA.TYPE.FLOAT  :
+        case Relution.LiveData.DATA.TYPE.FLOAT  :
           return 1;
-        case Bikini.DATA.TYPE.STRING :
+        case Relution.LiveData.DATA.TYPE.STRING :
           return 2;
-        case Bikini.DATA.TYPE.OBJECT :
+        case Relution.LiveData.DATA.TYPE.OBJECT :
           return 3;
-        case Bikini.DATA.TYPE.ARRAY  :
+        case Relution.LiveData.DATA.TYPE.ARRAY  :
           return 4;
-        case Bikini.DATA.TYPE.BINARY :
+        case Relution.LiveData.DATA.TYPE.BINARY :
           return 5;
-        case Bikini.DATA.TYPE.DATE   :
+        case Relution.LiveData.DATA.TYPE.DATE   :
           return 6;
       }
       return -1;
@@ -1336,19 +1401,19 @@
         a = a.toHexString();
         b = b.toHexString();
       }
-      if (ta === Bikini.DATA.TYPE.DATE) {
+      if (ta === Relution.LiveData.DATA.TYPE.DATE) {
         // Convert to millis.
         ta = tb = 1;
         a = a.getTime();
         b = b.getTime();
       }
-      if (ta === Bikini.DATA.TYPE.FLOAT) {
+      if (ta === Relution.LiveData.DATA.TYPE.FLOAT) {
         return a - b;
       }
-      if (tb === Bikini.DATA.TYPE.STRING) {
+      if (tb === Relution.LiveData.DATA.TYPE.STRING) {
         return a &lt; b ? -1 : (a === b ? 0 : 1);
       }
-      if (ta === Bikini.DATA.TYPE.OBJECT) {
+      if (ta === Relution.LiveData.DATA.TYPE.OBJECT) {
         // this could be much more efficient in the expected case ...
         var toArray = function (obj) {
           var ret = [];
@@ -1360,7 +1425,7 @@
         };
         return this._cmp(toArray(a), toArray(b));
       }
-      if (ta === Bikini.DATA.TYPE.ARRAY) { // Array
+      if (ta === Relution.LiveData.DATA.TYPE.ARRAY) { // Array
         for (i = 0; ; i++) {
           if (i === a.length) {
             return (i === b.length) ? 0 : -1;
@@ -1374,7 +1439,7 @@
           }
         }
       }
-      if (ta === Bikini.DATA.TYPE.BINARY) {
+      if (ta === Relution.LiveData.DATA.TYPE.BINARY) {
         if (a.length !== b.length) {
           return a.length - b.length;
         }
@@ -1388,16 +1453,16 @@
         }
         return 0;
       }
-      if (ta === Bikini.DATA.TYPE.BOOLEAN) {
+      if (ta === Relution.LiveData.DATA.TYPE.BOOLEAN) {
         if (a) {
           return b ? 0 : 1;
         }
         return b ? -1 : 0;
       }
-      if (ta === Bikini.DATA.TYPE.NULL) {
+      if (ta === Relution.LiveData.DATA.TYPE.NULL) {
         return 0;
       }
-  //        if( ta === Bikini.DATA.TYPE.REGEXP ) {
+  //        if( ta === Relution.LiveData.DATA.TYPE.REGEXP ) {
   //            throw Error("Sorting not supported on regular expression");
   //        } // XXX
   //        if( ta === 13 ) // javascript code
@@ -1413,19 +1478,19 @@
   
   /**
    *
-   * @module Bikini.Entity
+   * @module Relution.LiveData.Entity
    *
    */
   
   /**
    * Holds description about fields and other entity properties.
    * Also helper functions for field and transform operations
-   * @module Bikini.Entity
+   * @module Relution.LiveData.Entity
    *
    * @param options
    * @constructor
    */
-  Bikini.Entity = function (options) {
+  Relution.LiveData.Entity = function (options) {
     var fields = this.fields;
     this.fields = {};
     this._mergeFields(fields);
@@ -1448,12 +1513,12 @@
    * @param options
    * @returns {*}
    */
-  Bikini.Entity.from = function (entity, options) {
-    // is not an instance of Bikini.Entity
-    if (!Bikini.Entity.prototype.isPrototypeOf(entity)) {
+  Relution.LiveData.Entity.from = function (entity, options) {
+    // is not an instance of Relution.LiveData.Entity
+    if (!Relution.LiveData.Entity.prototype.isPrototypeOf(entity)) {
       // if this is a prototype of an entity, create an instance
       if (_.isFunction(entity) &&
-        Bikini.Entity.prototype.isPrototypeOf(entity.prototype)) {
+        Relution.LiveData.Entity.prototype.isPrototypeOf(entity.prototype)) {
         var Entity = entity;
         entity = new Entity(options);
       } else {
@@ -1463,7 +1528,7 @@
           };
         }
         // if this is just a config create a new Entity
-        var E = Bikini.Entity.extend(entity);
+        var E = Relution.LiveData.Entity.extend(entity);
         entity = new E(options);
       }
     } else if (options && options.typeMapping) {
@@ -1472,18 +1537,18 @@
     return entity;
   };
   
-  Bikini.Entity.extend = Bikini.extend;
-  Bikini.Entity.create = Bikini.create;
-  Bikini.Entity.design = Bikini.design;
+  Relution.LiveData.Entity.extend = Relution.LiveData.extend;
+  Relution.LiveData.Entity.create = Relution.LiveData.create;
+  Relution.LiveData.Entity.design = Relution.LiveData.design;
   
-  _.extend(Bikini.Entity.prototype, Bikini.Object, {
+  _.extend(Relution.LiveData.Entity.prototype, Relution.LiveData.Object, {
   
     /**
      * The type of this object.
      *
      * @type String
      */
-    _type: 'Bikini.Entity',
+    _type: 'Relution.LiveData.Entity',
   
     /**
      * Entity name, used for tables or collections
@@ -1525,7 +1590,7 @@
      * get a specified field from this entity
      *
      * @param fieldKey
-     * @returns Bikini.Field instance
+     * @returns Relution.LiveData.Field instance
      */
     getField: function (fieldKey) {
       return this.fields[fieldKey];
@@ -1548,7 +1613,7 @@
      * @returns String
      */
     getKey: function () {
-      return this.idAttribute || Bikini.Model.idAttribute;
+      return this.idAttribute || Relution.LiveData.Model.idAttribute;
     },
   
     /**
@@ -1592,7 +1657,7 @@
       if (_.isObject(newFields)) {
         _.each(newFields, function (value, key) {
           if (!that.fields[key]) {
-            that.fields[key] = new Bikini.Field(value);
+            that.fields[key] = new Relution.LiveData.Field(value);
           } else {
             that.fields[key].merge(value);
           }
@@ -1609,8 +1674,8 @@
     _updateFields: function (typeMapping) {
       var that = this;
       _.each(this.fields, function (value, key) {
-        // remove unused properties
-        if (value.persistent === NO) {
+        if (!value.persistent) {
+          // remove unused properties
           delete that.fields[key];
         } else {
           // add missing names
@@ -1714,38 +1779,29 @@
   
   /**
    *
-   * @module Bikini.Security
+   * @module Relution.LiveData.Security
    *
    * @type {{logon: Function, logonBasicAuth: Function, logonMcapAuth: Function, getHost: Function}}
    */
-  Bikini.Security = Bikini.Object.design({
+  Relution.LiveData.Security = Relution.LiveData.Object.design({
   
-  
-    logon: function (options, callback) {
-      var credentials = options ? options.credentials : null;
-      if (credentials) {
-        switch (credentials.type) {
-          case 'basic':
-            return this.logonBasicAuth(options, callback);
+    logon: _.extend(function logon(options) {
+      var credentials = options && options.credentials;
+      var type = credentials && credentials.type;
+      var auth = type && logon[type];
+      return auth ? auth.apply(this, arguments) : Q.resolve();
+    }, {
+      basic: function basic(options) {
+        var credentials = options.credentials;
+        var auth = credentials.username && Relution.LiveData.Base64.encode(encodeURIComponent(credentials.username + ':' + (credentials.password || '')));
+        if (auth) {
+          options.beforeSend = function (xhr) {
+            xhr.setRequestHeader('Authorization', 'Basic ' + auth);
+          };
         }
+        return Q.resolve();
       }
-      return this.handleCallback(callback);
-    },
-  
-    logonBasicAuth: function (options, callback) {
-      var credentials = options.credentials;
-      options.beforeSend = function (xhr) {
-        Bikini.Security.setBasicAuth(xhr, credentials);
-      };
-      return this.handleCallback(callback);
-    },
-  
-    setBasicAuth: function (xhr, credentials) {
-      if (credentials && credentials.username && xhr && Bikini.Base64) {
-        var basicAuth = Bikini.Base64.encode(encodeURIComponent(credentials.username + ':' + (credentials.password || '')));
-        xhr.setRequestHeader('Authorization', 'Basic ' + basicAuth);
-      }
-    }
+    })
   
   });
   
@@ -1754,12 +1810,12 @@
   
   /**
    *
-   * @module Bikini.Model
+   * @module Relution.LiveData.Model
    *
    * @type {*}
    * @extends Backbone.Model
    */
-  Bikini.Model = Backbone.Model.extend({
+  Relution.LiveData.Model = Backbone.Model.extend({
     constructor: function (attributes, options) {
       if (this.url && typeof this.url === 'string') {
         if (this.url.charAt(this.url.length - 1) !== '/') {
@@ -1771,22 +1827,20 @@
     }
   });
   
-  Bikini.Model.create = Bikini.create;
-  Bikini.Model.design = Bikini.design;
+  Relution.LiveData.Model.create = Relution.LiveData.create;
+  Relution.LiveData.Model.design = Relution.LiveData.design;
   
-  _.extend(Bikini.Model.prototype, Bikini.Object, {
+  _.extend(Relution.LiveData.Model.prototype, Relution.LiveData.Object, {
   
-    _type: 'Bikini.Model',
+    _type: 'Relution.LiveData.Model',
   
-    isModel: YES,
+    isModel: true,
   
     entity: null,
   
     defaults: {},
   
     changedSinceSync: {},
-  
-    logon: Bikini.Security.logon,
   
     init: function (attributes, options) {
       options = options || {};
@@ -1799,7 +1853,7 @@
       }
       this.entity = this.entity || (this.collection ? this.collection.entity : null) || options.entity;
       if (this.entity) {
-        this.entity = Bikini.Entity.from(this.entity, {model: this.constructor, typeMapping: options.typeMapping});
+        this.entity = Relution.LiveData.Entity.from(this.entity, {model: this.constructor, typeMapping: options.typeMapping});
         this.idAttribute = this.entity.idAttribute || this.idAttribute;
       }
       this.credentials = this.credentials || (this.collection ? this.collection.credentials : null) || options.credentials;
@@ -1807,21 +1861,8 @@
       this.on('sync', this.onSync, this);
     },
   
-    sync: function (method, model, options) {
-      options = options || {};
-      options.credentials = options.credentials || this.credentials;
-      var store = (options.store ? options.store : null) || this.store;
-      var that = this;
-      var args = arguments;
-  
-      return this.logon(options, function (result) {
-        if (store && _.isFunction(store.sync)) {
-          return store.sync.apply(that, args);
-        } else {
-          return Backbone.sync.apply(that, args);
-        }
-      });
-    },
+    ajax: Relution.LiveData.ajax,
+    sync: Relution.LiveData.sync,
   
     onChange: function (model, options) {
       // For each `set` attribute, update or delete the current value.
@@ -1854,7 +1895,7 @@
     toJSON: function (options) {
       options = options || {};
       var entity = options.entity || this.entity;
-      if (Bikini.isEntity(entity)) {
+      if (Relution.LiveData.isEntity(entity)) {
         return entity.fromAttributes(options.attrs || this.attributes);
       }
       return options.attrs || _.clone(this.attributes);
@@ -1863,7 +1904,7 @@
     parse: function (resp, options) {
       options = options || {};
       var entity = options.entity || this.entity;
-      if (Bikini.isEntity(entity)) {
+      if (Relution.LiveData.isEntity(entity)) {
         return entity.toAttributes(resp);
       }
       return resp;
@@ -1875,20 +1916,20 @@
   // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
   
   /**
-   * The Bikini.Collection can be used like a Backbone Collection,
+   * The Relution.LiveData.Collection can be used like a Backbone Collection,
    *
    * but there are some enhancements to fetch, save and delete the
    * contained models from or to other "data stores".
    *
-   * see LocalStorageStore, WebSqlStore or BikiniStore for examples
+   * see LocalStorageStore, WebSqlStore or SyncStore for examples
    *
-   * @module Bikini.Collection
+   * @module Relution.LiveData.Collection
    *
    * @type {*}
    * @extends Backbone.Collection
    *
    */
-  Bikini.Collection = Backbone.Collection.extend({
+  Relution.LiveData.Collection = Backbone.Collection.extend({
   
     constructor: function (options) {
       if (this.url && this.url.charAt(this.url.length - 1) !== '/') {
@@ -1899,22 +1940,20 @@
     }
   });
   
-  Bikini.Collection.create = Bikini.create;
-  Bikini.Collection.design = Bikini.design;
+  Relution.LiveData.Collection.create = Relution.LiveData.create;
+  Relution.LiveData.Collection.design = Relution.LiveData.design;
   
-  _.extend(Bikini.Collection.prototype, Bikini.Object, {
+  _.extend(Relution.LiveData.Collection.prototype, Relution.LiveData.Object, {
   
-    _type: 'Bikini.Collection',
+    _type: 'Relution.LiveData.Collection',
   
-    isCollection: YES,
+    isCollection: true,
   
-    model: Bikini.Model,
+    model: Relution.LiveData.Model,
   
     entity: null,
   
     options: null,
-  
-    logon: Bikini.Security.logon,
   
     init: function (options) {
       options = options || {};
@@ -1924,7 +1963,7 @@
   
       var entity = this.entity || this.entityFromUrl(this.url);
       if (entity) {
-        this.entity = Bikini.Entity.from(entity, {model: this.model, typeMapping: options.typeMapping});
+        this.entity = Relution.LiveData.Entity.from(entity, {model: this.model, typeMapping: options.typeMapping});
       }
       this._updateUrl();
   
@@ -1932,6 +1971,9 @@
         this.store.initCollection(this, options);
       }
     },
+  
+    ajax: Relution.LiveData.ajax,
+    sync: Relution.LiveData.sync,
   
     entityFromUrl: function (url) {
       if (url) {
@@ -1954,17 +1996,17 @@
   
     sort: function (options) {
       if (_.isObject(options && options.sort)) {
-        this.comparator = Bikini.DataSelector.compileSort(options.sort);
+        this.comparator = Relution.LiveData.DataSelector.compileSort(options.sort);
       }
       Backbone.Collection.prototype.sort.apply(this, arguments);
     },
   
     select: function (options) {
-      var selector = options && options.query ? Bikini.DataSelector.create(options.query) : null;
-      var collection = Bikini.Collection.create(null, {model: this.model});
+      var selector = options && options.query ? Relution.LiveData.DataSelector.create(options.query) : null;
+      var collection = Relution.LiveData.Collection.create(null, {model: this.model});
   
       if (options && options.sort) {
-        collection.comparator = Bikini.DataSelector.compileSort(options.sort);
+        collection.comparator = Relution.LiveData.DataSelector.compileSort(options.sort);
       }
   
       this.each(function (model) {
@@ -2005,22 +2047,6 @@
       localStorage.setItem('__' + this.channel + 'last_msg_time', '');
       this.store.endpoints = {};
       return this.reset();
-    },
-  
-    sync: function (method, model, options) {
-      options = options || {};
-      options.credentials = options.credentials || this.credentials;
-      var store = (options.store ? options.store : null) || this.store;
-      var that = this;
-      var args = arguments;
-  
-      return this.logon(options, function (result) {
-        if (store && _.isFunction(store.sync)) {
-          return store.sync.apply(that, args);
-        } else {
-          return Backbone.sync.apply(that, args);
-        }
-      });
     },
   
     /**
@@ -2087,21 +2113,21 @@
   // Copyright (c) 2013 M-Way Solutions GmbH
   // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
   
-  // Bikini.DataSelector uses code from meteor.js
+  // Relution.LiveData.DataSelector uses code from meteor.js
   // https://github.com/meteor/meteor/tree/master/packages/minimongo
   //
   // Thanks for sharing!
   
   /**
    *
-   * @module Bikini.DataSelector
+   * @module Relution.LiveData.DataSelector
    *
    * @type {*}
-   * @extends Bikini.Object
+   * @extends Relution.LiveData.Object
    */
-  Bikini.DataSelector = Bikini.Object.design({
+  Relution.LiveData.DataSelector = Relution.LiveData.Object.design({
   
-    _type: 'Bikini.DataSelector',
+    _type: 'Relution.LiveData.DataSelector',
   
     _selector: null,
   
@@ -2152,7 +2178,7 @@
       if (this._selectorIsId(selector)) {
         return function (record) {
           var id = _.isFunction(record.getId) ? record.getId() : (record._id || record.id);
-          return Bikini.Field.prototype.equals(id, selector);
+          return Relution.LiveData.Field.prototype.equals(id, selector);
         };
       }
   
@@ -2166,7 +2192,7 @@
       }
   
       // Top level can't be an array or true or binary.
-      if (_.isBoolean(selector) || _.isArray(selector) || Bikini.Field.prototype.isBinary(selector)) {
+      if (_.isBoolean(selector) || _.isArray(selector) || Relution.LiveData.Field.prototype.isBinary(selector)) {
         throw new Error('Invalid selector: ' + selector);
       }
   
@@ -2175,7 +2201,7 @@
   
     // The main compilation function for a given selector.
     compileDocSelector: function (docSelector) {
-      var that = Bikini.DataSelector;
+      var that = Relution.LiveData.DataSelector;
       var perKeySelectors = [];
       _.each(docSelector, function (subSelector, key) {
         if (key.substr(0, 1) === '$') {
@@ -2207,7 +2233,7 @@
     },
   
     compileValueSelector: function (valueSelector) {
-      var that = Bikini.DataSelector;
+      var that = Relution.LiveData.DataSelector;
       if (valueSelector === null) {  // undefined or null
         return function (value) {
           return that._anyIfArray(value, function (x) {
@@ -2356,11 +2382,11 @@
   
     // deep equality test: use for literal document and array matches
     _equal: function (a, b) {
-      return Bikini.Field.prototype._equals(a, b, true);
+      return Relution.LiveData.Field.prototype._equals(a, b, true);
     },
   
     _cmp: function (a, b) {
-      return Bikini.Field.prototype._cmp(a, b);
+      return Relution.LiveData.Field.prototype._cmp(a, b);
     },
   
     LOGICAL_OPERATORS: {
@@ -2368,7 +2394,7 @@
         if (!_.isArray(subSelector) || _.isEmpty(subSelector)) {
           throw new Error('$and/$or/$nor must be nonempty array');
         }
-        var subSelectorFunctions = _.map(subSelector, Bikini.DataSelector.compileDocSelector);
+        var subSelectorFunctions = _.map(subSelector, Relution.LiveData.DataSelector.compileDocSelector);
         return function (doc) {
           return _.all(subSelectorFunctions, function (f) {
             return f(doc);
@@ -2380,7 +2406,7 @@
         if (!_.isArray(subSelector) || _.isEmpty(subSelector)) {
           throw new Error('$and/$or/$nor must be nonempty array');
         }
-        var subSelectorFunctions = _.map(subSelector, Bikini.DataSelector.compileDocSelector);
+        var subSelectorFunctions = _.map(subSelector, Relution.LiveData.DataSelector.compileDocSelector);
         return function (doc) {
           return _.any(subSelectorFunctions, function (f) {
             return f(doc);
@@ -2392,7 +2418,7 @@
         if (!_.isArray(subSelector) || _.isEmpty(subSelector)) {
           throw new Error('$and/$or/$nor must be nonempty array');
         }
-        var subSelectorFunctions = _.map(subSelector, Bikini.DataSelector.compileDocSelector);
+        var subSelectorFunctions = _.map(subSelector, Relution.LiveData.DataSelector.compileDocSelector);
         return function (doc) {
           return _.all(subSelectorFunctions, function (f) {
             return !f(doc);
@@ -2419,9 +2445,9 @@
           throw new Error('Argument to $in must be array');
         }
         return function (value) {
-          return Bikini.DataSelector._anyIfArrayPlus(value, function (x) {
+          return Relution.LiveData.DataSelector._anyIfArrayPlus(value, function (x) {
             return _.any(operand, function (operandElt) {
-              return Bikini.DataSelector._equal(operandElt, x);
+              return Relution.LiveData.DataSelector._equal(operandElt, x);
             });
           });
         };
@@ -2437,7 +2463,7 @@
           }
           return _.all(operand, function (operandElt) {
             return _.any(value, function (valueElt) {
-              return Bikini.DataSelector._equal(operandElt, valueElt);
+              return Relution.LiveData.DataSelector._equal(operandElt, valueElt);
             });
           });
         };
@@ -2445,40 +2471,40 @@
   
       '$lt': function (operand) {
         return function (value) {
-          return Bikini.DataSelector._anyIfArray(value, function (x) {
-            return Bikini.DataSelector._cmp(x, operand) &lt; 0;
+          return Relution.LiveData.DataSelector._anyIfArray(value, function (x) {
+            return Relution.LiveData.DataSelector._cmp(x, operand) &lt; 0;
           });
         };
       },
   
       '$lte': function (operand) {
         return function (value) {
-          return Bikini.DataSelector._anyIfArray(value, function (x) {
-            return Bikini.DataSelector._cmp(x, operand) &lt;= 0;
+          return Relution.LiveData.DataSelector._anyIfArray(value, function (x) {
+            return Relution.LiveData.DataSelector._cmp(x, operand) &lt;= 0;
           });
         };
       },
   
       '$gt': function (operand) {
         return function (value) {
-          return Bikini.DataSelector._anyIfArray(value, function (x) {
-            return Bikini.DataSelector._cmp(x, operand) > 0;
+          return Relution.LiveData.DataSelector._anyIfArray(value, function (x) {
+            return Relution.LiveData.DataSelector._cmp(x, operand) > 0;
           });
         };
       },
   
       '$gte': function (operand) {
         return function (value) {
-          return Bikini.DataSelector._anyIfArray(value, function (x) {
-            return Bikini.DataSelector._cmp(x, operand) >= 0;
+          return Relution.LiveData.DataSelector._anyIfArray(value, function (x) {
+            return Relution.LiveData.DataSelector._cmp(x, operand) >= 0;
           });
         };
       },
   
       '$ne': function (operand) {
         return function (value) {
-          return !Bikini.DataSelector._anyIfArrayPlus(value, function (x) {
-            return Bikini.DataSelector._equal(x, operand);
+          return !Relution.LiveData.DataSelector._anyIfArrayPlus(value, function (x) {
+            return Relution.LiveData.DataSelector._equal(x, operand);
           });
         };
       },
@@ -2505,7 +2531,7 @@
       '$mod': function (operand) {
         var divisor = operand[0], remainder = operand[1];
         return function (value) {
-          return Bikini.DataSelector._anyIfArray(value, function (x) {
+          return Relution.LiveData.DataSelector._anyIfArray(value, function (x) {
             return x % divisor === remainder;
           });
         };
@@ -2523,8 +2549,8 @@
           if (_.isUndefined(value)) {
             return false;
           }
-          return Bikini.DataSelector._anyIfArray(value, function (x) {
-            return Bikini.Field.prototype.detectType(x) === operand;
+          return Relution.LiveData.DataSelector._anyIfArray(value, function (x) {
+            return Relution.LiveData.Field.prototype.detectType(x) === operand;
           });
         };
       },
@@ -2552,7 +2578,7 @@
           if (_.isUndefined(value)) {
             return false;
           }
-          return Bikini.DataSelector._anyIfArray(value, function (x) {
+          return Relution.LiveData.DataSelector._anyIfArray(value, function (x) {
             return operand.test(x);
           });
         };
@@ -2566,7 +2592,7 @@
       },
   
       '$elemMatch': function (operand) {
-        var matcher = Bikini.DataSelector.compileDocSelector(operand);
+        var matcher = Relution.LiveData.DataSelector.compileDocSelector(operand);
         return function (value) {
           if (!_.isArray(value)) {
             return false;
@@ -2578,7 +2604,7 @@
       },
   
       '$not': function (operand) {
-        var matcher = Bikini.DataSelector.compileDocSelector(operand);
+        var matcher = Relution.LiveData.DataSelector.compileDocSelector(operand);
         return function (value) {
           return !matcher(value);
         };
@@ -2663,7 +2689,7 @@
               // Compare the value we found to the value we found so far, saving it
               // if it's less (for an ascending sort) or more (for a descending
               // sort).
-              var cmp = Bikini.DataSelector._cmp(reduced, value);
+              var cmp = Relution.LiveData.DataSelector._cmp(reduced, value);
               if ((findMin && cmp > 0) || (!findMin && cmp &lt; 0)) {
                 reduced = value;
               }
@@ -2680,7 +2706,7 @@
           var specPart = sortSpecParts[i];
           var aValue = reduceValue(specPart.lookup(a), specPart.ascending);
           var bValue = reduceValue(specPart.lookup(b), specPart.ascending);
-          var compare = Bikini.DataSelector._cmp(aValue, bValue);
+          var compare = Relution.LiveData.DataSelector._cmp(aValue, bValue);
           if (compare !== 0) {
             return specPart.ascending ? compare : -compare;
           }
@@ -2696,14 +2722,14 @@
   
   /**
    *
-   * @module Bikini.SqlSelector
+   * @module Relution.LiveData.SqlSelector
    *
    * @type {*}
-   * @extends Bikini.DataSelector
+   * @extends Relution.LiveData.DataSelector
    */
-  Bikini.SqlSelector = Bikini.DataSelector.design({
+  Relution.LiveData.SqlSelector = Relution.LiveData.DataSelector.design({
   
-    _type: 'Bikini.SqlSelector',
+    _type: 'Relution.LiveData.SqlSelector',
   
     _selector: null,
     _query: null,
@@ -2748,7 +2774,7 @@
       }
   
       // Top level can't be an array or true or binary.
-      if (_.isBoolean(selector) || _.isArray(selector) || Bikini.DataField.isBinary(selector)) {
+      if (_.isBoolean(selector) || _.isArray(selector) || Relution.LiveData.DataField.isBinary(selector)) {
         throw new Error('Invalid selector: ' + selector);
       }
   
@@ -2992,23 +3018,23 @@
   /**
    * Base class to build a custom data store.
    *
-   * See: Bikini.LocalStorageStore, Bikini.WebSqlStore and Bikini.BikiniStore
+   * See: Relution.LiveData.LocalStorageStore, Relution.LiveData.WebSqlStore and Relution.LiveData.SyncStore
    *
-   * @module Bikini.Store
+   * @module Relution.LiveData.Store
    *
    */
-  Bikini.Store = function () {
+  Relution.LiveData.Store = function () {
     this.initialize.apply(this, arguments);
   };
   
-  Bikini.Store.extend = Bikini.extend;
-  Bikini.Store.create = Bikini.create;
-  Bikini.Store.design = Bikini.design;
+  Relution.LiveData.Store.extend = Relution.LiveData.extend;
+  Relution.LiveData.Store.create = Relution.LiveData.create;
+  Relution.LiveData.Store.design = Relution.LiveData.design;
   
   // Attach all inheritable methods to the Connector prototype.
-  _.extend(Bikini.Store.prototype, Backbone.Events, Bikini.Object, {
+  _.extend(Relution.LiveData.Store.prototype, Backbone.Events, Relution.LiveData.Object, {
   
-    _type: 'Bikini.Store',
+    _type: 'Relution.LiveData.Store',
   
     entities: null,
   
@@ -3018,9 +3044,9 @@
   
     typeMapping: (function () {
       var map = {};
-      map [Bikini.DATA.TYPE.OBJECTID] = Bikini.DATA.TYPE.STRING;
-      map [Bikini.DATA.TYPE.DATE] = Bikini.DATA.TYPE.STRING;
-      map [Bikini.DATA.TYPE.BINARY] = Bikini.DATA.TYPE.TEXT;
+      map [Relution.LiveData.DATA.TYPE.OBJECTID] = Relution.LiveData.DATA.TYPE.STRING;
+      map [Relution.LiveData.DATA.TYPE.DATE] = Relution.LiveData.DATA.TYPE.STRING;
+      map [Relution.LiveData.DATA.TYPE.BINARY] = Relution.LiveData.DATA.TYPE.TEXT;
       return map;
     })(),
   
@@ -3038,14 +3064,14 @@
     _setEntities: function (entities) {
       this.entities = {};
       for (var name in entities) {
-        var entity = Bikini.Entity.from(entities[name], {
+        var entity = Relution.LiveData.Entity.from(entities[name], {
           store: this,
           typeMapping: this.options.typeMapping
         });
         entity.name = entity.name || name;
   
         // connect collection and model to this store
-        var collection = entity.collection || Bikini.Collection.extend({model: Bikini.Model.extend({})});
+        var collection = entity.collection || Relution.LiveData.Collection.extend({model: Relution.LiveData.Model.extend({})});
         var model = collection.prototype.model;
         // set new entity and name
         collection.prototype.entity = model.prototype.entity = name;
@@ -3070,7 +3096,7 @@
         entity = this.entities[entity];
       }
       if (entity && entity.collection) {
-        if (Bikini.Collection.prototype.isPrototypeOf(entity.collection)) {
+        if (Relution.LiveData.Collection.prototype.isPrototypeOf(entity.collection)) {
           return entity.collection;
         } else {
           return new entity.collection();
@@ -3093,7 +3119,7 @@
     getArray: function (data) {
       if (_.isArray(data)) {
         return data;
-      } else if (Bikini.isCollection(data)) {
+      } else if (Relution.LiveData.isCollection(data)) {
         return data.models;
       }
       return _.isObject(data) ? [data] : [];
@@ -3125,15 +3151,20 @@
     },
   
     initModel: function (model) {
+      // may be overwritten
     },
   
     initCollection: function (collection) {
+      // may be overwritten
     },
   
     initEntity: function (entity) {
+      // may be overwritten
     },
   
     sync: function (method, model, options) {
+      // must be overwritten
+      return Q.reject(new Error('not implemented!')); // purely abstract
     },
   
     /**
@@ -3190,8 +3221,8 @@
     },
   
     _checkEntity: function (obj, entity) {
-      if (!Bikini.isEntity(entity)) {
-        var error = Bikini.Store.CONST.ERROR_NO_ENTITY;
+      if (!Relution.LiveData.isEntity(entity)) {
+        var error = Relution.LiveData.Store.CONST.ERROR_NO_ENTITY;
         console.error(error);
         this.handleCallback(obj.error, error);
         this.handleCallback(obj.finish, error);
@@ -3202,7 +3233,7 @@
   
     _checkData: function (obj, data) {
       if ((!_.isArray(data) || data.length === 0) && !_.isObject(data)) {
-        var error = Bikini.Store.CONST.ERROR_NO_DATA;
+        var error = Relution.LiveData.Store.CONST.ERROR_NO_DATA;
         console.error(error);
         this.handleCallback(obj.error, error);
         this.handleCallback(obj.finish, error);
@@ -3246,38 +3277,38 @@
   // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
   
   /**
-   * The Bikini.LocalStorageStore can be used to store model collection into
+   * The Relution.LiveData.LocalStorageStore can be used to store model collection into
    * the localStorage
    *
-   * @module Bikini.LocalStorageStore
+   * @module Relution.LiveData.LocalStorageStore
    *
    * @type {*}
-   * @extends Bikini.Store
+   * @extends Relution.LiveData.Store
    *
    * @example
    *
    * // The LocalStorageStore will save each model data as a json under his id,
    * // and keeps all id's under an extra key for faster access
    *
-   * var MyCollection = Bikini.Collection.extend({
-   *      store: Bikini.LocalStorageStore.create(),
+   * var MyCollection = Relution.LiveData.Collection.extend({
+   *      store: Relution.LiveData.LocalStorageStore.create(),
    *      entity: 'myEntityName'
    * });
    *
    */
-  Bikini.LocalStorageStore = Bikini.Store.extend({
+  Relution.LiveData.LocalStorageStore = Relution.LiveData.Store.extend({
   
-    _type: 'Bikini.LocalStorageStore',
+    _type: 'Relution.LiveData.LocalStorageStore',
   
     ids: {},
   
     sync: function (method, model, options) {
       options = options || {};
-      var that = options.store || this.store;
+      var that = this;
       var entity = that.getEntity(model.entity || options.entity || this.entity);
       var attrs;
-      if (that && entity && model) {
-        var id = model.id || (method === 'create' ? new Bikini.ObjectID().toHexString() : null);
+      if (entity && model) {
+        var id = model.id || (method === 'create' ? new Relution.LiveData.ObjectID().toHexString() : null);
         attrs = options.attrs || model.toJSON(options);
         switch (method) {
           case 'patch':
@@ -3312,11 +3343,14 @@
             return;
         }
       }
-      if (attrs) {
-        that.handleSuccess(options, attrs);
-      } else {
-        that.handleError(options, Bikini.Store.CONST.ERROR_NO_ENTITY);
-      }
+  
+      return Q.resolve(attrs).then(function (attrs) {
+        if (attrs) {
+          return that.handleSuccess(options, attrs) || attrs;
+        } else {
+          return that.handleError(options, Relution.LiveData.Store.CONST.ERROR_NO_ENTITY) || Q.reject(Relution.LiveData.Store.CONST.ERROR_NO_ENTITY);
+        }
+      });
     },
   
     drop: function (options) {
@@ -3329,7 +3363,7 @@
         localStorage.removeItem('__ids__' + entity.name);
         this.handleSuccess(options);
       } else {
-        this.handleError(options, Bikini.Store.CONST.ERROR_NO_ENTITY);
+        this.handleError(options, Relution.LiveData.Store.CONST.ERROR_NO_ENTITY);
       }
     },
   
@@ -3348,7 +3382,7 @@
             this._delItemId(id);
           }
         } catch (e) {
-          console.error(Bikini.Store.CONST.ERROR_LOAD_DATA + e.message);
+          console.error(Relution.LiveData.Store.CONST.ERROR_LOAD_DATA + e.message);
         }
       }
       return attrs;
@@ -3360,7 +3394,7 @@
           localStorage.setItem(this._getKey(entity, id), JSON.stringify(attrs));
           this._addItemId(entity, id);
         } catch (e) {
-          console.error(Bikini.Store.CONST.ERROR_SAVE_DATA + e.message);
+          console.error(Relution.LiveData.Store.CONST.ERROR_SAVE_DATA + e.message);
         }
       }
     },
@@ -3411,7 +3445,7 @@
         }
         return this.ids[entity.name];
       } catch (e) {
-        console.error(Bikini.Store.CONST.ERROR_LOAD_IDS + e.message);
+        console.error(Relution.LiveData.Store.CONST.ERROR_LOAD_IDS + e.message);
       }
     },
   
@@ -3420,7 +3454,7 @@
         var key = '__ids__' + entity.name;
         localStorage.setItem(key, JSON.stringify(ids));
       } catch (e) {
-        console.error(Bikini.Store.CONST.ERROR_SAVE_IDS + e.message);
+        console.error(Relution.LiveData.Store.CONST.ERROR_SAVE_IDS + e.message);
       }
     }
   });
@@ -3429,49 +3463,49 @@
   // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
   
   /**
-   * The Bikini.WebSqlStore can be used to store model collection into
+   * The Relution.LiveData.WebSqlStore can be used to store model collection into
    * the webSql database
    *
-   * @module Bikini.WebSqlStore
+   * @module Relution.LiveData.WebSqlStore
    *
    * @type {*}
-   * @extends Bikini.Store
+   * @extends Relution.LiveData.Store
    *
    * @example
    *
    * // The default configuration will save the complete model data as json
    * // into a database column with the name "data"
    *
-   * var MyCollection = Bikini.Collection.extend({
+   * var MyCollection = Relution.LiveData.Collection.extend({
        *      model: MyModel,
        *      entity: 'MyTableName',
-       *      store: new Bikini.WebSqlStorageStore()
+       *      store: new Relution.LiveData.WebSqlStorageStore()
        * });
    *
    * // If you want to use specific columns you can specify the fields
    * // in the entity of your model like this:
    *
-   * var MyModel = Bikini.Model.extend({
+   * var MyModel = Relution.LiveData.Model.extend({
        *      idAttribute: 'id',
        *      fields: {
-       *          id:          { type: Bikini.DATA.TYPE.STRING,  required: YES, index: YES },
-       *          sureName:    { name: 'USERNAME', type: Bikini.DATA.TYPE.STRING },
-       *          firstName:   { type: Bikini.DATA.TYPE.STRING,  length: 200 },
-       *          age:         { type: Bikini.DATA.TYPE.INTEGER }
+       *          id:          { type: Relution.LiveData.DATA.TYPE.STRING,  required: true, index: true },
+       *          sureName:    { name: 'USERNAME', type: Relution.LiveData.DATA.TYPE.STRING },
+       *          firstName:   { type: Relution.LiveData.DATA.TYPE.STRING,  length: 200 },
+       *          age:         { type: Relution.LiveData.DATA.TYPE.INTEGER }
        *      }
        * });
    *
    *
    */
-  Bikini.WebSqlStore = Bikini.Store.extend({
+  Relution.LiveData.WebSqlStore = Relution.LiveData.Store.extend({
   
-    _type: 'Bikini.WebSqlStore',
+    _type: 'Relution.LiveData.WebSqlStore',
   
     _selector: null,
   
     options: null,
   
-    name: 'bikini',
+    name: 'relution-livedata',
   
     size: 1024 * 1024, // 1 MB
   
@@ -3485,29 +3519,29 @@
   
     typeMapping: (function () {
       var map = {};
-      map [Bikini.DATA.TYPE.OBJECTID] = Bikini.DATA.TYPE.STRING;
-      map [Bikini.DATA.TYPE.DATE] = Bikini.DATA.TYPE.STRING;
-      map [Bikini.DATA.TYPE.OBJECT] = Bikini.DATA.TYPE.TEXT;
-      map [Bikini.DATA.TYPE.ARRAY] = Bikini.DATA.TYPE.TEXT;
-      map [Bikini.DATA.TYPE.BINARY] = Bikini.DATA.TYPE.TEXT;
+      map [Relution.LiveData.DATA.TYPE.OBJECTID] = Relution.LiveData.DATA.TYPE.STRING;
+      map [Relution.LiveData.DATA.TYPE.DATE] = Relution.LiveData.DATA.TYPE.STRING;
+      map [Relution.LiveData.DATA.TYPE.OBJECT] = Relution.LiveData.DATA.TYPE.TEXT;
+      map [Relution.LiveData.DATA.TYPE.ARRAY] = Relution.LiveData.DATA.TYPE.TEXT;
+      map [Relution.LiveData.DATA.TYPE.BINARY] = Relution.LiveData.DATA.TYPE.TEXT;
       return map;
     })(),
   
     sqlTypeMapping: (function () {
       var map = {};
-      map [Bikini.DATA.TYPE.STRING] = 'varchar(255)';
-      map [Bikini.DATA.TYPE.TEXT] = 'text';
-      map [Bikini.DATA.TYPE.OBJECT] = 'text';
-      map [Bikini.DATA.TYPE.ARRAY] = 'text';
-      map [Bikini.DATA.TYPE.FLOAT] = 'float';
-      map [Bikini.DATA.TYPE.INTEGER] = 'integer';
-      map [Bikini.DATA.TYPE.DATE] = 'varchar(255)';
-      map [Bikini.DATA.TYPE.BOOLEAN] = 'boolean';
+      map [Relution.LiveData.DATA.TYPE.STRING] = 'varchar(255)';
+      map [Relution.LiveData.DATA.TYPE.TEXT] = 'text';
+      map [Relution.LiveData.DATA.TYPE.OBJECT] = 'text';
+      map [Relution.LiveData.DATA.TYPE.ARRAY] = 'text';
+      map [Relution.LiveData.DATA.TYPE.FLOAT] = 'float';
+      map [Relution.LiveData.DATA.TYPE.INTEGER] = 'integer';
+      map [Relution.LiveData.DATA.TYPE.DATE] = 'varchar(255)';
+      map [Relution.LiveData.DATA.TYPE.BOOLEAN] = 'boolean';
       return map;
     })(),
   
     initialize: function (options) {
-      Bikini.Store.prototype.initialize.apply(this, arguments);
+      Relution.LiveData.Store.prototype.initialize.apply(this, arguments);
       this.options = this.options || {};
       this.options.name = this.name;
       this.options.size = this.size;
@@ -3516,55 +3550,69 @@
       this.options.sqlTypeMapping = this.sqlTypeMapping;
       _.extend(this.options, options || {});
   
+      var that = this;
       this._openDb({
-        error: function (msg) {
-          console.error(msg);
+        error: function (error) {
+          console.error(error);
+          that.trigger('error', error);
         }
       });
     },
   
     sync: function (method, model, options) {
-      var that = options.store || this.store;
-      var models = Bikini.isCollection(model) ? model.models : [model];
-      var q = new $.Deferred();
-      var _oldSuccess = options.success;
-      if (options.success) {
-        options.success = function (response) {
-          q.resolve(response);
-          _oldSuccess(response);
-        };
-      }
-      //debugger;
-      options.entity = options.entity || this.entity;
+      options = options || {};
+      var that = this;
+      var q = Q.defer();
+      var opts = _.extend({
+        entity: model.entity || options.entity || this.entity
+      }, options || {}, {
+        success: function (response) {
+          var result = that.handleSuccess(options, response) || response;
+          q.resolve(result);
+          return result;
+        },
+        error: function (error) {
+          var result = that.handleError(options, error);
+          if (result) {
+            q.resolve(result);
+            return result;
+          } else {
+            q.reject(error);
+          }
+        }
+      });
+  
+      var models = Relution.LiveData.isCollection(model) ? model.models : [model];
       switch (method) {
         case 'create':
-          that._checkTable(options, function () {
-            that._insertOrReplace(models, options);
+          that._checkTable(opts, function () {
+            that._insertOrReplace(models, opts);
           });
           break;
   
         case 'update':
         case 'patch':
-          that._checkTable(options, function () {
-            that._insertOrReplace(models, options);
+          that._checkTable(opts, function () {
+            that._insertOrReplace(models, opts);
           });
           break;
   
         case 'delete':
-          that._delete(models, options);
+          that._checkTable(opts, function () {
+            that._delete(models, opts);
+          });
           break;
   
         case 'read':
-          var self = this;
-          that._checkTable(options, function () {
-            that._select(self, options);
+          that._checkTable(opts, function () {
+            that._select(model, opts);
           });
           break;
   
         default:
           break;
       }
-      return q.promise();
+      return q.promise;
     },
   
     select: function (options) {
@@ -3582,7 +3630,6 @@
     execute: function (options) {
       this._executeSql(options);
     },
-  
   
     /**
      * @private
@@ -3674,7 +3721,7 @@
     _isAutoincrementKey: function (entity, key) {
       if (entity && key) {
         var column = this.getField(entity, key);
-        return column && column.type === Bikini.DATA.TYPE.INTEGER;
+        return column && column.type === Relution.LiveData.DATA.TYPE.INTEGER;
       }
     },
   
@@ -3741,7 +3788,7 @@
       if (_.isString(options.where)) {
         sql = options.where;
       } else if (_.isObject(options.where)) {
-        this._selector = Bikini.SqlSelector.create(options.where, entity);
+        this._selector = Relution.LiveData.SqlSelector.create(options.where, entity);
         sql = this._selector.buildStatement();
       }
       return sql;
@@ -3808,15 +3855,15 @@
     },
   
     _sqlValue: function (value, field) {
-      var type = field && field.type ? field.type : Bikini.Field.prototype.detectType(value);
-      if (type === Bikini.DATA.TYPE.INTEGER || type === Bikini.DATA.TYPE.FLOAT) {
+      var type = field && field.type ? field.type : Relution.LiveData.Field.prototype.detectType(value);
+      if (type === Relution.LiveData.DATA.TYPE.INTEGER || type === Relution.LiveData.DATA.TYPE.FLOAT) {
         return value;
-      } else if (type === Bikini.DATA.TYPE.BOOLEAN) {
+      } else if (type === Relution.LiveData.DATA.TYPE.BOOLEAN) {
         return value ? '1' : '0';
-      } else if (type === Bikini.DATA.TYPE.NULL) {
+      } else if (type === Relution.LiveData.DATA.TYPE.NULL) {
         return 'NULL';
       }
-      value = Bikini.Field.prototype.transform(value, Bikini.DATA.TYPE.STRING);
+      value = Relution.LiveData.Field.prototype.transform(value, Relution.LiveData.DATA.TYPE.STRING);
       value = value.replace(/"/g, '""');
       return '"' + value + '"';
     },
@@ -3886,7 +3933,7 @@
           var model = models[i];
           var statement = ''; // the actual sql insert string with values
           if (!isAutoInc && !model.id && model.idAttribute) {
-            model.set(model.idAttribute, new Bikini.ObjectID().toHexString());
+            model.set(model.idAttribute, new Relution.LiveData.ObjectID().toHexString());
           }
           var value = options.attrs || model.toJSON();
           var args, keys;
@@ -3908,17 +3955,16 @@
       }
     },
   
-    _select: function (result, options) {
-  
+    _select: function (model, options) {
       var entity = this.getEntity(options);
-  
       if (this._checkDb(options) && this._checkEntity(options, entity)) {
         var lastStatement;
-        var isCollection = Bikini.isCollection(result);
+        var isCollection = !Relution.LiveData.isModel(model);
+        var result;
         if (isCollection) {
           result = [];
         } else {
-          options.models = [result];
+          options.models = [model];
         }
         var stm = this._sqlSelect(options, entity);
         var that = this;
@@ -3960,7 +4006,11 @@
           console.error('WebSql Syntax Error: ' + sqlError.message);
           that.handleError(options, sqlError.message, lastStatement);
         }, function () { // voidCallback (success)
-          that.handleSuccess(options, result);
+          if (result) {
+            that.handleSuccess(options, result);
+          } else {
+            that.handleError(options, 'no result');
+          }
         });
       }
     },
@@ -4053,15 +4103,15 @@
   // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
   
   /**
-   * The Bikini.BikiniStore is used to connect a model collection to an
-   * bikini server.
+   * The Relution.LiveData.SyncStore is used to connect a model collection to an
+   * Relution server.
    *
    * This will give you an online and offline store with live data updates.
    *
-   * @module Bikini.BikiniStore
+   * @module Relution.LiveData.SyncStore
    *
    * @type {*}
-   * @extends Bikini.Store
+   * @extends Relution.LiveData.Store
    *
    * @example
    *
@@ -4069,10 +4119,10 @@
    * // and the offline change log to a local WebSql database, synchronize it
    * // trough REST calls with the server and receive live updates via a socket.io connection.
    *
-   * var MyCollection = Bikini.Collection.extend({
+   * var MyCollection = Relution.LiveData.Collection.extend({
    *      model: MyModel,
-   *      url: 'http://myBikiniServer.com:8200/bikini/myCollection',
-   *      store: new Bikini.BikiniStore( {
+   *      url: 'http://myServer.io/myOrga/myApplication/myCollection',
+   *      store: new Relution.LiveData.SyncStore( {
    *          useLocalStore:   true, // (default) store the data for offline use
    *          useSocketNotify: true, // (default) register at the server for live updates
    *          useOfflineChanges: true // (default) allow changes to the offline data
@@ -4081,9 +4131,9 @@
    *
    */
   
-  Bikini.BikiniStore = Bikini.Store.extend({
+  Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
   
-    _type: 'Bikini.BikiniStore',
+    _type: 'Relution.LiveData.SyncStore',
   
     _selector: null,
   
@@ -4091,26 +4141,24 @@
   
     options: null,
   
-    localStore: Bikini.WebSqlStore,
+    localStore: Relution.LiveData.WebSqlStore,
+  
     useLocalStore: true,
     useSocketNotify: true,
     useOfflineChanges: true,
-    isConnected: false,
+  
     typeMapping: {
       'binary': 'text',
       'date': 'string'
     },
   
     initialize: function (options) {
-      //debugger;
-      console.log('Bikini.BikiniStore.initialize');
-      Bikini.Store.prototype.initialize.apply(this, arguments);
+      Relution.LiveData.Store.prototype.initialize.apply(this, arguments);
       this.options = this.options || {};
   
       this.options.useLocalStore = this.useLocalStore;
       this.options.useSocketNotify = this.useSocketNotify;
       this.options.useOfflineChanges = this.useOfflineChanges;
-      this.options.query = options.query || false;
       this.options.socketPath = this.socketPath;
       this.options.localStore = this.localStore;
       this.options.typeMapping = this.typeMapping;
@@ -4121,12 +4169,8 @@
       _.extend(this.options, options || {});
     },
   
-    //initModel: function (model) {
-    //  console.log('Bikini.BikiniStore.initModel');
-    //},
-  
     initCollection: function (collection) {
-      console.log('Bikini.BikiniStore.initCollection');
+      console.log('Relution.LiveData.SyncStore.initCollection');
       var url = collection.getUrlRoot();
       if (url.charAt(url.length - 1) !== '/') {
         url += '/';
@@ -4134,17 +4178,18 @@
       var entity = this.getEntity(collection.entity);
       if (url && entity) {
         var name = entity.name;
-        var hash = this._locationBasedHashCode(url);
+        var hash = Relution.LiveData.URLUtil.hashLocation(url);
         var credentials = entity.credentials || collection.credentials;
         var user = credentials && credentials.username ? credentials.username : '';
         var channel = name + user + hash;
         collection.channel = channel;
+  
         // get or create endpoint for this url
-        var that = this;
         var endpoint = this.endpoints[hash];
         if (!endpoint) {
-          var href = this.getLocation(url);
+          var href = Relution.LiveData.URLUtil.getLocation(url);
           endpoint = {};
+          endpoint.isConnected = false;
           endpoint.baseUrl = url;
           endpoint.readUrl = collection.getUrl();
           endpoint.host = href.protocol + '//' + href.host;
@@ -4155,76 +4200,71 @@
           endpoint.socketPath = this.options.socketPath;
           endpoint.localStore = this.createLocalStore(endpoint);
           endpoint.messages = this.createMsgCollection(endpoint);
-          endpoint.socket = this.createSocket(endpoint);
+          endpoint.socket = this.createSocket(endpoint, name);
           endpoint.info = this.fetchServerInfo(endpoint);
-          that.endpoints[hash] = endpoint;
+          this.endpoints[hash] = endpoint;
         }
         collection.endpoint = endpoint;
-        collection.listenTo(this, endpoint.channel, this.onMessage, collection);
+  
+        if (this.options.useSocketNotify) {
+          // otherwise application code must fetch to update collection explicitly
+          collection.listenTo(this, 'sync:' + endpoint.channel, this.onMessageCollection, collection);
+        }
       }
     },
   
     getEndpoint: function (url) {
-      console.log('Bikini.BikiniStore.getEndpoint');
       if (url) {
-        var hash = this._locationBasedHashCode(url);
+        var hash = Relution.LiveData.URLUtil.hashLocation(url);
         return this.endpoints[hash];
       }
     },
   
-    createLocalStore: function (endpoint, idAttribute) {
-      console.log('Bikini.BikiniStore.createLocalStore');
-      if (this.options.useLocalStore && endpoint) {
+    createLocalStore: function (endpoint) {
+      if (this.options.useLocalStore) {
         var entities = {};
-        entities[endpoint.entity.name] = {
-          name: endpoint.channel,
-          idAttribute: idAttribute
-        };
+        entities[endpoint.entity.name] = _.extend(new Relution.LiveData.Entity(endpoint.entity), {
+          name: endpoint.channel
+        });
         return this.options.localStore.create({
           entities: entities
         });
       }
     },
+  
     /**
      * @description Here we save the changes in a Message local websql
      * @param endpoint {string}
      * @returns {*}
      */
     createMsgCollection: function (endpoint) {
-      if (this.options.useOfflineChanges && endpoint) {
+      if (this.options.useOfflineChanges) {
         var entity = 'msg-' + endpoint.channel;
         var entities = {};
-        entities[entity] = {
+        entities[entity] = new Relution.LiveData.Entity({
           name: entity,
           idAttribute: 'id'
-        };
-        var messages = Bikini.Collection.design({
-          url: endpoint.url,
+        });
+        var messages = Relution.LiveData.Collection.design({
           entity: entity,
           store: this.options.localStore.create({
             entities: entities
           })
         });
-        var that = this;
-        messages.fetch({
-          success: function () {
-            if (that.isConnected) {
-              that.sendMessages(endpoint);
-            }
-          }
-        });
+        if (endpoint.isConnected) {
+          this._sendMessages(endpoint);
+        }
         return messages;
       }
     },
   
     createSocket: function (endpoint, name) {
-      console.log('Bikini.BikiniStore.createSocket');
-      //debugger;
+      console.log('Relution.LiveData.SyncStore.createSocket');
       if (this.options.useSocketNotify && endpoint && endpoint.socketPath) {
         var that = this;
         var url = endpoint.host;
         var path = endpoint.path;
-        var href = this.getLocation(url);
+        var href = Relution.LiveData.URLUtil.getLocation(url);
         if (href.port === '') {
           if (href.protocol === 'https:') {
             url += ':443';
@@ -4233,7 +4273,6 @@
           }
         }
   
-        //path = endpoint.socketPath || (path + (path.charAt(path.length - 1) === '/' ? '' : '/' ) + 'live');
         path = endpoint.socketPath;
         // remove leading /
         var resource = (path && path.indexOf('/') === 0) ? path.substr(1) : path;
@@ -4247,27 +4286,19 @@
         endpoint.socket = io.connect(url, connectVo);
         endpoint.socket.on('connect', function () {
           that._bindChannel(endpoint, name);
-          that.onConnect(endpoint);
+          return that.onConnect(endpoint).done();
         });
         endpoint.socket.on('disconnect', function () {
           console.log('socket.io: disconnect');
-          that.onDisconnect(endpoint);
+          return that.onDisconnect(endpoint).done();
         });
-        var channel = endpoint.channel;
-        endpoint.socket.on(channel, function (msg) {
-          if (msg) {
-            that.trigger(channel, msg);
-            if (that.options.useLocalStore) {
-              that.setLastMessageTime(channel, msg.time);
-            }
-          }
-        });
+        endpoint.socket.on(endpoint.channel, that.onMessageStore.bind(that, endpoint));
         return endpoint.socket;
       }
     },
   
     _bindChannel: function (endpoint, name) {
-      console.log('Bikini.BikiniStore._bindChannel');
+      console.log('Relution.LiveData.SyncStore._bindChannel');
       var that = this;
       if (endpoint && endpoint.socket) {
         var channel = endpoint.channel;
@@ -4283,180 +4314,199 @@
     },
   
     getLastMessageTime: function (channel) {
-      if (this.lastMesgTime !== undefined) {
-        return this.lastMesgTime;
+      if (!this.lastMesgTime) {
+        this.lastMesgTime = {};
+      } else if (this.lastMesgTime[channel] !== undefined) {
+        return this.lastMesgTime[channel];
       }
-      console.log('Bikini.BikiniStore.getLastMessageTime');
-      this.lastMesgTime = localStorage.getItem('__' + channel + 'lastMesgTime') || 0;
-      return this.lastMesgTime;
+      var time = localStorage.getItem('__' + channel + 'lastMesgTime') || 0;
+      this.lastMesgTime[channel] = time;
+      return time;
     },
   
     setLastMessageTime: function (channel, time) {
-      if (!time || time > this.getLastMessageTime()) {
-        console.log('Bikini.BikiniStore.setLastMessageTime');
+      if (!time || time > this.getLastMessageTime(channel)) {
         localStorage.setItem('__' + channel + 'lastMesgTime', time);
-        this.lastMesgTime = time;
+        this.lastMesgTime[channel] = time;
       }
-    },
-  
-    _hashCode: function (str) {
-      console.log('Bikini.BikiniStore._hashCode');
-      var hash = 0, char;
-      if (str.length === 0) {
-        return hash;
-      }
-      for (var i = 0, l = str.length; i &lt; l; i++) {
-        char = str.charCodeAt(i);
-        hash = ((hash &lt;&lt; 5) - hash) + char;
-        hash |= 0; // Convert to 32bit integer
-      }
-      return hash;
-    },
-  
-    _locationBasedHashCode: function (str) {
-      console.log('Bikini.BikiniStore._locationBasedHashCode');
-      return this._hashCode(this._getLocationUrl(str));
-    },
-  
-    _getLocationUrl: function (str) {
-      console.log('Bikini.BikiniStore._getLocationUrl');
-      return this.getLocation(str).toString();
-    },
-  
-    _getLocation: function (url) {
-      console.log('Bikini.BikiniStore._getLocation');
-      var location = document.createElement('a');
-      location.href = url || this.url;
-      // IE doesn't populate all link properties when setting .href with a relative URL,
-      // however .href will return an absolute URL which then can be used on itself
-      // to populate these additional fields.
-      if (location.host === '') {
-        location.href = location.href;
-      }
-      return location;
     },
   
     onConnect: function (endpoint) {
-      console.log('Bikini.BikiniStore.onConnect');
-      if (!this.isConnected) {
-        this.isConnected = true;
-        this.fetchChanges(endpoint);
-        this.sendMessages(endpoint);
+      if (endpoint.isConnected) {
+        return Q.resolve();
       }
+  
+      endpoint.isConnected = true;
+      var that = this;
+      return this.fetchChanges(endpoint).then(function () {
+        return that._sendMessages(endpoint);
+      }).finally(function () {
+        if (endpoint.isConnected) {
+          that.trigger('connect:' + endpoint.channel);
+        }
+      });
     },
   
     onDisconnect: function (endpoint) {
-      console.log('Bikini.BikiniStore.onDisconnect');
-      if (this.isConnected) {
-        this.isConnected = false;
+      if (!endpoint.isConnected) {
+        return Q.resolve();
+      }
+  
+      endpoint.isConnected = false;
+      var that = this;
+      return Q.resolve(function () {
         if (endpoint.socket && endpoint.socket.socket) {
           endpoint.socket.socket.onDisconnect();
         }
+      }).finally(function () {
+        if (!endpoint.isConnected) {
+          that.trigger('disconnect:' + endpoint.channel);
+        }
+      });
+    },
+  
+    _fixMessage: function (endpoint, msg) {
+      if (msg.data && !msg.data[endpoint.entity.idAttribute] && msg.data._id) {
+        msg.data[endpoint.entity.idAttribute] = msg.data._id; // server bug!
+      } else if (!msg.data && msg.method === 'delete' && msg[endpoint.entity.idAttribute]) {
+        msg.data = {};
+        msg.data[endpoint.entity.idAttribute] = msg[endpoint.entity.idAttribute]; // server bug!
       }
     },
   
-    onMessage: function (msg) {
-      console.log('Bikini.BikiniStore.onMessage');
-      if (!msg) {
+    onMessageStore: function (endpoint, msg) {
+      // this is called by the store itself for a particular endpoint!
+      var that = this;
+      if (!msg || !msg.method) {
+        return Q.reject('no message or method given');
+      }
+      this._fixMessage(endpoint, msg);
+  
+      var channel = endpoint.channel;
+      if (endpoint.localStore) {
+        // first update the local store by forming a model and invoking sync
+        var options = _.defaults({
+          store: endpoint.localStore,
+          entity: endpoint.entity
+        }, that.options);
+        var model = new Relution.LiveData.Model(msg.data, _.extend({
+          parse: true
+        }, options));
+        return endpoint.localStore.sync(msg.method, model, _.extend(options, {
+          merge: msg.method === 'patch',
+          success: function (result) {
+            // update all collections listening
+            that.trigger('sync:' + channel, msg); // onMessageCollection
+          },
+          error: function (error) {
+            // report error as event on store
+            that.trigger('error:' + channel, error);
+          }
+        })).then(function () {
+          if (msg.time) {
+            that.setLastMessageTime(channel, msg.time);
+          }
+        }).thenResolve(msg);
+      } else {
+        // just update all collections listening
+        return Q.resolve(function () {
+          return that.trigger('sync:' + channel, msg); // onMessageCollection
+        });
+      }
+    },
+  
+    onMessageCollection: function (msg) {
+      // this is a collection listening on channel events of store here!
+      var options = {
+        collection: this,
+        entity: this.entity,
+        merge: msg.method === 'patch',
+        parse: true,
+        fromMessage: true
+      };
+      var id = this.modelId(msg.data);
+      if (id === 'all') {
+        this.reset(msg.data || {}, options);
         return;
       }
-      var localStore = this.endpoint ? this.endpoint.localStore : null;
-      var attrs = null;
-      var method = null;
-      var id = null;
-      var options = {
-        store: localStore,
-        entity: this.entity,
-        merge: true,
-        fromMessage: true,
-        parse: true
-      };
-      if (msg.id && msg.method) {
-        attrs = msg.data || {};
-        method = msg.method;
-        id = msg.id;
-      } else if (msg.attributes) {
-        attrs = msg.attributes.data;
-        method = msg.attributes.method;
-        id = msg.attributes.id;
-      }
   
-      switch (method) {
-        case 'patch':
-        case 'update':
+      var model = id && this.get(id);
+      switch (msg.method) {
         case 'create':
-          options.patch = method === 'patch';
-          var model = id ? this.get(id) : null;
+        case 'update':
+          if (!model) {
+            // create model in case it does not exist
+            model = new options.collection.model(msg.data, options);
+            if (model.validationError) {
+              this.trigger('invalid', this, model.validationError, options);
+            } else {
+              this.add(model, options);
+            }
+            break;
+          }
+          /* falls through */
+        case 'patch':
           if (model) {
-            model.save(attrs, options);
-          } else {
-            this.create(attrs, options);
+            // update model unless it is filtered
+            model.set(msg.data, options);
           }
           break;
         case 'delete':
-          if (id) {
-            if (id === 'all') {
-              while ((model = this.first())) {
-                if (localStore) {
-                  localStore.sync.apply(this, [
-                    'delete',
-                    model,
-                    {store: localStore, fromMessage: true}
-                  ]);
-                }
-                this.remove(model);
-              }
-              this.store.setLastMessageTime(this.endpoint.channel, '');
-            } else {
-              var msgModel = this.get(id);
-              if (msgModel) {
-                msgModel.destroy(options);
-              }
-            }
+          if (model) {
+            // remove model unless it is filtered
+            this.remove(model, options);
           }
           break;
-  
-        default:
-          break;
       }
-  
     },
   
     sync: function (method, model, options) {
-      //debugger;
-      console.log('Bikini.BikiniStore.sync');
-      var that = options.store || this.store;
-      if (options.fromMessage) {
-        return that.handleCallback(options.success);
-      }
-      var endpoint = that.getEndpoint(this.getUrlRoot());
-      var promise = null;
-      if (that && endpoint) {
-        var channel = this.channel;
+      console.log('Relution.LiveData.SyncStore.sync');
+      options = options || {};
   
-        if (Bikini.isModel(model) && !model.id) {
-          model.set(model.idAttribute, new Bikini.ObjectID().toHexString());
+      var endpoint;
+      try {
+        endpoint = this.getEndpoint(model.getUrlRoot() /*throws urlError*/);
+        if (!endpoint) {
+          throw new Error('no endpoint');
         }
-  
-        var time = that.getLastMessageTime(channel);
-        // only send read messages if no other store can do this
-        // or for initial load
-        if (method !== 'read' || !endpoint.localStore || !time) {
-          // do backbone rest
-          promise = that.addMessage(method, model, // we don't need to call callbacks if an other store handle this
-            endpoint.localStore ? {} : options, endpoint);
-        } else if (method === 'read') {
-          promise = that.fetchChanges(endpoint);
-        }
-        if (endpoint.localStore) {
-          options.store = endpoint.localStore;
-          endpoint.localStore.sync.apply(this, arguments);
-        }
-        return promise;
+      } catch(error) {
+        return Q.reject(this.handleError(options, error) || error);
       }
+  
+      if (Relution.LiveData.isModel(model) && !model.id) {
+        model.set(model.idAttribute, new Relution.LiveData.ObjectID().toHexString());
+      }
+  
+      var channel = endpoint.channel;
+      var time = this.getLastMessageTime(channel);
+      // only send read messages if no other store can do this or for initial load
+      if (method === 'read' && endpoint.localStore && time && !options.reset) {
+        // read data from localStore and fetch changes remote
+        var opts = _.clone(options);
+        opts.store = endpoint.localStore;
+        opts.entity = endpoint.entity;
+        delete opts.success;
+        delete opts.error;
+        var that = this;
+        return endpoint.localStore.sync(method, model, opts).then(function (resp) {
+          // load changes only (will happen AFTER success callback is invoked,
+          // but returned promise will resolve only after changes were processed.
+          // This is because backbone success callback alters the collection...
+          return that.fetchChanges(endpoint).catch(function (error) {
+            that.trigger('error:' + channel, error); // can not do much about it...
+          }).thenResolve(that.handleSuccess(options, resp) || resp); // caller expects original XHR response as changes body data is NOT compatible
+        }, function () {
+          // fall-back to loading full data set
+          return that._addMessage(method, model, options, endpoint);
+        });
+      }
+  
+      // do backbone rest
+      return this._addMessage(method, model, options, endpoint);
     },
   
-    addMessage: function (method, model, options, endpoint) {
+    _addMessage: function (method, model, options, endpoint) {
       var that = this;
       if (method && model) {
         var changes = model.changedSinceSync;
@@ -4486,184 +4536,170 @@
           _id: model.id,
           id: model.id,
           method: method,
-          data: data
+          data: data,
+          channel: endpoint.channel
         };
-        var emit = function (endpoint, msg) {
-          return that.emitMessage(endpoint, msg, options, model);
-        };
+  
+        var q = Q.resolve(msg);
+        var qMessage;
         if (storeMsg) {
-          return this.storeMessage(endpoint, msg, emit);
-        } else {
-          return emit(endpoint, msg);
+          // store and potentially merge message
+          qMessage = this.storeMessage(endpoint, q);
+          q = qMessage.then(function (message) {
+            // in case of merging, this result could be different
+            return message.attributes;
+          });
         }
+        return q.then(function (msg) {
+          // pass in qMessage so that deletion of stored message can be scheduled
+          return that._emitMessage(endpoint, msg, options, model, qMessage);
+        });
       }
     },
   
-    emitMessage: function (endpoint, msg, options, model) {
+    _emitMessage: function (endpoint, msg, options, model, qMessage) {
+      var that = this;
+      var channel = endpoint.channel;
+      var qAjax = this._ajaxMessage(endpoint, msg, options, model);
+      var q = qAjax;
+  
+      if (qMessage) {
+        // following takes care of offline change store
+        q = q.then(function (data) {
+          // success, remove message stored, if any
+          return that.removeMessage(endpoint, msg, qMessage).then(data, function (error) {
+            that.trigger('error:' + channel, error); // can not do much about it...
+            return data;
+          }).thenResolve(data); // resolve again yielding data
+        }, function (xhr) {
+          // failure eventually caught by offline changes
+          if (!xhr.responseText && that.options.useOfflineChanges) {
+            // this seams to be only a connection problem, so we keep the message and call success
+            return Q.resolve(msg.data);
+          } else {
+            // keep rejection as is
+            return Q.reject.apply(Q, arguments);
+          }
+        });
+      }
+  
+      q = this._applyResponse(q, endpoint, msg, options, model);
+  
+      q.finally(function () {
+        // do some connection handling
+        return qAjax.then(function () {
+          // trigger reconnection when disconnected
+          if (!endpoint.isConnected) {
+            return that.onConnect(endpoint);
+          }
+        }, function (xhr) {
+          // trigger disconnection when disconnected
+          if (!xhr.responseText && endpoint.isConnected) {
+            return that.onDisconnect(endpoint);
+          }
+        });
+      });
+    },
+  
+    _ajaxMessage: function (endpoint, msg, options, model) {
       var channel = endpoint.channel;
       var that = this;
-      var url = Bikini.isModel(model) || msg.method !== 'read' ? endpoint.baseUrl : endpoint.readUrl;
+      var url = Relution.LiveData.isModel(model) || msg.method !== 'read' ? endpoint.baseUrl : endpoint.readUrl;
       if (msg.id && msg.method !== 'create') {
         url += (url.charAt(url.length - 1) === '/' ? '' : '/' ) + msg.id;
       }
-      return model.sync.apply(model, [msg.method, model, {
+      console.log('ajaxMessage ' + msg.method + ' ' + url);
+      return model.sync(msg.method, model, {
+        // must not take arbitrary options as these won't be replayed on reconnect
         url: url,
-        error: function (xhr, status) {
-          if (!xhr.responseText && that.options.useOfflineChanges) {
-            // this seams to be only a connection problem, so we keep the message an call success
-            that.onDisconnect(endpoint);
-            that.handleCallback(options.success, msg.data);
-          } else {
-            // some real error
-            var handleError = function () {
-              // called when we want to retry on reconnect/restart, aka. the message stays in the store for future delivery
-              return that.handleCallback(options.error, model, xhr.responseJSON || new Error(status), options);
-            };
-            var removeAndHandleError = function () {
-              // called when we do not want to retry on reconnect/restart, message is to be deleted
-              return that.removeMessage(endpoint, msg, handleError);
-            };
-            var saveAndHandleError = function(model, data) {
-              // original request failed and the code below reloaded the data to revert the local modifications, which succeeded...
-              that.trigger(channel, {
-                _id: model.id,
-                id: model.id,
-                method: 'update',
-                data: data
-              });
-              removeAndHandleError();
-              // following does NOT work as this will NOT update the collection when sending messages on reconnect!
-              /*
-              return model.save(data, {
-                // remove message to no longer retry on reconnect/restart
-                error: removeAndHandleError,
-                success: removeAndHandleError,
-                // just affect local store
-                store: endpoint.localStore,
-                entity: endpoint.entity
-              });
-              */
-            };
-            var deleteAndHandleError = function (model, fetchResp) {
-              // original request failed and the code below tried to revert the local modifications by reloading the data, which failed as well...
-              var status = fetchResp && fetchResp.status;
-              switch (status) {
-                case 404: // NOT FOUND
-                case 401: // UNAUTHORIZED
-                case 410: // GONE*
-                  // ...because the item is gone by now, maybe someone else changed it to be deleted
-                  that.trigger(channel, {
-                    _id: model.id,
-                    id: model.id,
-                    method: 'delete'
-                  });
-                  removeAndHandleError();
-                  // following does NOT work as this will NOT update the collection when sending messages on reconnect!
-                  /*
-                  model.destroy({
-                    // remove message to no longer retry on reconnect/restart
-                    error: removeAndHandleError,
-                    success: removeAndHandleError,
-                    // just affect local store
-                    store: endpoint.localStore,
-                    entity: endpoint.entity
-                  });
-                  */
-                  break;
-                default:
-                  // reattempt operation on reconnect/restart as we are off in undefined state,
-                  // data can not be reloaded and yet it was not deleted, so what to do...
-                  console.error('don`t know how to handle ' + status + ' here!');
-                  handleError();
-                  break;
-              }
-            };
-            if (msg.method !== 'read' && endpoint.localStore) {
-              // revert modification by reloading data
-              return model.fetch({
-                url: url,
-                error: deleteAndHandleError,
-                success: saveAndHandleError,
-                store: {} // really go to remote server
-              });
-            } else {
-              // just give up and forward the error
-              return removeAndHandleError();
-            }
-          }
-        },
-        success: function (data) {
-          if (!that.isConnected) {
-            that.onConnect(endpoint);
-          }
-          that.removeMessage(endpoint, msg, function (endpoint, msg) {
-            if (options.success) {
-              var resp = data;
-              that.handleCallback(options.success, resp);
-            } else if (data) {
-              // no data if server asks not to alter state
-              // that.setLastMessageTime(channel, msg.time);
-              if (msg.method === 'read') {
-                if (Bikini.isCollection(model) && _.isArray(data)) {
-                  // synchronize the collection contents with the data read
-                  var ids = {};
-                  model.models.forEach(function (m) {
-                    ids[m.id] = m;
-                  });
-                  data.forEach(function (d) {
-                    if (d) {
-                      var id = d[endpoint.entity.idAttribute] || d._id;
-                      var m = ids[id];
-                      if (m) {
-                        // update the item
-                        delete ids[id]; // so that it is deleted below
-                        if (!_.isEqual(_.pick.call(m, m.attributes, Object.keys(d)), d)) {
-                          // above checked that all attributes in d are in m with equal values and found some mismatch
-                          that.trigger(channel, {
-                            id: id,
-                            method: 'update',
-                            data: d
-                          });
-                        }
-                      } else {
-                        // create the item
-                        that.trigger(channel, {
-                          id: id,
-                          method: 'create',
-                          data: d
-                        });
-                      }
-                    }
-                  });
-                  Object.keys(ids).forEach(function (id) {
-                    // delete the item
-                    that.trigger(channel, {
+        attrs: msg.data,
+        store: {},
+        // error propagation
+        error: that.options.error
+      });
+    },
+  
+    _applyResponse: function (qXHR, endpoint, msg, options, model) {
+      var channel = endpoint.channel;
+      var that = this;
+      return qXHR.then(function (data) {
+        // delete on server does not respond a body
+        if(!data && msg.method === 'delete') {
+          data = msg.data;
+        }
+  
+        // update local store state
+        if (data) {
+          // no data if server asks not to alter state
+          // that.setLastMessageTime(channel, msg.time);
+          var promises = [];
+          if (msg.method !== 'read') {
+            promises.push(that.onMessageStore(endpoint, data === msg.data ? msg : _.defaults({
+              data: data // just accepts new data
+            }, msg)));
+          } else if (Relution.LiveData.isCollection(model) && _.isArray(data)) {
+            // synchronize the collection contents with the data read
+            var ids = {};
+            model.models.forEach(function (m) {
+              ids[m.id] = m;
+            });
+            data.forEach(function (d) {
+              if (d) {
+                var id = d[endpoint.entity.idAttribute] || d._id;
+                var m = ids[id];
+                if (m) {
+                  // update the item
+                  delete ids[id]; // so that it is deleted below
+                  if (!_.isEqual(_.pick.call(m, m.attributes, Object.keys(d)), d)) {
+                    // above checked that all attributes in d are in m with equal values and found some mismatch
+                    promises.push(that.onMessageStore(endpoint, {
                       id: id,
-                      method: 'delete'
-                    });
-                  });
-                } else {
-                  // trigger an update to load the data read
-                  var array = _.isArray(data) ? data : [data];
-                  for (var i = 0; i &lt; array.length; i++) {
-                    data = array[i];
-                    if (data) {
-                      that.trigger(channel, {
-                        id: data[endpoint.entity.idAttribute] || data._id,
-                        method: 'update',
-                        data: data
-                      });
-                    }
+                      method: 'update',
+                      data: d
+                    }));
                   }
+                } else {
+                  // create the item
+                  promises.push(that.onMessageStore(endpoint, {
+                    id: id,
+                    method: 'create',
+                    data: d
+                  }));
                 }
-              } else {
-                that.trigger(channel, msg);
+              }
+            });
+            Object.keys(ids).forEach(function (id) {
+              // delete the item
+              var m = ids[id];
+              promises.push(that.onMessageStore(endpoint, {
+                id: id,
+                method: 'delete',
+                data: m.attributes
+              }));
+            });
+          } else {
+            // trigger an update to load the data read
+            var array = _.isArray(data) ? data : [data];
+            for (var i = 0; i &lt; array.length; i++) {
+              data = array[i];
+              if (data) {
+                promises.push(that.onMessageStore(endpoint, {
+                  id: data[endpoint.entity.idAttribute] || data._id,
+                  method: 'update',
+                  data: data
+                }));
               }
             }
-          });
-        },
-        store: {}
-      }]);
+          }
+          return Q.all(promises).thenResolve(data); // delayed till operations complete
+        }
+      }).then(function (response) {
+        // invoke success callback, if any
+        return that.handleSuccess(options, response) || response;
+      }, function (error) {
+        // invoke error callback, if any
+        return that.handleError(options, error) || Q.reject(error);
+      });
     },
   
     fetchChanges: function (endpoint) {
@@ -4671,29 +4707,27 @@
       var channel = endpoint ? endpoint.channel : '';
       var time = that.getLastMessageTime(channel);
       if (endpoint && endpoint.baseUrl && channel && time) {
-        var changes = new Bikini.Collection({});
+        var changes = new Relution.LiveData.Collection();
         return changes.fetch({
           url: endpoint.baseUrl + 'changes/' + time,
-          success: function (a, b, response) {
-            changes.each(function (msg) {
-              if (msg.get('time') && msg.get('method')) {
-                if (that.options.useLocalStore) {
-                  that.setLastMessageTime(channel, msg.get('time'));
-                }
-                that.trigger(channel, msg);
-              }
+          success: function (model, response, options) {
+            changes.each(function (change) {
+              var msg = change.attributes;
+              that.onMessageStore(endpoint, msg);
             });
-            return response.xhr;
+            return response || options.xhr;
           },
           credentials: endpoint.credentials
         });
+      } else {
+        return Q.resolve();
       }
     },
   
     fetchServerInfo: function (endpoint) {
       var that = this;
       if (endpoint && endpoint.baseUrl) {
-        var info = new Bikini.Model();
+        var info = new Relution.LiveData.Model();
         var time = that.getLastMessageTime(endpoint.channel);
         var url = endpoint.baseUrl;
         if (url.charAt((url.length - 1)) !== '/') {
@@ -4701,7 +4735,7 @@
         }
         return info.fetch({
           url: url + 'info',
-          success: function (a, b, response) {
+          success: function (model, response, options) {
             //@todo why we set a server time here ?
             if (!time && info.get('time')) {
               that.setLastMessageTime(endpoint.channel, info.get('time'));
@@ -4713,68 +4747,125 @@
                 endpoint.socket = that.createSocket(endpoint, name);
               }
             }
-            return response.xhr;
+            return response || options.xhr;
           },
           credentials: endpoint.credentials
         });
       }
     },
   
-    sendMessages: function (endpoint) {
-      if (endpoint && endpoint.messages) {
-        var that = this;
-        endpoint.messages.each(function (message) {
-          var msg;
-          try {
-            msg = JSON.parse(message.get('msg'));
-          } catch (e) {
-          }
-          var channel = message.get('channel');
-          if (msg && channel) {
-            var model = that.createModel({collection: endpoint.messages}, msg.data);
-            that.emitMessage(endpoint, msg, {
-              error: that.options.error
-            }, model);
-          } else {
-            message.destroy();
-          }
+    _sendMessages: function (endpoint) {
+      if (!endpoint || !endpoint.messages) {
+        return Q.resolve();
+      }
+  
+      var that = this;
+      return endpoint.messages.fetch().then(function next() {
+        if (endpoint.messages.models.length &lt;= 0) {
+          return;
+        }
+  
+        var message = endpoint.messages.models[0];
+        var msg = message.attributes;
+        var channel = message.get('channel');
+        if (!msg || !channel) {
+          return message.destroy();
+        }
+        that._fixMessage(endpoint, msg);
+  
+        var remoteOptions = {
+          urlRoot: endpoint.baseUrl,
+          store: {} // really go to remote server
+        };
+        var localOptions = {
+          // just affect local store
+          store: endpoint.localStore
+        };
+        var model = new Relution.LiveData.Model(msg.data, {
+          idAttribute: endpoint.entity.idAttribute,
+          entity: endpoint.entity,
         });
-      }
-    },
+        console.log('sendMessage ' + model.id);
+        return that._applyResponse(that._ajaxMessage(endpoint, msg, remoteOptions, model), endpoint, msg, remoteOptions, model).catch(function (error) {
+          // failed, eventually undo the modifications stored
+          if (!endpoint.localStore) {
+            return Q.reject(error);
+          }
   
-    mergeMessages: function (data, id) {
-      return data;
-    },
-  
-    storeMessage: function (endpoint, msg, callback) {
-      if (endpoint && endpoint.messages && msg) {
-        var channel = endpoint.channel;
-        var message = endpoint.messages.get(msg._id);
-        if (message) {
-          var oldMsg = JSON.parse(message.get('msg'));
-          message.save({
-            msg: JSON.stringify(_.extend(oldMsg, msg))
+          // revert modification by reloading data
+          if (msg.id) {
+            remoteOptions.url = remoteOptions.urlRoot + (remoteOptions.urlRoot.charAt(remoteOptions.urlRoot.length - 1) === '/' ? '' : '/' ) + msg.id;
+          }
+          return model.fetch(remoteOptions).then(function (data) {
+            // original request failed and the code above reloaded the data to revert the local modifications, which succeeded...
+            return model.save(data, localOptions);
+          }, function (fetchResp) {
+            // original request failed and the code above tried to revert the local modifications by reloading the data, which failed as well...
+            var status = fetchResp && fetchResp.status;
+            switch (status) {
+              case 404: // NOT FOUND
+              case 401: // UNAUTHORIZED
+              case 410: // GONE*
+                // ...because the item is gone by now, maybe someone else changed it to be deleted
+                return model.destroy(localOptions);
+              default:
+                return Q.reject(fetchResp);
+            }
           });
+        }).then(function () {
+          // succeeded or reverted
+          return message.destroy();
+        }).then(function (result) {
+          return next(result);
+        });
+      });
+    },
+  
+    storeMessage: function (endpoint, qMsg) {
+      return qMsg.then(function (msg) {
+        var options;
+        var id = endpoint.messages.modelId(msg);
+        console.log('storeMessage ' + id);
+        var message = id && endpoint.messages.get(id);
+        if (message) {
+          // use existing instance, should not be the case usually
+          options = {
+            merge: true
+          };
         } else {
-          endpoint.messages.create({
-            _id: msg._id,
-            id: msg.id,
-            msg: JSON.stringify(msg),
-            channel: channel
+          // instantiate new model, intentionally not added to collection
+          message = new endpoint.messages.model(msg, {
+            collection: endpoint.messages,
+            store: endpoint.messages.store
           });
         }
-      }
-      return callback(endpoint, msg);
+        return message.save(msg, options).thenResolve(message);
+      });
     },
   
-    removeMessage: function (endpoint, msg, callback) {
-      if (endpoint && endpoint.messages) {
-        var message = endpoint.messages.get(msg._id);
-        if (message) {
-          message.destroy();
+    removeMessage: function (endpoint, msg, qMessage) {
+      return qMessage.then(function (message) {
+        if (!message) {
+          var id = endpoint.messages.modelId(msg);
+          if (!id) {
+            // msg is not persistent
+            return Q.resolve();
+          }
+  
+          message = endpoint.messages.get(id);
+          if (!message) {
+            message = new endpoint.messages.model({
+              _id: msg._id,
+              id: msg.id
+            }, {
+              collection: endpoint.messages,
+              store: endpoint.messages.store
+            });
+          }
         }
-      }
-      return callback(endpoint, msg);
+        console.log('removeMessage ' + message.id);
+        return message.destroy();
+      });
     },
   
     clear: function (collection) {
@@ -4788,31 +4879,19 @@
           this.setLastMessageTime(endpoint.channel, '');
         }
       }
-    },
-  
-    /*
-     url = "http://example.com:3000/pathname/?search=test#hash";
-  
-     location.protocol; // => "http:"
-     location.host;     // => "example.com:3000"
-     location.hostname; // => "example.com"
-     location.port;     // => "3000"
-     location.pathname; // => "/pathname/"
-     location.hash;     // => "#hash"
-     location.search;   // => "?search=test"
-     */
-    getLocation: function (url) {
-      var location = document.createElement('a');
-      location.href = url || this.url;
-      // IE doesn't populate all link properties when setting .href with a relative URL,
-      // however .href will return an absolute URL which then can be used on itself
-      // to populate these additional fields.
-      if (location.host === '') {
-        location.href = location.href;
-      }
-      return location;
     }
+  
   });
+  
+
+  // Copyright (c) 2015 M-Way Solutions GmbH
+  // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
+  
+  var Bikini = null;
+  if (global.Relution) {
+    Bikini = global.Bikini = Relution.LiveData;
+    Bikini.BikiniStore = Relution.LiveData.SyncStore;
+  }
   
 
 })(this, Backbone, _, $);
@@ -4826,13 +4905,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Index</a></h2><h3>Modules</h3><ul><li><a href="Base64.html">Base64</a></li><li><a href="BikiniStore.html">BikiniStore</a></li><li><a href="Collection.html">Collection</a></li><li><a href="Cypher.html">Cypher</a></li><li><a href="DataSelector.html">DataSelector</a></li><li><a href="Date.html">Date</a></li><li><a href="Entity.html">Entity</a></li><li><a href="Field.html">Field</a></li><li><a href="LocalStorageStore.html">LocalStorageStore</a></li><li><a href="Model.html">Model</a></li><li><a href="ObjectID.html">ObjectID</a></li><li><a href="Security.html">Security</a></li><li><a href="SHA256.html">SHA256</a></li><li><a href="SqlSelector.html">SqlSelector</a></li><li><a href="Store.html">Store</a></li><li><a href="UniqueId.html">UniqueId</a></li><li><a href="WebSqlStore.html">WebSqlStore</a></li></ul><h3>Classes</h3><ul><li><a href="Bikini.Entity.html">Entity</a></li><li><a href="BikiniStore-Bikini.Field.html">Field</a></li></ul>
+    <h2><a href="index.html">Index</a></h2><h3>Modules</h3><ul><li><a href="Base64.html">Base64</a></li><li><a href="Collection.html">Collection</a></li><li><a href="Cypher.html">Cypher</a></li><li><a href="DataSelector.html">DataSelector</a></li><li><a href="Date.html">Date</a></li><li><a href="Entity.html">Entity</a></li><li><a href="Field.html">Field</a></li><li><a href="LocalStorageStore.html">LocalStorageStore</a></li><li><a href="Model.html">Model</a></li><li><a href="ObjectID.html">ObjectID</a></li><li><a href="Security.html">Security</a></li><li><a href="SHA256.html">SHA256</a></li><li><a href="SqlSelector.html">SqlSelector</a></li><li><a href="Store.html">Store</a></li><li><a href="SyncStore.html">SyncStore</a></li><li><a href="UniqueId.html">UniqueId</a></li><li><a href="URLUtil.html">URLUtil</a></li><li><a href="WebSqlStore.html">WebSqlStore</a></li></ul><h3>Classes</h3><ul><li><a href="Relution.LiveData.Entity.html">Entity</a></li><li><a href="SyncStore-Relution.LiveData.Field.html">Field</a></li></ul>
 </nav>
 
 <br clear="both">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.2.2</a> on Tue May 19 2015 11:02:18 GMT+0200 (MESZ)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.2.2</a> on Fri Jun 19 2015 12:07:04 GMT+0200 (MESZ)
 </footer>
 
 <script> prettyPrint(); </script>
