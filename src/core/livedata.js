@@ -12,6 +12,7 @@ if (typeof exports !== 'undefined') {
 } else {
   Relution = global.Relution = global.Relution || {};
 }
+Relution.debug = Relution.debug || _.bind(console.log, console);
 Relution.LiveData = {};
 
 /**
@@ -101,7 +102,7 @@ Relution.LiveData.sync = function sync(method, model, options) {
   var store = options.store || this.store;
   options.credentials = options.credentials || this.credentials || store && store.credentials;
 
-  console.log('Relution.LiveData.sync ' + method + ' ' + model.id);
+  Relution.debug('Relution.LiveData.sync ' + method + ' ' + model.id);
   if(store && store.sync) {
     // store access (this is redundant model argument)
     var storeAjax = store.ajax && _.bind(store.ajax, store);

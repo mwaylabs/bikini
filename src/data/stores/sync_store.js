@@ -69,7 +69,7 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
   },
 
   initCollection: function (collection) {
-    console.log('Relution.LiveData.SyncStore.initCollection');
+    Relution.debug('Relution.LiveData.SyncStore.initCollection');
     var url = collection.getUrlRoot();
     if (url.charAt(url.length - 1) !== '/') {
       url += '/';
@@ -158,7 +158,7 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
   },
 
   createSocket: function (endpoint, name) {
-    console.log('Relution.LiveData.SyncStore.createSocket');
+    Relution.debug('Relution.LiveData.SyncStore.createSocket');
     if (this.options.useSocketNotify && endpoint && endpoint.socketPath) {
       var that = this;
       var url = endpoint.host;
@@ -188,7 +188,7 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
         return that.onConnect(endpoint).done();
       });
       endpoint.socket.on('disconnect', function () {
-        console.log('socket.io: disconnect');
+        Relution.debug('socket.io: disconnect');
         return that.onDisconnect(endpoint).done();
       });
       endpoint.socket.on(endpoint.channel, that.onMessageStore.bind(that, endpoint));
@@ -197,7 +197,7 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
   },
 
   _bindChannel: function (endpoint, name) {
-    console.log('Relution.LiveData.SyncStore._bindChannel');
+    Relution.debug('Relution.LiveData.SyncStore._bindChannel');
     var that = this;
     if (endpoint && endpoint.socket) {
       var channel = endpoint.channel;
@@ -360,7 +360,7 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
   },
 
   sync: function (method, model, options) {
-    console.log('Relution.LiveData.SyncStore.sync');
+    Relution.debug('Relution.LiveData.SyncStore.sync');
     options = options || {};
 
     var endpoint;
@@ -507,7 +507,7 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
     if (msg.id && msg.method !== 'create') {
       url += (url.charAt(url.length - 1) === '/' ? '' : '/' ) + msg.id;
     }
-    console.log('ajaxMessage ' + msg.method + ' ' + url);
+    Relution.debug('ajaxMessage ' + msg.method + ' ' + url);
     return model.sync(msg.method, model, {
       // must not take arbitrary options as these won't be replayed on reconnect
       url: url,
@@ -684,7 +684,7 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
         idAttribute: endpoint.entity.idAttribute,
         entity: endpoint.entity,
       });
-      console.log('sendMessage ' + model.id);
+      Relution.debug('sendMessage ' + model.id);
       return that._applyResponse(that._ajaxMessage(endpoint, msg, remoteOptions, model), endpoint, msg, remoteOptions, model).catch(function (error) {
         // failed, eventually undo the modifications stored
         if (!endpoint.localStore) {
@@ -724,7 +724,7 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
     return qMsg.then(function (msg) {
       var options;
       var id = endpoint.messages.modelId(msg);
-      console.log('storeMessage ' + id);
+      Relution.debug('storeMessage ' + id);
       var message = id && endpoint.messages.get(id);
       if (message) {
         // use existing instance, should not be the case usually
@@ -762,7 +762,7 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
           });
         }
       }
-      console.log('removeMessage ' + message.id);
+      Relution.debug('removeMessage ' + message.id);
       return message.destroy();
     });
   },

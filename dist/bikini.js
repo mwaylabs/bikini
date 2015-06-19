@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Fri Jun 19 2015 12:06:57
+* Date:      Fri Jun 19 2015 16:10:44
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 
@@ -22,6 +22,7 @@
   } else {
     Relution = global.Relution = global.Relution || {};
   }
+  Relution.debug = Relution.debug || _.bind(console.log, console);
   Relution.LiveData = {};
   
   /**
@@ -111,7 +112,7 @@
     var store = options.store || this.store;
     options.credentials = options.credentials || this.credentials || store && store.credentials;
   
-    console.log('Relution.LiveData.sync ' + method + ' ' + model.id);
+    Relution.debug('Relution.LiveData.sync ' + method + ' ' + model.id);
     if(store && store.sync) {
       // store access (this is redundant model argument)
       var storeAjax = store.ajax && _.bind(store.ajax, store);
@@ -3653,7 +3654,7 @@
           var arSql = this._sqlUpdateDatabase(db.version, this.options.version);
           db.changeVersion(db.version, this.options.version, function (tx) {
             _.each(arSql, function (sql) {
-              console.log('sql statement: ' + sql);
+              Relution.debug('sql statement: ' + sql);
               lastSql = sql;
               tx.executeSql(sql);
             });
@@ -3945,9 +3946,9 @@
           var statement = stm.statement || stm;
           var args = stm.arguments;
           lastStatement = statement;
-          console.log('sql statement: ' + statement);
+          Relution.debug('sql statement: ' + statement);
           if (args) {
-            console.log('    arguments: ' + JSON.stringify(args));
+            Relution.debug('    arguments: ' + JSON.stringify(args));
           }
           t.executeSql(statement, args, function (tx, res) {
             var len = res.rows.length;//, i;
@@ -4016,9 +4017,9 @@
               var statement = stm.statement || stm;
               var args = stm.arguments;
               lastStatement = statement;
-              console.log('sql statement: ' + statement);
+              Relution.debug('sql statement: ' + statement);
               if (args) {
-                console.log('    arguments: ' + JSON.stringify(args));
+                Relution.debug('    arguments: ' + JSON.stringify(args));
               }
               t.executeSql(statement, args);
             });
@@ -4143,7 +4144,7 @@
     },
   
     initCollection: function (collection) {
-      console.log('Relution.LiveData.SyncStore.initCollection');
+      Relution.debug('Relution.LiveData.SyncStore.initCollection');
       var url = collection.getUrlRoot();
       if (url.charAt(url.length - 1) !== '/') {
         url += '/';
@@ -4232,7 +4233,7 @@
     },
   
     createSocket: function (endpoint, name) {
-      console.log('Relution.LiveData.SyncStore.createSocket');
+      Relution.debug('Relution.LiveData.SyncStore.createSocket');
       if (this.options.useSocketNotify && endpoint && endpoint.socketPath) {
         var that = this;
         var url = endpoint.host;
@@ -4262,7 +4263,7 @@
           return that.onConnect(endpoint).done();
         });
         endpoint.socket.on('disconnect', function () {
-          console.log('socket.io: disconnect');
+          Relution.debug('socket.io: disconnect');
           return that.onDisconnect(endpoint).done();
         });
         endpoint.socket.on(endpoint.channel, that.onMessageStore.bind(that, endpoint));
@@ -4271,7 +4272,7 @@
     },
   
     _bindChannel: function (endpoint, name) {
-      console.log('Relution.LiveData.SyncStore._bindChannel');
+      Relution.debug('Relution.LiveData.SyncStore._bindChannel');
       var that = this;
       if (endpoint && endpoint.socket) {
         var channel = endpoint.channel;
@@ -4434,7 +4435,7 @@
     },
   
     sync: function (method, model, options) {
-      console.log('Relution.LiveData.SyncStore.sync');
+      Relution.debug('Relution.LiveData.SyncStore.sync');
       options = options || {};
   
       var endpoint;
@@ -4581,7 +4582,7 @@
       if (msg.id && msg.method !== 'create') {
         url += (url.charAt(url.length - 1) === '/' ? '' : '/' ) + msg.id;
       }
-      console.log('ajaxMessage ' + msg.method + ' ' + url);
+      Relution.debug('ajaxMessage ' + msg.method + ' ' + url);
       return model.sync(msg.method, model, {
         // must not take arbitrary options as these won't be replayed on reconnect
         url: url,
@@ -4758,7 +4759,7 @@
           idAttribute: endpoint.entity.idAttribute,
           entity: endpoint.entity,
         });
-        console.log('sendMessage ' + model.id);
+        Relution.debug('sendMessage ' + model.id);
         return that._applyResponse(that._ajaxMessage(endpoint, msg, remoteOptions, model), endpoint, msg, remoteOptions, model).catch(function (error) {
           // failed, eventually undo the modifications stored
           if (!endpoint.localStore) {
@@ -4798,7 +4799,7 @@
       return qMsg.then(function (msg) {
         var options;
         var id = endpoint.messages.modelId(msg);
-        console.log('storeMessage ' + id);
+        Relution.debug('storeMessage ' + id);
         var message = id && endpoint.messages.get(id);
         if (message) {
           // use existing instance, should not be the case usually
@@ -4836,7 +4837,7 @@
             });
           }
         }
-        console.log('removeMessage ' + message.id);
+        Relution.debug('removeMessage ' + message.id);
         return message.destroy();
       });
     },

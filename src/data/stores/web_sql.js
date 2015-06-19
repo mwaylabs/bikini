@@ -219,7 +219,7 @@ Relution.LiveData.WebSqlStore = Relution.LiveData.Store.extend({
         var arSql = this._sqlUpdateDatabase(db.version, this.options.version);
         db.changeVersion(db.version, this.options.version, function (tx) {
           _.each(arSql, function (sql) {
-            console.log('sql statement: ' + sql);
+            Relution.debug('sql statement: ' + sql);
             lastSql = sql;
             tx.executeSql(sql);
           });
@@ -511,9 +511,9 @@ Relution.LiveData.WebSqlStore = Relution.LiveData.Store.extend({
         var statement = stm.statement || stm;
         var args = stm.arguments;
         lastStatement = statement;
-        console.log('sql statement: ' + statement);
+        Relution.debug('sql statement: ' + statement);
         if (args) {
-          console.log('    arguments: ' + JSON.stringify(args));
+          Relution.debug('    arguments: ' + JSON.stringify(args));
         }
         t.executeSql(statement, args, function (tx, res) {
           var len = res.rows.length;//, i;
@@ -582,9 +582,9 @@ Relution.LiveData.WebSqlStore = Relution.LiveData.Store.extend({
             var statement = stm.statement || stm;
             var args = stm.arguments;
             lastStatement = statement;
-            console.log('sql statement: ' + statement);
+            Relution.debug('sql statement: ' + statement);
             if (args) {
-              console.log('    arguments: ' + JSON.stringify(args));
+              Relution.debug('    arguments: ' + JSON.stringify(args));
             }
             t.executeSql(statement, args);
           });
