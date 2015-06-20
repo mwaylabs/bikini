@@ -17,8 +17,6 @@ Another cool feature of Bikini is that it keeps your app in sync. This allows yo
 
 Bikini is build on top of [Backbone.js](http://backbonejs.org/) which gives your web application structure.
 
-![mcap mobility platform](http://blog.mwaysolutions.com/wp-content/uploads/2013/12/mway_bikini_blog04.jpg)
-
 You should also have a lot at the [introducing blog-post about Bikini](http://blog.mwaysolutions.com/2013/12/20/offlineonline-synchronization-with-bikini-all-a-model-needs/).
 
 ## How to use
