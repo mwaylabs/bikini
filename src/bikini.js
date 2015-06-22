@@ -13,6 +13,9 @@
 // @include ./utility/url.js
 
 // @include ./query/JsonPath.js
+// @include ./query/Filter.js
+// @include ./query/FilterVisitor.js
+// @include ./query/JsonFilterVisitor.js
 // @include ./query/SortOrder.js
 // @include ./query/SortOrderComparator.js
 // @include ./query/GetQuery.js

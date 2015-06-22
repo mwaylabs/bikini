@@ -25,7 +25,34 @@
 /// <reference path="SortOrder.ts" />
 /// <reference path="JsonPath.ts" />
 
+declare var _;
+
 module query {
+
+  /**
+   * compiled compare function.
+   */
+  export interface JsonCompareFn<T> {
+    /**
+     * compares objects in a way compatible to Array.sort().
+     *
+     * @param o1 left operand.
+     * @param o2 right operand.
+     * @return {number} indicating relative ordering of operands.
+     */
+    (o1:T, o2:T):number;
+  }
+
+  /**
+   * compiles a JsonCompareFn from a given SortOrder.
+   *
+   * @param sortOrder being compiled.
+   * @return {function} a JsonCompareFn function compatible to Array.sort().
+   */
+  export function jsonCompare<T>(sortOrder:SortOrder):JsonCompareFn<T> {
+    var comparator = new SortOrderComparator<T>(sortOrder);
+    return _.bind(comparator.compare, comparator);
+  }
 
   /**
    * compiled SortOrder for comparison of objects.

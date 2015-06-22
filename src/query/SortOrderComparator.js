@@ -27,6 +27,17 @@
 var query;
 (function (query) {
     /**
+     * compiles a JsonCompareFn from a given SortOrder.
+     *
+     * @param sortOrder being compiled.
+     * @return {function} a JsonCompareFn function compatible to Array.sort().
+     */
+    function jsonCompare(sortOrder) {
+        var comparator = new SortOrderComparator(sortOrder);
+        return _.bind(comparator.compare, comparator);
+    }
+    query.jsonCompare = jsonCompare;
+    /**
      * compiled SortOrder for comparison of objects.
      *
      * @see SortOrder
