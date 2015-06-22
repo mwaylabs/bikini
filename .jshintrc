@@ -33,6 +33,7 @@
         "enquire": false,
         "describe": false,
         "assert": false,
-        "it": false
+        "it": false,
+        "jsonPath": false
     }
 }
