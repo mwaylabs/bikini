@@ -253,7 +253,7 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
 
     endpoint.isConnected = false;
     var that = this;
-    return Q.resolve(function () {
+    return Q.fcall(function () {
       if (endpoint.socket && endpoint.socket.socket) {
         endpoint.socket.socket.onDisconnect();
       }
@@ -281,6 +281,7 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
     }
     this._fixMessage(endpoint, msg);
 
+    var q;
     var channel = endpoint.channel;
     if (endpoint.localStore) {
       // first update the local store by forming a model and invoking sync
@@ -291,7 +292,7 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
       var model = new Relution.LiveData.Model(msg.data, _.extend({
         parse: true
       }, options));
-      return endpoint.localStore.sync(msg.method, model, _.extend(options, {
+      q = endpoint.localStore.sync(msg.method, model, _.extend(options, {
         merge: msg.method === 'patch',
         success: function (result) {
           // update all collections listening
@@ -301,17 +302,20 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
           // report error as event on store
           that.trigger('error:' + channel, error);
         }
-      })).then(function () {
-        if (msg.time) {
-          that.setLastMessageTime(channel, msg.time);
-        }
-      }).thenResolve(msg);
+      }));
     } else {
       // just update all collections listening
-      return Q.resolve(function () {
+      q = Q.fcall(function () {
         return that.trigger('sync:' + channel, msg); // onMessageCollection
       });
     }
+
+    // finally set the message time
+    return q.then(function () {
+      if (msg.time) {
+        that.setLastMessageTime(channel, msg.time);
+      }
+    }).thenResolve(msg);
   },
 
   onMessageCollection: function (msg) {

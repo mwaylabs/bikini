@@ -35,6 +35,28 @@ describe('Mocha', function () {
 
 Q.longStackSupport = true;
 
+describe('Q', function () {
+  it('Q direct resolve', function (done) {
+    Q.resolve(1).then(function (x) {
+      assert.equal(x, 1, 'one');
+    }).then(done, done).done();
+  });
+
+  it('Q indirect resolve', function (done) {
+    Q.fcall(function () {
+      return 1;
+    }).then(function (x) {
+      assert.equal(x, 1, 'one');
+    }).then(done, done).done();
+  });
+
+  it('Q empty resolve', function (done) {
+    Q.resolve().then(function (x) {
+      assert.equal(x, undefined, 'undefined');
+    }).then(done, done).done();
+  });
+});
+
 function backbone_error(done) {
   return function (model, error) {
     done(error || new Error());
