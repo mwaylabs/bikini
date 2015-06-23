@@ -68,4 +68,75 @@ describe('test.JsonFilterVisitor', function () {
     }
   });
 
+  it('filter movies like Ford', function () {
+    var testdata = makeMovies();
+    var expected = ['771373149', '771410658'];
+    var filtered = testdata.filter(Relution.LiveData.jsonFilter({
+      type: 'like',
+      fieldName: 'abridged_cast[*].name',
+      like: '%Ford%'
+    }));
+    assert.equal(filtered.length, expected.length, 'expected ' + expected.length + ' elements');
+    for (var i = 0; i < filtered.length; ++i) {
+      assert.equal(filtered[i].id, expected[i], 'filter at #' + i);
+    }
+  });
+
+  it('filter movies containing Harris', function () {
+    var testdata = makeMovies();
+    var expected = ['771364722', '771373149', '771410658'];
+    var filtered = testdata.filter(Relution.LiveData.jsonFilter({
+      type: 'containsString',
+      fieldName: 'abridged_cast[*].name',
+      contains: 'Harris'
+    }));
+    assert.equal(filtered.length, expected.length, 'expected ' + expected.length + ' elements');
+    for (var i = 0; i < filtered.length; ++i) {
+      assert.equal(filtered[i].id, expected[i], 'filter at #' + i);
+    }
+  });
+
+  it('filter movies with critics score [70;85]', function () {
+    var testdata = makeMovies();
+    var expected = ['771324839', '771313962', '771368269', '771354922', '771412075', '771357114', '771385848'];
+    var filtered = testdata.filter(Relution.LiveData.jsonFilter({
+      type: 'logOp',
+      operation: 'and',
+      filters: [
+        {
+          type: 'longRange',
+          fieldName: 'ratings.critics_score',
+          min: 70,
+          max: 88
+        },
+        {
+          type: 'doubleRange',
+          fieldName: 'ratings.critics_score',
+          max: 85
+        }
+      ]
+    }));
+    assert.equal(filtered.length, expected.length, 'expected ' + expected.length + ' elements');
+    for (var i = 0; i < filtered.length; ++i) {
+      assert.equal(filtered[i].id, expected[i], 'filter at #' + i);
+    }
+  });
+
+  it('filter movies without DVD release', function () {
+    var testdata = makeMovies();
+    var filtered = testdata.filter(Relution.LiveData.jsonFilter({
+      type: 'null',
+      fieldName: 'release_dates.dvd',
+      isNull: true
+    }));
+    var expected = testdata.filter(function (movie) {
+      /* jshint -W106 */
+      return !movie.release_dates.dvd;
+    });
+    assert.equal(filtered.length, expected.length, 'expected ' + expected.length + ' elements');
+    for (var i = 0; i < expected.length; ++i) {
+      assert.equal(filtered[i], expected[i], 'filter at #' + i);
+    }
+  });
+
 });

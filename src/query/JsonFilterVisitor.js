@@ -59,16 +59,23 @@ var Relution;
             }
             JsonFilterVisitor.prototype.containsString = function (filter) {
                 var expression = new LiveData.JsonPath(filter.fieldName);
+                var contains = filter.contains;
+                if (contains === undefined || contains === null) {
+                    return function (obj) {
+                        var value = expression.evaluate(obj);
+                        return value === undefined || value === null;
+                    };
+                }
                 return function (obj) {
                     var value = expression.evaluate(obj);
                     if (value === undefined || value === null) {
                         // null/undefined case
-                        return value == filter.contains;
+                        return false;
                     }
                     else if (_.isArray(value)) {
                         for (var i = 0; i < value.length; ++i) {
                             var val = value[i];
-                            if (String.toString.apply(val).indexOf(filter.contains) >= 0) {
+                            if (val !== undefined && val !== null && val.toString().indexOf(contains) >= 0) {
                                 return true;
                             }
                         }
@@ -76,7 +83,7 @@ var Relution;
                     }
                     else {
                         // simple case
-                        return String.toString.apply(value).indexOf(filter.contains) >= 0;
+                        return value !== undefined && value !== null && value.toString().indexOf(contains) >= 0;
                     }
                 };
             };

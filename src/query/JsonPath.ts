@@ -73,9 +73,17 @@ module Relution.LiveData {
      * @return{any} result of evaluating expression on object.
      */
     evaluate(obj:any, arg?:{}):any {
-      return jsonPath.eval(obj, this.expression, arg || {
+      var result = jsonPath.eval(obj, this.expression, arg || {
           wrap: false
         });
+      // when result is false it might indicate a missing value, we differentiate by requesting the path here
+      if (arg || result !== false || jsonPath.eval(obj, this.expression, {
+          resultType: 'PATH',
+          wrap: false
+        })) {
+        return result;
+      }
+      // intentionally we do not return a value here...
     }
   }
 

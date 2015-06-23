@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Tue Jun 23 2015 13:31:31
+* Date:      Tue Jun 23 2015 16:59:58
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 
@@ -1115,9 +1115,17 @@ var Relution;
              * @return{any} result of evaluating expression on object.
              */
             JsonPath.prototype.evaluate = function (obj, arg) {
-                return jsonPath.eval(obj, this.expression, arg || {
+                var result = jsonPath.eval(obj, this.expression, arg || {
                     wrap: false
                 });
+                // when result is false it might indicate a missing value, we differentiate by requesting the path here
+                if (arg || result !== false || jsonPath.eval(obj, this.expression, {
+                    resultType: 'PATH',
+                    wrap: false
+                })) {
+                    return result;
+                }
+                // intentionally we do not return a value here...
             };
             return JsonPath;
         })();
@@ -1255,16 +1263,23 @@ var Relution;
             }
             JsonFilterVisitor.prototype.containsString = function (filter) {
                 var expression = new LiveData.JsonPath(filter.fieldName);
+                var contains = filter.contains;
+                if (contains === undefined || contains === null) {
+                    return function (obj) {
+                        var value = expression.evaluate(obj);
+                        return value === undefined || value === null;
+                    };
+                }
                 return function (obj) {
                     var value = expression.evaluate(obj);
                     if (value === undefined || value === null) {
                         // null/undefined case
-                        return value == filter.contains;
+                        return false;
                     }
                     else if (_.isArray(value)) {
                         for (var i = 0; i < value.length; ++i) {
                             var val = value[i];
-                            if (String.toString.apply(val).indexOf(filter.contains) >= 0) {
+                            if (val !== undefined && val !== null && val.toString().indexOf(contains) >= 0) {
                                 return true;
                             }
                         }
@@ -1272,7 +1287,7 @@ var Relution;
                     }
                     else {
                         // simple case
-                        return String.toString.apply(value).indexOf(filter.contains) >= 0;
+                        return value !== undefined && value !== null && value.toString().indexOf(contains) >= 0;
                     }
                 };
             };

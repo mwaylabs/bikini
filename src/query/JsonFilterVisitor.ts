@@ -64,23 +64,31 @@ module Relution.LiveData {
 
     containsString(filter:ContainsStringFilter):JsonFilterFn<T> {
       var expression = new JsonPath(filter.fieldName);
+      var contains = filter.contains;
+      if (contains === undefined || contains === null) {
+        return (obj:T) => {
+          var value = expression.evaluate(obj);
+          return value === undefined || value === null;
+        };
+      }
+
       return (obj:T) => {
         var value = expression.evaluate(obj);
         if (value === undefined || value === null) {
           // null/undefined case
-          return value == filter.contains;
+          return false;
         } else if (_.isArray(value)) {
           // array case
           for (var i = 0; i < value.length; ++i) {
             var val = value[i];
-            if (String.toString.apply(val).indexOf(filter.contains) >= 0) {
+            if (val !== undefined && val !== null && val.toString().indexOf(contains) >= 0) {
               return true;
             }
           }
           return false;
         } else {
           // simple case
-          return String.toString.apply(value).indexOf(filter.contains) >= 0;
+          return value !== undefined && value !== null && value.toString().indexOf(contains) >= 0;
         }
       };
     }
