@@ -71,7 +71,8 @@ module Relution.LiveData {
           return value == filter.contains;
         } else if (_.isArray(value)) {
           // array case
-          for (var val in value) {
+          for (var i = 0; i < value.length; ++i) {
+            var val = value[i];
             if (String.toString.apply(val).indexOf(filter.contains) >= 0) {
               return true;
             }
@@ -101,7 +102,8 @@ module Relution.LiveData {
           return false;
         } else if (_.isArray(value)) {
           // array case
-          for (var val in value) {
+          for (var i = 0; i < value.length; ++i) {
+            var val = value[i];
             if (val == filter.value) {
               return true;
             }
@@ -247,7 +249,8 @@ module Relution.LiveData {
           return false;
         } else if (_.isArray(value)) {
           // array case
-          for (var val in value) {
+          for (var i = 0; i < value.length; ++i) {
+            var val = value[i];
             if (pattern.test(val)) {
               return true;
             }
@@ -287,7 +290,8 @@ module Relution.LiveData {
     andOp(filter:LogOpFilter):JsonFilterFn<T> {
       var filters = this.filters(filter);
       return (obj:T) => {
-        for (var filter in filters) {
+        for (var i = 0; i < filters.length; ++i) {
+          var filter = filters[i];
           if (!filter(obj)) {
             return false;
           }
@@ -299,7 +303,8 @@ module Relution.LiveData {
     orOp(filter:LogOpFilter):JsonFilterFn<T> {
       var filters = this.filters(filter);
       return (obj:T) => {
-        for (var filter in filters) {
+        for (var i = 0; i < filters.length; ++i) {
+          var filter = filters[i];
           if (filter(obj)) {
             return true;
           }
@@ -311,7 +316,8 @@ module Relution.LiveData {
     nandOp(filter:LogOpFilter):JsonFilterFn<T> {
       var filters = this.filters(filter);
       return (obj:T) => {
-        for (var filter in filters) {
+        for (var i = 0; i < filters.length; ++i) {
+          var filter = filters[i];
           if (!filter(obj)) {
             return true;
           }
@@ -323,7 +329,8 @@ module Relution.LiveData {
     norOp(filter:LogOpFilter):JsonFilterFn<T> {
       var filters = this.filters(filter);
       return (obj:T) => {
-        for (var filter in filters) {
+        for (var i = 0; i < filters.length; ++i) {
+          var filter = filters[i];
           if (filter(obj)) {
             return false;
           }

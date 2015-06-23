@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Tue Jun 23 2015 12:37:41
+* Date:      Tue Jun 23 2015 13:31:31
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 
@@ -1183,10 +1183,10 @@ var Relution;
             function FilterVisitorBase() {
             }
             FilterVisitorBase.prototype.visit = function (filter) {
-                return this[filter.type].apply(this, filter);
+                return this[filter.type].apply(this, arguments);
             };
             FilterVisitorBase.prototype.logOp = function (filter) {
-                return this[filter.operation + 'Op'].apply(this, filter);
+                return this[filter.operation + 'Op'].apply(this, arguments);
             };
             return FilterVisitorBase;
         })();
@@ -1262,7 +1262,8 @@ var Relution;
                         return value == filter.contains;
                     }
                     else if (_.isArray(value)) {
-                        for (var val in value) {
+                        for (var i = 0; i < value.length; ++i) {
+                            var val = value[i];
                             if (String.toString.apply(val).indexOf(filter.contains) >= 0) {
                                 return true;
                             }
@@ -1291,7 +1292,8 @@ var Relution;
                         return false;
                     }
                     else if (_.isArray(value)) {
-                        for (var val in value) {
+                        for (var i = 0; i < value.length; ++i) {
+                            var val = value[i];
                             if (val == filter.value) {
                                 return true;
                             }
@@ -1434,7 +1436,8 @@ var Relution;
                         return false;
                     }
                     else if (_.isArray(value)) {
-                        for (var val in value) {
+                        for (var i = 0; i < value.length; ++i) {
+                            var val = value[i];
                             if (pattern.test(val)) {
                                 return true;
                             }
@@ -1473,7 +1476,8 @@ var Relution;
             JsonFilterVisitor.prototype.andOp = function (filter) {
                 var filters = this.filters(filter);
                 return function (obj) {
-                    for (var filter in filters) {
+                    for (var i = 0; i < filters.length; ++i) {
+                        var filter = filters[i];
                         if (!filter(obj)) {
                             return false;
                         }
@@ -1484,7 +1488,8 @@ var Relution;
             JsonFilterVisitor.prototype.orOp = function (filter) {
                 var filters = this.filters(filter);
                 return function (obj) {
-                    for (var filter in filters) {
+                    for (var i = 0; i < filters.length; ++i) {
+                        var filter = filters[i];
                         if (filter(obj)) {
                             return true;
                         }
@@ -1495,7 +1500,8 @@ var Relution;
             JsonFilterVisitor.prototype.nandOp = function (filter) {
                 var filters = this.filters(filter);
                 return function (obj) {
-                    for (var filter in filters) {
+                    for (var i = 0; i < filters.length; ++i) {
+                        var filter = filters[i];
                         if (!filter(obj)) {
                             return true;
                         }
@@ -1506,7 +1512,8 @@ var Relution;
             JsonFilterVisitor.prototype.norOp = function (filter) {
                 var filters = this.filters(filter);
                 return function (obj) {
-                    for (var filter in filters) {
+                    for (var i = 0; i < filters.length; ++i) {
+                        var filter = filters[i];
                         if (filter(obj)) {
                             return false;
                         }

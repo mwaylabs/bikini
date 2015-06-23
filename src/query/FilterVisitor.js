@@ -31,10 +31,10 @@ var Relution;
             function FilterVisitorBase() {
             }
             FilterVisitorBase.prototype.visit = function (filter) {
-                return this[filter.type].apply(this, filter);
+                return this[filter.type].apply(this, arguments);
             };
             FilterVisitorBase.prototype.logOp = function (filter) {
-                return this[filter.operation + 'Op'].apply(this, filter);
+                return this[filter.operation + 'Op'].apply(this, arguments);
             };
             return FilterVisitorBase;
         })();

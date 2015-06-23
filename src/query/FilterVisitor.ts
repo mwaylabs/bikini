@@ -49,11 +49,11 @@ module Relution.LiveData {
 
   export class FilterVisitorBase<T> {
     public visit(filter:Filter):T {
-      return this[filter.type].apply(this, filter);
+      return this[filter.type].apply(this, arguments);
     }
 
     logOp(filter:LogOpFilter):T {
-      return this[filter.operation + 'Op'].apply(this, filter);
+      return this[filter.operation + 'Op'].apply(this, arguments);
     }
   }
 

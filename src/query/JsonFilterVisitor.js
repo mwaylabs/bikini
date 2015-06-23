@@ -66,7 +66,8 @@ var Relution;
                         return value == filter.contains;
                     }
                     else if (_.isArray(value)) {
-                        for (var val in value) {
+                        for (var i = 0; i < value.length; ++i) {
+                            var val = value[i];
                             if (String.toString.apply(val).indexOf(filter.contains) >= 0) {
                                 return true;
                             }
@@ -95,7 +96,8 @@ var Relution;
                         return false;
                     }
                     else if (_.isArray(value)) {
-                        for (var val in value) {
+                        for (var i = 0; i < value.length; ++i) {
+                            var val = value[i];
                             if (val == filter.value) {
                                 return true;
                             }
@@ -238,7 +240,8 @@ var Relution;
                         return false;
                     }
                     else if (_.isArray(value)) {
-                        for (var val in value) {
+                        for (var i = 0; i < value.length; ++i) {
+                            var val = value[i];
                             if (pattern.test(val)) {
                                 return true;
                             }
@@ -277,7 +280,8 @@ var Relution;
             JsonFilterVisitor.prototype.andOp = function (filter) {
                 var filters = this.filters(filter);
                 return function (obj) {
-                    for (var filter in filters) {
+                    for (var i = 0; i < filters.length; ++i) {
+                        var filter = filters[i];
                         if (!filter(obj)) {
                             return false;
                         }
@@ -288,7 +292,8 @@ var Relution;
             JsonFilterVisitor.prototype.orOp = function (filter) {
                 var filters = this.filters(filter);
                 return function (obj) {
-                    for (var filter in filters) {
+                    for (var i = 0; i < filters.length; ++i) {
+                        var filter = filters[i];
                         if (filter(obj)) {
                             return true;
                         }
@@ -299,7 +304,8 @@ var Relution;
             JsonFilterVisitor.prototype.nandOp = function (filter) {
                 var filters = this.filters(filter);
                 return function (obj) {
-                    for (var filter in filters) {
+                    for (var i = 0; i < filters.length; ++i) {
+                        var filter = filters[i];
                         if (!filter(obj)) {
                             return true;
                         }
@@ -310,7 +316,8 @@ var Relution;
             JsonFilterVisitor.prototype.norOp = function (filter) {
                 var filters = this.filters(filter);
                 return function (obj) {
-                    for (var filter in filters) {
+                    for (var i = 0; i < filters.length; ++i) {
+                        var filter = filters[i];
                         if (filter(obj)) {
                             return false;
                         }
