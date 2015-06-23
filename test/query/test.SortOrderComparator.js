@@ -1,7 +1,7 @@
 /**
  * test.SortOrderComparator.ts
  *
- * Created by Thomas Beckmann on 22.06.2015
+ * Created by Thomas Beckmann on 23.06.2015
  * Copyright (c)
  * 2015
  * M-Way Solutions GmbH. All rights reserved.
