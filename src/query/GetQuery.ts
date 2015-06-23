@@ -22,6 +22,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 /* jshint indent: 4 */
+/// <reference path="Filter.ts" />
 /// <reference path="SortOrder.ts" />
 
 module Relution.LiveData {
@@ -31,7 +32,7 @@ module Relution.LiveData {
     public offset:number;
 
     public sortOrder:SortOrder;
-    public filter:any;
+    public filter:Filter;
 
     public fields:string[];
 
@@ -40,7 +41,7 @@ module Relution.LiveData {
       offset?: number;
 
       sortOrder?: string[];
-      filter?: any;
+      filter?: { type: string };
 
       fields?: string[];
     }) {

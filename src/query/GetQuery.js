@@ -22,6 +22,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 /* jshint indent: 4 */
+/// <reference path="Filter.ts" />
 /// <reference path="SortOrder.ts" />
 var Relution;
 (function (Relution) {

@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Tue Jun 23 2015 16:59:58
+* Date:      Tue Jun 23 2015 17:09:46
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 
@@ -1738,6 +1738,7 @@ var Relution;
  * POSSIBILITY OF SUCH DAMAGE.
  */
 /* jshint indent: 4 */
+/// <reference path="Filter.ts" />
 /// <reference path="SortOrder.ts" />
 var Relution;
 (function (Relution) {
