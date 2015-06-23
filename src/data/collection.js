@@ -169,7 +169,6 @@ _.extend(Relution.LiveData.Collection.prototype, Relution.LiveData.Object, {
   applyFilter: function (callback) {
     this.trigger('filter', this.filter(callback));
   },
-
   _updateUrl: function () {
     var params = this.getUrlParams();
     if (this.options) {

@@ -78,7 +78,7 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
     if (url && entity) {
       var name = entity.name;
       var hash = Relution.LiveData.URLUtil.hashLocation(url);
-      var credentials = entity.credentials || collection.credentials;
+      var credentials = entity.credentials || collection.credentials || this.options.credentials;
       var user = credentials && credentials.username ? credentials.username : '';
       var channel = name + user + hash;
       collection.channel = channel;
@@ -95,7 +95,7 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
         endpoint.path = href.pathname;
         endpoint.entity = entity;
         endpoint.channel = channel;
-        endpoint.credentials = credentials;
+        endpoint.credentials = credentials  ;
         endpoint.socketPath = this.options.socketPath;
         endpoint.localStore = this.createLocalStore(endpoint);
         endpoint.messages = this.createMsgCollection(endpoint);
@@ -488,7 +488,7 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
 
     q = this._applyResponse(q, endpoint, msg, options, model);
 
-    q.finally(function () {
+    return q.finally(function () {
       // do some connection handling
       return qAjax.then(function () {
         // trigger reconnection when disconnected
@@ -517,6 +517,7 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
       url: url,
       attrs: msg.data,
       store: {},
+      credentials: options ? options.credentials : undefined,
       // error propagation
       error: that.options.error
     });

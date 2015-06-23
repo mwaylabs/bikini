@@ -8,12 +8,14 @@
  */
 var Relution;
 if (typeof exports !== 'undefined') {
-  Relution = {};
+  Relution = {
+    LiveData: exports
+  };
 } else {
   Relution = global.Relution = global.Relution || {};
+  Relution.LiveData = {};
 }
 Relution.debug = Relution.debug || _.bind(console.log, console);
-Relution.LiveData = {};
 
 /**
  * Version number of current release
@@ -100,7 +102,7 @@ Relution.LiveData.ajax = function ajax(url, options) {
 Relution.LiveData.sync = function sync(method, model, options) {
   options = options || {};
   var store = options.store || this.store;
-  options.credentials = options.credentials || this.credentials || store && store.credentials;
+  options.credentials = options.credentials || this.credentials || store && store.options.credentials;
 
   Relution.debug('Relution.LiveData.sync ' + method + ' ' + model.id);
   if(store && store.sync) {
