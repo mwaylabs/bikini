@@ -23,18 +23,21 @@
  */
 /* jshint indent: 4 */
 /// <reference path="SortOrder.ts" />
-var query;
-(function (query) {
-    var GetQuery = (function () {
-        function GetQuery(json) {
-            this.limit = json.limit;
-            this.offset = json.offset;
-            this.sortOrder = json.sortOrder && new query.SortOrder(json.sortOrder);
-            this.filter = json.filter;
-            this.fields = json.fields;
-        }
-        return GetQuery;
-    })();
-    query.GetQuery = GetQuery;
-})(query || (query = {}));
+var Relution;
+(function (Relution) {
+    var LiveData;
+    (function (LiveData) {
+        var GetQuery = (function () {
+            function GetQuery(json) {
+                this.limit = json.limit;
+                this.offset = json.offset;
+                this.sortOrder = json.sortOrder && new LiveData.SortOrder(json.sortOrder);
+                this.filter = json.filter;
+                this.fields = json.fields;
+            }
+            return GetQuery;
+        })();
+        LiveData.GetQuery = GetQuery;
+    })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
+})(Relution || (Relution = {}));
 //# sourceMappingURL=GetQuery.js.map

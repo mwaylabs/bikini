@@ -1,5 +1,5 @@
 /**
- * javascript.ts
+ * SortOrderComparator.ts
  *
  * Created by Thomas Beckmann on 22.06.2015
  * Copyright (c)
@@ -24,97 +24,100 @@
 /* jshint indent: 4 */
 /// <reference path="SortOrder.ts" />
 /// <reference path="JsonPath.ts" />
-var query;
-(function (query) {
-    /**
-     * compiles a JsonCompareFn from a given SortOrder.
-     *
-     * @param sortOrder being compiled.
-     * @return {function} a JsonCompareFn function compatible to Array.sort().
-     */
-    function jsonCompare(sortOrder) {
-        var comparator = new SortOrderComparator(sortOrder);
-        return _.bind(comparator.compare, comparator);
-    }
-    query.jsonCompare = jsonCompare;
-    /**
-     * compiled SortOrder for comparison of objects.
-     *
-     * @see SortOrder
-     */
-    var SortOrderComparator = (function () {
+var Relution;
+(function (Relution) {
+    var LiveData;
+    (function (LiveData) {
         /**
-         * constructs a compiled SortOrder for object comparison.
+         * compiles a JsonCompareFn from a given SortOrder.
          *
-         * @param sortOrder to realize.
+         * @param sortOrder being compiled.
+         * @return {function} a JsonCompareFn function compatible to Array.sort().
          */
-        function SortOrderComparator(sortOrder) {
-            this.sortOrder = sortOrder;
-            this.expressions = new Array(sortOrder.sortFields.length);
-            for (var i = 0; i < this.expressions.length; ++i) {
-                this.expressions[i] = new query.JsonPath(sortOrder.sortFields[i].name);
-            }
+        function jsonCompare(sortOrder) {
+            var comparator = new SortOrderComparator(sortOrder);
+            return _.bind(comparator.compare, comparator);
         }
+        LiveData.jsonCompare = jsonCompare;
         /**
-         * compares objects in a way compatible to Array.sort().
+         * compiled SortOrder for comparison of objects.
          *
-         * @param o1 left operand.
-         * @param o2 right operand.
-         * @return {number} indicating relative ordering of operands.
+         * @see SortOrder
          */
-        SortOrderComparator.prototype.compare = function (o1, o2) {
-            for (var i = 0; i < this.sortOrder.sortFields.length; ++i) {
-                var expression = this.expressions[i];
-                var val1 = expression.evaluate(o1);
-                var val2 = expression.evaluate(o2);
-                var cmp = SortOrderComparator.compare1(val1, val2);
-                if (cmp !== 0) {
-                    return this.sortOrder.sortFields[i].ascending ? +cmp : -cmp;
+        var SortOrderComparator = (function () {
+            /**
+             * constructs a compiled SortOrder for object comparison.
+             *
+             * @param sortOrder to realize.
+             */
+            function SortOrderComparator(sortOrder) {
+                this.sortOrder = sortOrder;
+                this.expressions = new Array(sortOrder.sortFields.length);
+                for (var i = 0; i < this.expressions.length; ++i) {
+                    this.expressions[i] = new LiveData.JsonPath(sortOrder.sortFields[i].name);
                 }
             }
-            return 0;
-        };
-        /**
-         * compares values in a way compatible to Array.sort().
-         *
-         * @param o1 left operand.
-         * @param o2 right operand.
-         * @return {number} indicating relative ordering of operands.
-         */
-        SortOrderComparator.compare1 = function (val1, val2) {
-            if (!val1 || !val2) {
-                // null/undefined case
-                if (val2) {
-                    return -1;
-                }
-                if (val1) {
-                    return +1;
-                }
-            }
-            else if (Array.isArray(val1) || Array.isArray(val2)) {
-                // array case
-                var items1 = Array.isArray(val1) ? val1 : [val1];
-                var items2 = Array.isArray(val2) ? val2 : [val2];
-                var length = Math.max(items1.length, items2.length);
-                for (var i = 0; i < length; ++i) {
-                    var c = this.compare1(items1[i], items2[i]);
-                    if (c !== 0) {
-                        return c;
+            /**
+             * compares objects in a way compatible to Array.sort().
+             *
+             * @param o1 left operand.
+             * @param o2 right operand.
+             * @return {number} indicating relative ordering of operands.
+             */
+            SortOrderComparator.prototype.compare = function (o1, o2) {
+                for (var i = 0; i < this.sortOrder.sortFields.length; ++i) {
+                    var expression = this.expressions[i];
+                    var val1 = expression.evaluate(o1);
+                    var val2 = expression.evaluate(o2);
+                    var cmp = SortOrderComparator.compare1(val1, val2);
+                    if (cmp !== 0) {
+                        return this.sortOrder.sortFields[i].ascending ? +cmp : -cmp;
                     }
                 }
-            }
-            else {
-                // value case
-                if (val1 < val2) {
-                    return -1;
+                return 0;
+            };
+            /**
+             * compares values in a way compatible to Array.sort().
+             *
+             * @param o1 left operand.
+             * @param o2 right operand.
+             * @return {number} indicating relative ordering of operands.
+             */
+            SortOrderComparator.compare1 = function (val1, val2) {
+                if (!val1 || !val2) {
+                    // null/undefined case
+                    if (val2) {
+                        return -1;
+                    }
+                    if (val1) {
+                        return +1;
+                    }
                 }
-                if (val1 > val2) {
-                    return +1;
+                else if (Array.isArray(val1) || Array.isArray(val2)) {
+                    // array case
+                    var items1 = Array.isArray(val1) ? val1 : [val1];
+                    var items2 = Array.isArray(val2) ? val2 : [val2];
+                    var length = Math.max(items1.length, items2.length);
+                    for (var i = 0; i < length; ++i) {
+                        var c = this.compare1(items1[i], items2[i]);
+                        if (c !== 0) {
+                            return c;
+                        }
+                    }
                 }
-            }
-            return 0;
-        };
-        return SortOrderComparator;
-    })();
-})(query || (query = {}));
+                else {
+                    // value case
+                    if (val1 < val2) {
+                        return -1;
+                    }
+                    if (val1 > val2) {
+                        return +1;
+                    }
+                }
+                return 0;
+            };
+            return SortOrderComparator;
+        })();
+    })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
+})(Relution || (Relution = {}));
 //# sourceMappingURL=SortOrderComparator.js.map

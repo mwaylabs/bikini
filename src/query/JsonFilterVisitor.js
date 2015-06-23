@@ -35,288 +35,291 @@ var __extends = this.__extends || function (d, b) {
     __.prototype = b.prototype;
     d.prototype = new __();
 };
-var query;
-(function (query) {
-    /**
-     * compiles a JsonFilterFn from a given Filter tree.
-     *
-     * @param filter tree being compiled.
-     * @return {function} a JsonFilterFn function.
-     */
-    function jsonFilter(filter) {
-        return new JsonFilterVisitor().visit(filter);
-    }
-    query.jsonFilter = jsonFilter;
-    /**
-     * compiles a Filter tree into a JsonFilterFn.
-     */
-    var JsonFilterVisitor = (function (_super) {
-        __extends(JsonFilterVisitor, _super);
-        function JsonFilterVisitor() {
-            _super.apply(this, arguments);
+var Relution;
+(function (Relution) {
+    var LiveData;
+    (function (LiveData) {
+        /**
+         * compiles a JsonFilterFn from a given Filter tree.
+         *
+         * @param filter tree being compiled.
+         * @return {function} a JsonFilterFn function.
+         */
+        function jsonFilter(filter) {
+            return new JsonFilterVisitor().visit(filter);
         }
-        JsonFilterVisitor.prototype.containsString = function (filter) {
-            var expression = new query.JsonPath(filter.fieldName);
-            return function (obj) {
-                var value = expression.evaluate(obj);
-                if (value === undefined || value === null) {
-                    // null/undefined case
-                    return value == filter.contains;
-                }
-                else if (_.isArray(value)) {
-                    for (var val in value) {
-                        if (String.toString.apply(val).indexOf(filter.contains) >= 0) {
-                            return true;
-                        }
+        LiveData.jsonFilter = jsonFilter;
+        /**
+         * compiles a Filter tree into a JsonFilterFn.
+         */
+        var JsonFilterVisitor = (function (_super) {
+            __extends(JsonFilterVisitor, _super);
+            function JsonFilterVisitor() {
+                _super.apply(this, arguments);
+            }
+            JsonFilterVisitor.prototype.containsString = function (filter) {
+                var expression = new LiveData.JsonPath(filter.fieldName);
+                return function (obj) {
+                    var value = expression.evaluate(obj);
+                    if (value === undefined || value === null) {
+                        // null/undefined case
+                        return value == filter.contains;
                     }
-                    return false;
-                }
-                else {
-                    // simple case
-                    return String.toString.apply(value).indexOf(filter.contains) >= 0;
-                }
-            };
-        };
-        JsonFilterVisitor.prototype.string = function (filter) {
-            var expression = new query.JsonPath(filter.fieldName);
-            var expected = filter.value;
-            if (expected === undefined || expected === null) {
-                return function (obj) {
-                    var value = expression.evaluate(obj);
-                    return value === undefined || value === null;
-                };
-            }
-            return function (obj) {
-                var value = expression.evaluate(obj);
-                if (value === undefined || value === null) {
-                    // null/undefined case
-                    return false;
-                }
-                else if (_.isArray(value)) {
-                    for (var val in value) {
-                        if (val == filter.value) {
-                            return true;
+                    else if (_.isArray(value)) {
+                        for (var val in value) {
+                            if (String.toString.apply(val).indexOf(filter.contains) >= 0) {
+                                return true;
+                            }
                         }
-                    }
-                    return false;
-                }
-                else {
-                    // simple case
-                    return value == filter.value;
-                }
-            };
-        };
-        JsonFilterVisitor.prototype.range = function (filter) {
-            var expression = new query.JsonPath(filter.fieldName);
-            var min = filter.min;
-            var max = filter.max;
-            if (min === undefined || min === null) {
-                if (max === undefined || max === null) {
-                    return function (obj) {
-                        var value = expression.evaluate(obj);
-                        return !!value;
-                    };
-                }
-                else {
-                    return function (obj) {
-                        var value = expression.evaluate(obj);
-                        return !!value && value <= max;
-                    };
-                }
-            }
-            else if (min === max) {
-                return function (obj) {
-                    var value = expression.evaluate(obj);
-                    return !!value && value == min;
-                };
-            }
-            else {
-                if (max === undefined || max === null) {
-                    return function (obj) {
-                        var value = expression.evaluate(obj);
-                        return !!value && value >= min;
-                    };
-                }
-                else {
-                    return function (obj) {
-                        var value = expression.evaluate(obj);
-                        return !!value && value <= max && value >= min;
-                    };
-                }
-            }
-        };
-        JsonFilterVisitor.prototype.longRange = function (filter) {
-            return this.range(filter);
-        };
-        JsonFilterVisitor.prototype.dateRange = function (filter) {
-            return this.range(filter);
-        };
-        JsonFilterVisitor.prototype.stringRange = function (filter) {
-            return this.range(filter);
-        };
-        JsonFilterVisitor.prototype.doubleRange = function (filter) {
-            return this.range(filter);
-        };
-        JsonFilterVisitor.prototype.boolean = function (filter) {
-            var expression = new query.JsonPath(filter.fieldName);
-            var expected = filter.value;
-            return function (obj) {
-                var value = expression.evaluate(obj);
-                return !!value === expected;
-            };
-        };
-        JsonFilterVisitor.prototype.enum = function (filter) {
-            var expression = new query.JsonPath(filter.fieldName);
-            var values = filter.values;
-            if (!values) {
-                return function (obj) {
-                    var value = expression.evaluate(obj);
-                    return !value;
-                };
-            }
-            else {
-                return function (obj) {
-                    var value = expression.evaluate(obj);
-                    return values.indexOf(value) >= 0;
-                };
-            }
-        };
-        JsonFilterVisitor.prototype.stringEnum = function (filter) {
-            return this.enum(filter);
-        };
-        JsonFilterVisitor.prototype.longEnum = function (filter) {
-            return this.enum(filter);
-        };
-        JsonFilterVisitor.prototype.stringMap = function (filter) {
-            var expression = new query.JsonPath(filter.fieldName);
-            var property = filter.key && new query.JsonPath(filter.key);
-            var expected = filter.value;
-            if (!property && (expected === undefined || expected === null)) {
-                return function (obj) {
-                    var value = expression.evaluate(obj);
-                    return value === undefined || value === null;
-                };
-            }
-            else if (!property) {
-                return function (obj) {
-                    var value = expression.evaluate(obj);
-                    return value == expected;
-                };
-            }
-            else if (expected === undefined || expected === null) {
-                return function (obj) {
-                    var value = expression.evaluate(obj);
-                    var val = property.evaluate(value);
-                    return val === undefined || val === null;
-                };
-            }
-            else {
-                return function (obj) {
-                    var value = expression.evaluate(obj);
-                    var val = property.evaluate(value);
-                    return val == expected;
-                };
-            }
-        };
-        JsonFilterVisitor.prototype.like = function (filter) {
-            var expression = new query.JsonPath(filter.fieldName);
-            var like = filter.like;
-            if (like === undefined || like === null) {
-                return function (obj) {
-                    var value = expression.evaluate(obj);
-                    return value === undefined || value === null;
-                };
-            }
-            var regexp = like.replace(/%/g, '.*');
-            var pattern = new RegExp(regexp);
-            return function (obj) {
-                var value = expression.evaluate(obj);
-                if (value === undefined || value === null) {
-                    // null/undefined case
-                    return false;
-                }
-                else if (_.isArray(value)) {
-                    for (var val in value) {
-                        if (pattern.test(val)) {
-                            return true;
-                        }
-                    }
-                    return false;
-                }
-                else {
-                    // simple case
-                    return pattern.test(value);
-                }
-            };
-        };
-        JsonFilterVisitor.prototype.null = function (filter) {
-            var expression = new query.JsonPath(filter.fieldName);
-            if (filter.isNull) {
-                return function (obj) {
-                    var value = expression.evaluate(obj);
-                    return value === undefined || value === null;
-                };
-            }
-            else {
-                return function (obj) {
-                    var value = expression.evaluate(obj);
-                    return value !== undefined && value !== null;
-                };
-            }
-        };
-        JsonFilterVisitor.prototype.filters = function (filter) {
-            // build filter functions
-            var filters = new Array(filter.filters.length);
-            for (var i = 0; i < filters.length; ++i) {
-                filters[i] = this.visit(filter.filters[i]);
-            }
-            return filters;
-        };
-        JsonFilterVisitor.prototype.andOp = function (filter) {
-            var filters = this.filters(filter);
-            return function (obj) {
-                for (var filter in filters) {
-                    if (!filter(obj)) {
                         return false;
                     }
-                }
-                return true;
-            };
-        };
-        JsonFilterVisitor.prototype.orOp = function (filter) {
-            var filters = this.filters(filter);
-            return function (obj) {
-                for (var filter in filters) {
-                    if (filter(obj)) {
-                        return true;
+                    else {
+                        // simple case
+                        return String.toString.apply(value).indexOf(filter.contains) >= 0;
                     }
-                }
-                return false;
+                };
             };
-        };
-        JsonFilterVisitor.prototype.nandOp = function (filter) {
-            var filters = this.filters(filter);
-            return function (obj) {
-                for (var filter in filters) {
-                    if (!filter(obj)) {
-                        return true;
-                    }
+            JsonFilterVisitor.prototype.string = function (filter) {
+                var expression = new LiveData.JsonPath(filter.fieldName);
+                var expected = filter.value;
+                if (expected === undefined || expected === null) {
+                    return function (obj) {
+                        var value = expression.evaluate(obj);
+                        return value === undefined || value === null;
+                    };
                 }
-                return false;
-            };
-        };
-        JsonFilterVisitor.prototype.norOp = function (filter) {
-            var filters = this.filters(filter);
-            return function (obj) {
-                for (var filter in filters) {
-                    if (filter(obj)) {
+                return function (obj) {
+                    var value = expression.evaluate(obj);
+                    if (value === undefined || value === null) {
+                        // null/undefined case
                         return false;
                     }
-                }
-                return true;
+                    else if (_.isArray(value)) {
+                        for (var val in value) {
+                            if (val == filter.value) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+                    else {
+                        // simple case
+                        return value == filter.value;
+                    }
+                };
             };
-        };
-        return JsonFilterVisitor;
-    })(query.FilterVisitorBase);
-})(query || (query = {}));
+            JsonFilterVisitor.prototype.range = function (filter) {
+                var expression = new LiveData.JsonPath(filter.fieldName);
+                var min = filter.min;
+                var max = filter.max;
+                if (min === undefined || min === null) {
+                    if (max === undefined || max === null) {
+                        return function (obj) {
+                            var value = expression.evaluate(obj);
+                            return !!value;
+                        };
+                    }
+                    else {
+                        return function (obj) {
+                            var value = expression.evaluate(obj);
+                            return !!value && value <= max;
+                        };
+                    }
+                }
+                else if (min === max) {
+                    return function (obj) {
+                        var value = expression.evaluate(obj);
+                        return !!value && value == min;
+                    };
+                }
+                else {
+                    if (max === undefined || max === null) {
+                        return function (obj) {
+                            var value = expression.evaluate(obj);
+                            return !!value && value >= min;
+                        };
+                    }
+                    else {
+                        return function (obj) {
+                            var value = expression.evaluate(obj);
+                            return !!value && value <= max && value >= min;
+                        };
+                    }
+                }
+            };
+            JsonFilterVisitor.prototype.longRange = function (filter) {
+                return this.range(filter);
+            };
+            JsonFilterVisitor.prototype.dateRange = function (filter) {
+                return this.range(filter);
+            };
+            JsonFilterVisitor.prototype.stringRange = function (filter) {
+                return this.range(filter);
+            };
+            JsonFilterVisitor.prototype.doubleRange = function (filter) {
+                return this.range(filter);
+            };
+            JsonFilterVisitor.prototype.boolean = function (filter) {
+                var expression = new LiveData.JsonPath(filter.fieldName);
+                var expected = filter.value;
+                return function (obj) {
+                    var value = expression.evaluate(obj);
+                    return !!value === expected;
+                };
+            };
+            JsonFilterVisitor.prototype.enum = function (filter) {
+                var expression = new LiveData.JsonPath(filter.fieldName);
+                var values = filter.values;
+                if (!values) {
+                    return function (obj) {
+                        var value = expression.evaluate(obj);
+                        return !value;
+                    };
+                }
+                else {
+                    return function (obj) {
+                        var value = expression.evaluate(obj);
+                        return values.indexOf(value) >= 0;
+                    };
+                }
+            };
+            JsonFilterVisitor.prototype.stringEnum = function (filter) {
+                return this.enum(filter);
+            };
+            JsonFilterVisitor.prototype.longEnum = function (filter) {
+                return this.enum(filter);
+            };
+            JsonFilterVisitor.prototype.stringMap = function (filter) {
+                var expression = new LiveData.JsonPath(filter.fieldName);
+                var property = filter.key && new LiveData.JsonPath(filter.key);
+                var expected = filter.value;
+                if (!property && (expected === undefined || expected === null)) {
+                    return function (obj) {
+                        var value = expression.evaluate(obj);
+                        return value === undefined || value === null;
+                    };
+                }
+                else if (!property) {
+                    return function (obj) {
+                        var value = expression.evaluate(obj);
+                        return value == expected;
+                    };
+                }
+                else if (expected === undefined || expected === null) {
+                    return function (obj) {
+                        var value = expression.evaluate(obj);
+                        var val = property.evaluate(value);
+                        return val === undefined || val === null;
+                    };
+                }
+                else {
+                    return function (obj) {
+                        var value = expression.evaluate(obj);
+                        var val = property.evaluate(value);
+                        return val == expected;
+                    };
+                }
+            };
+            JsonFilterVisitor.prototype.like = function (filter) {
+                var expression = new LiveData.JsonPath(filter.fieldName);
+                var like = filter.like;
+                if (like === undefined || like === null) {
+                    return function (obj) {
+                        var value = expression.evaluate(obj);
+                        return value === undefined || value === null;
+                    };
+                }
+                var regexp = like.replace(/%/g, '.*');
+                var pattern = new RegExp(regexp);
+                return function (obj) {
+                    var value = expression.evaluate(obj);
+                    if (value === undefined || value === null) {
+                        // null/undefined case
+                        return false;
+                    }
+                    else if (_.isArray(value)) {
+                        for (var val in value) {
+                            if (pattern.test(val)) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+                    else {
+                        // simple case
+                        return pattern.test(value);
+                    }
+                };
+            };
+            JsonFilterVisitor.prototype.null = function (filter) {
+                var expression = new LiveData.JsonPath(filter.fieldName);
+                if (filter.isNull) {
+                    return function (obj) {
+                        var value = expression.evaluate(obj);
+                        return value === undefined || value === null;
+                    };
+                }
+                else {
+                    return function (obj) {
+                        var value = expression.evaluate(obj);
+                        return value !== undefined && value !== null;
+                    };
+                }
+            };
+            JsonFilterVisitor.prototype.filters = function (filter) {
+                // build filter functions
+                var filters = new Array(filter.filters.length);
+                for (var i = 0; i < filters.length; ++i) {
+                    filters[i] = this.visit(filter.filters[i]);
+                }
+                return filters;
+            };
+            JsonFilterVisitor.prototype.andOp = function (filter) {
+                var filters = this.filters(filter);
+                return function (obj) {
+                    for (var filter in filters) {
+                        if (!filter(obj)) {
+                            return false;
+                        }
+                    }
+                    return true;
+                };
+            };
+            JsonFilterVisitor.prototype.orOp = function (filter) {
+                var filters = this.filters(filter);
+                return function (obj) {
+                    for (var filter in filters) {
+                        if (filter(obj)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                };
+            };
+            JsonFilterVisitor.prototype.nandOp = function (filter) {
+                var filters = this.filters(filter);
+                return function (obj) {
+                    for (var filter in filters) {
+                        if (!filter(obj)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                };
+            };
+            JsonFilterVisitor.prototype.norOp = function (filter) {
+                var filters = this.filters(filter);
+                return function (obj) {
+                    for (var filter in filters) {
+                        if (filter(obj)) {
+                            return false;
+                        }
+                    }
+                    return true;
+                };
+            };
+            return JsonFilterVisitor;
+        })(LiveData.FilterVisitorBase);
+    })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
+})(Relution || (Relution = {}));
 //# sourceMappingURL=JsonFilterVisitor.js.map

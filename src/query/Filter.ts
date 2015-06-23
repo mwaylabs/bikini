@@ -23,30 +23,30 @@
  */
 /* jshint indent: 4 */
 
-module query {
+module Relution.LiveData {
 
   export interface Filter {
     /**
      * kind of Filter as defined by corresponding Java object model.
      *
      * <p>
-     *	- boolean
-     *	- containsString
-     *	- dateRange
-     *	- doubleRange
-     *	- like
-     *	- logOp
-     *	- longEnum
-     *	- longRange
-     *	- stringEnum
-     *	- string
-     *	- stringMap
-     *	- stringRange
+     *  - boolean
+     *  - containsString
+     *  - dateRange
+     *  - doubleRange
+     *  - like
+     *  - logOp
+     *  - longEnum
+     *  - longRange
+     *  - stringEnum
+     *  - string
+     *  - stringMap
+     *  - stringRange
      *  - null
-     *	- ...
+     *  - ...
      * </p>
      */
-    type:string;
+      type:string;
   }
 
   export interface LogOpFilter extends Filter {

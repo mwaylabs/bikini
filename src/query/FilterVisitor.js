@@ -23,19 +23,22 @@
  */
 /* jshint indent: 4 */
 /// <reference path="Filter.ts" />
-var query;
-(function (query) {
-    var FilterVisitorBase = (function () {
-        function FilterVisitorBase() {
-        }
-        FilterVisitorBase.prototype.visit = function (filter) {
-            return this[filter.type].apply(this, filter);
-        };
-        FilterVisitorBase.prototype.logOp = function (filter) {
-            return this[filter.operation + 'Op'].apply(this, filter);
-        };
-        return FilterVisitorBase;
-    })();
-    query.FilterVisitorBase = FilterVisitorBase;
-})(query || (query = {}));
+var Relution;
+(function (Relution) {
+    var LiveData;
+    (function (LiveData) {
+        var FilterVisitorBase = (function () {
+            function FilterVisitorBase() {
+            }
+            FilterVisitorBase.prototype.visit = function (filter) {
+                return this[filter.type].apply(this, filter);
+            };
+            FilterVisitorBase.prototype.logOp = function (filter) {
+                return this[filter.operation + 'Op'].apply(this, filter);
+            };
+            return FilterVisitorBase;
+        })();
+        LiveData.FilterVisitorBase = FilterVisitorBase;
+    })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
+})(Relution || (Relution = {}));
 //# sourceMappingURL=FilterVisitor.js.map

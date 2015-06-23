@@ -24,7 +24,7 @@
 /* jshint indent: 4 */
 /// <reference path="Filter.ts" />
 
-module query {
+module Relution.LiveData {
 
   export interface FilterVisitorCore<T> {
     andOp(filter:LogOpFilter):T;

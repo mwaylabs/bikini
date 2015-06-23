@@ -22,26 +22,29 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 /* jshint indent: 4 */
-var query;
-(function (query) {
-    var SortOrder = (function () {
-        function SortOrder(sortFields) {
-            this.sortFields = new Array(sortFields.length);
-            for (var i = sortFields.length - 1; i >= 0; --i) {
-                this.sortFields[i] = new SortField(sortFields[i]);
+var Relution;
+(function (Relution) {
+    var LiveData;
+    (function (LiveData) {
+        var SortOrder = (function () {
+            function SortOrder(sortFields) {
+                this.sortFields = new Array(sortFields.length);
+                for (var i = sortFields.length - 1; i >= 0; --i) {
+                    this.sortFields[i] = new SortField(sortFields[i]);
+                }
             }
-        }
-        return SortOrder;
-    })();
-    query.SortOrder = SortOrder;
-    var SortField = (function () {
-        function SortField(sortField) {
-            var order = sortField.length > 0 && sortField.charAt(0);
-            this.name = order === '+' || order === '-' ? sortField.substring(1) : sortField;
-            this.ascending = order !== '-';
-        }
-        return SortField;
-    })();
-    query.SortField = SortField;
-})(query || (query = {}));
+            return SortOrder;
+        })();
+        LiveData.SortOrder = SortOrder;
+        var SortField = (function () {
+            function SortField(sortField) {
+                var order = sortField.length > 0 && sortField.charAt(0);
+                this.name = order === '+' || order === '-' ? sortField.substring(1) : sortField;
+                this.ascending = order !== '-';
+            }
+            return SortField;
+        })();
+        LiveData.SortField = SortField;
+    })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
+})(Relution || (Relution = {}));
 //# sourceMappingURL=SortOrder.js.map

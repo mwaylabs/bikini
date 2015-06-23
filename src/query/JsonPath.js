@@ -22,36 +22,42 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 /* jshint indent: 4 */
-var query;
-(function (query) {
-    /**
-     * compiled JSON path expression.
-     *
-     * @see http://goessner.net/articles/JsonPath/
-     */
-    var JsonPath = (function () {
+/* jshint -W061: eval can be harmful. */
+var Relution;
+(function (Relution) {
+    var LiveData;
+    (function (LiveData) {
         /**
-         * constructs a compiled expression.
+         * compiled JSON path expression.
          *
-         * @param expression to compile.
+         * @see http://goessner.net/articles/JsonPath/
          */
-        function JsonPath(expression) {
-            this.expression = jsonPath({}, expression, {
-                resultType: 'PATH'
-            }) || expression;
-        }
-        /**
-         * evaluates the expression on a target object.
-         *
-         * @param obj to evaluate expression on.
-         * @param arg options object.
-         * @return{any} result of evaluating expression on object.
-         */
-        JsonPath.prototype.evaluate = function (obj, arg) {
-            return jsonPath(obj, this.expression, arg);
-        };
-        return JsonPath;
-    })();
-    query.JsonPath = JsonPath;
-})(query || (query = {}));
+        var JsonPath = (function () {
+            /**
+             * constructs a compiled expression.
+             *
+             * @param expression to compile.
+             */
+            function JsonPath(expression) {
+                this.expression = jsonPath.eval(null, expression, {
+                    resultType: 'PATH'
+                }) || expression;
+            }
+            /**
+             * evaluates the expression on a target object.
+             *
+             * @param obj to evaluate expression on.
+             * @param arg options object.
+             * @return{any} result of evaluating expression on object.
+             */
+            JsonPath.prototype.evaluate = function (obj, arg) {
+                return jsonPath.eval(obj, this.expression, arg || {
+                    wrap: false
+                });
+            };
+            return JsonPath;
+        })();
+        LiveData.JsonPath = JsonPath;
+    })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
+})(Relution || (Relution = {}));
 //# sourceMappingURL=JsonPath.js.map

@@ -1,5 +1,5 @@
 /**
- * javascript.ts
+ * SortOrderComparator.ts
  *
  * Created by Thomas Beckmann on 22.06.2015
  * Copyright (c)
@@ -27,7 +27,7 @@
 
 declare var _;
 
-module query {
+module Relution.LiveData {
 
   /**
    * compiled compare function.
@@ -72,7 +72,7 @@ module query {
      */
     public constructor(private sortOrder:SortOrder) {
       this.expressions = new Array<JsonPath>(sortOrder.sortFields.length);
-      for(var i = 0; i < this.expressions.length; ++i) {
+      for (var i = 0; i < this.expressions.length; ++i) {
         this.expressions[i] = new JsonPath(sortOrder.sortFields[i].name);
       }
     }
@@ -85,7 +85,7 @@ module query {
      * @return {number} indicating relative ordering of operands.
      */
     public compare(o1:T, o2:T):number {
-      for(var i = 0; i < this.sortOrder.sortFields.length; ++i) {
+      for (var i = 0; i < this.sortOrder.sortFields.length; ++i) {
         var expression = this.expressions[i];
         var val1 = expression.evaluate(o1);
         var val2 = expression.evaluate(o2);
@@ -105,7 +105,7 @@ module query {
      * @return {number} indicating relative ordering of operands.
      */
     private static compare1(val1:any, val2:any):number {
-      if(!val1 || !val2) {
+      if (!val1 || !val2) {
         // null/undefined case
         if (val2) {
           return -1;

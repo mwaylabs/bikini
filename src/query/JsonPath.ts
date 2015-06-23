@@ -22,20 +22,26 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 /* jshint indent: 4 */
+/* jshint -W061: eval can be harmful. */
 
-module query {
+module Relution.LiveData {
 
   /**
    * external evaluation function of JSONPath library.
    *
-   * @param obj to evaluate expression on.
-   * @param expr to evaluate on object.
-   * @param arg options object.
-   * @return{any} result of evaluating expression on object.
-   *
    * @see https://libraries.io/bower/JSONPath
    */
-  declare function jsonPath(obj:any, expr:string, arg?:{}):any;
+  declare module jsonPath {
+    /**
+     * evaluates a JSONPath expression.
+     *
+     * @param obj to evaluate expression on.
+     * @param expr to evaluate on object.
+     * @param arg options object.
+     * @return{any} result of evaluating expression on object.
+     */
+    function eval(obj:any, expr:string, arg?:{}):any;
+  }
 
   /**
    * compiled JSON path expression.
@@ -54,9 +60,9 @@ module query {
      * @param expression to compile.
      */
     constructor(expression:string) {
-      this.expression = jsonPath({}, expression, {
-        resultType: 'PATH'
-      }) || expression;
+      this.expression = jsonPath.eval(null, expression, {
+          resultType: 'PATH'
+        }) || expression;
     }
 
     /**
@@ -67,7 +73,9 @@ module query {
      * @return{any} result of evaluating expression on object.
      */
     evaluate(obj:any, arg?:{}):any {
-      return jsonPath(obj, this.expression, arg);
+      return jsonPath.eval(obj, this.expression, arg || {
+          wrap: false
+        });
     }
   }
 

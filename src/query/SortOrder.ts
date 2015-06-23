@@ -23,14 +23,14 @@
  */
 /* jshint indent: 4 */
 
-module query {
+module Relution.LiveData {
 
   export class SortOrder {
-    sortFields: SortField[];
+    sortFields:SortField[];
 
-    constructor(sortFields: string[]) {
+    constructor(sortFields:string[]) {
       this.sortFields = new Array<SortField>(sortFields.length);
-      for(var i = sortFields.length - 1; i >= 0; --i) {
+      for (var i = sortFields.length - 1; i >= 0; --i) {
         this.sortFields[i] = new SortField(sortFields[i]);
       }
     }
@@ -40,7 +40,7 @@ module query {
     name:string;
     ascending:boolean;
 
-    constructor(sortField: string) {
+    constructor(sortField:string) {
       var order = sortField.length > 0 && sortField.charAt(0);
       this.name = order === '+' || order === '-' ? sortField.substring(1) : sortField;
       this.ascending = order !== '-';

@@ -32,7 +32,7 @@
 
 declare var _;
 
-module query {
+module Relution.LiveData {
 
   /**
    * compiled test function.
@@ -231,7 +231,7 @@ module query {
     like(filter:LikeFilter):JsonFilterFn<T> {
       var expression = new JsonPath(filter.fieldName);
       var like = filter.like;
-      if(like === undefined || like === null) {
+      if (like === undefined || like === null) {
         return (obj:T) => {
           var value = expression.evaluate(obj);
           return value === undefined || value === null;

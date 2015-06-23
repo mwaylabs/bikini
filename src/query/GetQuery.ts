@@ -24,18 +24,18 @@
 /* jshint indent: 4 */
 /// <reference path="SortOrder.ts" />
 
-module query {
+module Relution.LiveData {
 
   export class GetQuery {
-    public limit: number;
-    public offset: number;
+    public limit:number;
+    public offset:number;
 
-    public sortOrder: SortOrder;
-    public filter: any;
+    public sortOrder:SortOrder;
+    public filter:any;
 
-    public fields: string[];
+    public fields:string[];
 
-    constructor(json: {
+    constructor(json:{
       limit?: number;
       offset?: number;
 
