@@ -121,24 +121,23 @@ Relution.LiveData.WebSqlStore = Relution.LiveData.Store.extend({
       }
     });
 
-    var models = Relution.LiveData.isCollection(model) ? model.models : [model];
     switch (method) {
       case 'create':
         that._checkTable(opts, function () {
-          that._insertOrReplace(models, opts);
+          that._insertOrReplace(model, opts);
         });
         break;
 
       case 'update':
       case 'patch':
         that._checkTable(opts, function () {
-          that._insertOrReplace(models, opts);
+          that._insertOrReplace(model, opts);
         });
         break;
 
       case 'delete':
         that._checkTable(opts, function () {
-          that._delete(models, opts);
+          that._delete(model, opts);
         });
         break;
 
@@ -214,10 +213,12 @@ Relution.LiveData.WebSqlStore = Relution.LiveData.Store.extend({
     var lastSql;
     var that = this;
     try {
-      var db = window.openDatabase(this.options.name, '', '', this.options.size);
+      if (!this.db) {
+        this.db = window.openDatabase(this.options.name, '', '', this.options.size);
+      }
       try {
-        var arSql = this._sqlUpdateDatabase(db.version, this.options.version);
-        db.changeVersion(db.version, this.options.version, function (tx) {
+        var arSql = this._sqlUpdateDatabase(this.db.version, this.options.version);
+        this.db.changeVersion(this.db.version, this.options.version, function (tx) {
           _.each(arSql, function (sql) {
             Relution.debug('sql statement: ' + sql);
             lastSql = sql;
@@ -226,11 +227,11 @@ Relution.LiveData.WebSqlStore = Relution.LiveData.Store.extend({
         }, function (msg) {
           that.handleError(options, msg, lastSql);
         }, function () {
-          that.handleSuccess(options);
+          that.handleSuccess(options, that.db);
         });
       } catch (e) {
         error = e.message;
-        console.error('webSql change version failed, DB-Version: ' + db.version);
+        console.error('webSql change version failed, DB-Version: ' + this.db.version);
       }
     } catch (e) {
       error = e.message;
@@ -459,28 +460,27 @@ Relution.LiveData.WebSqlStore = Relution.LiveData.Store.extend({
     }
   },
 
-  _insertOrReplace: function (models, options) {
-
+  _insertOrReplace: function (model, options) {
     var entity = this.getEntity(options);
-
+    var models = Relution.LiveData.isCollection(model) ? model.models : [model];
     if (this._checkDb(options) && this._checkEntity(options, entity) && this._checkData(options, models)) {
 
       var isAutoInc = this._isAutoincrementKey(entity, entity.getKey());
       var statements = [];
       var sqlTemplate = 'INSERT OR REPLACE INTO \'' + entity.name + '\' (';
       for (var i = 0; i < models.length; i++) {
-        var model = models[i];
+        var amodel = models[i];
         var statement = ''; // the actual sql insert string with values
-        if (!isAutoInc && !model.id && model.idAttribute) {
-          model.set(model.idAttribute, new Relution.LiveData.ObjectID().toHexString());
+        if (!isAutoInc && !amodel.id && amodel.idAttribute) {
+          amodel.set(amodel.idAttribute, new Relution.LiveData.ObjectID().toHexString());
         }
-        var value = options.attrs || model.toJSON();
+        var value = options.attrs || amodel.toJSON();
         var args, keys;
         if (!_.isEmpty(entity.fields)) {
           args = _.values(value);
           keys = _.keys(value);
         } else {
-          args = [model.id, JSON.stringify(value)];
+          args = [amodel.id, JSON.stringify(value)];
           keys = ['id', 'data'];
         }
         if (args.length > 0) {
@@ -490,7 +490,7 @@ Relution.LiveData.WebSqlStore = Relution.LiveData.Store.extend({
           statements.push({statement: statement, arguments: args});
         }
       }
-      this._executeTransaction(options, statements);
+      this._executeTransaction(options, statements, model.toJSON());
     }
   },
 
@@ -554,13 +554,14 @@ Relution.LiveData.WebSqlStore = Relution.LiveData.Store.extend({
     }
   },
 
-  _delete: function (models, options) {
+  _delete: function (model, options) {
     var entity = this.getEntity(options);
+    var models = Relution.LiveData.isCollection(model) ? model.models : [model];
     if (this._checkDb(options) && this._checkEntity(options, entity)) {
       options.models = models;
       var sql = this._sqlDelete(options, entity);
       // reset flag
-      this._executeTransaction(options, [sql]);
+      this._executeTransaction(options, [sql], model.toJSON());
     }
   },
 
@@ -570,7 +571,7 @@ Relution.LiveData.WebSqlStore = Relution.LiveData.Store.extend({
     }
   },
 
-  _executeTransaction: function (options, statements) {
+  _executeTransaction: function (options, statements, result) {
     var error;
     var lastStatement;
     if (this._checkDb(options)) {
@@ -592,10 +593,11 @@ Relution.LiveData.WebSqlStore = Relution.LiveData.Store.extend({
           console.error(sqlError.message);
           that.handleError(options, sqlError.message, lastStatement);
         }, function () {
-          that.handleSuccess(options);
+          that.handleSuccess(options, result);
         });
       } catch (e) {
         console.error(e.message);
+        error = e;
       }
     }
     if (error) {

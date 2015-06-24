@@ -46,5 +46,7 @@
 <script>
     mocha.checkLeaks();
     mocha.globals(['jQuery']);
-    mocha.run();
+    mocha.run().on('test', function (test) {
+      console.log('*** ' + test.parent.title + ': ' + test.title + ' ***');
+    });
 </script>

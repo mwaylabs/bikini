@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Tue Jun 23 2015 19:20:17
+* Date:      Wed Jun 24 2015 10:08:00
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 
@@ -112,10 +112,10 @@ Relution.LiveData.ajax = function ajax(url, options) {
 Relution.LiveData.sync = function sync(method, model, options) {
   options = options || {};
   var store = options.store || this.store;
-  options.credentials = options.credentials || this.credentials || store && store.options.credentials;
+  options.credentials = options.credentials || this.credentials || store && store.options && store.options.credentials;
 
   Relution.debug('Relution.LiveData.sync ' + method + ' ' + model.id);
-  if(store && store.sync) {
+  if (store && store.sync) {
     // store access (this is redundant model argument)
     var storeAjax = store.ajax && _.bind(store.ajax, store);
     options.ajax = options.ajax ||  storeAjax || this.ajax || Relution.LiveData.ajax;
@@ -182,7 +182,6 @@ Relution.LiveData.Object = {
     // return the new object
     return obj;
   },
-
 
   /**
    * Binds a method to its caller, so it is always executed within the right scope.
@@ -1117,9 +1116,17 @@ var Relution;
              * @return{any} result of evaluating expression on object.
              */
             JsonPath.prototype.evaluate = function (obj, arg) {
-                return jsonPath.eval(obj, this.expression, arg || {
+                var result = jsonPath.eval(obj, this.expression, arg || {
                     wrap: false
                 });
+                // when result is false it might indicate a missing value, we differentiate by requesting the path here
+                if (arg || result !== false || jsonPath.eval(obj, this.expression, {
+                    resultType: 'PATH',
+                    wrap: false
+                })) {
+                    return result;
+                }
+                // intentionally we do not return a value here...
             };
             return JsonPath;
         })();
@@ -1185,10 +1192,10 @@ var Relution;
             function FilterVisitorBase() {
             }
             FilterVisitorBase.prototype.visit = function (filter) {
-                return this[filter.type].apply(this, filter);
+                return this[filter.type].apply(this, arguments);
             };
             FilterVisitorBase.prototype.logOp = function (filter) {
-                return this[filter.operation + 'Op'].apply(this, filter);
+                return this[filter.operation + 'Op'].apply(this, arguments);
             };
             return FilterVisitorBase;
         })();
@@ -1257,15 +1264,23 @@ var Relution;
             }
             JsonFilterVisitor.prototype.containsString = function (filter) {
                 var expression = new LiveData.JsonPath(filter.fieldName);
+                var contains = filter.contains;
+                if (contains === undefined || contains === null) {
+                    return function (obj) {
+                        var value = expression.evaluate(obj);
+                        return value === undefined || value === null;
+                    };
+                }
                 return function (obj) {
                     var value = expression.evaluate(obj);
                     if (value === undefined || value === null) {
                         // null/undefined case
-                        return value == filter.contains;
+                        return false;
                     }
                     else if (_.isArray(value)) {
-                        for (var val in value) {
-                            if (String.toString.apply(val).indexOf(filter.contains) >= 0) {
+                        for (var i = 0; i < value.length; ++i) {
+                            var val = value[i];
+                            if (val !== undefined && val !== null && val.toString().indexOf(contains) >= 0) {
                                 return true;
                             }
                         }
@@ -1273,7 +1288,7 @@ var Relution;
                     }
                     else {
                         // simple case
-                        return String.toString.apply(value).indexOf(filter.contains) >= 0;
+                        return value !== undefined && value !== null && value.toString().indexOf(contains) >= 0;
                     }
                 };
             };
@@ -1293,7 +1308,8 @@ var Relution;
                         return false;
                     }
                     else if (_.isArray(value)) {
-                        for (var val in value) {
+                        for (var i = 0; i < value.length; ++i) {
+                            var val = value[i];
                             if (val == filter.value) {
                                 return true;
                             }
@@ -1436,7 +1452,8 @@ var Relution;
                         return false;
                     }
                     else if (_.isArray(value)) {
-                        for (var val in value) {
+                        for (var i = 0; i < value.length; ++i) {
+                            var val = value[i];
                             if (pattern.test(val)) {
                                 return true;
                             }
@@ -1475,7 +1492,8 @@ var Relution;
             JsonFilterVisitor.prototype.andOp = function (filter) {
                 var filters = this.filters(filter);
                 return function (obj) {
-                    for (var filter in filters) {
+                    for (var i = 0; i < filters.length; ++i) {
+                        var filter = filters[i];
                         if (!filter(obj)) {
                             return false;
                         }
@@ -1486,7 +1504,8 @@ var Relution;
             JsonFilterVisitor.prototype.orOp = function (filter) {
                 var filters = this.filters(filter);
                 return function (obj) {
-                    for (var filter in filters) {
+                    for (var i = 0; i < filters.length; ++i) {
+                        var filter = filters[i];
                         if (filter(obj)) {
                             return true;
                         }
@@ -1497,7 +1516,8 @@ var Relution;
             JsonFilterVisitor.prototype.nandOp = function (filter) {
                 var filters = this.filters(filter);
                 return function (obj) {
-                    for (var filter in filters) {
+                    for (var i = 0; i < filters.length; ++i) {
+                        var filter = filters[i];
                         if (!filter(obj)) {
                             return true;
                         }
@@ -1508,7 +1528,8 @@ var Relution;
             JsonFilterVisitor.prototype.norOp = function (filter) {
                 var filters = this.filters(filter);
                 return function (obj) {
-                    for (var filter in filters) {
+                    for (var i = 0; i < filters.length; ++i) {
+                        var filter = filters[i];
                         if (filter(obj)) {
                             return false;
                         }
@@ -1718,6 +1739,7 @@ var Relution;
  * POSSIBILITY OF SUCH DAMAGE.
  */
 /* jshint indent: 4 */
+/// <reference path="Filter.ts" />
 /// <reference path="SortOrder.ts" />
 var Relution;
 (function (Relution) {
@@ -4231,24 +4253,23 @@ Relution.LiveData.WebSqlStore = Relution.LiveData.Store.extend({
       }
     });
 
-    var models = Relution.LiveData.isCollection(model) ? model.models : [model];
     switch (method) {
       case 'create':
         that._checkTable(opts, function () {
-          that._insertOrReplace(models, opts);
+          that._insertOrReplace(model, opts);
         });
         break;
 
       case 'update':
       case 'patch':
         that._checkTable(opts, function () {
-          that._insertOrReplace(models, opts);
+          that._insertOrReplace(model, opts);
         });
         break;
 
       case 'delete':
         that._checkTable(opts, function () {
-          that._delete(models, opts);
+          that._delete(model, opts);
         });
         break;
 
@@ -4324,10 +4345,12 @@ Relution.LiveData.WebSqlStore = Relution.LiveData.Store.extend({
     var lastSql;
     var that = this;
     try {
-      var db = window.openDatabase(this.options.name, '', '', this.options.size);
+      if (!this.db) {
+        this.db = window.openDatabase(this.options.name, '', '', this.options.size);
+      }
       try {
-        var arSql = this._sqlUpdateDatabase(db.version, this.options.version);
-        db.changeVersion(db.version, this.options.version, function (tx) {
+        var arSql = this._sqlUpdateDatabase(this.db.version, this.options.version);
+        this.db.changeVersion(this.db.version, this.options.version, function (tx) {
           _.each(arSql, function (sql) {
             Relution.debug('sql statement: ' + sql);
             lastSql = sql;
@@ -4336,11 +4359,11 @@ Relution.LiveData.WebSqlStore = Relution.LiveData.Store.extend({
         }, function (msg) {
           that.handleError(options, msg, lastSql);
         }, function () {
-          that.handleSuccess(options);
+          that.handleSuccess(options, that.db);
         });
       } catch (e) {
         error = e.message;
-        console.error('webSql change version failed, DB-Version: ' + db.version);
+        console.error('webSql change version failed, DB-Version: ' + this.db.version);
       }
     } catch (e) {
       error = e.message;
@@ -4569,28 +4592,27 @@ Relution.LiveData.WebSqlStore = Relution.LiveData.Store.extend({
     }
   },
 
-  _insertOrReplace: function (models, options) {
-
+  _insertOrReplace: function (model, options) {
     var entity = this.getEntity(options);
-
+    var models = Relution.LiveData.isCollection(model) ? model.models : [model];
     if (this._checkDb(options) && this._checkEntity(options, entity) && this._checkData(options, models)) {
 
       var isAutoInc = this._isAutoincrementKey(entity, entity.getKey());
       var statements = [];
       var sqlTemplate = 'INSERT OR REPLACE INTO \'' + entity.name + '\' (';
       for (var i = 0; i < models.length; i++) {
-        var model = models[i];
+        var amodel = models[i];
         var statement = ''; // the actual sql insert string with values
-        if (!isAutoInc && !model.id && model.idAttribute) {
-          model.set(model.idAttribute, new Relution.LiveData.ObjectID().toHexString());
+        if (!isAutoInc && !amodel.id && amodel.idAttribute) {
+          amodel.set(amodel.idAttribute, new Relution.LiveData.ObjectID().toHexString());
         }
-        var value = options.attrs || model.toJSON();
+        var value = options.attrs || amodel.toJSON();
         var args, keys;
         if (!_.isEmpty(entity.fields)) {
           args = _.values(value);
           keys = _.keys(value);
         } else {
-          args = [model.id, JSON.stringify(value)];
+          args = [amodel.id, JSON.stringify(value)];
           keys = ['id', 'data'];
         }
         if (args.length > 0) {
@@ -4600,7 +4622,7 @@ Relution.LiveData.WebSqlStore = Relution.LiveData.Store.extend({
           statements.push({statement: statement, arguments: args});
         }
       }
-      this._executeTransaction(options, statements);
+      this._executeTransaction(options, statements, model.toJSON());
     }
   },
 
@@ -4664,13 +4686,14 @@ Relution.LiveData.WebSqlStore = Relution.LiveData.Store.extend({
     }
   },
 
-  _delete: function (models, options) {
+  _delete: function (model, options) {
     var entity = this.getEntity(options);
+    var models = Relution.LiveData.isCollection(model) ? model.models : [model];
     if (this._checkDb(options) && this._checkEntity(options, entity)) {
       options.models = models;
       var sql = this._sqlDelete(options, entity);
       // reset flag
-      this._executeTransaction(options, [sql]);
+      this._executeTransaction(options, [sql], model.toJSON());
     }
   },
 
@@ -4680,7 +4703,7 @@ Relution.LiveData.WebSqlStore = Relution.LiveData.Store.extend({
     }
   },
 
-  _executeTransaction: function (options, statements) {
+  _executeTransaction: function (options, statements, result) {
     var error;
     var lastStatement;
     if (this._checkDb(options)) {
@@ -4702,10 +4725,11 @@ Relution.LiveData.WebSqlStore = Relution.LiveData.Store.extend({
           console.error(sqlError.message);
           that.handleError(options, sqlError.message, lastStatement);
         }, function () {
-          that.handleSuccess(options);
+          that.handleSuccess(options, result);
         });
       } catch (e) {
         console.error(e.message);
+        error = e;
       }
     }
     if (error) {
@@ -5278,7 +5302,7 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
     var that = this;
     return qXHR.then(function (data) {
       // delete on server does not respond a body
-      if(!data && msg.method === 'delete') {
+      if (!data && msg.method === 'delete') {
         data = msg.data;
       }
 

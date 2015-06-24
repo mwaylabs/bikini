@@ -528,7 +528,7 @@ Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
     var that = this;
     return qXHR.then(function (data) {
       // delete on server does not respond a body
-      if(!data && msg.method === 'delete') {
+      if (!data && msg.method === 'delete') {
         data = msg.data;
       }
 

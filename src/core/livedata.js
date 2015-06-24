@@ -102,10 +102,10 @@ Relution.LiveData.ajax = function ajax(url, options) {
 Relution.LiveData.sync = function sync(method, model, options) {
   options = options || {};
   var store = options.store || this.store;
-  options.credentials = options.credentials || this.credentials || store && store.options.credentials;
+  options.credentials = options.credentials || this.credentials || store && store.options && store.options.credentials;
 
   Relution.debug('Relution.LiveData.sync ' + method + ' ' + model.id);
-  if(store && store.sync) {
+  if (store && store.sync) {
     // store access (this is redundant model argument)
     var storeAjax = store.ajax && _.bind(store.ajax, store);
     options.ajax = options.ajax ||  storeAjax || this.ajax || Relution.LiveData.ajax;
@@ -172,7 +172,6 @@ Relution.LiveData.Object = {
     // return the new object
     return obj;
   },
-
 
   /**
    * Binds a method to its caller, so it is always executed within the right scope.

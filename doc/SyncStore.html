@@ -38,10 +38,7 @@
     
     
         
-            <div class="description">The Relution.LiveData.SyncStore is used to connect a model collection to an
-Relution server.
-
-This will give you an online and offline store with live data updates.</div>
+            <div class="description">The Relution.LiveData.SyncStore is used to connect a model collection to anRelution server.This will give you an online and offline store with live data updates.</div>
         
         
         
@@ -67,7 +64,7 @@ This will give you an online and offline store with live data updates.</div>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line4754">line 4754</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line4778">line 4778</a>
     </li></ul></dd>
     
     
@@ -82,19 +79,7 @@ This will give you an online and offline store with live data updates.</div>
         
             <h3>Example</h3>
             
-    <pre class="prettyprint"><code>// The default configuration will save the complete model data as a json,
-// and the offline change log to a local WebSql database, synchronize it
-// trough REST calls with the server and receive live updates via a socket.io connection.
-
-var MyCollection = Relution.LiveData.Collection.extend({
-     model: MyModel,
-     url: 'http://myServer.io/myOrga/myApplication/myCollection',
-     store: new Relution.LiveData.SyncStore( {
-         useLocalStore:   true, // (default) store the data for offline use
-         useSocketNotify: true, // (default) register at the server for live updates
-         useOfflineChanges: true // (default) allow changes to the offline data
-     })
-});</code></pre>
+    <pre class="prettyprint"><code>// The default configuration will save the complete model data as a json,// and the offline change log to a local WebSql database, synchronize it// trough REST calls with the server and receive live updates via a socket.io connection.var MyCollection = Relution.LiveData.Collection.extend({     model: MyModel,     url: 'http://myServer.io/myOrga/myApplication/myCollection',     store: new Relution.LiveData.SyncStore( {         useLocalStore:   true, // (default) store the data for offline use         useSocketNotify: true, // (default) register at the server for live updates         useOfflineChanges: true // (default) allow changes to the offline data     })});</code></pre>
 
         
     
@@ -168,7 +153,7 @@ var MyCollection = Relution.LiveData.Collection.extend({
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line462">line 462</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line461">line 461</a>
     </li></ul></dd>
     
     
@@ -232,7 +217,7 @@ var MyCollection = Relution.LiveData.Collection.extend({
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line1774">line 1774</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line1796">line 1796</a>
     </li></ul></dd>
     
     
@@ -296,7 +281,7 @@ var MyCollection = Relution.LiveData.Collection.extend({
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line2201">line 2201</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line2223">line 2223</a>
     </li></ul></dd>
     
     
@@ -360,7 +345,7 @@ var MyCollection = Relution.LiveData.Collection.extend({
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line650">line 650</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line649">line 649</a>
     </li></ul></dd>
     
     
@@ -424,7 +409,7 @@ var MyCollection = Relution.LiveData.Collection.extend({
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line841">line 841</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line840">line 840</a>
     </li></ul></dd>
     
     
@@ -488,7 +473,7 @@ var MyCollection = Relution.LiveData.Collection.extend({
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line849">line 849</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line848">line 848</a>
     </li></ul></dd>
     
     
@@ -552,7 +537,7 @@ var MyCollection = Relution.LiveData.Collection.extend({
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line857">line 857</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line856">line 856</a>
     </li></ul></dd>
     
     
@@ -612,7 +597,7 @@ var MyCollection = Relution.LiveData.Collection.extend({
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line2222">line 2222</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line2244">line 2244</a>
     </li></ul></dd>
     
     
@@ -676,7 +661,7 @@ var MyCollection = Relution.LiveData.Collection.extend({
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line657">line 657</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line656">line 656</a>
     </li></ul></dd>
     
     
@@ -740,7 +725,7 @@ var MyCollection = Relution.LiveData.Collection.extend({
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line2215">line 2215</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line2237">line 2237</a>
     </li></ul></dd>
     
     
@@ -804,7 +789,7 @@ var MyCollection = Relution.LiveData.Collection.extend({
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line2208">line 2208</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line2230">line 2230</a>
     </li></ul></dd>
     
     
@@ -868,7 +853,7 @@ var MyCollection = Relution.LiveData.Collection.extend({
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line455">line 455</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line454">line 454</a>
     </li></ul></dd>
     
     
@@ -932,7 +917,7 @@ var MyCollection = Relution.LiveData.Collection.extend({
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line643">line 643</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line642">line 642</a>
     </li></ul></dd>
     
     
@@ -996,7 +981,7 @@ var MyCollection = Relution.LiveData.Collection.extend({
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line834">line 834</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line833">line 833</a>
     </li></ul></dd>
     
     
@@ -1109,7 +1094,7 @@ var MyCollection = Relution.LiveData.Collection.extend({
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line4889">line 4889</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line4913">line 4913</a>
     </li></ul></dd>
     
     
@@ -1244,7 +1229,7 @@ var MyCollection = Relution.LiveData.Collection.extend({
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line591">line 591</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line590">line 590</a>
     </li></ul></dd>
     
     
@@ -1302,8 +1287,7 @@ var MyCollection = Relution.LiveData.Collection.extend({
     
     
     <div class="description">
-        This method is the one that initiates the decoding of a given string, based on either
-the default decoder or a custom decoder.
+        This method is the one that initiates the decoding of a given string, based on eitherthe default decoder or a custom decoder.
     </div>
     
 
@@ -1407,7 +1391,7 @@ the default decoder or a custom decoder.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line867">line 867</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line866">line 866</a>
     </li></ul></dd>
     
     
@@ -1541,7 +1525,7 @@ the default decoder or a custom decoder.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line1884">line 1884</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line1906">line 1906</a>
     </li></ul></dd>
     
     
@@ -1676,7 +1660,7 @@ the default decoder or a custom decoder.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line529">line 529</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line528">line 528</a>
     </li></ul></dd>
     
     
@@ -1734,8 +1718,7 @@ the default decoder or a custom decoder.
     
     
     <div class="description">
-        This method is the one that initiates the encoding of a given string, based on either
-the default encoder or a custom encoder.
+        This method is the one that initiates the encoding of a given string, based on eitherthe default encoder or a custom encoder.
     </div>
     
 
@@ -1839,7 +1822,7 @@ the default encoder or a custom encoder.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line885">line 885</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line884">line 884</a>
     </li></ul></dd>
     
     
@@ -1978,7 +1961,7 @@ the default encoder or a custom encoder.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line470">line 470</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line469">line 469</a>
     </li></ul></dd>
     
     
@@ -2130,7 +2113,7 @@ the default encoder or a custom encoder.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line1862">line 1862</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line1884">line 1884</a>
     </li></ul></dd>
     
     
@@ -2274,7 +2257,7 @@ the default encoder or a custom encoder.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line3824">line 3824</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line3846">line 3846</a>
     </li></ul></dd>
     
     
@@ -2310,8 +2293,7 @@ the default encoder or a custom encoder.
     
     
     <div class="description">
-        transform the given attributes to the destination data format
-considering the field specifications
+        transform the given attributes to the destination data formatconsidering the field specifications
     </div>
     
 
@@ -2405,7 +2387,7 @@ considering the field specifications
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line2374">line 2374</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line2396">line 2396</a>
     </li></ul></dd>
     
     
@@ -2535,7 +2517,7 @@ considering the field specifications
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line2245">line 2245</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line2267">line 2267</a>
     </li></ul></dd>
     
     
@@ -2657,7 +2639,7 @@ considering the field specifications
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line2255">line 2255</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line2277">line 2277</a>
     </li></ul></dd>
     
     
@@ -2736,7 +2718,7 @@ considering the field specifications
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line2235">line 2235</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line2257">line 2257</a>
     </li></ul></dd>
     
     
@@ -2866,7 +2848,7 @@ considering the field specifications
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line2417">line 2417</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line2439">line 2439</a>
     </li></ul></dd>
     
     
@@ -2962,7 +2944,7 @@ considering the field specifications
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line2265">line 2265</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line2287">line 2287</a>
     </li></ul></dd>
     
     
@@ -3041,7 +3023,7 @@ considering the field specifications
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line2274">line 2274</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line2296">line 2296</a>
     </li></ul></dd>
     
     
@@ -3095,8 +3077,7 @@ considering the field specifications
     
     
     <div class="description">
-        This method is called from the 'outside world', controls the hashing and
-finally returns the hash value.
+        This method is called from the 'outside world', controls the hashing andfinally returns the hash value.
     </div>
     
 
@@ -3177,7 +3158,7 @@ finally returns the hash value.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line666">line 666</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line665">line 665</a>
     </li></ul></dd>
     
     
@@ -3235,8 +3216,7 @@ finally returns the hash value.
     
     
     <div class="description">
-        This method is the one that initiates the hashing of a given string, based on either
-the default hashing algorithm or a custom hashing algorithm.
+        This method is the one that initiates the hashing of a given string, based on eitherthe default hashing algorithm or a custom hashing algorithm.
     </div>
     
 
@@ -3340,7 +3320,7 @@ the default hashing algorithm or a custom hashing algorithm.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line903">line 903</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line902">line 902</a>
     </li></ul></dd>
     
     
@@ -3431,7 +3411,7 @@ the default hashing algorithm or a custom hashing algorithm.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line2227">line 2227</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line2249">line 2249</a>
     </li></ul></dd>
     
     
@@ -3543,7 +3523,7 @@ the default hashing algorithm or a custom hashing algorithm.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line1874">line 1874</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line1896">line 1896</a>
     </li></ul></dd>
     
     
@@ -3676,7 +3656,7 @@ the default hashing algorithm or a custom hashing algorithm.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line1798">line 1798</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line1820">line 1820</a>
     </li></ul></dd>
     
     
@@ -3745,7 +3725,7 @@ the default hashing algorithm or a custom hashing algorithm.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line2705">line 2705</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line2727">line 2727</a>
     </li></ul></dd>
     
     
@@ -3875,7 +3855,7 @@ the default hashing algorithm or a custom hashing algorithm.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line2397">line 2397</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line2419">line 2419</a>
     </li></ul></dd>
     
     
@@ -3962,7 +3942,7 @@ the default hashing algorithm or a custom hashing algorithm.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line2283">line 2283</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line2305">line 2305</a>
     </li></ul></dd>
     
     
@@ -4020,8 +4000,7 @@ the default hashing algorithm or a custom hashing algorithm.
     
     
     <div class="description">
-        transform the given data to attributes
-considering the field specifications
+        transform the given data to attributesconsidering the field specifications
     </div>
     
 
@@ -4133,7 +4112,7 @@ considering the field specifications
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line2352">line 2352</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line2374">line 2374</a>
     </li></ul></dd>
     
     
@@ -4281,7 +4260,7 @@ considering the field specifications
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line1817">line 1817</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line1839">line 1839</a>
     </li></ul></dd>
     
     
@@ -4411,7 +4390,7 @@ considering the field specifications
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line1918">line 1918</a>
+        <a href="bikini.js.html">bikini.js</a>, <a href="bikini.js.html#line1940">line 1940</a>
     </li></ul></dd>
     
     
@@ -4476,7 +4455,7 @@ considering the field specifications
 <br clear="both">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.2.2</a> on Tue Jun 23 2015 19:20:27 GMT+0200 (CEST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.2.2</a> on Wed Jun 24 2015 10:08:07 GMT+0200 (MESZ)
 </footer>
 
 <script> prettyPrint(); </script>
