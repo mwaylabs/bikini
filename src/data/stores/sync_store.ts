@@ -89,7 +89,7 @@ module Relution.LiveData {
     }
 
     initCollection(collection) {
-      Relution.debug('Relution.LiveData.SyncStore.initCollection');
+      debug('Relution.LiveData.SyncStore.initCollection');
       var url = collection.getUrlRoot();
       if (url.charAt(url.length - 1) !== '/') {
         url += '/';
@@ -178,7 +178,7 @@ module Relution.LiveData {
     }
 
     createSocket(endpoint, name) {
-      Relution.debug('Relution.LiveData.SyncStore.createSocket');
+      debug('Relution.LiveData.SyncStore.createSocket');
       if (this.options.useSocketNotify && endpoint && endpoint.socketPath) {
         var that = this;
         var url = endpoint.host;
@@ -208,7 +208,7 @@ module Relution.LiveData {
           return that.onConnect(endpoint).done();
         });
         endpoint.socket.on('disconnect', function () {
-          Relution.debug('socket.io: disconnect');
+          debug('socket.io: disconnect');
           return that.onDisconnect(endpoint).done();
         });
         endpoint.socket.on(endpoint.channel, _.bind(this.onMessageStore, this, endpoint));
@@ -217,7 +217,7 @@ module Relution.LiveData {
     }
 
     _bindChannel(endpoint, name) {
-      Relution.debug('Relution.LiveData.SyncStore._bindChannel');
+      debug('Relution.LiveData.SyncStore._bindChannel');
       var that = this;
       if (endpoint && endpoint.socket) {
         var channel = endpoint.channel;
@@ -383,7 +383,7 @@ module Relution.LiveData {
     }
 
     public sync(method, model, options) {
-      Relution.debug('Relution.LiveData.SyncStore.sync');
+      debug('Relution.LiveData.SyncStore.sync');
       options = options || {};
 
       var endpoint;
@@ -530,7 +530,7 @@ module Relution.LiveData {
       if (msg.id && msg.method !== 'create') {
         url += (url.charAt(url.length - 1) === '/' ? '' : '/' ) + msg.id;
       }
-      Relution.debug('ajaxMessage ' + msg.method + ' ' + url);
+      debug('ajaxMessage ' + msg.method + ' ' + url);
       return model.sync(msg.method, model, {
         // must not take arbitrary options as these won't be replayed on reconnect
         url: url,
@@ -708,7 +708,7 @@ module Relution.LiveData {
           idAttribute: endpoint.entity.idAttribute,
           entity: endpoint.entity,
         });
-        Relution.debug('sendMessage ' + model.id);
+        debug('sendMessage ' + model.id);
         return that._applyResponse(that._ajaxMessage(endpoint, msg, remoteOptions, model), endpoint, msg, remoteOptions, model).catch(function (error) {
           // failed, eventually undo the modifications stored
           if (!endpoint.localStore) {
@@ -748,7 +748,7 @@ module Relution.LiveData {
       return qMsg.then(function (msg) {
         var options;
         var id = endpoint.messages.modelId(msg);
-        Relution.debug('storeMessage ' + id);
+        debug('storeMessage ' + id);
         var message = id && endpoint.messages.get(id);
         if (message) {
           // use existing instance, should not be the case usually
@@ -786,7 +786,7 @@ module Relution.LiveData {
             });
           }
         }
-        Relution.debug('removeMessage ' + message.id);
+        debug('removeMessage ' + message.id);
         return message.destroy();
       });
     }

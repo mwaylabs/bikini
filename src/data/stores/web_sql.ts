@@ -242,7 +242,7 @@ module Relution.LiveData {
           var arSql = this._sqlUpdateDatabase(this.db.version, this.options.version);
           this.db.changeVersion(this.db.version, this.options.version, function (tx) {
             _.each(arSql, function (sql) {
-              Relution.debug('sql statement: ' + sql);
+              debug('sql statement: ' + sql);
               lastSql = sql;
               tx.executeSql(sql);
             });
@@ -533,9 +533,9 @@ module Relution.LiveData {
           var statement = stm.statement || stm;
           var args = stm.arguments;
           lastStatement = statement;
-          Relution.debug('sql statement: ' + statement);
+          debug('sql statement: ' + statement);
           if (args) {
-            Relution.debug('    arguments: ' + JSON.stringify(args));
+            debug('    arguments: ' + JSON.stringify(args));
           }
           t.executeSql(statement, args, function (tx, res) {
             var len = res.rows.length;//, i;
@@ -605,9 +605,9 @@ module Relution.LiveData {
               var statement = stm.statement || stm;
               var args = stm.arguments;
               lastStatement = statement;
-              Relution.debug('sql statement: ' + statement);
+              debug('sql statement: ' + statement);
               if (args) {
-                Relution.debug('    arguments: ' + JSON.stringify(args));
+                debug('    arguments: ' + JSON.stringify(args));
               }
               t.executeSql(statement, args);
             });
