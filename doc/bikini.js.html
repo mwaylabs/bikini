@@ -29,7 +29,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Wed Jun 24 2015 10:08:00
+* Date:      Wed Jun 24 2015 14:45:37
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 
@@ -3710,1884 +3710,1901 @@ Relution.LiveData.SqlSelector = Relution.LiveData.DataSelector.design({
   }
 });
 
-// Copyright (c) 2013 M-Way Solutions GmbH
-// http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
-
 /**
- * Base class to build a custom data store.
+ * store.ts
  *
- * See: Relution.LiveData.LocalStorageStore, Relution.LiveData.WebSqlStore and Relution.LiveData.SyncStore
- *
- * @module Relution.LiveData.Store
- *
+ * Created by Thomas Beckmann on 24.06.2015
+ * Copyright (c)
+ * 2015
+ * M-Way Solutions GmbH. All rights reserved.
+ * http://www.mwaysolutions.com
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are not permitted.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
-Relution.LiveData.Store = function () {
-  this.initialize.apply(this, arguments);
-};
-
-Relution.LiveData.Store.extend = Relution.LiveData.extend;
-Relution.LiveData.Store.create = Relution.LiveData.create;
-Relution.LiveData.Store.design = Relution.LiveData.design;
-
-// Attach all inheritable methods to the Connector prototype.
-_.extend(Relution.LiveData.Store.prototype, Backbone.Events, Relution.LiveData.Object, {
-
-  _type: 'Relution.LiveData.Store',
-
-  entities: null,
-
-  options: null,
-
-  name: '',
-
-  typeMapping: (function () {
-    var map = {};
-    map [Relution.LiveData.DATA.TYPE.OBJECTID] = Relution.LiveData.DATA.TYPE.STRING;
-    map [Relution.LiveData.DATA.TYPE.DATE] = Relution.LiveData.DATA.TYPE.STRING;
-    map [Relution.LiveData.DATA.TYPE.BINARY] = Relution.LiveData.DATA.TYPE.TEXT;
-    return map;
-  })(),
-
-  initialize: function (options) {
-    options = options || {};
-    this.options = this.options || {};
-    this.options.name = this.name;
-    this.options.typeMapping = this.typeMapping;
-    this.options.entities = this.entities;
-    _.extend(this.options, options || {});
-
-    this._setEntities(options.entities || {});
-  },
-
-  _setEntities: function (entities) {
-    this.entities = {};
-    for (var name in entities) {
-      var entity = Relution.LiveData.Entity.from(entities[name], {
-        store: this,
-        typeMapping: this.options.typeMapping
-      });
-      entity.name = entity.name || name;
-
-      // connect collection and model to this store
-      var collection = entity.collection || Relution.LiveData.Collection.extend({model: Relution.LiveData.Model.extend({})});
-      var model = collection.prototype.model;
-      // set new entity and name
-      collection.prototype.entity = model.prototype.entity = name;
-      collection.prototype.store = model.prototype.store = this;
-      entity.idAttribute = entity.idAttribute || model.prototype.idAttribute;
-      this.entities[name] = entity;
-    }
-  },
-
-  getEntity: function (obj) {
-    if (obj) {
-      var entity = obj.entity || obj;
-      var name = _.isString(entity) ? entity : entity.name;
-      if (name) {
-        return this.entities[name] || (entity && entity.name ? entity : {name: name});
-      }
-    }
-  },
-
-  getCollection: function (entity) {
-    if (_.isString(entity)) {
-      entity = this.entities[entity];
-    }
-    if (entity && entity.collection) {
-      if (Relution.LiveData.Collection.prototype.isPrototypeOf(entity.collection)) {
-        return entity.collection;
-      } else {
-        return new entity.collection();
-      }
-    }
-  },
-
-  createModel: function (entity, attrs) {
-    if (_.isString(entity)) {
-      entity = this.entities[entity];
-    }
-    if (entity && entity.collection) {
-      var Model = entity.collection.model || entity.collection.prototype.model;
-      if (Model) {
-        return new Model(attrs);
-      }
-    }
-  },
-
-  getArray: function (data) {
-    if (_.isArray(data)) {
-      return data;
-    } else if (Relution.LiveData.isCollection(data)) {
-      return data.models;
-    }
-    return _.isObject(data) ? [data] : [];
-  },
-
-  getDataArray: function (data) {
-    var array = [];
-    if (_.isArray(data) || Backbone.Collection.prototype.isPrototypeOf(data)) {
-      _.each(data, function (d) {
-        var attrs = this.getAttributes(d);
-        if (attrs) {
-          array.push(attrs);
-        }
-      });
-    } else {
-      var attrs = this.getAttributes(data);
-      if (attrs) {
-        array.push(this.getAttributes(attrs));
-      }
-    }
-    return array;
-  },
-
-  getAttributes: function (model) {
-    if (Backbone.Model.prototype.isPrototypeOf(model)) {
-      return model.attributes;
-    }
-    return _.isObject(model) ? model : null;
-  },
-
-  initModel: function (model) {
-    // may be overwritten
-  },
-
-  initCollection: function (collection) {
-    // may be overwritten
-  },
-
-  initEntity: function (entity) {
-    // may be overwritten
-  },
-
-  sync: function (method, model, options) {
-    // must be overwritten
-    return Q.reject(new Error('not implemented!')); // purely abstract
-  },
-
-  /**
-   *
-   * @param collection usally a collection, but can also be a model
-   * @param options
-   */
-  fetch: function (collection, options) {
-    if (collection && !collection.models && !collection.attributes && !options) {
-      options = collection;
-    }
-    if ((!collection || (!collection.models && !collection.attributes)) && options && options.entity) {
-      collection = this.getCollection(options.entity);
-    }
-    if (collection && collection.fetch) {
-      var opts = _.extend({}, options || {}, {store: this});
-      return collection.fetch(opts);
-    }
-  },
-
-  create: function (collection, model, options) {
-    if (collection && !collection.models && !options) {
-      model = collection;
-      options = model;
-    }
-    if ((!collection || !collection.models) && options && options.entity) {
-      collection = this.getCollection(options.entity);
-    }
-    if (collection && collection.create) {
-      var opts = _.extend({}, options || {}, {store: this});
-      collection.create(model, opts);
-    }
-  },
-
-  save: function (model, attr, options) {
-    if (model && !model.attributes && !options) {
-      attr = model;
-      options = attr;
-    }
-    if ((!model || !model.attributes) && options && options.entity) {
-      model = this.createModel(options.entity);
-    }
-    if (model && model.save) {
-      var opts = _.extend({}, options || {}, {store: this});
-      model.save(attr, opts);
-    }
-  },
-
-  destroy: function (model, options) {
-    if (model && model.destroy) {
-      var opts = _.extend({}, options || {}, {store: this});
-      model.destroy(opts);
-    }
-  },
-
-  _checkEntity: function (obj, entity) {
-    if (!Relution.LiveData.isEntity(entity)) {
-      var error = Relution.LiveData.Store.CONST.ERROR_NO_ENTITY;
-      console.error(error);
-      this.handleCallback(obj.error, error);
-      this.handleCallback(obj.finish, error);
-      return false;
-    }
-    return true;
-  },
-
-  _checkData: function (obj, data) {
-    if ((!_.isArray(data) || data.length === 0) && !_.isObject(data)) {
-      var error = Relution.LiveData.Store.CONST.ERROR_NO_DATA;
-      console.error(error);
-      this.handleCallback(obj.error, error);
-      this.handleCallback(obj.finish, error);
-      return false;
-    }
-    return true;
-  },
-
-  handleSuccess: function (obj) {
-    var args = Array.prototype.slice.call(arguments, 1);
-    if (obj.success) {
-      this.handleCallback.apply(this, [obj.success].concat(args));
-    }
-    if (obj.finish) {
-      this.handleCallback.apply(this, [obj.finish].concat(args));
-    }
-  },
-
-  handleError: function (obj) {
-    var args = Array.prototype.slice.call(arguments, 1);
-    if (obj.error) {
-      this.handleCallback.apply(this, [obj.error].concat(args));
-    }
-    if (obj.finish) {
-      this.handleCallback.apply(this, [obj.finish].concat(args));
-    }
-  },
-
-  CONST: {
-    ERROR_NO_ENTITY: 'No valid entity specified. ',
-    ERROR_NO_DATA: 'No data passed. ',
-    ERROR_LOAD_DATA: 'Error while loading data from store. ',
-    ERROR_SAVE_DATA: 'Error while saving data to the store. ',
-    ERROR_LOAD_IDS: 'Error while loading ids from store. ',
-    ERROR_SAVE_IDS: 'Error while saving ids to the store. '
-  }
-
-});
-
-// Copyright (c) 2013 M-Way Solutions GmbH
-// http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
-
-/**
- * The Relution.LiveData.LocalStorageStore can be used to store model collection into
- * the localStorage
- *
- * @module Relution.LiveData.LocalStorageStore
- *
- * @type {*}
- * @extends Relution.LiveData.Store
- *
- * @example
- *
- * // The LocalStorageStore will save each model data as a json under his id,
- * // and keeps all id's under an extra key for faster access
- *
- * var MyCollection = Relution.LiveData.Collection.extend({
- *      store: Relution.LiveData.LocalStorageStore.create(),
- *      entity: 'myEntityName'
- * });
- *
- */
-Relution.LiveData.LocalStorageStore = Relution.LiveData.Store.extend({
-
-  _type: 'Relution.LiveData.LocalStorageStore',
-
-  ids: {},
-
-  sync: function (method, model, options) {
-    options = options || {};
-    var that = this;
-    var entity = that.getEntity(model.entity || options.entity || this.entity);
-    var attrs;
-    if (entity && model) {
-      var id = model.id || (method === 'create' ? new Relution.LiveData.ObjectID().toHexString() : null);
-      attrs = options.attrs || model.toJSON(options);
-      switch (method) {
-        case 'patch':
-        case 'update':
-        case 'create':
-          if (method !== 'create') {
-            attrs = _.extend(that._getItem(entity, id) || {}, attrs);
-          }
-          if (model.id !== id && model.idAttribute) {
-            attrs[model.idAttribute] = id;
-          }
-          that._setItem(entity, id, attrs);
-          break;
-        case 'delete' :
-          that._removeItem(entity, id);
-          break;
-        case 'read' :
-          if (id) {
-            attrs = that._getItem(entity, id);
-          } else {
-            attrs = [];
-            var ids = that._getItemIds(entity);
-            for (id in ids) {
-              var itemData = that._getItem(entity, id);
-              if (itemData) {
-                attrs.push(itemData);
-              }
+/* jshint indent: 4 */
+/// &lt;reference path="../../core/livedata.d.ts" />
+var Relution;
+(function (Relution) {
+    var LiveData;
+    (function (LiveData) {
+        /**
+         * Base class to build a custom data store.
+         *
+         * See: Relution.LiveData.LocalStorageStore, Relution.LiveData.WebSqlStore and Relution.LiveData.SyncStore
+         *
+         * @module Relution.LiveData.Store
+         */
+        var Store = (function () {
+            function Store(options) {
+                this.options = _.extend({
+                    name: '',
+                    entities: {},
+                    typeMapping: (function () {
+                        var map = {};
+                        map[LiveData.DATA.TYPE.OBJECTID] = LiveData.DATA.TYPE.STRING;
+                        map[LiveData.DATA.TYPE.DATE] = LiveData.DATA.TYPE.STRING;
+                        map[LiveData.DATA.TYPE.BINARY] = LiveData.DATA.TYPE.TEXT;
+                        return map;
+                    })()
+                }, options);
+                this.setEntities(this.options.entities);
             }
-          }
-          break;
-        default:
-          return;
-      }
-    }
-
-    return Q.resolve(attrs).then(function (attrs) {
-      if (attrs) {
-        return that.handleSuccess(options, attrs) || attrs;
-      } else {
-        return that.handleError(options, Relution.LiveData.Store.CONST.ERROR_NO_ENTITY) || Q.reject(Relution.LiveData.Store.CONST.ERROR_NO_ENTITY);
-      }
-    });
-  },
-
-  drop: function (options) {
-    var entity = this.getEntity(options);
-    if (entity && entity.name) {
-      var keys = this._findAllKeys(entity);
-      for (var i = 0; i &lt; keys.length; i++) {
-        localStorage.removeItem(keys[i]);
-      }
-      localStorage.removeItem('__ids__' + entity.name);
-      this.handleSuccess(options);
-    } else {
-      this.handleError(options, Relution.LiveData.Store.CONST.ERROR_NO_ENTITY);
-    }
-  },
-
-  _getKey: function (entity, id) {
-    return '_' + entity.name + '_' + id;
-  },
-
-  _getItem: function (entity, id) {
-    var attrs;
-    if (entity && id) {
-      try {
-        attrs = JSON.parse(localStorage.getItem(this._getKey(entity, id)));
-        if (attrs) {
-          entity.setId(attrs, id); // fix id
-        } else {
-          this._delItemId(id);
-        }
-      } catch (e) {
-        console.error(Relution.LiveData.Store.CONST.ERROR_LOAD_DATA + e.message);
-      }
-    }
-    return attrs;
-  },
-
-  _setItem: function (entity, id, attrs) {
-    if (entity && id && attrs) {
-      try {
-        localStorage.setItem(this._getKey(entity, id), JSON.stringify(attrs));
-        this._addItemId(entity, id);
-      } catch (e) {
-        console.error(Relution.LiveData.Store.CONST.ERROR_SAVE_DATA + e.message);
-      }
-    }
-  },
-
-  _removeItem: function (entity, id) {
-    if (entity && id) {
-      localStorage.removeItem(this._getKey(entity, id));
-      this._delItemId(entity, id);
-    }
-  },
-
-  _addItemId: function (entity, id) {
-    var ids = this._getItemIds(entity);
-    if (!(id in ids)) {
-      ids[id] = '';
-      this._saveItemIds(entity, ids);
-    }
-  },
-
-  _delItemId: function (entity, id) {
-    var ids = this._getItemIds(entity);
-    if (id in ids) {
-      delete ids[id];
-      this._saveItemIds(entity, ids);
-    }
-  },
-
-  _findAllKeys: function (entity) {
-    var keys = [];
-    var prefixItem = this._getKey(entity, '');
-    if (prefixItem) {
-      var key, len = localStorage.length;
-      for (var i = 0; i &lt; len; i++) {
-        key = localStorage.key(i);
-        if (key && key === prefixItem) {
-          keys.push(key);
-        }
-      }
-    }
-    return keys;
-  },
-
-  _getItemIds: function (entity) {
-    try {
-      var key = '__ids__' + entity.name;
-      if (!this.ids[entity.name]) {
-        this.ids[entity.name] = JSON.parse(localStorage.getItem(key)) || {};
-      }
-      return this.ids[entity.name];
-    } catch (e) {
-      console.error(Relution.LiveData.Store.CONST.ERROR_LOAD_IDS + e.message);
-    }
-  },
-
-  _saveItemIds: function (entity, ids) {
-    try {
-      var key = '__ids__' + entity.name;
-      localStorage.setItem(key, JSON.stringify(ids));
-    } catch (e) {
-      console.error(Relution.LiveData.Store.CONST.ERROR_SAVE_IDS + e.message);
-    }
-  }
-});
-
-// Copyright (c) 2013 M-Way Solutions GmbH
-// http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
-
-/**
- * The Relution.LiveData.WebSqlStore can be used to store model collection into
- * the webSql database
- *
- * @module Relution.LiveData.WebSqlStore
- *
- * @type {*}
- * @extends Relution.LiveData.Store
- *
- * @example
- *
- * // The default configuration will save the complete model data as json
- * // into a database column with the name "data"
- *
- * var MyCollection = Relution.LiveData.Collection.extend({
-     *      model: MyModel,
-     *      entity: 'MyTableName',
-     *      store: new Relution.LiveData.WebSqlStorageStore()
-     * });
- *
- * // If you want to use specific columns you can specify the fields
- * // in the entity of your model like this:
- *
- * var MyModel = Relution.LiveData.Model.extend({
-     *      idAttribute: 'id',
-     *      fields: {
-     *          id:          { type: Relution.LiveData.DATA.TYPE.STRING,  required: true, index: true },
-     *          sureName:    { name: 'USERNAME', type: Relution.LiveData.DATA.TYPE.STRING },
-     *          firstName:   { type: Relution.LiveData.DATA.TYPE.STRING,  length: 200 },
-     *          age:         { type: Relution.LiveData.DATA.TYPE.INTEGER }
-     *      }
-     * });
- *
- *
- */
-Relution.LiveData.WebSqlStore = Relution.LiveData.Store.extend({
-
-  _type: 'Relution.LiveData.WebSqlStore',
-
-  _selector: null,
-
-  options: null,
-
-  name: 'relution-livedata',
-
-  size: 1024 * 1024, // 1 MB
-
-  version: '1.0',
-
-  db: null,
-
-  dataField: {name: 'data', type: 'text', required: true},
-
-  idField: {name: 'id', type: 'string', required: true},
-
-  typeMapping: (function () {
-    var map = {};
-    map [Relution.LiveData.DATA.TYPE.OBJECTID] = Relution.LiveData.DATA.TYPE.STRING;
-    map [Relution.LiveData.DATA.TYPE.DATE] = Relution.LiveData.DATA.TYPE.STRING;
-    map [Relution.LiveData.DATA.TYPE.OBJECT] = Relution.LiveData.DATA.TYPE.TEXT;
-    map [Relution.LiveData.DATA.TYPE.ARRAY] = Relution.LiveData.DATA.TYPE.TEXT;
-    map [Relution.LiveData.DATA.TYPE.BINARY] = Relution.LiveData.DATA.TYPE.TEXT;
-    return map;
-  })(),
-
-  sqlTypeMapping: (function () {
-    var map = {};
-    map [Relution.LiveData.DATA.TYPE.STRING] = 'varchar(255)';
-    map [Relution.LiveData.DATA.TYPE.TEXT] = 'text';
-    map [Relution.LiveData.DATA.TYPE.OBJECT] = 'text';
-    map [Relution.LiveData.DATA.TYPE.ARRAY] = 'text';
-    map [Relution.LiveData.DATA.TYPE.FLOAT] = 'float';
-    map [Relution.LiveData.DATA.TYPE.INTEGER] = 'integer';
-    map [Relution.LiveData.DATA.TYPE.DATE] = 'varchar(255)';
-    map [Relution.LiveData.DATA.TYPE.BOOLEAN] = 'boolean';
-    return map;
-  })(),
-
-  initialize: function (options) {
-    Relution.LiveData.Store.prototype.initialize.apply(this, arguments);
-    this.options = this.options || {};
-    this.options.name = this.name;
-    this.options.size = this.size;
-    this.options.version = this.version;
-    this.options.typeMapping = this.typeMapping;
-    this.options.sqlTypeMapping = this.sqlTypeMapping;
-    _.extend(this.options, options || {});
-
-    var that = this;
-    this._openDb({
-      error: function (error) {
-        console.error(error);
-        that.trigger('error', error);
-      }
-    });
-  },
-
-  sync: function (method, model, options) {
-    options = options || {};
-    var that = this;
-    var q = Q.defer();
-    var opts = _.extend({
-      entity: model.entity || options.entity || this.entity
-    }, options || {}, {
-      success: function (response) {
-        var result = that.handleSuccess(options, response) || response;
-        q.resolve(result);
-        return result;
-      },
-      error: function (error) {
-        var result = that.handleError(options, error);
-        if (result) {
-          q.resolve(result);
-          return result;
-        } else {
-          q.reject(error);
-        }
-      }
-    });
-
-    switch (method) {
-      case 'create':
-        that._checkTable(opts, function () {
-          that._insertOrReplace(model, opts);
-        });
-        break;
-
-      case 'update':
-      case 'patch':
-        that._checkTable(opts, function () {
-          that._insertOrReplace(model, opts);
-        });
-        break;
-
-      case 'delete':
-        that._checkTable(opts, function () {
-          that._delete(model, opts);
-        });
-        break;
-
-      case 'read':
-        that._checkTable(opts, function () {
-          that._select(model, opts);
-        });
-        break;
-
-      default:
-        break;
-    }
-    return q.promise;
-  },
-
-  select: function (options) {
-    this._select(null, options);
-  },
-
-  drop: function (options) {
-    this._dropTable(options);
-  },
-
-  createTable: function (options) {
-    this._createTable(options);
-  },
-
-  execute: function (options) {
-    this._executeSql(options);
-  },
-
-  /**
-   * @private
-   */
-  _openDb: function (options) {
-    var error, dbError;
-    /* openDatabase(db_name, version, description, estimated_size, callback) */
-    if (!this.db) {
-      try {
-        if (!window.openDatabase) {
-          error = 'Your browser does not support WebSQL databases.';
-        } else {
-          this.db = window.openDatabase(this.options.name, '', '', this.options.size);
-          if (this.entities) {
-            for (var key in this.entities) {
-              this._createTable({entity: this.entities[key]});
-            }
-          }
-        }
-      } catch (e) {
-        dbError = e;
-      }
-    }
-    if (this.db) {
-      if (this.options.version && this.db.version !== this.options.version) {
-        this._updateDb(options);
-      } else {
-        this.handleSuccess(options, this.db);
-      }
-    } else if (dbError === 2 || dbError === '2') {
-      // Version number mismatch.
-      this._updateDb(options);
-    } else {
-      if (!error && dbError) {
-        error = dbError;
-      }
-      this.handleSuccess(options, error);
-    }
-  },
-
-  _updateDb: function (options) {
-    var error;
-    var lastSql;
-    var that = this;
-    try {
-      if (!this.db) {
-        this.db = window.openDatabase(this.options.name, '', '', this.options.size);
-      }
-      try {
-        var arSql = this._sqlUpdateDatabase(this.db.version, this.options.version);
-        this.db.changeVersion(this.db.version, this.options.version, function (tx) {
-          _.each(arSql, function (sql) {
-            Relution.debug('sql statement: ' + sql);
-            lastSql = sql;
-            tx.executeSql(sql);
-          });
-        }, function (msg) {
-          that.handleError(options, msg, lastSql);
-        }, function () {
-          that.handleSuccess(options, that.db);
-        });
-      } catch (e) {
-        error = e.message;
-        console.error('webSql change version failed, DB-Version: ' + this.db.version);
-      }
-    } catch (e) {
-      error = e.message;
-    }
-    if (error) {
-      this.handleError(options, error);
-    }
-  },
-
-  _sqlUpdateDatabase: function (oldVersion, newVersion) {
-    // create sql array, simply drop and create the database
-    var sql = [];
-    if (this.entities) {
-      for (var name in this.entities) {
-        var entity = this.entities[name];
-        sql.push(this._sqlDropTable(entity.name));
-        sql.push(this._sqlCreateTable(entity));
-      }
-    }
-    return sql;
-  },
-
-  _sqlDropTable: function (name) {
-    return 'DROP TABLE IF EXISTS \'' + name + '\'';
-  },
-
-  _isAutoincrementKey: function (entity, key) {
-    if (entity && key) {
-      var column = this.getField(entity, key);
-      return column && column.type === Relution.LiveData.DATA.TYPE.INTEGER;
-    }
-  },
-
-  _sqlPrimaryKey: function (entity, keys) {
-    if (keys && keys.length === 1) {
-      if (this._isAutoincrementKey(entity, keys[0])) {
-        return keys[0] + ' INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE';
-      } else {
-        return keys[0] + ' PRIMARY KEY ASC UNIQUE';
-      }
-    }
-    return '';
-  },
-
-  _sqlConstraint: function (entity, keys) {
-    if (keys && keys.length > 1) {
-      return 'PRIMARY KEY (' + keys.join(',') + ') ON CONFLICT REPLACE';
-    }
-    return '';
-  },
-
-  _sqlCreateTable: function (entity) {
-    var that = this;
-    var keys = entity.getKeys();
-    var primaryKey = keys.length === 1 ? this._sqlPrimaryKey(entity, keys) : '';
-    var constraint = keys.length > 1 ? this._sqlConstraint(entity, keys) : (entity.constraint || '');
-
-    var columns = '';
-    var fields = this.getFields(entity);
-    _.each(fields, function (field) {
-      // skip ID, it is defined manually above
-      if (!primaryKey || field.name !== keys[0]) {
-        // only add valid types
-        var attr = that._dbAttribute(field);
-        if (attr) {
-          columns += (columns ? ', ' : '') + attr;
-        }
-      }
-    });
-    if (!columns) {
-      columns = this._dbAttribute(this.dataField);
-    }
-    var sql = 'CREATE TABLE IF NOT EXISTS \'' + entity.name + '\' (';
-    sql += primaryKey ? primaryKey + ', ' : '';
-    sql += columns;
-    sql += constraint ? ', ' + constraint : '';
-    sql += ');';
-    return sql;
-  },
-
-  _sqlDelete: function (options, entity) {
-    var sql = 'DELETE FROM \'' + entity.name + '\'';
-    var where = this._sqlWhere(options, entity) || this._sqlWhereFromData(options, entity);
-    if (where) {
-      sql += ' WHERE ' + where;
-    }
-    sql += options.and ? ' AND ' + options.and : '';
-    return sql;
-  },
-
-  _sqlWhere: function (options, entity) {
-    this._selector = null;
-    var sql = '';
-    if (_.isString(options.where)) {
-      sql = options.where;
-    } else if (_.isObject(options.where)) {
-      this._selector = Relution.LiveData.SqlSelector.create(options.where, entity);
-      sql = this._selector.buildStatement();
-    }
-    return sql;
-  },
-
-  _sqlWhereFromData: function (options, entity) {
-    var that = this;
-    var ids = [];
-    if (options && options.models && entity && entity.idAttribute) {
-      var id, key = entity.idAttribute;
-      var field = this.getField(entity, key);
-      _.each(options.models, function (model) {
-        id = model.id;
-        if (!_.isUndefined(id)) {
-          ids.push(that._sqlValue(id, field));
-        }
-      });
-      if (ids.length > 0) {
-        return key + ' IN (' + ids.join(',') + ')';
-      }
-    }
-    return '';
-  },
-
-  _sqlSelect: function (options, entity) {
-
-    var sql = 'SELECT ';
-    if (options.fields) {
-      if (options.fields.length > 1) {
-        sql += options.fields.join(', ');
-      } else if (options.fields.length === 1) {
-        sql += options.fields[0];
-      }
-    } else {
-      sql += '*';
-    }
-    sql += ' FROM \'' + entity.name + '\'';
-    if (options.join) {
-      sql += ' JOIN ' + options.join;
-    }
-
-    if (options.leftJoin) {
-      sql += ' LEFT JOIN ' + options.leftJoin;
-    }
-
-    var where = this._sqlWhere(options, entity) || this._sqlWhereFromData(options, entity);
-    if (where) {
-      sql += ' WHERE ' + where;
-    }
-
-    if (options.order) {
-      sql += ' ORDER BY ' + options.order;
-    }
-
-    if (options.limit) {
-      sql += ' LIMIT ' + options.limit;
-    }
-
-    if (options.offset) {
-      sql += ' OFFSET ' + options.offset;
-    }
-
-    return sql;
-  },
-
-  _sqlValue: function (value, field) {
-    var type = field && field.type ? field.type : Relution.LiveData.Field.prototype.detectType(value);
-    if (type === Relution.LiveData.DATA.TYPE.INTEGER || type === Relution.LiveData.DATA.TYPE.FLOAT) {
-      return value;
-    } else if (type === Relution.LiveData.DATA.TYPE.BOOLEAN) {
-      return value ? '1' : '0';
-    } else if (type === Relution.LiveData.DATA.TYPE.NULL) {
-      return 'NULL';
-    }
-    value = Relution.LiveData.Field.prototype.transform(value, Relution.LiveData.DATA.TYPE.STRING);
-    value = value.replace(/"/g, '""');
-    return '"' + value + '"';
-  },
-
-  _dbAttribute: function (field) {
-    if (field && field.name) {
-      var type = this.options.sqlTypeMapping[field.type];
-      var isReqStr = field.required ? ' NOT NULL' : '';
-      if (type) {
-        return field.name + ' ' + type.toUpperCase() + isReqStr;
-      }
-    }
-  },
-
-  _dropTable: function (options) {
-
-    var entity = this.getEntity(options);
-    entity.db = null;
-
-    if (this._checkDb(options) && entity) {
-      var sql = this._sqlDropTable(entity.name);
-      // reset flag
-      this._executeTransaction(options, [sql]);
-    }
-  },
-
-  _createTable: function (options) {
-
-    var entity = this.getEntity(options);
-    entity.db = this.db;
-
-    if (this._checkDb(options) && this._checkEntity(options, entity)) {
-      var sql = this._sqlCreateTable(entity);
-      // reset flag
-      this._executeTransaction(options, [sql]);
-    }
-  },
-
-  _checkTable: function (options, callback) {
-    var entity = this.getEntity(options);
-    var that = this;
-    if (entity && !entity.db) {
-      this._createTable({
-        success: function () {
-          callback();
-        },
-        error: function (error) {
-          this.handleError(options, error);
-        },
-        entity: entity
-      });
-    } else {
-      callback();
-    }
-  },
-
-  _insertOrReplace: function (model, options) {
-    var entity = this.getEntity(options);
-    var models = Relution.LiveData.isCollection(model) ? model.models : [model];
-    if (this._checkDb(options) && this._checkEntity(options, entity) && this._checkData(options, models)) {
-
-      var isAutoInc = this._isAutoincrementKey(entity, entity.getKey());
-      var statements = [];
-      var sqlTemplate = 'INSERT OR REPLACE INTO \'' + entity.name + '\' (';
-      for (var i = 0; i &lt; models.length; i++) {
-        var amodel = models[i];
-        var statement = ''; // the actual sql insert string with values
-        if (!isAutoInc && !amodel.id && amodel.idAttribute) {
-          amodel.set(amodel.idAttribute, new Relution.LiveData.ObjectID().toHexString());
-        }
-        var value = options.attrs || amodel.toJSON();
-        var args, keys;
-        if (!_.isEmpty(entity.fields)) {
-          args = _.values(value);
-          keys = _.keys(value);
-        } else {
-          args = [amodel.id, JSON.stringify(value)];
-          keys = ['id', 'data'];
-        }
-        if (args.length > 0) {
-          var values = new Array(args.length).join('?,') + '?';
-          var columns = '\'' + keys.join('\',\'') + '\'';
-          statement += sqlTemplate + columns + ') VALUES (' + values + ');';
-          statements.push({statement: statement, arguments: args});
-        }
-      }
-      this._executeTransaction(options, statements, model.toJSON());
-    }
-  },
-
-  _select: function (model, options) {
-    var entity = this.getEntity(options);
-    if (this._checkDb(options) && this._checkEntity(options, entity)) {
-      var lastStatement;
-      var isCollection = !Relution.LiveData.isModel(model);
-      var result;
-      if (isCollection) {
-        result = [];
-      } else {
-        options.models = [model];
-      }
-      var stm = this._sqlSelect(options, entity);
-      var that = this;
-      this.db.readTransaction(function (t) {
-        var statement = stm.statement || stm;
-        var args = stm.arguments;
-        lastStatement = statement;
-        Relution.debug('sql statement: ' + statement);
-        if (args) {
-          Relution.debug('    arguments: ' + JSON.stringify(args));
-        }
-        t.executeSql(statement, args, function (tx, res) {
-          var len = res.rows.length;//, i;
-          for (var i = 0; i &lt; len; i++) {
-            var item = res.rows.item(i);
-            var attrs;
-            if (!_.isEmpty(entity.fields) || !that._hasDefaultFields(item)) {
-              attrs = item;
-            } else {
-              try {
-                attrs = JSON.parse(item.data);
-              } catch (e) {
-              }
-            }
-            if (attrs && (!that._selector || that._selector.matches(attrs))) {
-              if (isCollection) {
-                result.push(attrs);
-              } else {
-                result = attrs;
-                break;
-              }
-            }
-          }
-        }, function (t, e) {
-          // error
-          console.error('webSql error: ' + e.message);
-        });
-      }, function (sqlError) { // errorCallback
-        console.error('WebSql Syntax Error: ' + sqlError.message);
-        that.handleError(options, sqlError.message, lastStatement);
-      }, function () { // voidCallback (success)
-        if (result) {
-          that.handleSuccess(options, result);
-        } else {
-          that.handleError(options, 'no result');
-        }
-      });
-    }
-  },
-
-  _delete: function (model, options) {
-    var entity = this.getEntity(options);
-    var models = Relution.LiveData.isCollection(model) ? model.models : [model];
-    if (this._checkDb(options) && this._checkEntity(options, entity)) {
-      options.models = models;
-      var sql = this._sqlDelete(options, entity);
-      // reset flag
-      this._executeTransaction(options, [sql], model.toJSON());
-    }
-  },
-
-  _executeSql: function (options) {
-    if (options.sql) {
-      this._executeTransaction(options, [options.sql]);
-    }
-  },
-
-  _executeTransaction: function (options, statements, result) {
-    var error;
-    var lastStatement;
-    if (this._checkDb(options)) {
-      var that = this;
-      try {
-        /* transaction has 3 parameters: the transaction callback, the error callback and the success callback */
-        this.db.transaction(function (t) {
-          _.each(statements, function (stm) {
-            var statement = stm.statement || stm;
-            var args = stm.arguments;
-            lastStatement = statement;
-            Relution.debug('sql statement: ' + statement);
-            if (args) {
-              Relution.debug('    arguments: ' + JSON.stringify(args));
-            }
-            t.executeSql(statement, args);
-          });
-        }, function (sqlError) { // errorCallback
-          console.error(sqlError.message);
-          that.handleError(options, sqlError.message, lastStatement);
-        }, function () {
-          that.handleSuccess(options, result);
-        });
-      } catch (e) {
-        console.error(e.message);
-        error = e;
-      }
-    }
-    if (error) {
-      this.handleCallback(options.error, error, lastStatement);
-    }
-  },
-
-  _hasDefaultFields: function (item) {
-    return _.every(_.keys(item), function (key) {
-      return key === this.idField.name || key === this.dataField.name;
-    }, this);
-  },
-
-  _checkDb: function (options) {
-    // has to be initialized first
-    if (!this.db) {
-      var error = 'db handler not initialized.';
-      console.error(error);
-      this.handleError(options, error);
-      return false;
-    }
-    return true;
-  },
-
-  getFields: function (entity) {
-    if (!_.isEmpty(entity.fields)) {
-      return entity.fields;
-    } else {
-      var fields = {};
-      fields.data = this.dataField;
-      var idAttribute = entity.idAttribute || 'id';
-      fields[idAttribute] = this.idField;
-      return fields;
-    }
-  },
-
-  getField: function (entity, key) {
-    return this.getFields(entity)[key];
-  }
-
-});
-
-// Copyright (c) 2013 M-Way Solutions GmbH
-// http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
-
-/**
- * The Relution.LiveData.SyncStore is used to connect a model collection to an
- * Relution server.
- *
- * This will give you an online and offline store with live data updates.
- *
- * @module Relution.LiveData.SyncStore
- *
- * @type {*}
- * @extends Relution.LiveData.Store
- *
- * @example
- *
- * // The default configuration will save the complete model data as a json,
- * // and the offline change log to a local WebSql database, synchronize it
- * // trough REST calls with the server and receive live updates via a socket.io connection.
- *
- * var MyCollection = Relution.LiveData.Collection.extend({
- *      model: MyModel,
- *      url: 'http://myServer.io/myOrga/myApplication/myCollection',
- *      store: new Relution.LiveData.SyncStore( {
- *          useLocalStore:   true, // (default) store the data for offline use
- *          useSocketNotify: true, // (default) register at the server for live updates
- *          useOfflineChanges: true // (default) allow changes to the offline data
- *      })
- * });
- *
- */
-
-Relution.LiveData.SyncStore = Relution.LiveData.Store.extend({
-
-  _type: 'Relution.LiveData.SyncStore',
-
-  _selector: null,
-
-  endpoints: {},
-
-  options: null,
-
-  localStore: Relution.LiveData.WebSqlStore,
-
-  useLocalStore: true,
-  useSocketNotify: true,
-  useOfflineChanges: true,
-
-  typeMapping: {
-    'binary': 'text',
-    'date': 'string'
-  },
-
-  initialize: function (options) {
-    Relution.LiveData.Store.prototype.initialize.apply(this, arguments);
-    this.options = this.options || {};
-
-    this.options.useLocalStore = this.useLocalStore;
-    this.options.useSocketNotify = this.useSocketNotify;
-    this.options.useOfflineChanges = this.useOfflineChanges;
-    this.options.socketPath = this.socketPath;
-    this.options.localStore = this.localStore;
-    this.options.typeMapping = this.typeMapping;
-    if (this.options.useSocketNotify && typeof io !== 'object') {
-      console.log('Socket.IO not present !!');
-      this.options.useSocketNotify = false;
-    }
-    _.extend(this.options, options || {});
-  },
-
-  initCollection: function (collection) {
-    Relution.debug('Relution.LiveData.SyncStore.initCollection');
-    var url = collection.getUrlRoot();
-    if (url.charAt(url.length - 1) !== '/') {
-      url += '/';
-    }
-    var entity = this.getEntity(collection.entity);
-    if (url && entity) {
-      var name = entity.name;
-      var hash = Relution.LiveData.URLUtil.hashLocation(url);
-      var credentials = entity.credentials || collection.credentials || this.options.credentials;
-      var user = credentials && credentials.username ? credentials.username : '';
-      var channel = name + user + hash;
-      collection.channel = channel;
-
-      // get or create endpoint for this url
-      var endpoint = this.endpoints[hash];
-      if (!endpoint) {
-        var href = Relution.LiveData.URLUtil.getLocation(url);
-        endpoint = {};
-        endpoint.isConnected = false;
-        endpoint.baseUrl = url;
-        endpoint.readUrl = collection.getUrl();
-        endpoint.host = href.protocol + '//' + href.host;
-        endpoint.path = href.pathname;
-        endpoint.entity = entity;
-        endpoint.channel = channel;
-        endpoint.credentials = credentials  ;
-        endpoint.socketPath = this.options.socketPath;
-        endpoint.localStore = this.createLocalStore(endpoint);
-        endpoint.messages = this.createMsgCollection(endpoint);
-        endpoint.socket = this.createSocket(endpoint, name);
-        endpoint.info = this.fetchServerInfo(endpoint);
-        this.endpoints[hash] = endpoint;
-      }
-      collection.endpoint = endpoint;
-
-      if (this.options.useSocketNotify) {
-        // otherwise application code must fetch to update collection explicitly
-        collection.listenTo(this, 'sync:' + endpoint.channel, this.onMessageCollection, collection);
-      }
-    }
-  },
-
-  getEndpoint: function (url) {
-    if (url) {
-      var hash = Relution.LiveData.URLUtil.hashLocation(url);
-      return this.endpoints[hash];
-    }
-  },
-
-  createLocalStore: function (endpoint) {
-    if (this.options.useLocalStore) {
-      var entities = {};
-      entities[endpoint.entity.name] = _.extend(new Relution.LiveData.Entity(endpoint.entity), {
-        name: endpoint.channel
-      });
-      return this.options.localStore.create({
-        entities: entities
-      });
-    }
-  },
-
-  /**
-   * @description Here we save the changes in a Message local websql
-   * @param endpoint {string}
-   * @returns {*}
-   */
-  createMsgCollection: function (endpoint) {
-    if (this.options.useOfflineChanges) {
-      var entity = 'msg-' + endpoint.channel;
-      var entities = {};
-      entities[entity] = new Relution.LiveData.Entity({
-        name: entity,
-        idAttribute: 'id'
-      });
-      var messages = Relution.LiveData.Collection.design({
-        entity: entity,
-        store: this.options.localStore.create({
-          entities: entities
-        })
-      });
-      if (endpoint.isConnected) {
-        this._sendMessages(endpoint);
-      }
-      return messages;
-    }
-  },
-
-  createSocket: function (endpoint, name) {
-    Relution.debug('Relution.LiveData.SyncStore.createSocket');
-    if (this.options.useSocketNotify && endpoint && endpoint.socketPath) {
-      var that = this;
-      var url = endpoint.host;
-      var path = endpoint.path;
-      var href = Relution.LiveData.URLUtil.getLocation(url);
-      if (href.port === '') {
-        if (href.protocol === 'https:') {
-          url += ':443';
-        } else if (href.protocol === 'http:') {
-          url += ':80';
-        }
-      }
-
-      path = endpoint.socketPath;
-      // remove leading /
-      var resource = (path && path.indexOf('/') === 0) ? path.substr(1) : path;
-      var connectVo = {
-        resource: resource
-      };
-
-      if (this.options.socketQuery) {
-        connectVo.query = this.options.socketQuery;
-      }
-      endpoint.socket = io.connect(url, connectVo);
-      endpoint.socket.on('connect', function () {
-        that._bindChannel(endpoint, name);
-        return that.onConnect(endpoint).done();
-      });
-      endpoint.socket.on('disconnect', function () {
-        Relution.debug('socket.io: disconnect');
-        return that.onDisconnect(endpoint).done();
-      });
-      endpoint.socket.on(endpoint.channel, that.onMessageStore.bind(that, endpoint));
-      return endpoint.socket;
-    }
-  },
-
-  _bindChannel: function (endpoint, name) {
-    Relution.debug('Relution.LiveData.SyncStore._bindChannel');
-    var that = this;
-    if (endpoint && endpoint.socket) {
-      var channel = endpoint.channel;
-      var socket = endpoint.socket;
-      var time = this.getLastMessageTime(channel);
-      name = name || endpoint.entity.name;
-      socket.emit('bind', {
-        entity: name,
-        channel: channel,
-        time: time
-      });
-    }
-  },
-
-  getLastMessageTime: function (channel) {
-    if (!this.lastMesgTime) {
-      this.lastMesgTime = {};
-    } else if (this.lastMesgTime[channel] !== undefined) {
-      return this.lastMesgTime[channel];
-    }
-    var time = localStorage.getItem('__' + channel + 'lastMesgTime') || 0;
-    this.lastMesgTime[channel] = time;
-    return time;
-  },
-
-  setLastMessageTime: function (channel, time) {
-    if (!time || time > this.getLastMessageTime(channel)) {
-      localStorage.setItem('__' + channel + 'lastMesgTime', time);
-      this.lastMesgTime[channel] = time;
-    }
-  },
-
-  onConnect: function (endpoint) {
-    if (endpoint.isConnected) {
-      return Q.resolve();
-    }
-
-    endpoint.isConnected = true;
-    var that = this;
-    return this.fetchChanges(endpoint).then(function () {
-      return that._sendMessages(endpoint);
-    }).finally(function () {
-      if (endpoint.isConnected) {
-        that.trigger('connect:' + endpoint.channel);
-      }
-    });
-  },
-
-  onDisconnect: function (endpoint) {
-    if (!endpoint.isConnected) {
-      return Q.resolve();
-    }
-
-    endpoint.isConnected = false;
-    var that = this;
-    return Q.fcall(function () {
-      if (endpoint.socket && endpoint.socket.socket) {
-        endpoint.socket.socket.onDisconnect();
-      }
-    }).finally(function () {
-      if (!endpoint.isConnected) {
-        that.trigger('disconnect:' + endpoint.channel);
-      }
-    });
-  },
-
-  _fixMessage: function (endpoint, msg) {
-    if (msg.data && !msg.data[endpoint.entity.idAttribute] && msg.data._id) {
-      msg.data[endpoint.entity.idAttribute] = msg.data._id; // server bug!
-    } else if (!msg.data && msg.method === 'delete' && msg[endpoint.entity.idAttribute]) {
-      msg.data = {};
-      msg.data[endpoint.entity.idAttribute] = msg[endpoint.entity.idAttribute]; // server bug!
-    }
-  },
-
-  onMessageStore: function (endpoint, msg) {
-    // this is called by the store itself for a particular endpoint!
-    var that = this;
-    if (!msg || !msg.method) {
-      return Q.reject('no message or method given');
-    }
-    this._fixMessage(endpoint, msg);
-
-    var q;
-    var channel = endpoint.channel;
-    if (endpoint.localStore) {
-      // first update the local store by forming a model and invoking sync
-      var options = _.defaults({
-        store: endpoint.localStore,
-        entity: endpoint.entity
-      }, that.options);
-      var model = new Relution.LiveData.Model(msg.data, _.extend({
-        parse: true
-      }, options));
-      q = endpoint.localStore.sync(msg.method, model, _.extend(options, {
-        merge: msg.method === 'patch',
-        success: function (result) {
-          // update all collections listening
-          that.trigger('sync:' + channel, msg); // onMessageCollection
-        },
-        error: function (error) {
-          // report error as event on store
-          that.trigger('error:' + channel, error);
-        }
-      }));
-    } else {
-      // just update all collections listening
-      q = Q.fcall(function () {
-        return that.trigger('sync:' + channel, msg); // onMessageCollection
-      });
-    }
-
-    // finally set the message time
-    return q.then(function () {
-      if (msg.time) {
-        that.setLastMessageTime(channel, msg.time);
-      }
-    }).thenResolve(msg);
-  },
-
-  onMessageCollection: function (msg) {
-    // this is a collection listening on channel events of store here!
-    var options = {
-      collection: this,
-      entity: this.entity,
-      merge: msg.method === 'patch',
-      parse: true,
-      fromMessage: true
-    };
-    var id = this.modelId(msg.data);
-    if (id === 'all') {
-      this.reset(msg.data || {}, options);
-      return;
-    }
-
-    var model = id && this.get(id);
-    switch (msg.method) {
-      case 'create':
-      case 'update':
-        if (!model) {
-          // create model in case it does not exist
-          model = new options.collection.model(msg.data, options);
-          if (model.validationError) {
-            this.trigger('invalid', this, model.validationError, options);
-          } else {
-            this.add(model, options);
-          }
-          break;
-        }
-        /* falls through */
-      case 'patch':
-        if (model) {
-          // update model unless it is filtered
-          model.set(msg.data, options);
-        }
-        break;
-      case 'delete':
-        if (model) {
-          // remove model unless it is filtered
-          this.remove(model, options);
-        }
-        break;
-    }
-  },
-
-  sync: function (method, model, options) {
-    Relution.debug('Relution.LiveData.SyncStore.sync');
-    options = options || {};
-
-    var endpoint;
-    try {
-      endpoint = this.getEndpoint(model.getUrlRoot() /*throws urlError*/);
-      if (!endpoint) {
-        throw new Error('no endpoint');
-      }
-    } catch(error) {
-      return Q.reject(this.handleError(options, error) || error);
-    }
-
-    if (Relution.LiveData.isModel(model) && !model.id) {
-      model.set(model.idAttribute, new Relution.LiveData.ObjectID().toHexString());
-    }
-
-    var channel = endpoint.channel;
-    var time = this.getLastMessageTime(channel);
-    // only send read messages if no other store can do this or for initial load
-    if (method === 'read' && endpoint.localStore && time && !options.reset) {
-      // read data from localStore and fetch changes remote
-      var opts = _.clone(options);
-      opts.store = endpoint.localStore;
-      opts.entity = endpoint.entity;
-      delete opts.success;
-      delete opts.error;
-      var that = this;
-      return endpoint.localStore.sync(method, model, opts).then(function (resp) {
-        // load changes only (will happen AFTER success callback is invoked,
-        // but returned promise will resolve only after changes were processed.
-        // This is because backbone success callback alters the collection...
-        return that.fetchChanges(endpoint).catch(function (error) {
-          that.trigger('error:' + channel, error); // can not do much about it...
-        }).thenResolve(that.handleSuccess(options, resp) || resp); // caller expects original XHR response as changes body data is NOT compatible
-      }, function () {
-        // fall-back to loading full data set
-        return that._addMessage(method, model, options, endpoint);
-      });
-    }
-
-    // do backbone rest
-    return this._addMessage(method, model, options, endpoint);
-  },
-
-  _addMessage: function (method, model, options, endpoint) {
-    var that = this;
-    if (method && model) {
-      var changes = model.changedSinceSync;
-      var data = null;
-      var storeMsg = true;
-      switch (method) {
-        case 'update':
-        case 'create':
-          data = options.attrs || model.toJSON();
-          break;
-
-        case 'patch':
-          if (_.isEmpty(changes)) {
-            return;
-          }
-          data = model.toJSON({attrs: changes});
-          break;
-
-        case 'delete':
-          break;
-
-        default:
-          storeMsg = false;
-          break;
-      }
-      var msg = {
-        _id: model.id,
-        id: model.id,
-        method: method,
-        data: data,
-        channel: endpoint.channel
-      };
-
-      var q = Q.resolve(msg);
-      var qMessage;
-      if (storeMsg) {
-        // store and potentially merge message
-        qMessage = this.storeMessage(endpoint, q);
-        q = qMessage.then(function (message) {
-          // in case of merging, this result could be different
-          return message.attributes;
-        });
-      }
-      return q.then(function (msg) {
-        // pass in qMessage so that deletion of stored message can be scheduled
-        return that._emitMessage(endpoint, msg, options, model, qMessage);
-      });
-    }
-  },
-
-  _emitMessage: function (endpoint, msg, options, model, qMessage) {
-    var that = this;
-    var channel = endpoint.channel;
-    var qAjax = this._ajaxMessage(endpoint, msg, options, model);
-    var q = qAjax;
-
-    if (qMessage) {
-      // following takes care of offline change store
-      q = q.then(function (data) {
-        // success, remove message stored, if any
-        return that.removeMessage(endpoint, msg, qMessage).then(data, function (error) {
-          that.trigger('error:' + channel, error); // can not do much about it...
-          return data;
-        }).thenResolve(data); // resolve again yielding data
-      }, function (xhr) {
-        // failure eventually caught by offline changes
-        if (!xhr.responseText && that.options.useOfflineChanges) {
-          // this seams to be only a connection problem, so we keep the message and call success
-          return Q.resolve(msg.data);
-        } else {
-          // keep rejection as is
-          return Q.reject.apply(Q, arguments);
-        }
-      });
-    }
-
-    q = this._applyResponse(q, endpoint, msg, options, model);
-
-    return q.finally(function () {
-      // do some connection handling
-      return qAjax.then(function () {
-        // trigger reconnection when disconnected
-        if (!endpoint.isConnected) {
-          return that.onConnect(endpoint);
-        }
-      }, function (xhr) {
-        // trigger disconnection when disconnected
-        if (!xhr.responseText && endpoint.isConnected) {
-          return that.onDisconnect(endpoint);
-        }
-      });
-    });
-  },
-
-  _ajaxMessage: function (endpoint, msg, options, model) {
-    var channel = endpoint.channel;
-    var that = this;
-    var url = Relution.LiveData.isModel(model) || msg.method !== 'read' ? endpoint.baseUrl : endpoint.readUrl;
-    if (msg.id && msg.method !== 'create') {
-      url += (url.charAt(url.length - 1) === '/' ? '' : '/' ) + msg.id;
-    }
-    Relution.debug('ajaxMessage ' + msg.method + ' ' + url);
-    return model.sync(msg.method, model, {
-      // must not take arbitrary options as these won't be replayed on reconnect
-      url: url,
-      attrs: msg.data,
-      store: {},
-      credentials: options ? options.credentials : undefined,
-      // error propagation
-      error: that.options.error
-    });
-  },
-
-  _applyResponse: function (qXHR, endpoint, msg, options, model) {
-    var channel = endpoint.channel;
-    var that = this;
-    return qXHR.then(function (data) {
-      // delete on server does not respond a body
-      if (!data && msg.method === 'delete') {
-        data = msg.data;
-      }
-
-      // update local store state
-      if (data) {
-        // no data if server asks not to alter state
-        // that.setLastMessageTime(channel, msg.time);
-        var promises = [];
-        if (msg.method !== 'read') {
-          promises.push(that.onMessageStore(endpoint, data === msg.data ? msg : _.defaults({
-            data: data // just accepts new data
-          }, msg)));
-        } else if (Relution.LiveData.isCollection(model) && _.isArray(data)) {
-          // synchronize the collection contents with the data read
-          var ids = {};
-          model.models.forEach(function (m) {
-            ids[m.id] = m;
-          });
-          data.forEach(function (d) {
-            if (d) {
-              var id = d[endpoint.entity.idAttribute] || d._id;
-              var m = ids[id];
-              if (m) {
-                // update the item
-                delete ids[id]; // so that it is deleted below
-                if (!_.isEqual(_.pick.call(m, m.attributes, Object.keys(d)), d)) {
-                  // above checked that all attributes in d are in m with equal values and found some mismatch
-                  promises.push(that.onMessageStore(endpoint, {
-                    id: id,
-                    method: 'update',
-                    data: d
-                  }));
+            Store.prototype.setEntities = function (entities) {
+                this.entities = {};
+                for (var name in entities) {
+                    var entity = LiveData.Entity.from(entities[name], {
+                        store: this,
+                        typeMapping: this.options.typeMapping
+                    });
+                    entity.name = entity.name || name;
+                    // connect collection and model to this store
+                    var collection = entity.collection || LiveData.Collection.extend({ model: LiveData.Model.extend({}) });
+                    var model = collection.prototype.model;
+                    // set new entity and name
+                    collection.prototype.entity = model.prototype.entity = name;
+                    collection.prototype.store = model.prototype.store = this;
+                    entity.idAttribute = entity.idAttribute || model.prototype.idAttribute;
+                    this.entities[name] = entity;
                 }
-              } else {
-                // create the item
-                promises.push(that.onMessageStore(endpoint, {
-                  id: id,
-                  method: 'create',
-                  data: d
-                }));
-              }
+            };
+            Store.prototype.getEntity = function (obj) {
+                if (obj) {
+                    var entity = obj.entity || obj;
+                    var name = _.isString(entity) ? entity : entity.name;
+                    if (name) {
+                        return this.entities[name] || (entity && entity.name ? entity : { name: name });
+                    }
+                }
+            };
+            Store.prototype.getCollection = function (entity) {
+                if (_.isString(entity)) {
+                    entity = this.entities[entity];
+                }
+                if (entity && entity.collection) {
+                    if (Relution.LiveData.Collection.prototype.isPrototypeOf(entity.collection)) {
+                        return entity.collection;
+                    }
+                    else {
+                        return new entity.collection();
+                    }
+                }
+            };
+            Store.prototype.createModel = function (entity, attrs) {
+                if (_.isString(entity)) {
+                    entity = this.entities[entity];
+                }
+                if (entity && entity.collection) {
+                    var Model = entity.collection.model || entity.collection.prototype.model;
+                    if (Model) {
+                        return new Model(attrs);
+                    }
+                }
+            };
+            Store.prototype.getArray = function (data) {
+                if (_.isArray(data)) {
+                    return data;
+                }
+                else if (Relution.LiveData.isCollection(data)) {
+                    return data.models;
+                }
+                return _.isObject(data) ? [data] : [];
+            };
+            Store.prototype.getDataArray = function (data) {
+                var array = [];
+                if (_.isArray(data) || Backbone.Collection.prototype.isPrototypeOf(data)) {
+                    _.each(data, function (d) {
+                        var attrs = this.getAttributes(d);
+                        if (attrs) {
+                            array.push(attrs);
+                        }
+                    });
+                }
+                else {
+                    var attrs = this.getAttributes(data);
+                    if (attrs) {
+                        array.push(this.getAttributes(attrs));
+                    }
+                }
+                return array;
+            };
+            Store.prototype.getAttributes = function (model) {
+                if (Backbone.Model.prototype.isPrototypeOf(model)) {
+                    return model.attributes;
+                }
+                return _.isObject(model) ? model : null;
+            };
+            Store.prototype.initModel = function (model) {
+                // may be overwritten
+            };
+            Store.prototype.initCollection = function (collection) {
+                // may be overwritten
+            };
+            Store.prototype.initEntity = function (entity) {
+                // may be overwritten
+            };
+            Store.prototype.sync = function (method, model, options) {
+                // must be overwritten
+                return Q.reject(new Error('not implemented!')); // purely abstract
+            };
+            /**
+             *
+             * @param collection usally a collection, but can also be a model
+             * @param options
+             */
+            Store.prototype.fetch = function (collection, options) {
+                if (collection && !collection.models && !collection.attributes && !options) {
+                    options = collection;
+                }
+                if ((!collection || (!collection.models && !collection.attributes)) && options && options.entity) {
+                    collection = this.getCollection(options.entity);
+                }
+                if (collection && collection.fetch) {
+                    var opts = _.extend({}, options || {}, { store: this });
+                    return collection.fetch(opts);
+                }
+            };
+            Store.prototype.create = function (collection, model, options) {
+                if (collection && !collection.models && !options) {
+                    model = collection;
+                    options = model;
+                }
+                if ((!collection || !collection.models) && options && options.entity) {
+                    collection = this.getCollection(options.entity);
+                }
+                if (collection && collection.create) {
+                    var opts = _.extend({}, options || {}, { store: this });
+                    collection.create(model, opts);
+                }
+            };
+            Store.prototype.save = function (model, attr, options) {
+                if (model && !model.attributes && !options) {
+                    attr = model;
+                    options = attr;
+                }
+                if ((!model || !model.attributes) && options && options.entity) {
+                    model = this.createModel(options.entity);
+                }
+                if (model && model.save) {
+                    var opts = _.extend({}, options || {}, { store: this });
+                    model.save(attr, opts);
+                }
+            };
+            Store.prototype.destroy = function (model, options) {
+                if (model && model.destroy) {
+                    var opts = _.extend({}, options || {}, { store: this });
+                    model.destroy(opts);
+                }
+            };
+            Store.prototype._checkEntity = function (obj, entity) {
+                if (!Relution.LiveData.isEntity(entity)) {
+                    var error = Relution.LiveData.Store.CONST.ERROR_NO_ENTITY;
+                    console.error(error);
+                    this.handleError(obj, error);
+                    return false;
+                }
+                return true;
+            };
+            Store.prototype._checkData = function (obj, data) {
+                if ((!_.isArray(data) || data.length === 0) && !_.isObject(data)) {
+                    var error = Relution.LiveData.Store.CONST.ERROR_NO_DATA;
+                    console.error(error);
+                    this.handleError(obj, error);
+                    return false;
+                }
+                return true;
+            };
+            Store.prototype.handleSuccess = function (obj) {
+                var args = [];
+                for (var _i = 1; _i &lt; arguments.length; _i++) {
+                    args[_i - 1] = arguments[_i];
+                }
+                if (obj.success) {
+                    this.handleCallback.apply(this, [obj.success].concat(args));
+                }
+                if (obj.finish) {
+                    this.handleCallback.apply(this, [obj.finish].concat(args));
+                }
+            };
+            Store.prototype.handleError = function (obj) {
+                var args = [];
+                for (var _i = 1; _i &lt; arguments.length; _i++) {
+                    args[_i - 1] = arguments[_i];
+                }
+                if (obj.error) {
+                    this.handleCallback.apply(this, [obj.error].concat(args));
+                }
+                if (obj.finish) {
+                    this.handleCallback.apply(this, [obj.finish].concat(args));
+                }
+            };
+            Store.extend = LiveData.extend;
+            Store.create = LiveData.create;
+            Store.design = LiveData.design;
+            Store.CONST = {
+                ERROR_NO_ENTITY: 'No valid entity specified. ',
+                ERROR_NO_DATA: 'No data passed. ',
+                ERROR_LOAD_DATA: 'Error while loading data from store. ',
+                ERROR_SAVE_DATA: 'Error while saving data to the store. ',
+                ERROR_LOAD_IDS: 'Error while loading ids from store. ',
+                ERROR_SAVE_IDS: 'Error while saving ids to the store. '
+            };
+            return Store;
+        })();
+        LiveData.Store = Store;
+        _.extend(Store.prototype, Backbone.Events, LiveData.Object);
+    })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
+})(Relution || (Relution = {}));
+//# sourceMappingURL=store.js.map
+/**
+ * local_storage.ts
+ *
+ * Created by Thomas Beckmann on 24.06.2015
+ * Copyright (c)
+ * 2015
+ * M-Way Solutions GmbH. All rights reserved.
+ * http://www.mwaysolutions.com
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are not permitted.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+/* jshint indent: 4 */
+/* jshint curly: false */
+/* jshint newcap: false */
+/* jshint -W004: '%' is already defined. */
+/// &lt;reference path="../../core/livedata.d.ts" />
+/// &lt;reference path="store.ts" />
+var __extends = this.__extends || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    __.prototype = b.prototype;
+    d.prototype = new __();
+};
+var Relution;
+(function (Relution) {
+    var LiveData;
+    (function (LiveData) {
+        /**
+         * The Relution.LiveData.LocalStorageStore can be used to store model collection into
+         * the localStorage
+         *
+         * @module Relution.LiveData.LocalStorageStore
+         *
+         * @type {*}
+         * @extends Relution.LiveData.Store
+         *
+         * @example
+         *
+         * // The LocalStorageStore will save each model data as a json under his id,
+         * // and keeps all id's under an extra key for faster access
+         *
+         * var MyCollection = Relution.LiveData.Collection.extend({
+         *      store: Relution.LiveData.LocalStorageStore.create(),
+         *      entity: 'myEntityName'
+         * });
+         *
+         */
+        var LocalStorageStore = (function (_super) {
+            __extends(LocalStorageStore, _super);
+            function LocalStorageStore() {
+                _super.apply(this, arguments);
+                this.ids = {};
             }
-          });
-          Object.keys(ids).forEach(function (id) {
-            // delete the item
-            var m = ids[id];
-            promises.push(that.onMessageStore(endpoint, {
-              id: id,
-              method: 'delete',
-              data: m.attributes
-            }));
-          });
-        } else {
-          // trigger an update to load the data read
-          var array = _.isArray(data) ? data : [data];
-          for (var i = 0; i &lt; array.length; i++) {
-            data = array[i];
-            if (data) {
-              promises.push(that.onMessageStore(endpoint, {
-                id: data[endpoint.entity.idAttribute] || data._id,
-                method: 'update',
-                data: data
-              }));
+            LocalStorageStore.prototype.sync = function (method, model, options) {
+                options = options || {};
+                var that = this;
+                var entity = that.getEntity(model.entity || options.entity);
+                var attrs;
+                if (entity && model) {
+                    var id = model.id || (method === 'create' ? new Relution.LiveData.ObjectID().toHexString() : null);
+                    attrs = options.attrs || model.toJSON(options);
+                    switch (method) {
+                        case 'patch':
+                        case 'update':
+                        case 'create':
+                            if (method !== 'create') {
+                                attrs = _.extend(that._getItem(entity, id) || {}, attrs);
+                            }
+                            if (model.id !== id && model.idAttribute) {
+                                attrs[model.idAttribute] = id;
+                            }
+                            that._setItem(entity, id, attrs);
+                            break;
+                        case 'delete':
+                            that._removeItem(entity, id);
+                            break;
+                        case 'read':
+                            if (id) {
+                                attrs = that._getItem(entity, id);
+                            }
+                            else {
+                                attrs = [];
+                                var ids = that._getItemIds(entity);
+                                for (id in ids) {
+                                    var itemData = that._getItem(entity, id);
+                                    if (itemData) {
+                                        attrs.push(itemData);
+                                    }
+                                }
+                            }
+                            break;
+                        default:
+                            return;
+                    }
+                }
+                return Q.resolve(attrs).then(function (attrs) {
+                    if (attrs) {
+                        return that.handleSuccess(options, attrs) || attrs;
+                    }
+                    else {
+                        return that.handleError(options, Relution.LiveData.Store.CONST.ERROR_NO_ENTITY) || Q.reject(Relution.LiveData.Store.CONST.ERROR_NO_ENTITY);
+                    }
+                });
+            };
+            LocalStorageStore.prototype.drop = function (options) {
+                var entity = this.getEntity(options);
+                if (entity && entity.name) {
+                    var keys = this._findAllKeys(entity);
+                    for (var i = 0; i &lt; keys.length; i++) {
+                        localStorage.removeItem(keys[i]);
+                    }
+                    localStorage.removeItem('__ids__' + entity.name);
+                    this.handleSuccess(options);
+                }
+                else {
+                    this.handleError(options, Relution.LiveData.Store.CONST.ERROR_NO_ENTITY);
+                }
+            };
+            LocalStorageStore.prototype._getKey = function (entity, id) {
+                return '_' + entity.name + '_' + id;
+            };
+            LocalStorageStore.prototype._getItem = function (entity, id) {
+                var attrs;
+                if (entity && id) {
+                    try {
+                        attrs = JSON.parse(localStorage.getItem(this._getKey(entity, id)));
+                        if (attrs) {
+                            entity.setId(attrs, id); // fix id
+                        }
+                        else {
+                            this._delItemId(entity, id);
+                        }
+                    }
+                    catch (e) {
+                        console.error(Relution.LiveData.Store.CONST.ERROR_LOAD_DATA + e.message);
+                    }
+                }
+                return attrs;
+            };
+            LocalStorageStore.prototype._setItem = function (entity, id, attrs) {
+                if (entity && id && attrs) {
+                    try {
+                        localStorage.setItem(this._getKey(entity, id), JSON.stringify(attrs));
+                        this._addItemId(entity, id);
+                    }
+                    catch (e) {
+                        console.error(Relution.LiveData.Store.CONST.ERROR_SAVE_DATA + e.message);
+                    }
+                }
+            };
+            LocalStorageStore.prototype._removeItem = function (entity, id) {
+                if (entity && id) {
+                    localStorage.removeItem(this._getKey(entity, id));
+                    this._delItemId(entity, id);
+                }
+            };
+            LocalStorageStore.prototype._addItemId = function (entity, id) {
+                var ids = this._getItemIds(entity);
+                if (!(id in ids)) {
+                    ids[id] = '';
+                    this._saveItemIds(entity, ids);
+                }
+            };
+            LocalStorageStore.prototype._delItemId = function (entity, id) {
+                var ids = this._getItemIds(entity);
+                if (id in ids) {
+                    delete ids[id];
+                    this._saveItemIds(entity, ids);
+                }
+            };
+            LocalStorageStore.prototype._findAllKeys = function (entity) {
+                var keys = [];
+                var prefixItem = this._getKey(entity, '');
+                if (prefixItem) {
+                    var key, len = localStorage.length;
+                    for (var i = 0; i &lt; len; i++) {
+                        key = localStorage.key(i);
+                        if (key && key === prefixItem) {
+                            keys.push(key);
+                        }
+                    }
+                }
+                return keys;
+            };
+            LocalStorageStore.prototype._getItemIds = function (entity) {
+                try {
+                    var key = '__ids__' + entity.name;
+                    if (!this.ids[entity.name]) {
+                        this.ids[entity.name] = JSON.parse(localStorage.getItem(key)) || {};
+                    }
+                    return this.ids[entity.name];
+                }
+                catch (e) {
+                    console.error(Relution.LiveData.Store.CONST.ERROR_LOAD_IDS + e.message);
+                }
+            };
+            LocalStorageStore.prototype._saveItemIds = function (entity, ids) {
+                try {
+                    var key = '__ids__' + entity.name;
+                    localStorage.setItem(key, JSON.stringify(ids));
+                }
+                catch (e) {
+                    console.error(Relution.LiveData.Store.CONST.ERROR_SAVE_IDS + e.message);
+                }
+            };
+            return LocalStorageStore;
+        })(LiveData.Store);
+        LiveData.LocalStorageStore = LocalStorageStore;
+    })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
+})(Relution || (Relution = {}));
+//# sourceMappingURL=local_storage.js.map
+/**
+ * web_sql.ts
+ *
+ * Created by Thomas Beckmann on 24.06.2015
+ * Copyright (c)
+ * 2015
+ * M-Way Solutions GmbH. All rights reserved.
+ * http://www.mwaysolutions.com
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are not permitted.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+/* jshint indent: 4 */
+/* jshint curly: false */
+/* jshint newcap: false */
+/* jshint -W004: '%' is already defined. */
+/// &lt;reference path="../../core/livedata.d.ts" />
+/// &lt;reference path="store.ts" />
+var __extends = this.__extends || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    __.prototype = b.prototype;
+    d.prototype = new __();
+};
+var Relution;
+(function (Relution) {
+    var LiveData;
+    (function (LiveData) {
+        /**
+         * The Relution.LiveData.WebSqlStore can be used to store model collection into
+         * the webSql database
+         *
+         * @module Relution.LiveData.WebSqlStore
+         *
+         * @type {*}
+         * @extends Relution.LiveData.Store
+         *
+         * @example
+         *
+         * // The default configuration will save the complete model data as json
+         * // into a database column with the name "data"
+         *
+         * var MyCollection = Relution.LiveData.Collection.extend({
+         *      model: MyModel,
+         *      entity: 'MyTableName',
+         *      store: new Relution.LiveData.WebSqlStorageStore()
+         * });
+         *
+         * // If you want to use specific columns you can specify the fields
+         * // in the entity of your model like this:
+         *
+         * var MyModel = Relution.LiveData.Model.extend({
+         *      idAttribute: 'id',
+         *      fields: {
+         *          id:          { type: Relution.LiveData.DATA.TYPE.STRING,  required: true, index: true },
+         *          sureName:    { name: 'USERNAME', type: Relution.LiveData.DATA.TYPE.STRING },
+         *          firstName:   { type: Relution.LiveData.DATA.TYPE.STRING,  length: 200 },
+         *          age:         { type: Relution.LiveData.DATA.TYPE.INTEGER }
+         *      }
+         * });
+         *
+         *
+         */
+        var WebSqlStore = (function (_super) {
+            __extends(WebSqlStore, _super);
+            function WebSqlStore(options) {
+                _super.call(this, _.extend({
+                    name: 'relution-livedata',
+                    size: 1024 * 1024,
+                    version: '1.0',
+                    typeMapping: (function () {
+                        var map = {};
+                        map[Relution.LiveData.DATA.TYPE.OBJECTID] = Relution.LiveData.DATA.TYPE.STRING;
+                        map[Relution.LiveData.DATA.TYPE.DATE] = Relution.LiveData.DATA.TYPE.STRING;
+                        map[Relution.LiveData.DATA.TYPE.OBJECT] = Relution.LiveData.DATA.TYPE.TEXT;
+                        map[Relution.LiveData.DATA.TYPE.ARRAY] = Relution.LiveData.DATA.TYPE.TEXT;
+                        map[Relution.LiveData.DATA.TYPE.BINARY] = Relution.LiveData.DATA.TYPE.TEXT;
+                        return map;
+                    })(),
+                    sqlTypeMapping: (function () {
+                        var map = {};
+                        map[Relution.LiveData.DATA.TYPE.STRING] = 'varchar(255)';
+                        map[Relution.LiveData.DATA.TYPE.TEXT] = 'text';
+                        map[Relution.LiveData.DATA.TYPE.OBJECT] = 'text';
+                        map[Relution.LiveData.DATA.TYPE.ARRAY] = 'text';
+                        map[Relution.LiveData.DATA.TYPE.FLOAT] = 'float';
+                        map[Relution.LiveData.DATA.TYPE.INTEGER] = 'integer';
+                        map[Relution.LiveData.DATA.TYPE.DATE] = 'varchar(255)';
+                        map[Relution.LiveData.DATA.TYPE.BOOLEAN] = 'boolean';
+                        return map;
+                    })()
+                }, options));
+                this.db = null;
+                this.dataField = {
+                    name: 'data',
+                    type: 'text',
+                    required: true
+                };
+                this.idField = {
+                    name: 'id',
+                    type: 'string',
+                    required: true
+                };
+                var that = this;
+                this._openDb({
+                    error: function (error) {
+                        console.error(error);
+                        that.trigger('error', error);
+                    }
+                });
             }
-          }
-        }
-        return Q.all(promises).thenResolve(data); // delayed till operations complete
-      }
-    }).then(function (response) {
-      // invoke success callback, if any
-      return that.handleSuccess(options, response) || response;
-    }, function (error) {
-      // invoke error callback, if any
-      return that.handleError(options, error) || Q.reject(error);
-    });
-  },
-
-  fetchChanges: function (endpoint) {
-    var that = this;
-    var channel = endpoint ? endpoint.channel : '';
-    var time = that.getLastMessageTime(channel);
-    if (endpoint && endpoint.baseUrl && channel && time) {
-      var changes = new Relution.LiveData.Collection();
-      return changes.fetch({
-        url: endpoint.baseUrl + 'changes/' + time,
-        success: function (model, response, options) {
-          changes.each(function (change) {
-            var msg = change.attributes;
-            that.onMessageStore(endpoint, msg);
-          });
-          return response || options.xhr;
-        },
-        credentials: endpoint.credentials
-      });
-    } else {
-      return Q.resolve();
-    }
-  },
-
-  fetchServerInfo: function (endpoint) {
-    var that = this;
-    if (endpoint && endpoint.baseUrl) {
-      var info = new Relution.LiveData.Model();
-      var time = that.getLastMessageTime(endpoint.channel);
-      var url = endpoint.baseUrl;
-      if (url.charAt((url.length - 1)) !== '/') {
-        url += '/';
-      }
-      return info.fetch({
-        url: url + 'info',
-        success: function (model, response, options) {
-          //@todo why we set a server time here ?
-          if (!time && info.get('time')) {
-            that.setLastMessageTime(endpoint.channel, info.get('time'));
-          }
-          if (!endpoint.socketPath && info.get('socketPath')) {
-            endpoint.socketPath = info.get('socketPath');
-            var name = info.get('entity') || endpoint.entity.name;
-            if (that.options.useSocketNotify) {
-              endpoint.socket = that.createSocket(endpoint, name);
+            WebSqlStore.prototype.sync = function (method, model, options) {
+                options = options || {};
+                var that = this;
+                var q = Q.defer();
+                var opts = _.extend({
+                    entity: model.entity || options.entity
+                }, options || {}, {
+                    success: function (response) {
+                        var result = that.handleSuccess(options, response) || response;
+                        q.resolve(result);
+                        return result;
+                    },
+                    error: function (error) {
+                        var result = that.handleError(options, error);
+                        if (result) {
+                            q.resolve(result);
+                            return result;
+                        }
+                        else {
+                            q.reject(error);
+                        }
+                    }
+                });
+                switch (method) {
+                    case 'create':
+                        that._checkTable(opts, function () {
+                            that._insertOrReplace(model, opts);
+                        });
+                        break;
+                    case 'update':
+                    case 'patch':
+                        that._checkTable(opts, function () {
+                            that._insertOrReplace(model, opts);
+                        });
+                        break;
+                    case 'delete':
+                        that._checkTable(opts, function () {
+                            that._delete(model, opts);
+                        });
+                        break;
+                    case 'read':
+                        that._checkTable(opts, function () {
+                            that._select(model, opts);
+                        });
+                        break;
+                    default:
+                        break;
+                }
+                return q.promise;
+            };
+            WebSqlStore.prototype.select = function (options) {
+                this._select(null, options);
+            };
+            WebSqlStore.prototype.drop = function (options) {
+                this._dropTable(options);
+            };
+            WebSqlStore.prototype.createTable = function (options) {
+                this._createTable(options);
+            };
+            WebSqlStore.prototype.execute = function (options) {
+                this._executeSql(options);
+            };
+            /**
+             * @private
+             */
+            WebSqlStore.prototype._openDb = function (options) {
+                var error, dbError;
+                /* openDatabase(db_name, version, description, estimated_size, callback) */
+                if (!this.db) {
+                    try {
+                        if (!global.openDatabase) {
+                            error = 'Your browser does not support WebSQL databases.';
+                        }
+                        else {
+                            this.db = global.openDatabase(this.options.name, '', '', this.options.size);
+                            if (this.entities) {
+                                for (var key in this.entities) {
+                                    this._createTable({ entity: this.entities[key] });
+                                }
+                            }
+                        }
+                    }
+                    catch (e) {
+                        dbError = e;
+                    }
+                }
+                if (this.db) {
+                    if (this.options.version && this.db.version !== this.options.version) {
+                        this._updateDb(options);
+                    }
+                    else {
+                        this.handleSuccess(options, this.db);
+                    }
+                }
+                else if (dbError === 2 || dbError === '2') {
+                    // Version number mismatch.
+                    this._updateDb(options);
+                }
+                else {
+                    if (!error && dbError) {
+                        error = dbError;
+                    }
+                    this.handleSuccess(options, error);
+                }
+            };
+            WebSqlStore.prototype._updateDb = function (options) {
+                var error;
+                var lastSql;
+                var that = this;
+                try {
+                    if (!this.db) {
+                        this.db = global.openDatabase(this.options.name, '', '', this.options.size);
+                    }
+                    try {
+                        var arSql = this._sqlUpdateDatabase(this.db.version, this.options.version);
+                        this.db.changeVersion(this.db.version, this.options.version, function (tx) {
+                            _.each(arSql, function (sql) {
+                                Relution.debug('sql statement: ' + sql);
+                                lastSql = sql;
+                                tx.executeSql(sql);
+                            });
+                        }, function (msg) {
+                            that.handleError(options, msg, lastSql);
+                        }, function () {
+                            that.handleSuccess(options, that.db);
+                        });
+                    }
+                    catch (e) {
+                        error = e.message;
+                        console.error('webSql change version failed, DB-Version: ' + this.db.version);
+                    }
+                }
+                catch (e) {
+                    error = e.message;
+                }
+                if (error) {
+                    this.handleError(options, error);
+                }
+            };
+            WebSqlStore.prototype._sqlUpdateDatabase = function (oldVersion, newVersion) {
+                // create sql array, simply drop and create the database
+                var sql = [];
+                if (this.entities) {
+                    for (var name in this.entities) {
+                        var entity = this.entities[name];
+                        sql.push(this._sqlDropTable(entity.name));
+                        sql.push(this._sqlCreateTable(entity));
+                    }
+                }
+                return sql;
+            };
+            WebSqlStore.prototype._sqlDropTable = function (name) {
+                return 'DROP TABLE IF EXISTS \'' + name + '\'';
+            };
+            WebSqlStore.prototype._isAutoincrementKey = function (entity, key) {
+                if (entity && key) {
+                    var column = this.getField(entity, key);
+                    return column && column.type === Relution.LiveData.DATA.TYPE.INTEGER;
+                }
+            };
+            WebSqlStore.prototype._sqlPrimaryKey = function (entity, keys) {
+                if (keys && keys.length === 1) {
+                    if (this._isAutoincrementKey(entity, keys[0])) {
+                        return keys[0] + ' INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE';
+                    }
+                    else {
+                        return keys[0] + ' PRIMARY KEY ASC UNIQUE';
+                    }
+                }
+                return '';
+            };
+            WebSqlStore.prototype._sqlConstraint = function (entity, keys) {
+                if (keys && keys.length > 1) {
+                    return 'PRIMARY KEY (' + keys.join(',') + ') ON CONFLICT REPLACE';
+                }
+                return '';
+            };
+            WebSqlStore.prototype._sqlCreateTable = function (entity) {
+                var that = this;
+                var keys = entity.getKeys();
+                var primaryKey = keys.length === 1 ? this._sqlPrimaryKey(entity, keys) : '';
+                var constraint = keys.length > 1 ? this._sqlConstraint(entity, keys) : (entity.constraint || '');
+                var columns = '';
+                var fields = this.getFields(entity);
+                _.each(fields, function (field) {
+                    // skip ID, it is defined manually above
+                    if (!primaryKey || field.name !== keys[0]) {
+                        // only add valid types
+                        var attr = that._dbAttribute(field);
+                        if (attr) {
+                            columns += (columns ? ', ' : '') + attr;
+                        }
+                    }
+                });
+                if (!columns) {
+                    columns = this._dbAttribute(this.dataField);
+                }
+                var sql = 'CREATE TABLE IF NOT EXISTS \'' + entity.name + '\' (';
+                sql += primaryKey ? primaryKey + ', ' : '';
+                sql += columns;
+                sql += constraint ? ', ' + constraint : '';
+                sql += ');';
+                return sql;
+            };
+            WebSqlStore.prototype._sqlDelete = function (options, entity) {
+                var sql = 'DELETE FROM \'' + entity.name + '\'';
+                var where = this._sqlWhere(options, entity) || this._sqlWhereFromData(options, entity);
+                if (where) {
+                    sql += ' WHERE ' + where;
+                }
+                sql += options.and ? ' AND ' + options.and : '';
+                return sql;
+            };
+            WebSqlStore.prototype._sqlWhere = function (options, entity) {
+                this._selector = null;
+                var sql = '';
+                if (_.isString(options.where)) {
+                    sql = options.where;
+                }
+                else if (_.isObject(options.where)) {
+                    this._selector = Relution.LiveData.SqlSelector.create(options.where, entity);
+                    sql = this._selector.buildStatement();
+                }
+                return sql;
+            };
+            WebSqlStore.prototype._sqlWhereFromData = function (options, entity) {
+                var that = this;
+                var ids = [];
+                if (options && options.models && entity && entity.idAttribute) {
+                    var id, key = entity.idAttribute;
+                    var field = this.getField(entity, key);
+                    _.each(options.models, function (model) {
+                        id = model.id;
+                        if (!_.isUndefined(id)) {
+                            ids.push(that._sqlValue(id, field));
+                        }
+                    });
+                    if (ids.length > 0) {
+                        return key + ' IN (' + ids.join(',') + ')';
+                    }
+                }
+                return '';
+            };
+            WebSqlStore.prototype._sqlSelect = function (options, entity) {
+                var sql = 'SELECT ';
+                if (options.fields) {
+                    if (options.fields.length > 1) {
+                        sql += options.fields.join(', ');
+                    }
+                    else if (options.fields.length === 1) {
+                        sql += options.fields[0];
+                    }
+                }
+                else {
+                    sql += '*';
+                }
+                sql += ' FROM \'' + entity.name + '\'';
+                if (options.join) {
+                    sql += ' JOIN ' + options.join;
+                }
+                if (options.leftJoin) {
+                    sql += ' LEFT JOIN ' + options.leftJoin;
+                }
+                var where = this._sqlWhere(options, entity) || this._sqlWhereFromData(options, entity);
+                if (where) {
+                    sql += ' WHERE ' + where;
+                }
+                if (options.order) {
+                    sql += ' ORDER BY ' + options.order;
+                }
+                if (options.limit) {
+                    sql += ' LIMIT ' + options.limit;
+                }
+                if (options.offset) {
+                    sql += ' OFFSET ' + options.offset;
+                }
+                return sql;
+            };
+            WebSqlStore.prototype._sqlValue = function (value, field) {
+                var type = field && field.type ? field.type : Relution.LiveData.Field.prototype.detectType(value);
+                if (type === Relution.LiveData.DATA.TYPE.INTEGER || type === Relution.LiveData.DATA.TYPE.FLOAT) {
+                    return value;
+                }
+                else if (type === Relution.LiveData.DATA.TYPE.BOOLEAN) {
+                    return value ? '1' : '0';
+                }
+                else if (type === Relution.LiveData.DATA.TYPE.NULL) {
+                    return 'NULL';
+                }
+                value = Relution.LiveData.Field.prototype.transform(value, Relution.LiveData.DATA.TYPE.STRING);
+                value = value.replace(/"/g, '""');
+                return '"' + value + '"';
+            };
+            WebSqlStore.prototype._dbAttribute = function (field) {
+                if (field && field.name) {
+                    var type = this.options.sqlTypeMapping[field.type];
+                    var isReqStr = field.required ? ' NOT NULL' : '';
+                    if (type) {
+                        return field.name + ' ' + type.toUpperCase() + isReqStr;
+                    }
+                }
+            };
+            WebSqlStore.prototype._dropTable = function (options) {
+                var entity = this.getEntity(options);
+                entity.db = null;
+                if (this._checkDb(options) && entity) {
+                    var sql = this._sqlDropTable(entity.name);
+                    // reset flag
+                    this._executeTransaction(options, [sql]);
+                }
+            };
+            WebSqlStore.prototype._createTable = function (options) {
+                var entity = this.getEntity(options);
+                entity.db = this.db;
+                if (this._checkDb(options) && this._checkEntity(options, entity)) {
+                    var sql = this._sqlCreateTable(entity);
+                    // reset flag
+                    this._executeTransaction(options, [sql]);
+                }
+            };
+            WebSqlStore.prototype._checkTable = function (options, callback) {
+                var entity = this.getEntity(options);
+                var that = this;
+                if (entity && !entity.db) {
+                    this._createTable({
+                        success: function () {
+                            callback();
+                        },
+                        error: function (error) {
+                            this.handleError(options, error);
+                        },
+                        entity: entity
+                    });
+                }
+                else {
+                    callback();
+                }
+            };
+            WebSqlStore.prototype._insertOrReplace = function (model, options) {
+                var entity = this.getEntity(options);
+                var models = Relution.LiveData.isCollection(model) ? model.models : [model];
+                if (this._checkDb(options) && this._checkEntity(options, entity) && this._checkData(options, models)) {
+                    var isAutoInc = this._isAutoincrementKey(entity, entity.getKey());
+                    var statements = [];
+                    var sqlTemplate = 'INSERT OR REPLACE INTO \'' + entity.name + '\' (';
+                    for (var i = 0; i &lt; models.length; i++) {
+                        var amodel = models[i];
+                        var statement = ''; // the actual sql insert string with values
+                        if (!isAutoInc && !amodel.id && amodel.idAttribute) {
+                            amodel.set(amodel.idAttribute, new Relution.LiveData.ObjectID().toHexString());
+                        }
+                        var value = options.attrs || amodel.toJSON();
+                        var args, keys;
+                        if (!_.isEmpty(entity.fields)) {
+                            args = _.values(value);
+                            keys = _.keys(value);
+                        }
+                        else {
+                            args = [amodel.id, JSON.stringify(value)];
+                            keys = ['id', 'data'];
+                        }
+                        if (args.length > 0) {
+                            var values = new Array(args.length).join('?,') + '?';
+                            var columns = '\'' + keys.join('\',\'') + '\'';
+                            statement += sqlTemplate + columns + ') VALUES (' + values + ');';
+                            statements.push({ statement: statement, arguments: args });
+                        }
+                    }
+                    this._executeTransaction(options, statements, model.toJSON());
+                }
+            };
+            WebSqlStore.prototype._select = function (model, options) {
+                var entity = this.getEntity(options);
+                if (this._checkDb(options) && this._checkEntity(options, entity)) {
+                    var lastStatement;
+                    var isCollection = !Relution.LiveData.isModel(model);
+                    var result;
+                    if (isCollection) {
+                        result = [];
+                    }
+                    else {
+                        options.models = [model];
+                    }
+                    var stm = this._sqlSelect(options, entity);
+                    var that = this;
+                    this.db.readTransaction(function (t) {
+                        var statement = stm.statement || stm;
+                        var args = stm.arguments;
+                        lastStatement = statement;
+                        Relution.debug('sql statement: ' + statement);
+                        if (args) {
+                            Relution.debug('    arguments: ' + JSON.stringify(args));
+                        }
+                        t.executeSql(statement, args, function (tx, res) {
+                            var len = res.rows.length; //, i;
+                            for (var i = 0; i &lt; len; i++) {
+                                var item = res.rows.item(i);
+                                var attrs;
+                                if (!_.isEmpty(entity.fields) || !that._hasDefaultFields(item)) {
+                                    attrs = item;
+                                }
+                                else {
+                                    try {
+                                        attrs = JSON.parse(item.data);
+                                    }
+                                    catch (e) {
+                                    }
+                                }
+                                if (attrs && (!that._selector || that._selector.matches(attrs))) {
+                                    if (isCollection) {
+                                        result.push(attrs);
+                                    }
+                                    else {
+                                        result = attrs;
+                                        break;
+                                    }
+                                }
+                            }
+                        }, function (t, e) {
+                            // error
+                            console.error('webSql error: ' + e.message);
+                        });
+                    }, function (sqlError) {
+                        console.error('WebSql Syntax Error: ' + sqlError.message);
+                        that.handleError(options, sqlError.message, lastStatement);
+                    }, function () {
+                        if (result) {
+                            that.handleSuccess(options, result);
+                        }
+                        else {
+                            that.handleError(options, 'no result');
+                        }
+                    });
+                }
+            };
+            WebSqlStore.prototype._delete = function (model, options) {
+                var entity = this.getEntity(options);
+                var models = Relution.LiveData.isCollection(model) ? model.models : [model];
+                if (this._checkDb(options) && this._checkEntity(options, entity)) {
+                    options.models = models;
+                    var sql = this._sqlDelete(options, entity);
+                    // reset flag
+                    this._executeTransaction(options, [sql], model.toJSON());
+                }
+            };
+            WebSqlStore.prototype._executeSql = function (options) {
+                if (options.sql) {
+                    this._executeTransaction(options, [options.sql]);
+                }
+            };
+            WebSqlStore.prototype._executeTransaction = function (options, statements, result) {
+                var error;
+                var lastStatement;
+                if (this._checkDb(options)) {
+                    var that = this;
+                    try {
+                        /* transaction has 3 parameters: the transaction callback, the error callback and the success callback */
+                        this.db.transaction(function (t) {
+                            _.each(statements, function (stm) {
+                                var statement = stm.statement || stm;
+                                var args = stm.arguments;
+                                lastStatement = statement;
+                                Relution.debug('sql statement: ' + statement);
+                                if (args) {
+                                    Relution.debug('    arguments: ' + JSON.stringify(args));
+                                }
+                                t.executeSql(statement, args);
+                            });
+                        }, function (sqlError) {
+                            console.error(sqlError.message);
+                            that.handleError(options, sqlError.message, lastStatement);
+                        }, function () {
+                            that.handleSuccess(options, result);
+                        });
+                    }
+                    catch (e) {
+                        console.error(e.message);
+                        error = e;
+                    }
+                }
+                if (error) {
+                    this.handleError(options, error, lastStatement);
+                }
+            };
+            WebSqlStore.prototype._hasDefaultFields = function (item) {
+                return _.every(_.keys(item), function (key) {
+                    return key === this.idField.name || key === this.dataField.name;
+                }, this);
+            };
+            WebSqlStore.prototype._checkDb = function (options) {
+                // has to be initialized first
+                if (!this.db) {
+                    var error = 'db handler not initialized.';
+                    console.error(error);
+                    this.handleError(options, error);
+                    return false;
+                }
+                return true;
+            };
+            WebSqlStore.prototype.getFields = function (entity) {
+                if (!_.isEmpty(entity.fields)) {
+                    return entity.fields;
+                }
+                else {
+                    var fields = {};
+                    fields.data = this.dataField;
+                    var idAttribute = entity.idAttribute || 'id';
+                    fields[idAttribute] = this.idField;
+                    return fields;
+                }
+            };
+            WebSqlStore.prototype.getField = function (entity, key) {
+                return this.getFields(entity)[key];
+            };
+            return WebSqlStore;
+        })(LiveData.Store);
+        LiveData.WebSqlStore = WebSqlStore;
+    })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
+})(Relution || (Relution = {}));
+//# sourceMappingURL=web_sql.js.map
+/**
+ * local_storage.ts
+ *
+ * Created by Thomas Beckmann on 24.06.2015
+ * Copyright (c)
+ * 2015
+ * M-Way Solutions GmbH. All rights reserved.
+ * http://www.mwaysolutions.com
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are not permitted.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+/* jshint indent: 4 */
+/* jshint curly: false */
+/* jshint newcap: false */
+/* jshint -W004: '%' is already defined. */
+/* jshint -W086: Expected a 'break' statement before 'case'. */
+/// &lt;reference path="../../core/livedata.d.ts" />
+/// &lt;reference path="store.ts" />
+/// &lt;reference path="web_sql.ts" />
+var __extends = this.__extends || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    __.prototype = b.prototype;
+    d.prototype = new __();
+};
+var Relution;
+(function (Relution) {
+    var LiveData;
+    (function (LiveData) {
+        /**
+         * The Relution.LiveData.SyncStore is used to connect a model collection to an
+         * Relution server.
+         *
+         * This will give you an online and offline store with live data updates.
+         *
+         * @module Relution.LiveData.SyncStore
+         *
+         * @type {*}
+         * @extends Relution.LiveData.Store
+         *
+         * @example
+         *
+         * // The default configuration will save the complete model data as a json,
+         * // and the offline change log to a local WebSql database, synchronize it
+         * // trough REST calls with the server and receive live updates via a socket.io connection.
+         *
+         * var MyCollection = Relution.LiveData.Collection.extend({
+         *      model: MyModel,
+         *      url: 'http://myServer.io/myOrga/myApplication/myCollection',
+         *      store: new Relution.LiveData.SyncStore( {
+         *          useLocalStore:   true, // (default) store the data for offline use
+         *          useSocketNotify: true, // (default) register at the server for live updates
+         *          useOfflineChanges: true // (default) allow changes to the offline data
+         *      })
+         * });
+         */
+        var SyncStore = (function (_super) {
+            __extends(SyncStore, _super);
+            function SyncStore(options) {
+                _super.call(this, _.extend({
+                    localStore: LiveData.WebSqlStore,
+                    useLocalStore: true,
+                    useSocketNotify: true,
+                    useOfflineChanges: true,
+                    socketPath: '',
+                    typeMapping: (function () {
+                        var map = {};
+                        map[LiveData.DATA.BINARY] = 'text';
+                        map[LiveData.DATA.TEXT] = 'string';
+                        return map;
+                    })()
+                }, options));
+                this.endpoints = {};
+                if (this.options.useSocketNotify && typeof io !== 'object') {
+                    console.log('Socket.IO not present !!');
+                    this.options.useSocketNotify = false;
+                }
             }
-          }
-          return response || options.xhr;
-        },
-        credentials: endpoint.credentials
-      });
-    }
-  },
-
-  _sendMessages: function (endpoint) {
-    if (!endpoint || !endpoint.messages) {
-      return Q.resolve();
-    }
-
-    var that = this;
-    return endpoint.messages.fetch().then(function next() {
-      if (endpoint.messages.models.length &lt;= 0) {
-        return;
-      }
-
-      var message = endpoint.messages.models[0];
-      var msg = message.attributes;
-      var channel = message.get('channel');
-      if (!msg || !channel) {
-        return message.destroy();
-      }
-      that._fixMessage(endpoint, msg);
-
-      var remoteOptions = {
-        urlRoot: endpoint.baseUrl,
-        store: {} // really go to remote server
-      };
-      var localOptions = {
-        // just affect local store
-        store: endpoint.localStore
-      };
-      var model = new Relution.LiveData.Model(msg.data, {
-        idAttribute: endpoint.entity.idAttribute,
-        entity: endpoint.entity,
-      });
-      Relution.debug('sendMessage ' + model.id);
-      return that._applyResponse(that._ajaxMessage(endpoint, msg, remoteOptions, model), endpoint, msg, remoteOptions, model).catch(function (error) {
-        // failed, eventually undo the modifications stored
-        if (!endpoint.localStore) {
-          return Q.reject(error);
-        }
-
-        // revert modification by reloading data
-        if (msg.id) {
-          remoteOptions.url = remoteOptions.urlRoot + (remoteOptions.urlRoot.charAt(remoteOptions.urlRoot.length - 1) === '/' ? '' : '/' ) + msg.id;
-        }
-        return model.fetch(remoteOptions).then(function (data) {
-          // original request failed and the code above reloaded the data to revert the local modifications, which succeeded...
-          return model.save(data, localOptions);
-        }, function (fetchResp) {
-          // original request failed and the code above tried to revert the local modifications by reloading the data, which failed as well...
-          var status = fetchResp && fetchResp.status;
-          switch (status) {
-            case 404: // NOT FOUND
-            case 401: // UNAUTHORIZED
-            case 410: // GONE*
-              // ...because the item is gone by now, maybe someone else changed it to be deleted
-              return model.destroy(localOptions);
-            default:
-              return Q.reject(fetchResp);
-          }
-        });
-      }).then(function () {
-        // succeeded or reverted
-        return message.destroy();
-      }).then(function (result) {
-        return next(result);
-      });
-    });
-  },
-
-  storeMessage: function (endpoint, qMsg) {
-    return qMsg.then(function (msg) {
-      var options;
-      var id = endpoint.messages.modelId(msg);
-      Relution.debug('storeMessage ' + id);
-      var message = id && endpoint.messages.get(id);
-      if (message) {
-        // use existing instance, should not be the case usually
-        options = {
-          merge: true
-        };
-      } else {
-        // instantiate new model, intentionally not added to collection
-        message = new endpoint.messages.model(msg, {
-          collection: endpoint.messages,
-          store: endpoint.messages.store
-        });
-      }
-      return message.save(msg, options).thenResolve(message);
-    });
-  },
-
-  removeMessage: function (endpoint, msg, qMessage) {
-    return qMessage.then(function (message) {
-      if (!message) {
-        var id = endpoint.messages.modelId(msg);
-        if (!id) {
-          // msg is not persistent
-          return Q.resolve();
-        }
-
-        message = endpoint.messages.get(id);
-        if (!message) {
-          message = new endpoint.messages.model({
-            _id: msg._id,
-            id: msg.id
-          }, {
-            collection: endpoint.messages,
-            store: endpoint.messages.store
-          });
-        }
-      }
-      Relution.debug('removeMessage ' + message.id);
-      return message.destroy();
-    });
-  },
-
-  clear: function (collection) {
-    if (collection) {
-      var endpoint = this.getEndpoint(collection.getUrlRoot());
-      if (endpoint) {
-        if (endpoint.messages) {
-          endpoint.messages.destroy();
-        }
-        collection.reset();
-        this.setLastMessageTime(endpoint.channel, '');
-      }
-    }
-  }
-
-});
-
+            SyncStore.prototype.initCollection = function (collection) {
+                Relution.debug('Relution.LiveData.SyncStore.initCollection');
+                var url = collection.getUrlRoot();
+                if (url.charAt(url.length - 1) !== '/') {
+                    url += '/';
+                }
+                var entity = this.getEntity(collection.entity);
+                if (url && entity) {
+                    var name = entity.name;
+                    var hash = Relution.LiveData.URLUtil.hashLocation(url);
+                    var credentials = entity.credentials || collection.credentials || this.options.credentials;
+                    var user = credentials && credentials.username ? credentials.username : '';
+                    var channel = name + user + hash;
+                    collection.channel = channel;
+                    // get or create endpoint for this url
+                    var endpoint = this.endpoints[hash];
+                    if (!endpoint) {
+                        var href = Relution.LiveData.URLUtil.getLocation(url);
+                        endpoint = {};
+                        endpoint.isConnected = false;
+                        endpoint.baseUrl = url;
+                        endpoint.readUrl = collection.getUrl();
+                        endpoint.host = href.protocol + '//' + href.host;
+                        endpoint.path = href.pathname;
+                        endpoint.entity = entity;
+                        endpoint.channel = channel;
+                        endpoint.credentials = credentials;
+                        endpoint.socketPath = this.options.socketPath;
+                        endpoint.localStore = this.createLocalStore(endpoint);
+                        endpoint.messages = this.createMsgCollection(endpoint);
+                        endpoint.socket = this.createSocket(endpoint, name);
+                        endpoint.info = this.fetchServerInfo(endpoint);
+                        this.endpoints[hash] = endpoint;
+                    }
+                    collection.endpoint = endpoint;
+                    if (this.options.useSocketNotify) {
+                        // otherwise application code must fetch to update collection explicitly
+                        collection.listenTo(this, 'sync:' + endpoint.channel, _.bind(this.onMessageCollection, this, collection));
+                    }
+                }
+            };
+            SyncStore.prototype.getEndpoint = function (url) {
+                if (url) {
+                    var hash = Relution.LiveData.URLUtil.hashLocation(url);
+                    return this.endpoints[hash];
+                }
+            };
+            SyncStore.prototype.createLocalStore = function (endpoint) {
+                if (this.options.useLocalStore) {
+                    var entities = {};
+                    entities[endpoint.entity.name] = _.extend(new Relution.LiveData.Entity(endpoint.entity), {
+                        name: endpoint.channel
+                    });
+                    return this.options.localStore.create({
+                        entities: entities
+                    });
+                }
+            };
+            /**
+             * @description Here we save the changes in a Message local websql
+             * @param endpoint {string}
+             * @returns {*}
+             */
+            SyncStore.prototype.createMsgCollection = function (endpoint) {
+                if (this.options.useOfflineChanges) {
+                    var entity = 'msg-' + endpoint.channel;
+                    var entities = {};
+                    entities[entity] = new Relution.LiveData.Entity({
+                        name: entity,
+                        idAttribute: 'id'
+                    });
+                    var messages = Relution.LiveData.Collection.design({
+                        entity: entity,
+                        store: this.options.localStore.create({
+                            entities: entities
+                        })
+                    });
+                    if (endpoint.isConnected) {
+                        this._sendMessages(endpoint);
+                    }
+                    return messages;
+                }
+            };
+            SyncStore.prototype.createSocket = function (endpoint, name) {
+                Relution.debug('Relution.LiveData.SyncStore.createSocket');
+                if (this.options.useSocketNotify && endpoint && endpoint.socketPath) {
+                    var that = this;
+                    var url = endpoint.host;
+                    var path = endpoint.path;
+                    var href = Relution.LiveData.URLUtil.getLocation(url);
+                    if (href.port === '') {
+                        if (href.protocol === 'https:') {
+                            url += ':443';
+                        }
+                        else if (href.protocol === 'http:') {
+                            url += ':80';
+                        }
+                    }
+                    path = endpoint.socketPath;
+                    // remove leading /
+                    var resource = (path && path.indexOf('/') === 0) ? path.substr(1) : path;
+                    var connectVo = {
+                        resource: resource
+                    };
+                    if (this.options.socketQuery) {
+                        connectVo.query = this.options.socketQuery;
+                    }
+                    endpoint.socket = io.connect(url, connectVo);
+                    endpoint.socket.on('connect', function () {
+                        that._bindChannel(endpoint, name);
+                        return that.onConnect(endpoint).done();
+                    });
+                    endpoint.socket.on('disconnect', function () {
+                        Relution.debug('socket.io: disconnect');
+                        return that.onDisconnect(endpoint).done();
+                    });
+                    endpoint.socket.on(endpoint.channel, _.bind(this.onMessageStore, this, endpoint));
+                    return endpoint.socket;
+                }
+            };
+            SyncStore.prototype._bindChannel = function (endpoint, name) {
+                Relution.debug('Relution.LiveData.SyncStore._bindChannel');
+                var that = this;
+                if (endpoint && endpoint.socket) {
+                    var channel = endpoint.channel;
+                    var socket = endpoint.socket;
+                    var time = this.getLastMessageTime(channel);
+                    name = name || endpoint.entity.name;
+                    socket.emit('bind', {
+                        entity: name,
+                        channel: channel,
+                        time: time
+                    });
+                }
+            };
+            SyncStore.prototype.getLastMessageTime = function (channel) {
+                if (!this.lastMesgTime) {
+                    this.lastMesgTime = {};
+                }
+                else if (this.lastMesgTime[channel] !== undefined) {
+                    return this.lastMesgTime[channel];
+                }
+                var time = localStorage.getItem('__' + channel + 'lastMesgTime') || 0;
+                this.lastMesgTime[channel] = time;
+                return time;
+            };
+            SyncStore.prototype.setLastMessageTime = function (channel, time) {
+                if (!time || time > this.getLastMessageTime(channel)) {
+                    localStorage.setItem('__' + channel + 'lastMesgTime', time);
+                    this.lastMesgTime[channel] = time;
+                }
+            };
+            SyncStore.prototype.onConnect = function (endpoint) {
+                if (endpoint.isConnected) {
+                    return Q.resolve();
+                }
+                endpoint.isConnected = true;
+                var that = this;
+                return this.fetchChanges(endpoint).then(function () {
+                    return that._sendMessages(endpoint);
+                }).finally(function () {
+                    if (endpoint.isConnected) {
+                        that.trigger('connect:' + endpoint.channel);
+                    }
+                });
+            };
+            SyncStore.prototype.onDisconnect = function (endpoint) {
+                if (!endpoint.isConnected) {
+                    return Q.resolve();
+                }
+                endpoint.isConnected = false;
+                var that = this;
+                return Q.fcall(function () {
+                    if (endpoint.socket && endpoint.socket.socket) {
+                        endpoint.socket.socket.onDisconnect();
+                    }
+                }).finally(function () {
+                    if (!endpoint.isConnected) {
+                        that.trigger('disconnect:' + endpoint.channel);
+                    }
+                });
+            };
+            SyncStore.prototype._fixMessage = function (endpoint, msg) {
+                if (msg.data && !msg.data[endpoint.entity.idAttribute] && msg.data._id) {
+                    msg.data[endpoint.entity.idAttribute] = msg.data._id; // server bug!
+                }
+                else if (!msg.data && msg.method === 'delete' && msg[endpoint.entity.idAttribute]) {
+                    msg.data = {};
+                    msg.data[endpoint.entity.idAttribute] = msg[endpoint.entity.idAttribute]; // server bug!
+                }
+            };
+            SyncStore.prototype.onMessageStore = function (endpoint, msg) {
+                // this is called by the store itself for a particular endpoint!
+                var that = this;
+                if (!msg || !msg.method) {
+                    return Q.reject('no message or method given');
+                }
+                this._fixMessage(endpoint, msg);
+                var q;
+                var channel = endpoint.channel;
+                if (endpoint.localStore) {
+                    // first update the local store by forming a model and invoking sync
+                    var options = _.defaults({
+                        store: endpoint.localStore,
+                        entity: endpoint.entity
+                    }, that.options);
+                    var model = new Relution.LiveData.Model(msg.data, _.extend({
+                        parse: true
+                    }, options));
+                    q = endpoint.localStore.sync(msg.method, model, _.extend(options, {
+                        merge: msg.method === 'patch',
+                        success: function (result) {
+                            // update all collections listening
+                            that.trigger('sync:' + channel, msg); // onMessageCollection
+                        },
+                        error: function (error) {
+                            // report error as event on store
+                            that.trigger('error:' + channel, error);
+                        }
+                    }));
+                }
+                else {
+                    // just update all collections listening
+                    q = Q.fcall(function () {
+                        return that.trigger('sync:' + channel, msg); // onMessageCollection
+                    });
+                }
+                // finally set the message time
+                return q.then(function () {
+                    if (msg.time) {
+                        that.setLastMessageTime(channel, msg.time);
+                    }
+                }).thenResolve(msg);
+            };
+            SyncStore.prototype.onMessageCollection = function (collection, msg) {
+                var options = {
+                    collection: collection,
+                    entity: collection.entity,
+                    merge: msg.method === 'patch',
+                    parse: true,
+                    fromMessage: true
+                };
+                var id = collection.modelId(msg.data);
+                if (id === 'all') {
+                    collection.reset(msg.data || {}, options);
+                    return;
+                }
+                var model = id && collection.get(id);
+                switch (msg.method) {
+                    case 'create':
+                    case 'update':
+                        if (!model) {
+                            // create model in case it does not exist
+                            model = new options.collection.model(msg.data, options);
+                            if (model.validationError) {
+                                collection.trigger('invalid', this, model.validationError, options);
+                            }
+                            else {
+                                collection.add(model, options);
+                            }
+                            break;
+                        }
+                    case 'patch':
+                        if (model) {
+                            // update model unless it is filtered
+                            model.set(msg.data, options);
+                        }
+                        break;
+                    case 'delete':
+                        if (model) {
+                            // remove model unless it is filtered
+                            collection.remove(model, options);
+                        }
+                        break;
+                }
+            };
+            SyncStore.prototype.sync = function (method, model, options) {
+                Relution.debug('Relution.LiveData.SyncStore.sync');
+                options = options || {};
+                var endpoint;
+                try {
+                    endpoint = this.getEndpoint(model.getUrlRoot());
+                    if (!endpoint) {
+                        throw new Error('no endpoint');
+                    }
+                }
+                catch (error) {
+                    return Q.reject(this.handleError(options, error) || error);
+                }
+                if (Relution.LiveData.isModel(model) && !model.id) {
+                    model.set(model.idAttribute, new Relution.LiveData.ObjectID().toHexString());
+                }
+                var channel = endpoint.channel;
+                var time = this.getLastMessageTime(channel);
+                // only send read messages if no other store can do this or for initial load
+                if (method === 'read' && endpoint.localStore && time && !options.reset) {
+                    // read data from localStore and fetch changes remote
+                    var opts = _.clone(options);
+                    opts.store = endpoint.localStore;
+                    opts.entity = endpoint.entity;
+                    delete opts.success;
+                    delete opts.error;
+                    var that = this;
+                    return endpoint.localStore.sync(method, model, opts).then(function (resp) {
+                        // load changes only (will happen AFTER success callback is invoked,
+                        // but returned promise will resolve only after changes were processed.
+                        // This is because backbone success callback alters the collection...
+                        return that.fetchChanges(endpoint).catch(function (error) {
+                            that.trigger('error:' + channel, error); // can not do much about it...
+                        }).thenResolve(that.handleSuccess(options, resp) || resp); // caller expects original XHR response as changes body data is NOT compatible
+                    }, function () {
+                        // fall-back to loading full data set
+                        return that._addMessage(method, model, options, endpoint);
+                    });
+                }
+                // do backbone rest
+                return this._addMessage(method, model, options, endpoint);
+            };
+            SyncStore.prototype._addMessage = function (method, model, options, endpoint) {
+                var that = this;
+                if (method && model) {
+                    var changes = model.changedSinceSync;
+                    var data = null;
+                    var storeMsg = true;
+                    switch (method) {
+                        case 'update':
+                        case 'create':
+                            data = options.attrs || model.toJSON();
+                            break;
+                        case 'patch':
+                            if (_.isEmpty(changes)) {
+                                return;
+                            }
+                            data = model.toJSON({ attrs: changes });
+                            break;
+                        case 'delete':
+                            break;
+                        default:
+                            storeMsg = false;
+                            break;
+                    }
+                    var msg = {
+                        _id: model.id,
+                        id: model.id,
+                        method: method,
+                        data: data,
+                        channel: endpoint.channel
+                    };
+                    var q = Q.resolve(msg);
+                    var qMessage;
+                    if (storeMsg) {
+                        // store and potentially merge message
+                        qMessage = this.storeMessage(endpoint, q);
+                        q = qMessage.then(function (message) {
+                            // in case of merging, this result could be different
+                            return message.attributes;
+                        });
+                    }
+                    return q.then(function (msg) {
+                        // pass in qMessage so that deletion of stored message can be scheduled
+                        return that._emitMessage(endpoint, msg, options, model, qMessage);
+                    });
+                }
+            };
+            SyncStore.prototype._emitMessage = function (endpoint, msg, options, model, qMessage) {
+                var that = this;
+                var channel = endpoint.channel;
+                var qAjax = this._ajaxMessage(endpoint, msg, options, model);
+                var q = qAjax;
+                if (qMessage) {
+                    // following takes care of offline change store
+                    q = q.then(function (data) {
+                        // success, remove message stored, if any
+                        return that.removeMessage(endpoint, msg, qMessage).then(data, function (error) {
+                            that.trigger('error:' + channel, error); // can not do much about it...
+                            return data;
+                        }).thenResolve(data); // resolve again yielding data
+                    }, function (xhr) {
+                        // failure eventually caught by offline changes
+                        if (!xhr.responseText && that.options.useOfflineChanges) {
+                            // this seams to be only a connection problem, so we keep the message and call success
+                            return Q.resolve(msg.data);
+                        }
+                        else {
+                            // keep rejection as is
+                            return Q.reject.apply(Q, arguments);
+                        }
+                    });
+                }
+                q = this._applyResponse(q, endpoint, msg, options, model);
+                return q.finally(function () {
+                    // do some connection handling
+                    return qAjax.then(function () {
+                        // trigger reconnection when disconnected
+                        if (!endpoint.isConnected) {
+                            return that.onConnect(endpoint);
+                        }
+                    }, function (xhr) {
+                        // trigger disconnection when disconnected
+                        if (!xhr.responseText && endpoint.isConnected) {
+                            return that.onDisconnect(endpoint);
+                        }
+                    });
+                });
+            };
+            SyncStore.prototype._ajaxMessage = function (endpoint, msg, options, model) {
+                var channel = endpoint.channel;
+                var that = this;
+                var url = Relution.LiveData.isModel(model) || msg.method !== 'read' ? endpoint.baseUrl : endpoint.readUrl;
+                if (msg.id && msg.method !== 'create') {
+                    url += (url.charAt(url.length - 1) === '/' ? '' : '/') + msg.id;
+                }
+                Relution.debug('ajaxMessage ' + msg.method + ' ' + url);
+                return model.sync(msg.method, model, {
+                    // must not take arbitrary options as these won't be replayed on reconnect
+                    url: url,
+                    attrs: msg.data,
+                    store: {},
+                    credentials: options ? options.credentials : undefined,
+                    // error propagation
+                    error: that.options.error
+                });
+            };
+            SyncStore.prototype._applyResponse = function (qXHR, endpoint, msg, options, model) {
+                var channel = endpoint.channel;
+                var that = this;
+                return qXHR.then(function (data) {
+                    // delete on server does not respond a body
+                    if (!data && msg.method === 'delete') {
+                        data = msg.data;
+                    }
+                    // update local store state
+                    if (data) {
+                        // no data if server asks not to alter state
+                        // that.setLastMessageTime(channel, msg.time);
+                        var promises = [];
+                        if (msg.method !== 'read') {
+                            promises.push(that.onMessageStore(endpoint, data === msg.data ? msg : _.defaults({
+                                data: data // just accepts new data
+                            }, msg)));
+                        }
+                        else if (Relution.LiveData.isCollection(model) && _.isArray(data)) {
+                            // synchronize the collection contents with the data read
+                            var ids = {};
+                            model.models.forEach(function (m) {
+                                ids[m.id] = m;
+                            });
+                            data.forEach(function (d) {
+                                if (d) {
+                                    var id = d[endpoint.entity.idAttribute] || d._id;
+                                    var m = ids[id];
+                                    if (m) {
+                                        // update the item
+                                        delete ids[id]; // so that it is deleted below
+                                        if (!_.isEqual(_.pick.call(m, m.attributes, LiveData.Object.keys(d)), d)) {
+                                            // above checked that all attributes in d are in m with equal values and found some mismatch
+                                            promises.push(that.onMessageStore(endpoint, {
+                                                id: id,
+                                                method: 'update',
+                                                data: d
+                                            }));
+                                        }
+                                    }
+                                    else {
+                                        // create the item
+                                        promises.push(that.onMessageStore(endpoint, {
+                                            id: id,
+                                            method: 'create',
+                                            data: d
+                                        }));
+                                    }
+                                }
+                            });
+                            LiveData.Object.keys(ids).forEach(function (id) {
+                                // delete the item
+                                var m = ids[id];
+                                promises.push(that.onMessageStore(endpoint, {
+                                    id: id,
+                                    method: 'delete',
+                                    data: m.attributes
+                                }));
+                            });
+                        }
+                        else {
+                            // trigger an update to load the data read
+                            var array = _.isArray(data) ? data : [data];
+                            for (var i = 0; i &lt; array.length; i++) {
+                                data = array[i];
+                                if (data) {
+                                    promises.push(that.onMessageStore(endpoint, {
+                                        id: data[endpoint.entity.idAttribute] || data._id,
+                                        method: 'update',
+                                        data: data
+                                    }));
+                                }
+                            }
+                        }
+                        return Q.all(promises).thenResolve(data); // delayed till operations complete
+                    }
+                }).then(function (response) {
+                    // invoke success callback, if any
+                    return that.handleSuccess(options, response) || response;
+                }, function (error) {
+                    // invoke error callback, if any
+                    return that.handleError(options, error) || Q.reject(error);
+                });
+            };
+            SyncStore.prototype.fetchChanges = function (endpoint) {
+                var that = this;
+                var channel = endpoint ? endpoint.channel : '';
+                var time = that.getLastMessageTime(channel);
+                if (endpoint && endpoint.baseUrl && channel && time) {
+                    var changes = new Relution.LiveData.Collection();
+                    return changes.fetch({
+                        url: endpoint.baseUrl + 'changes/' + time,
+                        success: function (model, response, options) {
+                            changes.each(function (change) {
+                                var msg = change.attributes;
+                                that.onMessageStore(endpoint, msg);
+                            });
+                            return response || options.xhr;
+                        },
+                        credentials: endpoint.credentials
+                    });
+                }
+                else {
+                    return Q.resolve();
+                }
+            };
+            SyncStore.prototype.fetchServerInfo = function (endpoint) {
+                var that = this;
+                if (endpoint && endpoint.baseUrl) {
+                    var info = new Relution.LiveData.Model();
+                    var time = that.getLastMessageTime(endpoint.channel);
+                    var url = endpoint.baseUrl;
+                    if (url.charAt((url.length - 1)) !== '/') {
+                        url += '/';
+                    }
+                    return info.fetch({
+                        url: url + 'info',
+                        success: function (model, response, options) {
+                            //@todo why we set a server time here ?
+                            if (!time && info.get('time')) {
+                                that.setLastMessageTime(endpoint.channel, info.get('time'));
+                            }
+                            if (!endpoint.socketPath && info.get('socketPath')) {
+                                endpoint.socketPath = info.get('socketPath');
+                                var name = info.get('entity') || endpoint.entity.name;
+                                if (that.options.useSocketNotify) {
+                                    endpoint.socket = that.createSocket(endpoint, name);
+                                }
+                            }
+                            return response || options.xhr;
+                        },
+                        credentials: endpoint.credentials
+                    });
+                }
+            };
+            SyncStore.prototype._sendMessages = function (endpoint) {
+                if (!endpoint || !endpoint.messages) {
+                    return Q.resolve();
+                }
+                var that = this;
+                return endpoint.messages.fetch().then(function next(result) {
+                    if (endpoint.messages.models.length &lt;= 0) {
+                        return result;
+                    }
+                    var message = endpoint.messages.models[0];
+                    var msg = message.attributes;
+                    var channel = message.get('channel');
+                    if (!msg || !channel) {
+                        return message.destroy();
+                    }
+                    that._fixMessage(endpoint, msg);
+                    var remoteOptions = {
+                        urlRoot: endpoint.baseUrl,
+                        store: {} // really go to remote server
+                    };
+                    var localOptions = {
+                        // just affect local store
+                        store: endpoint.localStore
+                    };
+                    var model = new Relution.LiveData.Model(msg.data, {
+                        idAttribute: endpoint.entity.idAttribute,
+                        entity: endpoint.entity,
+                    });
+                    Relution.debug('sendMessage ' + model.id);
+                    return that._applyResponse(that._ajaxMessage(endpoint, msg, remoteOptions, model), endpoint, msg, remoteOptions, model).catch(function (error) {
+                        // failed, eventually undo the modifications stored
+                        if (!endpoint.localStore) {
+                            return Q.reject(error);
+                        }
+                        // revert modification by reloading data
+                        if (msg.id) {
+                            remoteOptions.url = remoteOptions.urlRoot + (remoteOptions.urlRoot.charAt(remoteOptions.urlRoot.length - 1) === '/' ? '' : '/') + msg.id;
+                        }
+                        return model.fetch(remoteOptions).then(function (data) {
+                            // original request failed and the code above reloaded the data to revert the local modifications, which succeeded...
+                            return model.save(data, localOptions);
+                        }, function (fetchResp) {
+                            // original request failed and the code above tried to revert the local modifications by reloading the data, which failed as well...
+                            var status = fetchResp && fetchResp.status;
+                            switch (status) {
+                                case 404:
+                                case 401:
+                                case 410:
+                                    // ...because the item is gone by now, maybe someone else changed it to be deleted
+                                    return model.destroy(localOptions);
+                                default:
+                                    return Q.reject(fetchResp);
+                            }
+                        });
+                    }).then(function () {
+                        // succeeded or reverted
+                        return message.destroy();
+                    }).then(function (result) {
+                        return next(result);
+                    });
+                });
+            };
+            SyncStore.prototype.storeMessage = function (endpoint, qMsg) {
+                return qMsg.then(function (msg) {
+                    var options;
+                    var id = endpoint.messages.modelId(msg);
+                    Relution.debug('storeMessage ' + id);
+                    var message = id && endpoint.messages.get(id);
+                    if (message) {
+                        // use existing instance, should not be the case usually
+                        options = {
+                            merge: true
+                        };
+                    }
+                    else {
+                        // instantiate new model, intentionally not added to collection
+                        message = new endpoint.messages.model(msg, {
+                            collection: endpoint.messages,
+                            store: endpoint.messages.store
+                        });
+                    }
+                    return message.save(msg, options).thenResolve(message);
+                });
+            };
+            SyncStore.prototype.removeMessage = function (endpoint, msg, qMessage) {
+                return qMessage.then(function (message) {
+                    if (!message) {
+                        var id = endpoint.messages.modelId(msg);
+                        if (!id) {
+                            // msg is not persistent
+                            return Q.resolve();
+                        }
+                        message = endpoint.messages.get(id);
+                        if (!message) {
+                            message = new endpoint.messages.model({
+                                _id: msg._id,
+                                id: msg.id
+                            }, {
+                                collection: endpoint.messages,
+                                store: endpoint.messages.store
+                            });
+                        }
+                    }
+                    Relution.debug('removeMessage ' + message.id);
+                    return message.destroy();
+                });
+            };
+            SyncStore.prototype.clear = function (collection) {
+                if (collection) {
+                    var endpoint = this.getEndpoint(collection.getUrlRoot());
+                    if (endpoint) {
+                        if (endpoint.messages) {
+                            endpoint.messages.destroy();
+                        }
+                        collection.reset();
+                        this.setLastMessageTime(endpoint.channel, '');
+                    }
+                }
+            };
+            return SyncStore;
+        })(LiveData.Store);
+        LiveData.SyncStore = SyncStore;
+    })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
+})(Relution || (Relution = {}));
+//# sourceMappingURL=sync_store.js.map
 
 // Copyright (c) 2015 M-Way Solutions GmbH
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
@@ -5616,7 +5633,7 @@ if (global.Relution) {
 <br clear="both">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.2.2</a> on Wed Jun 24 2015 10:08:07 GMT+0200 (MESZ)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.2.2</a> on Wed Jun 24 2015 14:45:44 GMT+0200 (MESZ)
 </footer>
 
 <script> prettyPrint(); </script>
