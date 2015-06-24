@@ -29,7 +29,7 @@ Relution.LiveData.Collection = Backbone.Collection.extend({
 Relution.LiveData.Collection.create = Relution.LiveData.create;
 Relution.LiveData.Collection.design = Relution.LiveData.design;
 
-_.extend(Relution.LiveData.Collection.prototype, Relution.LiveData.Object, {
+_.extend(Relution.LiveData.Collection.prototype, Relution.LiveData._Object, {
 
   _type: 'Relution.LiveData.Collection',
 

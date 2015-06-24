@@ -66,7 +66,7 @@ Relution.LiveData.Entity.extend = Relution.LiveData.extend;
 Relution.LiveData.Entity.create = Relution.LiveData.create;
 Relution.LiveData.Entity.design = Relution.LiveData.design;
 
-_.extend(Relution.LiveData.Entity.prototype, Relution.LiveData.Object, {
+_.extend(Relution.LiveData.Entity.prototype, Relution.LiveData._Object, {
 
   /**
    * The type of this object.

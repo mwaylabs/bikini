@@ -95,7 +95,7 @@ module Relution.LiveData {
         entity = this.entities[entity];
       }
       if (entity && entity.collection) {
-        if (Relution.LiveData.Collection.prototype.isPrototypeOf(entity.collection)) {
+        if (Collection.prototype.isPrototypeOf(entity.collection)) {
           return entity.collection;
         } else {
           return new entity.collection();
@@ -118,7 +118,7 @@ module Relution.LiveData {
     getArray(data) {
       if (_.isArray(data)) {
         return data;
-      } else if (Relution.LiveData.isCollection(data)) {
+      } else if (isCollection(data)) {
         return data.models;
       }
       return _.isObject(data) ? [data] : [];
@@ -220,8 +220,8 @@ module Relution.LiveData {
     }
 
     _checkEntity(obj, entity) {
-      if (!Relution.LiveData.isEntity(entity)) {
-        var error = Relution.LiveData.Store.CONST.ERROR_NO_ENTITY;
+      if (!isEntity(entity)) {
+        var error = Store.CONST.ERROR_NO_ENTITY;
         console.error(error);
         this.handleError(obj, error);
         return false;
@@ -231,7 +231,7 @@ module Relution.LiveData {
 
     _checkData(obj, data) {
       if ((!_.isArray(data) || data.length === 0) && !_.isObject(data)) {
-        var error = Relution.LiveData.Store.CONST.ERROR_NO_DATA;
+        var error = Store.CONST.ERROR_NO_DATA;
         console.error(error);
         this.handleError(obj, error);
         return false;
@@ -269,5 +269,5 @@ module Relution.LiveData {
       }
   }
 
-  _.extend(Store.prototype, Backbone.Events, Object);
+  _.extend(Store.prototype, Backbone.Events, _Object);
 }

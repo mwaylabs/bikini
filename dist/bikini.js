@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Wed Jun 24 2015 14:45:37
+* Date:      Wed Jun 24 2015 15:11:56
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 
@@ -129,13 +129,13 @@ Relution.LiveData.sync = function sync(method, model, options) {
   }
 };
 
-Relution.LiveData.Object = {
+Relution.LiveData._Object = {
   /**
    * The type of this object.
    *
    * @type String
    */
-  _type: 'Relution.LiveData.Object',
+  _type: 'Relution.LiveData._Object',
 
   /**
    * Creates an object based on a passed prototype.
@@ -397,9 +397,9 @@ _.extend(Relution.LiveData.ObjectID.prototype, {
  * @module Relution.LiveData.UniqueId
  *
  * @type {*}
- * @extends Relution.LiveData.Object
+ * @extends Relution.LiveData._Object
  */
-Relution.LiveData.UniqueId = Relution.LiveData.Object.design({
+Relution.LiveData.UniqueId = Relution.LiveData._Object.design({
   uuid: function (len, radix) {
     // based on Robert Kieffer's randomUUID.js at http://www.broofa.com
     var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
@@ -442,9 +442,9 @@ Relution.LiveData.UniqueId = Relution.LiveData.Object.design({
  * this.
  * @module Relution.LiveData.Base64
  *
- * @extends Relution.LiveData.Object
+ * @extends Relution.LiveData._Object
  */
-Relution.LiveData.Base64 = Relution.LiveData.Object.design(/** @scope Relution.LiveData.Base64.prototype */ {
+Relution.LiveData.Base64 = Relution.LiveData._Object.design(/** @scope Relution.LiveData.Base64.prototype */ {
 
   /**
    * The type of this object.
@@ -630,9 +630,9 @@ Relution.LiveData.Base64 = Relution.LiveData.Object.design(/** @scope Relution.L
  * this.
  * @module Relution.LiveData.SHA256
  *
- * @extends Relution.LiveData.Object
+ * @extends Relution.LiveData._Object
  */
-Relution.LiveData.SHA256 = Relution.LiveData.Object.design(/** @scope Relution.LiveData.SHA256.prototype */ {
+Relution.LiveData.SHA256 = Relution.LiveData._Object.design(/** @scope Relution.LiveData.SHA256.prototype */ {
 
   /**
    * The type of this object.
@@ -821,9 +821,9 @@ Relution.LiveData.SHA256 = Relution.LiveData.Object.design(/** @scope Relution.L
  * based values.
  * @module Relution.LiveData.Cypher
  *
- * @extends Relution.LiveData.Object
+ * @extends Relution.LiveData._Object
  */
-Relution.LiveData.Cypher = Relution.LiveData.Object.design(/** @scope Relution.LiveData.Cypher.prototype */ {
+Relution.LiveData.Cypher = Relution.LiveData._Object.design(/** @scope Relution.LiveData.Cypher.prototype */ {
 
   /**
    * The type of this object.
@@ -988,7 +988,7 @@ Relution.LiveData.Cypher = Relution.LiveData.Object.design(/** @scope Relution.L
  *
  * @module Relution.LiveData.Date
  *
- * @extends Relution.LiveData.Object
+ * @extends Relution.LiveData._Object
  */
 Relution.LiveData.Date = {
 
@@ -1014,9 +1014,9 @@ Relution.LiveData.Date = {
  * @module Relution.LiveData.URLUtil
  *
  * @type {*}
- * @extends Relution.LiveData.Object
+ * @extends Relution.LiveData._Object
  */
-Relution.LiveData.URLUtil = Relution.LiveData.Object.design({
+Relution.LiveData.URLUtil = Relution.LiveData._Object.design({
   /*
    url = "http://example.com:3000/pathname/?search=test#hash";
 
@@ -1786,7 +1786,7 @@ Relution.LiveData.Field.extend = Relution.LiveData.extend;
 Relution.LiveData.Field.create = Relution.LiveData.create;
 Relution.LiveData.Field.design = Relution.LiveData.design;
 
-_.extend(Relution.LiveData.Field.prototype, Relution.LiveData.Object, {
+_.extend(Relution.LiveData.Field.prototype, Relution.LiveData._Object, {
 
   /**
    * The type of this object.
@@ -2213,7 +2213,7 @@ Relution.LiveData.Entity.extend = Relution.LiveData.extend;
 Relution.LiveData.Entity.create = Relution.LiveData.create;
 Relution.LiveData.Entity.design = Relution.LiveData.design;
 
-_.extend(Relution.LiveData.Entity.prototype, Relution.LiveData.Object, {
+_.extend(Relution.LiveData.Entity.prototype, Relution.LiveData._Object, {
 
   /**
    * The type of this object.
@@ -2455,7 +2455,7 @@ _.extend(Relution.LiveData.Entity.prototype, Relution.LiveData.Object, {
  *
  * @type {{logon: Function, logonBasicAuth: Function, logonMcapAuth: Function, getHost: Function}}
  */
-Relution.LiveData.Security = Relution.LiveData.Object.design({
+Relution.LiveData.Security = Relution.LiveData._Object.design({
 
   logon: _.extend(function logon(options) {
     var credentials = options && options.credentials;
@@ -2502,7 +2502,7 @@ Relution.LiveData.Model = Backbone.Model.extend({
 Relution.LiveData.Model.create = Relution.LiveData.create;
 Relution.LiveData.Model.design = Relution.LiveData.design;
 
-_.extend(Relution.LiveData.Model.prototype, Relution.LiveData.Object, {
+_.extend(Relution.LiveData.Model.prototype, Relution.LiveData._Object, {
 
   _type: 'Relution.LiveData.Model',
 
@@ -2615,7 +2615,7 @@ Relution.LiveData.Collection = Backbone.Collection.extend({
 Relution.LiveData.Collection.create = Relution.LiveData.create;
 Relution.LiveData.Collection.design = Relution.LiveData.design;
 
-_.extend(Relution.LiveData.Collection.prototype, Relution.LiveData.Object, {
+_.extend(Relution.LiveData.Collection.prototype, Relution.LiveData._Object, {
 
   _type: 'Relution.LiveData.Collection',
 
@@ -2794,9 +2794,9 @@ _.extend(Relution.LiveData.Collection.prototype, Relution.LiveData.Object, {
  * @module Relution.LiveData.DataSelector
  *
  * @type {*}
- * @extends Relution.LiveData.Object
+ * @extends Relution.LiveData._Object
  */
-Relution.LiveData.DataSelector = Relution.LiveData.Object.design({
+Relution.LiveData.DataSelector = Relution.LiveData._Object.design({
 
   _type: 'Relution.LiveData.DataSelector',
 
@@ -3766,7 +3766,7 @@ var Relution;
                     entity = this.entities[entity];
                 }
                 if (entity && entity.collection) {
-                    if (Relution.LiveData.Collection.prototype.isPrototypeOf(entity.collection)) {
+                    if (LiveData.Collection.prototype.isPrototypeOf(entity.collection)) {
                         return entity.collection;
                     }
                     else {
@@ -3789,7 +3789,7 @@ var Relution;
                 if (_.isArray(data)) {
                     return data;
                 }
-                else if (Relution.LiveData.isCollection(data)) {
+                else if (LiveData.isCollection(data)) {
                     return data.models;
                 }
                 return _.isObject(data) ? [data] : [];
@@ -3881,8 +3881,8 @@ var Relution;
                 }
             };
             Store.prototype._checkEntity = function (obj, entity) {
-                if (!Relution.LiveData.isEntity(entity)) {
-                    var error = Relution.LiveData.Store.CONST.ERROR_NO_ENTITY;
+                if (!LiveData.isEntity(entity)) {
+                    var error = Store.CONST.ERROR_NO_ENTITY;
                     console.error(error);
                     this.handleError(obj, error);
                     return false;
@@ -3891,7 +3891,7 @@ var Relution;
             };
             Store.prototype._checkData = function (obj, data) {
                 if ((!_.isArray(data) || data.length === 0) && !_.isObject(data)) {
-                    var error = Relution.LiveData.Store.CONST.ERROR_NO_DATA;
+                    var error = Store.CONST.ERROR_NO_DATA;
                     console.error(error);
                     this.handleError(obj, error);
                     return false;
@@ -3936,7 +3936,7 @@ var Relution;
             return Store;
         })();
         LiveData.Store = Store;
-        _.extend(Store.prototype, Backbone.Events, LiveData.Object);
+        _.extend(Store.prototype, Backbone.Events, LiveData._Object);
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=store.js.map
@@ -4011,7 +4011,7 @@ var Relution;
                 var entity = that.getEntity(model.entity || options.entity);
                 var attrs;
                 if (entity && model) {
-                    var id = model.id || (method === 'create' ? new Relution.LiveData.ObjectID().toHexString() : null);
+                    var id = model.id || (method === 'create' ? new LiveData.ObjectID().toHexString() : null);
                     attrs = options.attrs || model.toJSON(options);
                     switch (method) {
                         case 'patch':
@@ -4052,7 +4052,7 @@ var Relution;
                         return that.handleSuccess(options, attrs) || attrs;
                     }
                     else {
-                        return that.handleError(options, Relution.LiveData.Store.CONST.ERROR_NO_ENTITY) || Q.reject(Relution.LiveData.Store.CONST.ERROR_NO_ENTITY);
+                        return that.handleError(options, LiveData.Store.CONST.ERROR_NO_ENTITY) || Q.reject(LiveData.Store.CONST.ERROR_NO_ENTITY);
                     }
                 });
             };
@@ -4067,7 +4067,7 @@ var Relution;
                     this.handleSuccess(options);
                 }
                 else {
-                    this.handleError(options, Relution.LiveData.Store.CONST.ERROR_NO_ENTITY);
+                    this.handleError(options, LiveData.Store.CONST.ERROR_NO_ENTITY);
                 }
             };
             LocalStorageStore.prototype._getKey = function (entity, id) {
@@ -4086,7 +4086,7 @@ var Relution;
                         }
                     }
                     catch (e) {
-                        console.error(Relution.LiveData.Store.CONST.ERROR_LOAD_DATA + e.message);
+                        console.error(LiveData.Store.CONST.ERROR_LOAD_DATA + e.message);
                     }
                 }
                 return attrs;
@@ -4098,7 +4098,7 @@ var Relution;
                         this._addItemId(entity, id);
                     }
                     catch (e) {
-                        console.error(Relution.LiveData.Store.CONST.ERROR_SAVE_DATA + e.message);
+                        console.error(LiveData.Store.CONST.ERROR_SAVE_DATA + e.message);
                     }
                 }
             };
@@ -4145,7 +4145,7 @@ var Relution;
                     return this.ids[entity.name];
                 }
                 catch (e) {
-                    console.error(Relution.LiveData.Store.CONST.ERROR_LOAD_IDS + e.message);
+                    console.error(LiveData.Store.CONST.ERROR_LOAD_IDS + e.message);
                 }
             };
             LocalStorageStore.prototype._saveItemIds = function (entity, ids) {
@@ -4154,7 +4154,7 @@ var Relution;
                     localStorage.setItem(key, JSON.stringify(ids));
                 }
                 catch (e) {
-                    console.error(Relution.LiveData.Store.CONST.ERROR_SAVE_IDS + e.message);
+                    console.error(LiveData.Store.CONST.ERROR_SAVE_IDS + e.message);
                 }
             };
             return LocalStorageStore;
@@ -4246,23 +4246,23 @@ var Relution;
                     version: '1.0',
                     typeMapping: (function () {
                         var map = {};
-                        map[Relution.LiveData.DATA.TYPE.OBJECTID] = Relution.LiveData.DATA.TYPE.STRING;
-                        map[Relution.LiveData.DATA.TYPE.DATE] = Relution.LiveData.DATA.TYPE.STRING;
-                        map[Relution.LiveData.DATA.TYPE.OBJECT] = Relution.LiveData.DATA.TYPE.TEXT;
-                        map[Relution.LiveData.DATA.TYPE.ARRAY] = Relution.LiveData.DATA.TYPE.TEXT;
-                        map[Relution.LiveData.DATA.TYPE.BINARY] = Relution.LiveData.DATA.TYPE.TEXT;
+                        map[LiveData.DATA.TYPE.OBJECTID] = LiveData.DATA.TYPE.STRING;
+                        map[LiveData.DATA.TYPE.DATE] = LiveData.DATA.TYPE.STRING;
+                        map[LiveData.DATA.TYPE.OBJECT] = LiveData.DATA.TYPE.TEXT;
+                        map[LiveData.DATA.TYPE.ARRAY] = LiveData.DATA.TYPE.TEXT;
+                        map[LiveData.DATA.TYPE.BINARY] = LiveData.DATA.TYPE.TEXT;
                         return map;
                     })(),
                     sqlTypeMapping: (function () {
                         var map = {};
-                        map[Relution.LiveData.DATA.TYPE.STRING] = 'varchar(255)';
-                        map[Relution.LiveData.DATA.TYPE.TEXT] = 'text';
-                        map[Relution.LiveData.DATA.TYPE.OBJECT] = 'text';
-                        map[Relution.LiveData.DATA.TYPE.ARRAY] = 'text';
-                        map[Relution.LiveData.DATA.TYPE.FLOAT] = 'float';
-                        map[Relution.LiveData.DATA.TYPE.INTEGER] = 'integer';
-                        map[Relution.LiveData.DATA.TYPE.DATE] = 'varchar(255)';
-                        map[Relution.LiveData.DATA.TYPE.BOOLEAN] = 'boolean';
+                        map[LiveData.DATA.TYPE.STRING] = 'varchar(255)';
+                        map[LiveData.DATA.TYPE.TEXT] = 'text';
+                        map[LiveData.DATA.TYPE.OBJECT] = 'text';
+                        map[LiveData.DATA.TYPE.ARRAY] = 'text';
+                        map[LiveData.DATA.TYPE.FLOAT] = 'float';
+                        map[LiveData.DATA.TYPE.INTEGER] = 'integer';
+                        map[LiveData.DATA.TYPE.DATE] = 'varchar(255)';
+                        map[LiveData.DATA.TYPE.BOOLEAN] = 'boolean';
                         return map;
                     })()
                 }, options));
@@ -4442,7 +4442,7 @@ var Relution;
             WebSqlStore.prototype._isAutoincrementKey = function (entity, key) {
                 if (entity && key) {
                     var column = this.getField(entity, key);
-                    return column && column.type === Relution.LiveData.DATA.TYPE.INTEGER;
+                    return column && column.type === LiveData.DATA.TYPE.INTEGER;
                 }
             };
             WebSqlStore.prototype._sqlPrimaryKey = function (entity, keys) {
@@ -4505,7 +4505,7 @@ var Relution;
                     sql = options.where;
                 }
                 else if (_.isObject(options.where)) {
-                    this._selector = Relution.LiveData.SqlSelector.create(options.where, entity);
+                    this._selector = LiveData.SqlSelector.create(options.where, entity);
                     sql = this._selector.buildStatement();
                 }
                 return sql;
@@ -4564,17 +4564,17 @@ var Relution;
                 return sql;
             };
             WebSqlStore.prototype._sqlValue = function (value, field) {
-                var type = field && field.type ? field.type : Relution.LiveData.Field.prototype.detectType(value);
-                if (type === Relution.LiveData.DATA.TYPE.INTEGER || type === Relution.LiveData.DATA.TYPE.FLOAT) {
+                var type = field && field.type ? field.type : LiveData.Field.prototype.detectType(value);
+                if (type === LiveData.DATA.TYPE.INTEGER || type === LiveData.DATA.TYPE.FLOAT) {
                     return value;
                 }
-                else if (type === Relution.LiveData.DATA.TYPE.BOOLEAN) {
+                else if (type === LiveData.DATA.TYPE.BOOLEAN) {
                     return value ? '1' : '0';
                 }
-                else if (type === Relution.LiveData.DATA.TYPE.NULL) {
+                else if (type === LiveData.DATA.TYPE.NULL) {
                     return 'NULL';
                 }
-                value = Relution.LiveData.Field.prototype.transform(value, Relution.LiveData.DATA.TYPE.STRING);
+                value = LiveData.Field.prototype.transform(value, LiveData.DATA.TYPE.STRING);
                 value = value.replace(/"/g, '""');
                 return '"' + value + '"';
             };
@@ -4625,7 +4625,7 @@ var Relution;
             };
             WebSqlStore.prototype._insertOrReplace = function (model, options) {
                 var entity = this.getEntity(options);
-                var models = Relution.LiveData.isCollection(model) ? model.models : [model];
+                var models = LiveData.isCollection(model) ? model.models : [model];
                 if (this._checkDb(options) && this._checkEntity(options, entity) && this._checkData(options, models)) {
                     var isAutoInc = this._isAutoincrementKey(entity, entity.getKey());
                     var statements = [];
@@ -4634,7 +4634,7 @@ var Relution;
                         var amodel = models[i];
                         var statement = ''; // the actual sql insert string with values
                         if (!isAutoInc && !amodel.id && amodel.idAttribute) {
-                            amodel.set(amodel.idAttribute, new Relution.LiveData.ObjectID().toHexString());
+                            amodel.set(amodel.idAttribute, new LiveData.ObjectID().toHexString());
                         }
                         var value = options.attrs || amodel.toJSON();
                         var args, keys;
@@ -4660,7 +4660,7 @@ var Relution;
                 var entity = this.getEntity(options);
                 if (this._checkDb(options) && this._checkEntity(options, entity)) {
                     var lastStatement;
-                    var isCollection = !Relution.LiveData.isModel(model);
+                    var isCollection = !LiveData.isModel(model);
                     var result;
                     if (isCollection) {
                         result = [];
@@ -4722,7 +4722,7 @@ var Relution;
             };
             WebSqlStore.prototype._delete = function (model, options) {
                 var entity = this.getEntity(options);
-                var models = Relution.LiveData.isCollection(model) ? model.models : [model];
+                var models = LiveData.isCollection(model) ? model.models : [model];
                 if (this._checkDb(options) && this._checkEntity(options, entity)) {
                     options.models = models;
                     var sql = this._sqlDelete(options, entity);
@@ -4904,7 +4904,7 @@ var Relution;
                 var entity = this.getEntity(collection.entity);
                 if (url && entity) {
                     var name = entity.name;
-                    var hash = Relution.LiveData.URLUtil.hashLocation(url);
+                    var hash = LiveData.URLUtil.hashLocation(url);
                     var credentials = entity.credentials || collection.credentials || this.options.credentials;
                     var user = credentials && credentials.username ? credentials.username : '';
                     var channel = name + user + hash;
@@ -4912,7 +4912,7 @@ var Relution;
                     // get or create endpoint for this url
                     var endpoint = this.endpoints[hash];
                     if (!endpoint) {
-                        var href = Relution.LiveData.URLUtil.getLocation(url);
+                        var href = LiveData.URLUtil.getLocation(url);
                         endpoint = {};
                         endpoint.isConnected = false;
                         endpoint.baseUrl = url;
@@ -4938,14 +4938,14 @@ var Relution;
             };
             SyncStore.prototype.getEndpoint = function (url) {
                 if (url) {
-                    var hash = Relution.LiveData.URLUtil.hashLocation(url);
+                    var hash = LiveData.URLUtil.hashLocation(url);
                     return this.endpoints[hash];
                 }
             };
             SyncStore.prototype.createLocalStore = function (endpoint) {
                 if (this.options.useLocalStore) {
                     var entities = {};
-                    entities[endpoint.entity.name] = _.extend(new Relution.LiveData.Entity(endpoint.entity), {
+                    entities[endpoint.entity.name] = _.extend(new LiveData.Entity(endpoint.entity), {
                         name: endpoint.channel
                     });
                     return this.options.localStore.create({
@@ -4962,11 +4962,11 @@ var Relution;
                 if (this.options.useOfflineChanges) {
                     var entity = 'msg-' + endpoint.channel;
                     var entities = {};
-                    entities[entity] = new Relution.LiveData.Entity({
+                    entities[entity] = new LiveData.Entity({
                         name: entity,
                         idAttribute: 'id'
                     });
-                    var messages = Relution.LiveData.Collection.design({
+                    var messages = LiveData.Collection.design({
                         entity: entity,
                         store: this.options.localStore.create({
                             entities: entities
@@ -4984,7 +4984,7 @@ var Relution;
                     var that = this;
                     var url = endpoint.host;
                     var path = endpoint.path;
-                    var href = Relution.LiveData.URLUtil.getLocation(url);
+                    var href = LiveData.URLUtil.getLocation(url);
                     if (href.port === '') {
                         if (href.protocol === 'https:') {
                             url += ':443';
@@ -5101,7 +5101,7 @@ var Relution;
                         store: endpoint.localStore,
                         entity: endpoint.entity
                     }, that.options);
-                    var model = new Relution.LiveData.Model(msg.data, _.extend({
+                    var model = new LiveData.Model(msg.data, _.extend({
                         parse: true
                     }, options));
                     q = endpoint.localStore.sync(msg.method, model, _.extend(options, {
@@ -5184,8 +5184,8 @@ var Relution;
                 catch (error) {
                     return Q.reject(this.handleError(options, error) || error);
                 }
-                if (Relution.LiveData.isModel(model) && !model.id) {
-                    model.set(model.idAttribute, new Relution.LiveData.ObjectID().toHexString());
+                if (LiveData.isModel(model) && !model.id) {
+                    model.set(model.idAttribute, new LiveData.ObjectID().toHexString());
                 }
                 var channel = endpoint.channel;
                 var time = this.getLastMessageTime(channel);
@@ -5303,7 +5303,7 @@ var Relution;
             SyncStore.prototype._ajaxMessage = function (endpoint, msg, options, model) {
                 var channel = endpoint.channel;
                 var that = this;
-                var url = Relution.LiveData.isModel(model) || msg.method !== 'read' ? endpoint.baseUrl : endpoint.readUrl;
+                var url = LiveData.isModel(model) || msg.method !== 'read' ? endpoint.baseUrl : endpoint.readUrl;
                 if (msg.id && msg.method !== 'create') {
                     url += (url.charAt(url.length - 1) === '/' ? '' : '/') + msg.id;
                 }
@@ -5336,7 +5336,7 @@ var Relution;
                                 data: data // just accepts new data
                             }, msg)));
                         }
-                        else if (Relution.LiveData.isCollection(model) && _.isArray(data)) {
+                        else if (LiveData.isCollection(model) && _.isArray(data)) {
                             // synchronize the collection contents with the data read
                             var ids = {};
                             model.models.forEach(function (m) {
@@ -5349,7 +5349,7 @@ var Relution;
                                     if (m) {
                                         // update the item
                                         delete ids[id]; // so that it is deleted below
-                                        if (!_.isEqual(_.pick.call(m, m.attributes, LiveData.Object.keys(d)), d)) {
+                                        if (!_.isEqual(_.pick.call(m, m.attributes, Object.keys(d)), d)) {
                                             // above checked that all attributes in d are in m with equal values and found some mismatch
                                             promises.push(that.onMessageStore(endpoint, {
                                                 id: id,
@@ -5368,7 +5368,7 @@ var Relution;
                                     }
                                 }
                             });
-                            LiveData.Object.keys(ids).forEach(function (id) {
+                            Object.keys(ids).forEach(function (id) {
                                 // delete the item
                                 var m = ids[id];
                                 promises.push(that.onMessageStore(endpoint, {
@@ -5407,7 +5407,7 @@ var Relution;
                 var channel = endpoint ? endpoint.channel : '';
                 var time = that.getLastMessageTime(channel);
                 if (endpoint && endpoint.baseUrl && channel && time) {
-                    var changes = new Relution.LiveData.Collection();
+                    var changes = new LiveData.Collection();
                     return changes.fetch({
                         url: endpoint.baseUrl + 'changes/' + time,
                         success: function (model, response, options) {
@@ -5427,7 +5427,7 @@ var Relution;
             SyncStore.prototype.fetchServerInfo = function (endpoint) {
                 var that = this;
                 if (endpoint && endpoint.baseUrl) {
-                    var info = new Relution.LiveData.Model();
+                    var info = new LiveData.Model();
                     var time = that.getLastMessageTime(endpoint.channel);
                     var url = endpoint.baseUrl;
                     if (url.charAt((url.length - 1)) !== '/') {
@@ -5477,7 +5477,7 @@ var Relution;
                         // just affect local store
                         store: endpoint.localStore
                     };
-                    var model = new Relution.LiveData.Model(msg.data, {
+                    var model = new LiveData.Model(msg.data, {
                         idAttribute: endpoint.entity.idAttribute,
                         entity: endpoint.entity,
                     });

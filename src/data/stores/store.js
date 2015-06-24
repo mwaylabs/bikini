@@ -81,7 +81,7 @@ var Relution;
                     entity = this.entities[entity];
                 }
                 if (entity && entity.collection) {
-                    if (Relution.LiveData.Collection.prototype.isPrototypeOf(entity.collection)) {
+                    if (LiveData.Collection.prototype.isPrototypeOf(entity.collection)) {
                         return entity.collection;
                     }
                     else {
@@ -104,7 +104,7 @@ var Relution;
                 if (_.isArray(data)) {
                     return data;
                 }
-                else if (Relution.LiveData.isCollection(data)) {
+                else if (LiveData.isCollection(data)) {
                     return data.models;
                 }
                 return _.isObject(data) ? [data] : [];
@@ -196,8 +196,8 @@ var Relution;
                 }
             };
             Store.prototype._checkEntity = function (obj, entity) {
-                if (!Relution.LiveData.isEntity(entity)) {
-                    var error = Relution.LiveData.Store.CONST.ERROR_NO_ENTITY;
+                if (!LiveData.isEntity(entity)) {
+                    var error = Store.CONST.ERROR_NO_ENTITY;
                     console.error(error);
                     this.handleError(obj, error);
                     return false;
@@ -206,7 +206,7 @@ var Relution;
             };
             Store.prototype._checkData = function (obj, data) {
                 if ((!_.isArray(data) || data.length === 0) && !_.isObject(data)) {
-                    var error = Relution.LiveData.Store.CONST.ERROR_NO_DATA;
+                    var error = Store.CONST.ERROR_NO_DATA;
                     console.error(error);
                     this.handleError(obj, error);
                     return false;
@@ -251,7 +251,7 @@ var Relution;
             return Store;
         })();
         LiveData.Store = Store;
-        _.extend(Store.prototype, Backbone.Events, LiveData.Object);
+        _.extend(Store.prototype, Backbone.Events, LiveData._Object);
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=store.js.map

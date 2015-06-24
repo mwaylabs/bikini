@@ -119,13 +119,13 @@ Relution.LiveData.sync = function sync(method, model, options) {
   }
 };
 
-Relution.LiveData.Object = {
+Relution.LiveData._Object = {
   /**
    * The type of this object.
    *
    * @type String
    */
-  _type: 'Relution.LiveData.Object',
+  _type: 'Relution.LiveData._Object',
 
   /**
    * Creates an object based on a passed prototype.

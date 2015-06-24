@@ -6,9 +6,9 @@
  * based values.
  * @module Relution.LiveData.Cypher
  *
- * @extends Relution.LiveData.Object
+ * @extends Relution.LiveData._Object
  */
-Relution.LiveData.Cypher = Relution.LiveData.Object.design(/** @scope Relution.LiveData.Cypher.prototype */ {
+Relution.LiveData.Cypher = Relution.LiveData._Object.design(/** @scope Relution.LiveData.Cypher.prototype */ {
 
   /**
    * The type of this object.

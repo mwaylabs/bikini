@@ -7,9 +7,9 @@
  * this.
  * @module Relution.LiveData.SHA256
  *
- * @extends Relution.LiveData.Object
+ * @extends Relution.LiveData._Object
  */
-Relution.LiveData.SHA256 = Relution.LiveData.Object.design(/** @scope Relution.LiveData.SHA256.prototype */ {
+Relution.LiveData.SHA256 = Relution.LiveData._Object.design(/** @scope Relution.LiveData.SHA256.prototype */ {
 
   /**
    * The type of this object.

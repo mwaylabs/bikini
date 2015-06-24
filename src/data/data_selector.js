@@ -11,9 +11,9 @@
  * @module Relution.LiveData.DataSelector
  *
  * @type {*}
- * @extends Relution.LiveData.Object
+ * @extends Relution.LiveData._Object
  */
-Relution.LiveData.DataSelector = Relution.LiveData.Object.design({
+Relution.LiveData.DataSelector = Relution.LiveData._Object.design({
 
   _type: 'Relution.LiveData.DataSelector',
 

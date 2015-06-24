@@ -38,7 +38,7 @@ declare module Relution {
 
 declare module Relution.LiveData {
 
-  var Object;
+  var _Object;
   var Entity;
   var Model;
   var Collection;

@@ -81,23 +81,23 @@ var Relution;
                     version: '1.0',
                     typeMapping: (function () {
                         var map = {};
-                        map[Relution.LiveData.DATA.TYPE.OBJECTID] = Relution.LiveData.DATA.TYPE.STRING;
-                        map[Relution.LiveData.DATA.TYPE.DATE] = Relution.LiveData.DATA.TYPE.STRING;
-                        map[Relution.LiveData.DATA.TYPE.OBJECT] = Relution.LiveData.DATA.TYPE.TEXT;
-                        map[Relution.LiveData.DATA.TYPE.ARRAY] = Relution.LiveData.DATA.TYPE.TEXT;
-                        map[Relution.LiveData.DATA.TYPE.BINARY] = Relution.LiveData.DATA.TYPE.TEXT;
+                        map[LiveData.DATA.TYPE.OBJECTID] = LiveData.DATA.TYPE.STRING;
+                        map[LiveData.DATA.TYPE.DATE] = LiveData.DATA.TYPE.STRING;
+                        map[LiveData.DATA.TYPE.OBJECT] = LiveData.DATA.TYPE.TEXT;
+                        map[LiveData.DATA.TYPE.ARRAY] = LiveData.DATA.TYPE.TEXT;
+                        map[LiveData.DATA.TYPE.BINARY] = LiveData.DATA.TYPE.TEXT;
                         return map;
                     })(),
                     sqlTypeMapping: (function () {
                         var map = {};
-                        map[Relution.LiveData.DATA.TYPE.STRING] = 'varchar(255)';
-                        map[Relution.LiveData.DATA.TYPE.TEXT] = 'text';
-                        map[Relution.LiveData.DATA.TYPE.OBJECT] = 'text';
-                        map[Relution.LiveData.DATA.TYPE.ARRAY] = 'text';
-                        map[Relution.LiveData.DATA.TYPE.FLOAT] = 'float';
-                        map[Relution.LiveData.DATA.TYPE.INTEGER] = 'integer';
-                        map[Relution.LiveData.DATA.TYPE.DATE] = 'varchar(255)';
-                        map[Relution.LiveData.DATA.TYPE.BOOLEAN] = 'boolean';
+                        map[LiveData.DATA.TYPE.STRING] = 'varchar(255)';
+                        map[LiveData.DATA.TYPE.TEXT] = 'text';
+                        map[LiveData.DATA.TYPE.OBJECT] = 'text';
+                        map[LiveData.DATA.TYPE.ARRAY] = 'text';
+                        map[LiveData.DATA.TYPE.FLOAT] = 'float';
+                        map[LiveData.DATA.TYPE.INTEGER] = 'integer';
+                        map[LiveData.DATA.TYPE.DATE] = 'varchar(255)';
+                        map[LiveData.DATA.TYPE.BOOLEAN] = 'boolean';
                         return map;
                     })()
                 }, options));
@@ -277,7 +277,7 @@ var Relution;
             WebSqlStore.prototype._isAutoincrementKey = function (entity, key) {
                 if (entity && key) {
                     var column = this.getField(entity, key);
-                    return column && column.type === Relution.LiveData.DATA.TYPE.INTEGER;
+                    return column && column.type === LiveData.DATA.TYPE.INTEGER;
                 }
             };
             WebSqlStore.prototype._sqlPrimaryKey = function (entity, keys) {
@@ -340,7 +340,7 @@ var Relution;
                     sql = options.where;
                 }
                 else if (_.isObject(options.where)) {
-                    this._selector = Relution.LiveData.SqlSelector.create(options.where, entity);
+                    this._selector = LiveData.SqlSelector.create(options.where, entity);
                     sql = this._selector.buildStatement();
                 }
                 return sql;
@@ -399,17 +399,17 @@ var Relution;
                 return sql;
             };
             WebSqlStore.prototype._sqlValue = function (value, field) {
-                var type = field && field.type ? field.type : Relution.LiveData.Field.prototype.detectType(value);
-                if (type === Relution.LiveData.DATA.TYPE.INTEGER || type === Relution.LiveData.DATA.TYPE.FLOAT) {
+                var type = field && field.type ? field.type : LiveData.Field.prototype.detectType(value);
+                if (type === LiveData.DATA.TYPE.INTEGER || type === LiveData.DATA.TYPE.FLOAT) {
                     return value;
                 }
-                else if (type === Relution.LiveData.DATA.TYPE.BOOLEAN) {
+                else if (type === LiveData.DATA.TYPE.BOOLEAN) {
                     return value ? '1' : '0';
                 }
-                else if (type === Relution.LiveData.DATA.TYPE.NULL) {
+                else if (type === LiveData.DATA.TYPE.NULL) {
                     return 'NULL';
                 }
-                value = Relution.LiveData.Field.prototype.transform(value, Relution.LiveData.DATA.TYPE.STRING);
+                value = LiveData.Field.prototype.transform(value, LiveData.DATA.TYPE.STRING);
                 value = value.replace(/"/g, '""');
                 return '"' + value + '"';
             };
@@ -460,7 +460,7 @@ var Relution;
             };
             WebSqlStore.prototype._insertOrReplace = function (model, options) {
                 var entity = this.getEntity(options);
-                var models = Relution.LiveData.isCollection(model) ? model.models : [model];
+                var models = LiveData.isCollection(model) ? model.models : [model];
                 if (this._checkDb(options) && this._checkEntity(options, entity) && this._checkData(options, models)) {
                     var isAutoInc = this._isAutoincrementKey(entity, entity.getKey());
                     var statements = [];
@@ -469,7 +469,7 @@ var Relution;
                         var amodel = models[i];
                         var statement = ''; // the actual sql insert string with values
                         if (!isAutoInc && !amodel.id && amodel.idAttribute) {
-                            amodel.set(amodel.idAttribute, new Relution.LiveData.ObjectID().toHexString());
+                            amodel.set(amodel.idAttribute, new LiveData.ObjectID().toHexString());
                         }
                         var value = options.attrs || amodel.toJSON();
                         var args, keys;
@@ -495,7 +495,7 @@ var Relution;
                 var entity = this.getEntity(options);
                 if (this._checkDb(options) && this._checkEntity(options, entity)) {
                     var lastStatement;
-                    var isCollection = !Relution.LiveData.isModel(model);
+                    var isCollection = !LiveData.isModel(model);
                     var result;
                     if (isCollection) {
                         result = [];
@@ -557,7 +557,7 @@ var Relution;
             };
             WebSqlStore.prototype._delete = function (model, options) {
                 var entity = this.getEntity(options);
-                var models = Relution.LiveData.isCollection(model) ? model.models : [model];
+                var models = LiveData.isCollection(model) ? model.models : [model];
                 if (this._checkDb(options) && this._checkEntity(options, entity)) {
                     options.models = models;
                     var sql = this._sqlDelete(options, entity);

@@ -23,7 +23,7 @@ Relution.LiveData.Model = Backbone.Model.extend({
 Relution.LiveData.Model.create = Relution.LiveData.create;
 Relution.LiveData.Model.design = Relution.LiveData.design;
 
-_.extend(Relution.LiveData.Model.prototype, Relution.LiveData.Object, {
+_.extend(Relution.LiveData.Model.prototype, Relution.LiveData._Object, {
 
   _type: 'Relution.LiveData.Model',
 

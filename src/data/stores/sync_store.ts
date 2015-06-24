@@ -97,7 +97,7 @@ module Relution.LiveData {
       var entity = this.getEntity(collection.entity);
       if (url && entity) {
         var name = entity.name;
-        var hash = Relution.LiveData.URLUtil.hashLocation(url);
+        var hash = URLUtil.hashLocation(url);
         var credentials = entity.credentials || collection.credentials || this.options.credentials;
         var user = credentials && credentials.username ? credentials.username : '';
         var channel = name + user + hash;
@@ -106,7 +106,7 @@ module Relution.LiveData {
         // get or create endpoint for this url
         var endpoint = this.endpoints[hash];
         if (!endpoint) {
-          var href = Relution.LiveData.URLUtil.getLocation(url);
+          var href = URLUtil.getLocation(url);
           endpoint = {};
           endpoint.isConnected = false;
           endpoint.baseUrl = url;
@@ -134,7 +134,7 @@ module Relution.LiveData {
 
     getEndpoint(url) {
       if (url) {
-        var hash = Relution.LiveData.URLUtil.hashLocation(url);
+        var hash = URLUtil.hashLocation(url);
         return this.endpoints[hash];
       }
     }
@@ -142,7 +142,7 @@ module Relution.LiveData {
     createLocalStore(endpoint) {
       if (this.options.useLocalStore) {
         var entities = {};
-        entities[endpoint.entity.name] = _.extend(new Relution.LiveData.Entity(endpoint.entity), {
+        entities[endpoint.entity.name] = _.extend(new Entity(endpoint.entity), {
           name: endpoint.channel
         });
         return this.options.localStore.create({
@@ -160,11 +160,11 @@ module Relution.LiveData {
       if (this.options.useOfflineChanges) {
         var entity = 'msg-' + endpoint.channel;
         var entities = {};
-        entities[entity] = new Relution.LiveData.Entity({
+        entities[entity] = new Entity({
           name: entity,
           idAttribute: 'id'
         });
-        var messages = Relution.LiveData.Collection.design({
+        var messages = Collection.design({
           entity: entity,
           store: this.options.localStore.create({
             entities: entities
@@ -183,7 +183,7 @@ module Relution.LiveData {
         var that = this;
         var url = endpoint.host;
         var path = endpoint.path;
-        var href = Relution.LiveData.URLUtil.getLocation(url);
+        var href = URLUtil.getLocation(url);
         if (href.port === '') {
           if (href.protocol === 'https:') {
             url += ':443';
@@ -309,7 +309,7 @@ module Relution.LiveData {
           store: endpoint.localStore,
           entity: endpoint.entity
         }, that.options);
-        var model = new Relution.LiveData.Model(msg.data, _.extend({
+        var model = new Model(msg.data, _.extend({
           parse: true
         }, options));
         q = endpoint.localStore.sync(msg.method, model, _.extend(options, {
@@ -396,8 +396,8 @@ module Relution.LiveData {
         return Q.reject(this.handleError(options, error) || error);
       }
 
-      if (Relution.LiveData.isModel(model) && !model.id) {
-        model.set(model.idAttribute, new Relution.LiveData.ObjectID().toHexString());
+      if (isModel(model) && !model.id) {
+        model.set(model.idAttribute, new ObjectID().toHexString());
       }
 
       var channel = endpoint.channel;
@@ -526,7 +526,7 @@ module Relution.LiveData {
     private _ajaxMessage(endpoint, msg, options, model) {
       var channel = endpoint.channel;
       var that = this;
-      var url = Relution.LiveData.isModel(model) || msg.method !== 'read' ? endpoint.baseUrl : endpoint.readUrl;
+      var url = isModel(model) || msg.method !== 'read' ? endpoint.baseUrl : endpoint.readUrl;
       if (msg.id && msg.method !== 'create') {
         url += (url.charAt(url.length - 1) === '/' ? '' : '/' ) + msg.id;
       }
@@ -560,7 +560,7 @@ module Relution.LiveData {
             promises.push(that.onMessageStore(endpoint, data === msg.data ? msg : _.defaults({
               data: data // just accepts new data
             }, msg)));
-          } else if (Relution.LiveData.isCollection(model) && _.isArray(data)) {
+          } else if (isCollection(model) && _.isArray(data)) {
             // synchronize the collection contents with the data read
             var ids = {};
             model.models.forEach(function (m) {
@@ -630,7 +630,7 @@ module Relution.LiveData {
       var channel = endpoint ? endpoint.channel : '';
       var time = that.getLastMessageTime(channel);
       if (endpoint && endpoint.baseUrl && channel && time) {
-        var changes = new Relution.LiveData.Collection();
+        var changes = new Collection();
         return changes.fetch({
           url: endpoint.baseUrl + 'changes/' + time,
           success: function (model, response, options) {
@@ -650,7 +650,7 @@ module Relution.LiveData {
     private fetchServerInfo(endpoint) {
       var that = this;
       if (endpoint && endpoint.baseUrl) {
-        var info = new Relution.LiveData.Model();
+        var info = new Model();
         var time = that.getLastMessageTime(endpoint.channel);
         var url = endpoint.baseUrl;
         if (url.charAt((url.length - 1)) !== '/') {
@@ -704,7 +704,7 @@ module Relution.LiveData {
           // just affect local store
           store: endpoint.localStore
         };
-        var model = new Relution.LiveData.Model(msg.data, {
+        var model = new Model(msg.data, {
           idAttribute: endpoint.entity.idAttribute,
           entity: endpoint.entity,
         });

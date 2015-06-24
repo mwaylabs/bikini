@@ -69,7 +69,7 @@ var Relution;
                 var entity = that.getEntity(model.entity || options.entity);
                 var attrs;
                 if (entity && model) {
-                    var id = model.id || (method === 'create' ? new Relution.LiveData.ObjectID().toHexString() : null);
+                    var id = model.id || (method === 'create' ? new LiveData.ObjectID().toHexString() : null);
                     attrs = options.attrs || model.toJSON(options);
                     switch (method) {
                         case 'patch':
@@ -110,7 +110,7 @@ var Relution;
                         return that.handleSuccess(options, attrs) || attrs;
                     }
                     else {
-                        return that.handleError(options, Relution.LiveData.Store.CONST.ERROR_NO_ENTITY) || Q.reject(Relution.LiveData.Store.CONST.ERROR_NO_ENTITY);
+                        return that.handleError(options, LiveData.Store.CONST.ERROR_NO_ENTITY) || Q.reject(LiveData.Store.CONST.ERROR_NO_ENTITY);
                     }
                 });
             };
@@ -125,7 +125,7 @@ var Relution;
                     this.handleSuccess(options);
                 }
                 else {
-                    this.handleError(options, Relution.LiveData.Store.CONST.ERROR_NO_ENTITY);
+                    this.handleError(options, LiveData.Store.CONST.ERROR_NO_ENTITY);
                 }
             };
             LocalStorageStore.prototype._getKey = function (entity, id) {
@@ -144,7 +144,7 @@ var Relution;
                         }
                     }
                     catch (e) {
-                        console.error(Relution.LiveData.Store.CONST.ERROR_LOAD_DATA + e.message);
+                        console.error(LiveData.Store.CONST.ERROR_LOAD_DATA + e.message);
                     }
                 }
                 return attrs;
@@ -156,7 +156,7 @@ var Relution;
                         this._addItemId(entity, id);
                     }
                     catch (e) {
-                        console.error(Relution.LiveData.Store.CONST.ERROR_SAVE_DATA + e.message);
+                        console.error(LiveData.Store.CONST.ERROR_SAVE_DATA + e.message);
                     }
                 }
             };
@@ -203,7 +203,7 @@ var Relution;
                     return this.ids[entity.name];
                 }
                 catch (e) {
-                    console.error(Relution.LiveData.Store.CONST.ERROR_LOAD_IDS + e.message);
+                    console.error(LiveData.Store.CONST.ERROR_LOAD_IDS + e.message);
                 }
             };
             LocalStorageStore.prototype._saveItemIds = function (entity, ids) {
@@ -212,7 +212,7 @@ var Relution;
                     localStorage.setItem(key, JSON.stringify(ids));
                 }
                 catch (e) {
-                    console.error(Relution.LiveData.Store.CONST.ERROR_SAVE_IDS + e.message);
+                    console.error(LiveData.Store.CONST.ERROR_SAVE_IDS + e.message);
                 }
             };
             return LocalStorageStore;

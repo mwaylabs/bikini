@@ -7,7 +7,7 @@
  *
  * @type {{logon: Function, logonBasicAuth: Function, logonMcapAuth: Function, getHost: Function}}
  */
-Relution.LiveData.Security = Relution.LiveData.Object.design({
+Relution.LiveData.Security = Relution.LiveData._Object.design({
 
   logon: _.extend(function logon(options) {
     var credentials = options && options.credentials;

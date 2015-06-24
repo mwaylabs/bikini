@@ -8,9 +8,9 @@
  * @module Relution.LiveData.URLUtil
  *
  * @type {*}
- * @extends Relution.LiveData.Object
+ * @extends Relution.LiveData._Object
  */
-Relution.LiveData.URLUtil = Relution.LiveData.Object.design({
+Relution.LiveData.URLUtil = Relution.LiveData._Object.design({
   /*
    url = "http://example.com:3000/pathname/?search=test#hash";
 

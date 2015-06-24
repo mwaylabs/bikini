@@ -7,9 +7,9 @@
  * this.
  * @module Relution.LiveData.Base64
  *
- * @extends Relution.LiveData.Object
+ * @extends Relution.LiveData._Object
  */
-Relution.LiveData.Base64 = Relution.LiveData.Object.design(/** @scope Relution.LiveData.Base64.prototype */ {
+Relution.LiveData.Base64 = Relution.LiveData._Object.design(/** @scope Relution.LiveData.Base64.prototype */ {
 
   /**
    * The type of this object.

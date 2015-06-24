@@ -5,7 +5,7 @@
  *
  * @module Relution.LiveData.Date
  *
- * @extends Relution.LiveData.Object
+ * @extends Relution.LiveData._Object
  */
 Relution.LiveData.Date = {
 

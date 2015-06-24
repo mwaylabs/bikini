@@ -60,7 +60,7 @@ module Relution.LiveData {
       var entity = that.getEntity(model.entity || options.entity);
       var attrs;
       if (entity && model) {
-        var id = model.id || (method === 'create' ? new Relution.LiveData.ObjectID().toHexString() : null);
+        var id = model.id || (method === 'create' ? new ObjectID().toHexString() : null);
         attrs = options.attrs || model.toJSON(options);
         switch (method) {
           case 'patch':
@@ -100,7 +100,7 @@ module Relution.LiveData {
         if (attrs) {
           return that.handleSuccess(options, attrs) || attrs;
         } else {
-          return that.handleError(options, Relution.LiveData.Store.CONST.ERROR_NO_ENTITY) || Q.reject(Relution.LiveData.Store.CONST.ERROR_NO_ENTITY);
+          return that.handleError(options, Store.CONST.ERROR_NO_ENTITY) || Q.reject(Store.CONST.ERROR_NO_ENTITY);
         }
       });
     }
@@ -115,7 +115,7 @@ module Relution.LiveData {
         localStorage.removeItem('__ids__' + entity.name);
         this.handleSuccess(options);
       } else {
-        this.handleError(options, Relution.LiveData.Store.CONST.ERROR_NO_ENTITY);
+        this.handleError(options, Store.CONST.ERROR_NO_ENTITY);
       }
     }
 
@@ -134,7 +134,7 @@ module Relution.LiveData {
             this._delItemId(entity, id);
           }
         } catch (e) {
-          console.error(Relution.LiveData.Store.CONST.ERROR_LOAD_DATA + e.message);
+          console.error(Store.CONST.ERROR_LOAD_DATA + e.message);
         }
       }
       return attrs;
@@ -146,7 +146,7 @@ module Relution.LiveData {
           localStorage.setItem(this._getKey(entity, id), JSON.stringify(attrs));
           this._addItemId(entity, id);
         } catch (e) {
-          console.error(Relution.LiveData.Store.CONST.ERROR_SAVE_DATA + e.message);
+          console.error(Store.CONST.ERROR_SAVE_DATA + e.message);
         }
       }
     }
@@ -197,7 +197,7 @@ module Relution.LiveData {
         }
         return this.ids[entity.name];
       } catch (e) {
-        console.error(Relution.LiveData.Store.CONST.ERROR_LOAD_IDS + e.message);
+        console.error(Store.CONST.ERROR_LOAD_IDS + e.message);
       }
     }
 
@@ -206,7 +206,7 @@ module Relution.LiveData {
         var key = '__ids__' + entity.name;
         localStorage.setItem(key, JSON.stringify(ids));
       } catch (e) {
-        console.error(Relution.LiveData.Store.CONST.ERROR_SAVE_IDS + e.message);
+        console.error(Store.CONST.ERROR_SAVE_IDS + e.message);
       }
     }
   }

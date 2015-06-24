@@ -24,7 +24,7 @@ Relution.LiveData.Field.extend = Relution.LiveData.extend;
 Relution.LiveData.Field.create = Relution.LiveData.create;
 Relution.LiveData.Field.design = Relution.LiveData.design;
 
-_.extend(Relution.LiveData.Field.prototype, Relution.LiveData.Object, {
+_.extend(Relution.LiveData.Field.prototype, Relution.LiveData._Object, {
 
   /**
    * The type of this object.

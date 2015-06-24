@@ -90,23 +90,23 @@ module Relution.LiveData {
 
         typeMapping: (function () {
           var map = {};
-          map [Relution.LiveData.DATA.TYPE.OBJECTID] = Relution.LiveData.DATA.TYPE.STRING;
-          map [Relution.LiveData.DATA.TYPE.DATE] = Relution.LiveData.DATA.TYPE.STRING;
-          map [Relution.LiveData.DATA.TYPE.OBJECT] = Relution.LiveData.DATA.TYPE.TEXT;
-          map [Relution.LiveData.DATA.TYPE.ARRAY] = Relution.LiveData.DATA.TYPE.TEXT;
-          map [Relution.LiveData.DATA.TYPE.BINARY] = Relution.LiveData.DATA.TYPE.TEXT;
+          map [DATA.TYPE.OBJECTID] = DATA.TYPE.STRING;
+          map [DATA.TYPE.DATE] = DATA.TYPE.STRING;
+          map [DATA.TYPE.OBJECT] = DATA.TYPE.TEXT;
+          map [DATA.TYPE.ARRAY] = DATA.TYPE.TEXT;
+          map [DATA.TYPE.BINARY] = DATA.TYPE.TEXT;
           return map;
         })(),
         sqlTypeMapping: (function () {
           var map = {};
-          map [Relution.LiveData.DATA.TYPE.STRING] = 'varchar(255)';
-          map [Relution.LiveData.DATA.TYPE.TEXT] = 'text';
-          map [Relution.LiveData.DATA.TYPE.OBJECT] = 'text';
-          map [Relution.LiveData.DATA.TYPE.ARRAY] = 'text';
-          map [Relution.LiveData.DATA.TYPE.FLOAT] = 'float';
-          map [Relution.LiveData.DATA.TYPE.INTEGER] = 'integer';
-          map [Relution.LiveData.DATA.TYPE.DATE] = 'varchar(255)';
-          map [Relution.LiveData.DATA.TYPE.BOOLEAN] = 'boolean';
+          map [DATA.TYPE.STRING] = 'varchar(255)';
+          map [DATA.TYPE.TEXT] = 'text';
+          map [DATA.TYPE.OBJECT] = 'text';
+          map [DATA.TYPE.ARRAY] = 'text';
+          map [DATA.TYPE.FLOAT] = 'float';
+          map [DATA.TYPE.INTEGER] = 'integer';
+          map [DATA.TYPE.DATE] = 'varchar(255)';
+          map [DATA.TYPE.BOOLEAN] = 'boolean';
           return map;
         })()
       }, options));
@@ -283,7 +283,7 @@ module Relution.LiveData {
     private _isAutoincrementKey(entity, key) {
       if (entity && key) {
         var column = this.getField(entity, key);
-        return column && column.type === Relution.LiveData.DATA.TYPE.INTEGER;
+        return column && column.type === DATA.TYPE.INTEGER;
       }
     }
 
@@ -350,7 +350,7 @@ module Relution.LiveData {
       if (_.isString(options.where)) {
         sql = options.where;
       } else if (_.isObject(options.where)) {
-        this._selector = Relution.LiveData.SqlSelector.create(options.where, entity);
+        this._selector = SqlSelector.create(options.where, entity);
         sql = this._selector.buildStatement();
       }
       return sql;
@@ -417,15 +417,15 @@ module Relution.LiveData {
     }
 
     private _sqlValue(value, field) {
-      var type = field && field.type ? field.type : Relution.LiveData.Field.prototype.detectType(value);
-      if (type === Relution.LiveData.DATA.TYPE.INTEGER || type === Relution.LiveData.DATA.TYPE.FLOAT) {
+      var type = field && field.type ? field.type : Field.prototype.detectType(value);
+      if (type === DATA.TYPE.INTEGER || type === DATA.TYPE.FLOAT) {
         return value;
-      } else if (type === Relution.LiveData.DATA.TYPE.BOOLEAN) {
+      } else if (type === DATA.TYPE.BOOLEAN) {
         return value ? '1' : '0';
-      } else if (type === Relution.LiveData.DATA.TYPE.NULL) {
+      } else if (type === DATA.TYPE.NULL) {
         return 'NULL';
       }
-      value = Relution.LiveData.Field.prototype.transform(value, Relution.LiveData.DATA.TYPE.STRING);
+      value = Field.prototype.transform(value, DATA.TYPE.STRING);
       value = value.replace(/"/g, '""');
       return '"' + value + '"';
     }
@@ -484,7 +484,7 @@ module Relution.LiveData {
 
     private _insertOrReplace(model, options) {
       var entity = this.getEntity(options);
-      var models = Relution.LiveData.isCollection(model) ? model.models : [model];
+      var models = isCollection(model) ? model.models : [model];
       if (this._checkDb(options) && this._checkEntity(options, entity) && this._checkData(options, models)) {
 
         var isAutoInc = this._isAutoincrementKey(entity, entity.getKey());
@@ -494,7 +494,7 @@ module Relution.LiveData {
           var amodel = models[i];
           var statement = ''; // the actual sql insert string with values
           if (!isAutoInc && !amodel.id && amodel.idAttribute) {
-            amodel.set(amodel.idAttribute, new Relution.LiveData.ObjectID().toHexString());
+            amodel.set(amodel.idAttribute, new ObjectID().toHexString());
           }
           var value = options.attrs || amodel.toJSON();
           var args, keys;
@@ -520,7 +520,7 @@ module Relution.LiveData {
       var entity = this.getEntity(options);
       if (this._checkDb(options) && this._checkEntity(options, entity)) {
         var lastStatement;
-        var isCollection = !Relution.LiveData.isModel(model);
+        var isCollection = !isModel(model);
         var result;
         if (isCollection) {
           result = [];
@@ -578,7 +578,7 @@ module Relution.LiveData {
 
     private _delete(model, options) {
       var entity = this.getEntity(options);
-      var models = Relution.LiveData.isCollection(model) ? model.models : [model];
+      var models = isCollection(model) ? model.models : [model];
       if (this._checkDb(options) && this._checkEntity(options, entity)) {
         options.models = models;
         var sql = this._sqlDelete(options, entity);

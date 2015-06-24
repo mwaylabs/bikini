@@ -97,7 +97,7 @@ var Relution;
                 var entity = this.getEntity(collection.entity);
                 if (url && entity) {
                     var name = entity.name;
-                    var hash = Relution.LiveData.URLUtil.hashLocation(url);
+                    var hash = LiveData.URLUtil.hashLocation(url);
                     var credentials = entity.credentials || collection.credentials || this.options.credentials;
                     var user = credentials && credentials.username ? credentials.username : '';
                     var channel = name + user + hash;
@@ -105,7 +105,7 @@ var Relution;
                     // get or create endpoint for this url
                     var endpoint = this.endpoints[hash];
                     if (!endpoint) {
-                        var href = Relution.LiveData.URLUtil.getLocation(url);
+                        var href = LiveData.URLUtil.getLocation(url);
                         endpoint = {};
                         endpoint.isConnected = false;
                         endpoint.baseUrl = url;
@@ -131,14 +131,14 @@ var Relution;
             };
             SyncStore.prototype.getEndpoint = function (url) {
                 if (url) {
-                    var hash = Relution.LiveData.URLUtil.hashLocation(url);
+                    var hash = LiveData.URLUtil.hashLocation(url);
                     return this.endpoints[hash];
                 }
             };
             SyncStore.prototype.createLocalStore = function (endpoint) {
                 if (this.options.useLocalStore) {
                     var entities = {};
-                    entities[endpoint.entity.name] = _.extend(new Relution.LiveData.Entity(endpoint.entity), {
+                    entities[endpoint.entity.name] = _.extend(new LiveData.Entity(endpoint.entity), {
                         name: endpoint.channel
                     });
                     return this.options.localStore.create({
@@ -155,11 +155,11 @@ var Relution;
                 if (this.options.useOfflineChanges) {
                     var entity = 'msg-' + endpoint.channel;
                     var entities = {};
-                    entities[entity] = new Relution.LiveData.Entity({
+                    entities[entity] = new LiveData.Entity({
                         name: entity,
                         idAttribute: 'id'
                     });
-                    var messages = Relution.LiveData.Collection.design({
+                    var messages = LiveData.Collection.design({
                         entity: entity,
                         store: this.options.localStore.create({
                             entities: entities
@@ -177,7 +177,7 @@ var Relution;
                     var that = this;
                     var url = endpoint.host;
                     var path = endpoint.path;
-                    var href = Relution.LiveData.URLUtil.getLocation(url);
+                    var href = LiveData.URLUtil.getLocation(url);
                     if (href.port === '') {
                         if (href.protocol === 'https:') {
                             url += ':443';
@@ -294,7 +294,7 @@ var Relution;
                         store: endpoint.localStore,
                         entity: endpoint.entity
                     }, that.options);
-                    var model = new Relution.LiveData.Model(msg.data, _.extend({
+                    var model = new LiveData.Model(msg.data, _.extend({
                         parse: true
                     }, options));
                     q = endpoint.localStore.sync(msg.method, model, _.extend(options, {
@@ -377,8 +377,8 @@ var Relution;
                 catch (error) {
                     return Q.reject(this.handleError(options, error) || error);
                 }
-                if (Relution.LiveData.isModel(model) && !model.id) {
-                    model.set(model.idAttribute, new Relution.LiveData.ObjectID().toHexString());
+                if (LiveData.isModel(model) && !model.id) {
+                    model.set(model.idAttribute, new LiveData.ObjectID().toHexString());
                 }
                 var channel = endpoint.channel;
                 var time = this.getLastMessageTime(channel);
@@ -496,7 +496,7 @@ var Relution;
             SyncStore.prototype._ajaxMessage = function (endpoint, msg, options, model) {
                 var channel = endpoint.channel;
                 var that = this;
-                var url = Relution.LiveData.isModel(model) || msg.method !== 'read' ? endpoint.baseUrl : endpoint.readUrl;
+                var url = LiveData.isModel(model) || msg.method !== 'read' ? endpoint.baseUrl : endpoint.readUrl;
                 if (msg.id && msg.method !== 'create') {
                     url += (url.charAt(url.length - 1) === '/' ? '' : '/') + msg.id;
                 }
@@ -529,7 +529,7 @@ var Relution;
                                 data: data // just accepts new data
                             }, msg)));
                         }
-                        else if (Relution.LiveData.isCollection(model) && _.isArray(data)) {
+                        else if (LiveData.isCollection(model) && _.isArray(data)) {
                             // synchronize the collection contents with the data read
                             var ids = {};
                             model.models.forEach(function (m) {
@@ -542,7 +542,7 @@ var Relution;
                                     if (m) {
                                         // update the item
                                         delete ids[id]; // so that it is deleted below
-                                        if (!_.isEqual(_.pick.call(m, m.attributes, LiveData.Object.keys(d)), d)) {
+                                        if (!_.isEqual(_.pick.call(m, m.attributes, Object.keys(d)), d)) {
                                             // above checked that all attributes in d are in m with equal values and found some mismatch
                                             promises.push(that.onMessageStore(endpoint, {
                                                 id: id,
@@ -561,7 +561,7 @@ var Relution;
                                     }
                                 }
                             });
-                            LiveData.Object.keys(ids).forEach(function (id) {
+                            Object.keys(ids).forEach(function (id) {
                                 // delete the item
                                 var m = ids[id];
                                 promises.push(that.onMessageStore(endpoint, {
@@ -600,7 +600,7 @@ var Relution;
                 var channel = endpoint ? endpoint.channel : '';
                 var time = that.getLastMessageTime(channel);
                 if (endpoint && endpoint.baseUrl && channel && time) {
-                    var changes = new Relution.LiveData.Collection();
+                    var changes = new LiveData.Collection();
                     return changes.fetch({
                         url: endpoint.baseUrl + 'changes/' + time,
                         success: function (model, response, options) {
@@ -620,7 +620,7 @@ var Relution;
             SyncStore.prototype.fetchServerInfo = function (endpoint) {
                 var that = this;
                 if (endpoint && endpoint.baseUrl) {
-                    var info = new Relution.LiveData.Model();
+                    var info = new LiveData.Model();
                     var time = that.getLastMessageTime(endpoint.channel);
                     var url = endpoint.baseUrl;
                     if (url.charAt((url.length - 1)) !== '/') {
@@ -670,7 +670,7 @@ var Relution;
                         // just affect local store
                         store: endpoint.localStore
                     };
-                    var model = new Relution.LiveData.Model(msg.data, {
+                    var model = new LiveData.Model(msg.data, {
                         idAttribute: endpoint.entity.idAttribute,
                         entity: endpoint.entity,
                     });
