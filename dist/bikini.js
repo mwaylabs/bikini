@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Wed Jun 24 2015 15:11:56
+* Date:      Thu Jun 25 2015 17:08:34
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 
@@ -4447,11 +4447,12 @@ var Relution;
             };
             WebSqlStore.prototype._sqlPrimaryKey = function (entity, keys) {
                 if (keys && keys.length === 1) {
+                    var field = this.getField(entity, keys[0]);
                     if (this._isAutoincrementKey(entity, keys[0])) {
-                        return keys[0] + ' INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE';
+                        return field.name + ' INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE';
                     }
                     else {
-                        return keys[0] + ' PRIMARY KEY ASC UNIQUE';
+                        return this._dbAttribute(field) + ' PRIMARY KEY ASC UNIQUE';
                     }
                 }
                 return '';
@@ -4470,8 +4471,8 @@ var Relution;
                 var columns = '';
                 var fields = this.getFields(entity);
                 _.each(fields, function (field) {
-                    // skip ID, it is defined manually above
-                    if (!primaryKey || field.name !== keys[0]) {
+                    // skip primary key as it is defined manually above
+                    if (!primaryKey || field !== fields[keys[0]]) {
                         // only add valid types
                         var attr = that._dbAttribute(field);
                         if (attr) {
@@ -4636,7 +4637,7 @@ var Relution;
                         if (!isAutoInc && !amodel.id && amodel.idAttribute) {
                             amodel.set(amodel.idAttribute, new LiveData.ObjectID().toHexString());
                         }
-                        var value = options.attrs || amodel.toJSON();
+                        var value = amodel.toJSON(options);
                         var args, keys;
                         if (!_.isEmpty(entity.fields)) {
                             args = _.values(value);
@@ -4644,7 +4645,7 @@ var Relution;
                         }
                         else {
                             args = [amodel.id, JSON.stringify(value)];
-                            keys = ['id', 'data'];
+                            keys = [this.idField.name, this.dataField.name];
                         }
                         if (args.length > 0) {
                             var values = new Array(args.length).join('?,') + '?';
@@ -4691,9 +4692,11 @@ var Relution;
                                         attrs = JSON.parse(item.data);
                                     }
                                     catch (e) {
+                                        that.trigger('error', e);
+                                        continue;
                                     }
                                 }
-                                if (attrs && (!that._selector || that._selector.matches(attrs))) {
+                                if (!that._selector || that._selector.matches(attrs)) {
                                     if (isCollection) {
                                         result.push(attrs);
                                     }
@@ -4790,9 +4793,9 @@ var Relution;
                 }
                 else {
                     var fields = {};
-                    fields.data = this.dataField;
                     var idAttribute = entity.idAttribute || 'id';
                     fields[idAttribute] = this.idField;
+                    fields.data = this.dataField;
                     return fields;
                 }
             };

@@ -289,10 +289,11 @@ module Relution.LiveData {
 
     private _sqlPrimaryKey(entity, keys) {
       if (keys && keys.length === 1) {
+        var field = this.getField(entity, keys[0]);
         if (this._isAutoincrementKey(entity, keys[0])) {
-          return keys[0] + ' INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE';
+          return field.name + ' INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE';
         } else {
-          return keys[0] + ' PRIMARY KEY ASC UNIQUE';
+          return this._dbAttribute(field) + ' PRIMARY KEY ASC UNIQUE';
         }
       }
       return '';
@@ -314,8 +315,8 @@ module Relution.LiveData {
       var columns = '';
       var fields = this.getFields(entity);
       _.each(fields, function (field) {
-        // skip ID, it is defined manually above
-        if (!primaryKey || field.name !== keys[0]) {
+        // skip primary key as it is defined manually above
+        if (!primaryKey || field !== fields[keys[0]]) {
           // only add valid types
           var attr = that._dbAttribute(field);
           if (attr) {
@@ -496,14 +497,14 @@ module Relution.LiveData {
           if (!isAutoInc && !amodel.id && amodel.idAttribute) {
             amodel.set(amodel.idAttribute, new ObjectID().toHexString());
           }
-          var value = options.attrs || amodel.toJSON();
+          var value = amodel.toJSON(options);
           var args, keys;
           if (!_.isEmpty(entity.fields)) {
             args = _.values(value);
             keys = _.keys(value);
           } else {
             args = [amodel.id, JSON.stringify(value)];
-            keys = ['id', 'data'];
+            keys = [this.idField.name, this.dataField.name];
           }
           if (args.length > 0) {
             var values = new Array(args.length).join('?,') + '?';
@@ -548,9 +549,11 @@ module Relution.LiveData {
                 try {
                   attrs = JSON.parse(item.data);
                 } catch (e) {
+                  that.trigger('error', e);
+                  continue;
                 }
               }
-              if (attrs && (!that._selector || that._selector.matches(attrs))) {
+              if (!that._selector || that._selector.matches(attrs)) {
                 if (isCollection) {
                   result.push(attrs);
                 } else {
@@ -649,9 +652,9 @@ module Relution.LiveData {
         return entity.fields;
       } else {
         var fields:any = {};
-        fields.data = this.dataField;
         var idAttribute = entity.idAttribute || 'id';
         fields[idAttribute] = this.idField;
+        fields.data = this.dataField;
         return fields;
       }
     }

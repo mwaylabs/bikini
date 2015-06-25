@@ -37,7 +37,7 @@ describe('Relution.LiveData.WebSqlStore', function () {
   it('simple websql store', function (done) {
 
     TEST.SimpleModel = Relution.LiveData.Model.extend({
-      idAttribute: '_id'
+      idAttribute: 'key'
     });
 
     assert.typeOf(TEST.SimpleModel, 'function', 'SimpleModel model successfully extended.');
@@ -59,9 +59,9 @@ describe('Relution.LiveData.WebSqlStore', function () {
         success: function (model) {
           assert.ok(model, 'new record exists.');
 
-          TEST.id = model.id;
+          TEST.key = model.id;
 
-          assert.ok(TEST.id, 'new record has an id.');
+          assert.ok(TEST.key, 'new record has an id.');
 
           done();
         },
@@ -78,11 +78,11 @@ describe('Relution.LiveData.WebSqlStore', function () {
     assert.typeOf(Relution.LiveData.Collection, 'function', 'Relution.LiveData.Collection is defined');
 
     TEST.TestModel = Relution.LiveData.Model.extend({
-      idAttribute: '_id',
+      idAttribute: 'key',
       entity: {
         name: 'test',
         fields: {
-          _id: {type: Relution.LiveData.DATA.TYPE.STRING, required: true, index: true},
+          key: {type: Relution.LiveData.DATA.TYPE.STRING, required: true, index: true},
           sureName: {name: 'USERNAME', type: Relution.LiveData.DATA.TYPE.STRING, required: true, index: true},
           firstName: {type: Relution.LiveData.DATA.TYPE.STRING, length: 200},
           age: {type: Relution.LiveData.DATA.TYPE.INTEGER}
@@ -114,9 +114,9 @@ describe('Relution.LiveData.WebSqlStore', function () {
         success: function (model) {
           assert.ok(model, 'new record exists.');
 
-          TEST.id = model.id;
+          TEST.key = model.id;
 
-          assert.ok(TEST.id, 'new record has an id.');
+          assert.ok(TEST.key, 'new record has an id.');
 
           done();
         },
@@ -132,9 +132,9 @@ describe('Relution.LiveData.WebSqlStore', function () {
         success: function (model) {
           assert.ok(model, 'new record exists.');
 
-          TEST.id = model.id;
+          TEST.key = model.id;
 
-          assert.ok(TEST.id, 'new record has an id.');
+          assert.ok(TEST.key, 'new record has an id.');
 
           done();
         },
@@ -144,7 +144,7 @@ describe('Relution.LiveData.WebSqlStore', function () {
   });
 
   it('read record', function () {
-    var model = TEST.Tests.get(TEST.id);
+    var model = TEST.Tests.get(TEST.key);
 
     assert.ok(model, "record found");
 
@@ -157,21 +157,19 @@ describe('Relution.LiveData.WebSqlStore', function () {
   it('fetching data with new model', function (done) {
 
     TEST.TestModel2 = Relution.LiveData.Model.extend({
-      idAttribute: '_id',
+      idAttribute: 'key',
       store: TEST.store,
-      entity: {
-        name: 'test'
-      }
+      entity: 'test'
     });
 
-    var model = TEST.TestModel2.create({_id: TEST.id});
+    var model = TEST.TestModel2.create({key: TEST.key});
 
     assert.isObject(model, "new model created");
 
     model.fetch({
       success: function () {
         assert.ok(true, 'model has been fetched.');
-        assert.equal(model.id, TEST.id, "found record has the correct id");
+        assert.equal(model.id, TEST.key, "found record has the correct id");
         assert.equal(model.get('firstName'), TEST.data.firstName, "found record has the correct 'firstname' value");
         assert.equal(model.get('USERNAME'), TEST.data.sureName, "found record has the correct 'USERNAME' value");
         assert.equal(model.get('age'), TEST.data.age, "found record has the correct 'age' value");
@@ -182,7 +180,7 @@ describe('Relution.LiveData.WebSqlStore', function () {
   });
 
   it('delete record', function (done) {
-    TEST.Tests.get(TEST.id).destroy(
+    TEST.Tests.get(TEST.key).destroy(
       {
         success: function (model) {
           assert.ok(true, 'record has been deleted.');
@@ -225,6 +223,17 @@ describe('Relution.LiveData.WebSqlStore', function () {
 
   it('create record (no schema)', function (done) {
 
+    // recreate store type to drop schema information
+    TEST.store = Relution.LiveData.WebSqlStore.design();
+
+    TEST.TestModel2 = Relution.LiveData.Model.extend({
+      idAttribute: 'key',
+      store: TEST.store,
+      entity: {
+        name: 'test'
+      }
+    });
+
     TEST.Tests2 = Relution.LiveData.Collection.design({
       model: TEST.TestModel2,
       store: TEST.store
@@ -243,9 +252,9 @@ describe('Relution.LiveData.WebSqlStore', function () {
         success: function (model) {
           assert.ok(model, 'new record exists.');
 
-          TEST.id = model.id;
+          TEST.key = model.id;
 
-          assert.ok(TEST.id, 'new record has an id.');
+          assert.ok(TEST.key, 'new record has an id.');
 
           done();
         },
@@ -255,7 +264,7 @@ describe('Relution.LiveData.WebSqlStore', function () {
   });
 
   it('read record', function () {
-    var model = TEST.Tests2.get(TEST.id);
+    var model = TEST.Tests2.get(TEST.key);
 
     assert.ok(model, "record found");
 
