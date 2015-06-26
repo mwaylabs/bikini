@@ -36,7 +36,7 @@ module Relution.LiveData {
 
     public fields:string[];
 
-    constructor(json:{
+    constructor(json?:{
       limit?: number;
       offset?: number;
 
@@ -45,13 +45,19 @@ module Relution.LiveData {
 
       fields?: string[];
     }) {
-      this.limit = json.limit;
-      this.offset = json.offset;
+      if (json) {
+        this.limit = json.limit;
+        this.offset = json.offset;
 
-      this.sortOrder = json.sortOrder && new SortOrder(json.sortOrder);
-      this.filter = json.filter;
+        this.sortOrder = json.sortOrder && new SortOrder(json.sortOrder);
+        this.filter = json.filter;
 
-      this.fields = json.fields;
+        this.fields = json.fields;
+      }
+    }
+
+    public merge(other:GetQuery) {
+      // TODO...
     }
   }
 

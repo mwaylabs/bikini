@@ -25,10 +25,10 @@
 /* jshint curly: false */
 /* jshint newcap: false */
 /* jshint -W004: '%' is already defined. */
-/* jshint -W086: Expected a 'break' statement before 'case'. */
 /// <reference path="../../core/livedata.d.ts" />
 /// <reference path="Store.ts" />
 /// <reference path="WebSqlStore.ts" />
+/// <reference path="SyncContext.ts" />
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -129,12 +129,6 @@ var Relution;
             SyncStore.prototype.initCollection = function (collection) {
                 Relution.debug('Relution.LiveData.SyncStore.initCollection');
                 collection.endpoint = this.initEndpoint(collection, collection.model);
-                if (collection.endpoint) {
-                    if (this.options.useSocketNotify) {
-                        // otherwise application code must fetch to update collection explicitly
-                        collection.listenTo(this, 'sync:' + collection.endpoint.channel, _.bind(this.onMessageCollection, this, collection));
-                    }
-                }
             };
             SyncStore.prototype.getEndpoint = function (url) {
                 if (url) {
@@ -212,7 +206,7 @@ var Relution;
                         Relution.debug('socket.io: disconnect');
                         return that.onDisconnect(endpoint).done();
                     });
-                    endpoint.socket.on(endpoint.channel, _.bind(this.onMessageStore, this, endpoint));
+                    endpoint.socket.on(endpoint.channel, _.bind(this.onMessage, this, endpoint));
                     return endpoint.socket;
                 }
             };
@@ -288,7 +282,7 @@ var Relution;
                     msg.data[endpoint.entity.idAttribute] = msg[endpoint.entity.idAttribute]; // server bug!
                 }
             };
-            SyncStore.prototype.onMessageStore = function (endpoint, msg) {
+            SyncStore.prototype.onMessage = function (endpoint, msg) {
                 // this is called by the store itself for a particular endpoint!
                 var that = this;
                 if (!msg || !msg.method) {
@@ -310,7 +304,7 @@ var Relution;
                         merge: msg.method === 'patch',
                         success: function (result) {
                             // update all collections listening
-                            that.trigger('sync:' + channel, msg); // onMessageCollection
+                            that.trigger('sync:' + channel, msg); // SyncContext.onMessage
                         },
                         error: function (error) {
                             // report error as event on store
@@ -321,7 +315,7 @@ var Relution;
                 else {
                     // just update all collections listening
                     q = Q.fcall(function () {
-                        return that.trigger('sync:' + channel, msg); // onMessageCollection
+                        return that.trigger('sync:' + channel, msg); // SyncContext.onMessage
                     });
                 }
                 // finally set the message time
@@ -331,89 +325,67 @@ var Relution;
                     }
                 }).thenResolve(msg);
             };
-            SyncStore.prototype.onMessageCollection = function (collection, msg) {
-                var options = {
-                    collection: collection,
-                    entity: collection.entity,
-                    merge: msg.method === 'patch',
-                    parse: true,
-                    fromMessage: true
-                };
-                var id = collection.modelId(msg.data);
-                if (id === 'all') {
-                    collection.reset(msg.data || {}, options);
-                    return;
-                }
-                var model = id && collection.get(id);
-                switch (msg.method) {
-                    case 'create':
-                    case 'update':
-                        if (!model) {
-                            // create model in case it does not exist
-                            model = new options.collection.model(msg.data, options);
-                            if (model.validationError) {
-                                collection.trigger('invalid', this, model.validationError, options);
-                            }
-                            else {
-                                collection.add(model, options);
-                            }
-                            break;
-                        }
-                    case 'patch':
-                        if (model) {
-                            // update model unless it is filtered
-                            model.set(msg.data, options);
-                        }
-                        break;
-                    case 'delete':
-                        if (model) {
-                            // remove model unless it is filtered
-                            collection.remove(model, options);
-                        }
-                        break;
-                }
-            };
             SyncStore.prototype.sync = function (method, model, options) {
                 Relution.debug('Relution.LiveData.SyncStore.sync');
                 options = options || {};
-                var endpoint;
                 try {
-                    endpoint = this.getEndpoint(model.getUrlRoot());
+                    var endpoint = model.endpoint || this.getEndpoint(model.getUrlRoot());
                     if (!endpoint) {
                         throw new Error('no endpoint');
                     }
+                    if (LiveData.isCollection(model)) {
+                        // collections can be filtered, etc.
+                        if (method === 'read') {
+                            var syncContext = options.syncContext; // sync can be called by SyncContext itself when paging results
+                            if (!syncContext) {
+                                // capture GetQuery options
+                                syncContext = new LiveData.SyncContext(options, model.options, this.options);
+                            }
+                            if (model.syncContext !== syncContext) {
+                                // assign a different instance
+                                if (model.syncContext) {
+                                    model.stopListening(this, 'sync:' + endpoint.channel);
+                                }
+                                model.listenTo(this, 'sync:' + endpoint.channel, _.bind(syncContext.onMessage, syncContext, this, model));
+                                model.syncContext = syncContext;
+                            }
+                        }
+                    }
+                    else if (LiveData.isModel(model)) {
+                        // offline capability requires IDs for data
+                        if (method === 'create' && !model.id) {
+                            model.set(model.idAttribute, new LiveData.ObjectID().toHexString());
+                        }
+                    }
+                    var channel = endpoint.channel;
+                    var time = this.getLastMessageTime(channel);
+                    // only send read messages if no other store can do this or for initial load
+                    if (method === 'read' && endpoint.localStore && time && !options.reset) {
+                        // read data from localStore and fetch changes remote
+                        var opts = _.clone(options);
+                        opts.store = endpoint.localStore;
+                        opts.entity = endpoint.entity;
+                        delete opts.success;
+                        delete opts.error;
+                        var that = this;
+                        return endpoint.localStore.sync(method, model, opts).then(function (resp) {
+                            // load changes only (will happen AFTER success callback is invoked,
+                            // but returned promise will resolve only after changes were processed.
+                            // This is because backbone success callback alters the collection...
+                            return that.fetchChanges(endpoint).catch(function (error) {
+                                that.trigger('error:' + channel, error); // can not do much about it...
+                            }).thenResolve(that.handleSuccess(options, resp) || resp); // caller expects original XHR response as changes body data is NOT compatible
+                        }, function () {
+                            // fall-back to loading full data set
+                            return that._addMessage(method, model, options, endpoint);
+                        });
+                    }
+                    // do backbone rest
+                    return this._addMessage(method, model, options, endpoint);
                 }
                 catch (error) {
                     return Q.reject(this.handleError(options, error) || error);
                 }
-                if (LiveData.isModel(model) && !model.id) {
-                    model.set(model.idAttribute, new LiveData.ObjectID().toHexString());
-                }
-                var channel = endpoint.channel;
-                var time = this.getLastMessageTime(channel);
-                // only send read messages if no other store can do this or for initial load
-                if (method === 'read' && endpoint.localStore && time && !options.reset) {
-                    // read data from localStore and fetch changes remote
-                    var opts = _.clone(options);
-                    opts.store = endpoint.localStore;
-                    opts.entity = endpoint.entity;
-                    delete opts.success;
-                    delete opts.error;
-                    var that = this;
-                    return endpoint.localStore.sync(method, model, opts).then(function (resp) {
-                        // load changes only (will happen AFTER success callback is invoked,
-                        // but returned promise will resolve only after changes were processed.
-                        // This is because backbone success callback alters the collection...
-                        return that.fetchChanges(endpoint).catch(function (error) {
-                            that.trigger('error:' + channel, error); // can not do much about it...
-                        }).thenResolve(that.handleSuccess(options, resp) || resp); // caller expects original XHR response as changes body data is NOT compatible
-                    }, function () {
-                        // fall-back to loading full data set
-                        return that._addMessage(method, model, options, endpoint);
-                    });
-                }
-                // do backbone rest
-                return this._addMessage(method, model, options, endpoint);
             };
             SyncStore.prototype._addMessage = function (method, model, options, endpoint) {
                 var that = this;
@@ -545,7 +517,7 @@ var Relution;
                         // that.setLastMessageTime(channel, msg.time);
                         var promises = [];
                         if (msg.method !== 'read') {
-                            promises.push(that.onMessageStore(endpoint, data === msg.data ? msg : _.defaults({
+                            promises.push(that.onMessage(endpoint, data === msg.data ? msg : _.defaults({
                                 data: data // just accepts new data
                             }, msg)));
                         }
@@ -564,7 +536,7 @@ var Relution;
                                         delete ids[id]; // so that it is deleted below
                                         if (!_.isEqual(_.pick.call(m, m.attributes, Object.keys(d)), d)) {
                                             // above checked that all attributes in d are in m with equal values and found some mismatch
-                                            promises.push(that.onMessageStore(endpoint, {
+                                            promises.push(that.onMessage(endpoint, {
                                                 id: id,
                                                 method: 'update',
                                                 data: d
@@ -573,7 +545,7 @@ var Relution;
                                     }
                                     else {
                                         // create the item
-                                        promises.push(that.onMessageStore(endpoint, {
+                                        promises.push(that.onMessage(endpoint, {
                                             id: id,
                                             method: 'create',
                                             data: d
@@ -584,7 +556,7 @@ var Relution;
                             Object.keys(ids).forEach(function (id) {
                                 // delete the item
                                 var m = ids[id];
-                                promises.push(that.onMessageStore(endpoint, {
+                                promises.push(that.onMessage(endpoint, {
                                     id: id,
                                     method: 'delete',
                                     data: m.attributes
@@ -597,7 +569,7 @@ var Relution;
                             for (var i = 0; i < array.length; i++) {
                                 data = array[i];
                                 if (data) {
-                                    promises.push(that.onMessageStore(endpoint, {
+                                    promises.push(that.onMessage(endpoint, {
                                         id: data[endpoint.entity.idAttribute] || data._id,
                                         method: 'update',
                                         data: data
@@ -627,7 +599,7 @@ var Relution;
                         success: function (model, response, options) {
                             changes.each(function (change) {
                                 var msg = change.attributes;
-                                that.onMessageStore(endpoint, msg);
+                                that.onMessage(endpoint, msg);
                             });
                             return response || options.xhr;
                         },

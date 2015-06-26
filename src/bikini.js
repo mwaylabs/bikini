@@ -31,6 +31,7 @@
 // @include ./data/stores/LocalStorageStore.js
 // @include ./data/stores/WebSqlStore.js
 // @include ./data/stores/SyncStore.js
+// @include ./data/stores/SyncContext.js
 
 // @include ./core/bikini.js
 

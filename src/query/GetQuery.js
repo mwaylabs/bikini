@@ -30,12 +30,17 @@ var Relution;
     (function (LiveData) {
         var GetQuery = (function () {
             function GetQuery(json) {
-                this.limit = json.limit;
-                this.offset = json.offset;
-                this.sortOrder = json.sortOrder && new LiveData.SortOrder(json.sortOrder);
-                this.filter = json.filter;
-                this.fields = json.fields;
+                if (json) {
+                    this.limit = json.limit;
+                    this.offset = json.offset;
+                    this.sortOrder = json.sortOrder && new LiveData.SortOrder(json.sortOrder);
+                    this.filter = json.filter;
+                    this.fields = json.fields;
+                }
             }
+            GetQuery.prototype.merge = function (other) {
+                // TODO...
+            };
             return GetQuery;
         })();
         LiveData.GetQuery = GetQuery;
