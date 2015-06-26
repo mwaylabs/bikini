@@ -24,7 +24,7 @@
 
 var makeMovies;
 
-describe('test.JsonFilterVisitor', function () {
+describe('Relution.LiveData.JsonFilterVisitor', function () {
 
   it('filter movies by id', function () {
     var testdata = makeMovies();

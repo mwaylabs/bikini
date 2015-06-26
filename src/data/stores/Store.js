@@ -1,5 +1,5 @@
 /**
- * store.ts
+ * Store.ts
  *
  * Created by Thomas Beckmann on 24.06.2015
  * Copyright (c)
@@ -254,4 +254,4 @@ var Relution;
         _.extend(Store.prototype, Backbone.Events, LiveData._Object);
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=store.js.map
+//# sourceMappingURL=Store.js.map

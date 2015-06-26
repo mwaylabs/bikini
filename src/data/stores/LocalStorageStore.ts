@@ -1,5 +1,5 @@
 /**
- * local_storage.ts
+ * LocalStorageStore.ts
  *
  * Created by Thomas Beckmann on 24.06.2015
  * Copyright (c)
@@ -26,7 +26,7 @@
 /* jshint newcap: false */
 /* jshint -W004: '%' is already defined. */
 /// <reference path="../../core/livedata.d.ts" />
-/// <reference path="store.ts" />
+/// <reference path="Store.ts" />
 
 module Relution.LiveData {
 

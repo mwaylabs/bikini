@@ -1,5 +1,5 @@
 /**
- * local_storage.ts
+ * SyncStore.ts
  *
  * Created by Thomas Beckmann on 24.06.2015
  * Copyright (c)
@@ -27,8 +27,8 @@
 /* jshint -W004: '%' is already defined. */
 /* jshint -W086: Expected a 'break' statement before 'case'. */
 /// <reference path="../../core/livedata.d.ts" />
-/// <reference path="store.ts" />
-/// <reference path="web_sql.ts" />
+/// <reference path="Store.ts" />
+/// <reference path="WebSqlStore.ts" />
 
 module Relution.LiveData {
 

@@ -1,5 +1,5 @@
 /**
- * web_sql.ts
+ * WebSqlStore.ts
  *
  * Created by Thomas Beckmann on 24.06.2015
  * Copyright (c)
@@ -26,7 +26,7 @@
 /* jshint newcap: false */
 /* jshint -W004: '%' is already defined. */
 /// <reference path="../../core/livedata.d.ts" />
-/// <reference path="store.ts" />
+/// <reference path="Store.ts" />
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -643,4 +643,4 @@ var Relution;
         LiveData.WebSqlStore = WebSqlStore;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=web_sql.js.map
+//# sourceMappingURL=WebSqlStore.js.map

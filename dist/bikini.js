@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Fri Jun 26 2015 10:27:50
+* Date:      Fri Jun 26 2015 10:44:25
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 
@@ -3686,7 +3686,7 @@ Relution.LiveData.SqlSelector = Relution.LiveData.DataSelector.design({
 });
 
 /**
- * store.ts
+ * Store.ts
  *
  * Created by Thomas Beckmann on 24.06.2015
  * Copyright (c)
@@ -3941,9 +3941,9 @@ var Relution;
         _.extend(Store.prototype, Backbone.Events, LiveData._Object);
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=store.js.map
+//# sourceMappingURL=Store.js.map
 /**
- * local_storage.ts
+ * LocalStorageStore.ts
  *
  * Created by Thomas Beckmann on 24.06.2015
  * Copyright (c)
@@ -3970,7 +3970,7 @@ var Relution;
 /* jshint newcap: false */
 /* jshint -W004: '%' is already defined. */
 /// <reference path="../../core/livedata.d.ts" />
-/// <reference path="store.ts" />
+/// <reference path="Store.ts" />
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -4164,9 +4164,9 @@ var Relution;
         LiveData.LocalStorageStore = LocalStorageStore;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=local_storage.js.map
+//# sourceMappingURL=LocalStorageStore.js.map
 /**
- * web_sql.ts
+ * WebSqlStore.ts
  *
  * Created by Thomas Beckmann on 24.06.2015
  * Copyright (c)
@@ -4193,7 +4193,7 @@ var Relution;
 /* jshint newcap: false */
 /* jshint -W004: '%' is already defined. */
 /// <reference path="../../core/livedata.d.ts" />
-/// <reference path="store.ts" />
+/// <reference path="Store.ts" />
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -4810,9 +4810,9 @@ var Relution;
         LiveData.WebSqlStore = WebSqlStore;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=web_sql.js.map
+//# sourceMappingURL=WebSqlStore.js.map
 /**
- * local_storage.ts
+ * SyncStore.ts
  *
  * Created by Thomas Beckmann on 24.06.2015
  * Copyright (c)
@@ -4840,8 +4840,8 @@ var Relution;
 /* jshint -W004: '%' is already defined. */
 /* jshint -W086: Expected a 'break' statement before 'case'. */
 /// <reference path="../../core/livedata.d.ts" />
-/// <reference path="store.ts" />
-/// <reference path="web_sql.ts" />
+/// <reference path="Store.ts" />
+/// <reference path="WebSqlStore.ts" />
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -5604,7 +5604,7 @@ var Relution;
         LiveData.SyncStore = SyncStore;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=sync_store.js.map
+//# sourceMappingURL=SyncStore.js.map
 
 // Copyright (c) 2015 M-Way Solutions GmbH
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt

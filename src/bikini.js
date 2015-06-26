@@ -27,10 +27,10 @@
 // @include ./data/collection.js
 // @include ./data/data_selector.js
 // @include ./data/sql_selector.js
-// @include ./data/stores/store.js
-// @include ./data/stores/local_storage.js
-// @include ./data/stores/web_sql.js
-// @include ./data/stores/sync_store.js
+// @include ./data/stores/Store.js
+// @include ./data/stores/LocalStorageStore.js
+// @include ./data/stores/WebSqlStore.js
+// @include ./data/stores/SyncStore.js
 
 // @include ./core/bikini.js
 

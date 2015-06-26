@@ -24,7 +24,7 @@
 
 var makeMovies;
 
-describe('test.SortOrderComparator', function () {
+describe('Relution.LiveData.SortOrderComparator', function () {
 
   it('sort movies by id', function () {
     var testdata = makeMovies();

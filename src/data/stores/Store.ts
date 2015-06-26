@@ -1,5 +1,5 @@
 /**
- * store.ts
+ * Store.ts
  *
  * Created by Thomas Beckmann on 24.06.2015
  * Copyright (c)
