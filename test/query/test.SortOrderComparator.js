@@ -34,7 +34,7 @@ describe('Relution.LiveData.SortOrderComparator', function () {
       original[i] = testdata[i].id;
     }
 
-    testdata.sort(Relution.LiveData.jsonCompare(new Relution.LiveData.SortOrder([
+    testdata.sort(Relution.LiveData.jsonCompare(new Relution.LiveData.SortOrder().fromJSON([
       'id'
     ])));
     original.sort();
@@ -52,9 +52,9 @@ describe('Relution.LiveData.SortOrderComparator', function () {
       original[i] = testdata[i].year;
     }
 
-    testdata.sort(Relution.LiveData.jsonCompare(new Relution.LiveData.SortOrder([
+    testdata.sort(Relution.LiveData.jsonCompare(
       '+year'
-    ])));
+    ));
     original.sort();
 
     for (var j = 0; j < testdata.length; ++j) {
@@ -70,7 +70,7 @@ describe('Relution.LiveData.SortOrderComparator', function () {
       original[i] = testdata[i].runtime;
     }
 
-    testdata.sort(Relution.LiveData.jsonCompare(new Relution.LiveData.SortOrder([
+    testdata.sort(Relution.LiveData.jsonCompare(new Relution.LiveData.SortOrder().fromJSON([
       '-runtime'
     ])));
     original.sort(function (a, b) {
@@ -86,11 +86,11 @@ describe('Relution.LiveData.SortOrderComparator', function () {
     var testdata = makeMovies();
     var original = _.clone(testdata);
 
-    testdata.sort(Relution.LiveData.jsonCompare(new Relution.LiveData.SortOrder([
+    testdata.sort(Relution.LiveData.jsonCompare([
       '-year',
       '+runtime',
       'id'
-    ])));
+    ]));
     original.sort(function (a, b) {
       var result = (b.year | 0) - (a.year | 0);
       if (result === 0) {

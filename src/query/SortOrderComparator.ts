@@ -46,10 +46,42 @@ module Relution.LiveData {
   /**
    * compiles a JsonCompareFn from a given SortOrder.
    *
+   * @param json of SortOrder being compiled.
+   * @return {function} a JsonCompareFn function compatible to Array.sort().
+   */
+  export function jsonCompare<T>(...json:string[]):JsonCompareFn<T>;
+  /**
+   * compiles a JsonCompareFn from a given SortOrder.
+   *
+   * @param json of SortOrder being compiled.
+   * @return {function} a JsonCompareFn function compatible to Array.sort().
+   */
+  export function jsonCompare<T>(json:string[]):JsonCompareFn<T>;
+  /**
+   * compiles a JsonCompareFn from a given SortOrder.
+   *
    * @param sortOrder being compiled.
    * @return {function} a JsonCompareFn function compatible to Array.sort().
    */
-  export function jsonCompare<T>(sortOrder:SortOrder):JsonCompareFn<T> {
+  export function jsonCompare<T>(sortOrder:SortOrder):JsonCompareFn<T>;
+  /**
+   * compiles a JsonCompareFn from a given SortOrder.
+   *
+   * @param arg defining the SortOrder being compiled.
+   * @return {function} a JsonCompareFn function compatible to Array.sort().
+   */
+  export function jsonCompare<T>(arg):JsonCompareFn<T> {
+    var sortOrder;
+    if(typeof arg === 'string') {
+      sortOrder = new SortOrder();
+      sortOrder.fromJSON.apply(sortOrder, arguments);
+    } else if(_.isArray(arg)) {
+      sortOrder = new SortOrder();
+      sortOrder.fromJSON.call(sortOrder, arg);
+    } else {
+      sortOrder = arg;
+    }
+
     var comparator = new SortOrderComparator<T>(sortOrder);
     return _.bind(comparator.compare, comparator);
   }

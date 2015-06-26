@@ -58,9 +58,10 @@ var Relution;
                 // merge options forming a GetQuery
                 options.forEach(function (json) {
                     if (json) {
-                        _this.getQuery.merge(new LiveData.GetQuery(json));
+                        _this.getQuery.merge(new LiveData.GetQuery().fromJSON(json));
                     }
                 });
+                this.getQuery.optimize();
             }
             /**
              * receives change messages.

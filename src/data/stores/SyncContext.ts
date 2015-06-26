@@ -50,13 +50,14 @@ module Relution.LiveData {
      * @param options to merge.
      * @constructor
      */
-    public constructor(...options) {
+    public constructor(...options:{}[]) {
       // merge options forming a GetQuery
       options.forEach((json) => {
         if(json) {
-          this.getQuery.merge(new GetQuery(json));
+          this.getQuery.merge(new GetQuery().fromJSON(json));
         }
-      })
+      });
+      this.getQuery.optimize();
     }
 
     /**

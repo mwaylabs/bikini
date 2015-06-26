@@ -22,11 +22,19 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 /* jshint indent: 4 */
+/* jshint quotmark: false */
+/// <reference path="../core/livedata.d.ts"/>
 /// <reference path="Filter.ts" />
 /// <reference path="SortOrder.ts" />
 
 module Relution.LiveData {
 
+  /**
+   * general query parameters.
+   *
+   * Caution, member fields eventually are shared by multiple instances! You may mutate member fields, but not the
+   * objects and arrays referenced by them.
+   */
   export class GetQuery {
     public limit:number;
     public offset:number;
@@ -36,7 +44,39 @@ module Relution.LiveData {
 
     public fields:string[];
 
-    constructor(json?:{
+    public get min():number {
+      return this.offset | 0;
+    }
+    public set min(value:number) {
+      var max = this.max;
+      this.offset = value;
+      this.max = max;
+    }
+    public get max():number {
+      return this.limit ? (this.limit + this.min) : Infinity;
+    }
+    public set max(value:number) {
+      this.limit = value && value !== Infinity && (value - this.min);
+    }
+
+    /**
+     * default/copy constructor.
+     *
+     * @param other instance to optionally initialize an independent copy of.
+     */
+    public constructor(other?:GetQuery) {
+      if(other) {
+        this.limit = other.limit;
+        this.offset = other.offset;
+
+        this.sortOrder = other.sortOrder;
+        this.filter = other.filter;
+
+        this.fields = other.fields;
+      }
+    }
+
+    public fromJSON(json:{
       limit?: number;
       offset?: number;
 
@@ -44,20 +84,74 @@ module Relution.LiveData {
       filter?: { type: string };
 
       fields?: string[];
-    }) {
-      if (json) {
-        this.limit = json.limit;
-        this.offset = json.offset;
+    }): GetQuery {
+      this.limit = json.limit;
+      this.offset = json.offset;
 
-        this.sortOrder = json.sortOrder && new SortOrder(json.sortOrder);
-        this.filter = json.filter;
+      this.sortOrder = json.sortOrder && new SortOrder().fromJSON(json.sortOrder);
+      this.filter = json.filter;
 
-        this.fields = json.fields;
-      }
+      this.fields = json.fields;
+
+      return this;
+    }
+
+    private static isAndFilter(filter:Filter) {
+      return filter.type === 'logOp' && (<LogOpFilter>filter).operation === 'and';
     }
 
     public merge(other:GetQuery) {
-      // TODO...
+      this.min = Math.max(this.min, other.min);
+      this.max = Math.min(this.max, other.max);
+
+      if (!this.sortOrder) {
+        this.sortOrder = other.sortOrder && new SortOrder(other.sortOrder);
+      } else if (other.sortOrder) {
+        this.sortOrder.merge(other.sortOrder);
+      }
+
+      if (!this.filter) {
+        this.filter = other.filter;
+      } else if(other.filter) {
+        this.filter = {
+          type: 'logOp',
+          operation: 'and',
+          filters: [
+            this.filter,
+            other.filter
+          ]
+        }
+      }
+
+      if (!this.fields) {
+        this.fields = other.fields;
+      } else if(other.fields) {
+        this.fields = this.fields.concat(other.fields);
+      }
+    }
+
+    public optimize() {
+      if (this.sortOrder) {
+        this.sortOrder.optimize();
+      }
+
+      if (this.filter && GetQuery.isAndFilter(this.filter)) {
+        // following loop flattens nested and filters by recursively replacing them by their children
+        var filters = (<LogOpFilter>this.filter).filters;
+        for (var i = filters.length; i >= 0;) {
+          if (GetQuery.isAndFilter(filters[i])) {
+            Array.prototype.splice.apply(filters, Array.prototype.concat([i, 1], (<LogOpFilter>filters[i]).filters));
+          } else {
+            --i;
+          }
+        }
+      }
+
+      if (this.fields) {
+        // not an unsorted unique to have resulting array sorted
+        Array.prototype.sort.apply(this.fields);
+        this.fields = _.unique(this.fields, true);
+      }
     }
   }
 

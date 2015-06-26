@@ -31,10 +31,22 @@ var Relution;
         /**
          * compiles a JsonCompareFn from a given SortOrder.
          *
-         * @param sortOrder being compiled.
+         * @param arg defining the SortOrder being compiled.
          * @return {function} a JsonCompareFn function compatible to Array.sort().
          */
-        function jsonCompare(sortOrder) {
+        function jsonCompare(arg) {
+            var sortOrder;
+            if (typeof arg === 'string') {
+                sortOrder = new LiveData.SortOrder();
+                sortOrder.fromJSON.apply(sortOrder, arguments);
+            }
+            else if (_.isArray(arg)) {
+                sortOrder = new LiveData.SortOrder();
+                sortOrder.fromJSON.call(sortOrder, arg);
+            }
+            else {
+                sortOrder = arg;
+            }
             var comparator = new SortOrderComparator(sortOrder);
             return _.bind(comparator.compare, comparator);
         }

@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Fri Jun 26 2015 12:11:57
+* Date:      Fri Jun 26 2015 16:15:56
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 
@@ -1566,26 +1566,55 @@ var Relution;
  * POSSIBILITY OF SUCH DAMAGE.
  */
 /* jshint indent: 4 */
+/// <reference path="../core/livedata.d.ts"/>
 var Relution;
 (function (Relution) {
     var LiveData;
     (function (LiveData) {
+        /**
+         * defines a sort order of fields.
+         *
+         * Caution, member fields eventually are shared by multiple instances! You may mutate member fields, but not the
+         * objects and arrays referenced by them.
+         */
         var SortOrder = (function () {
-            function SortOrder(sortFields) {
-                this.sortFields = new Array(sortFields.length);
-                for (var i = sortFields.length - 1; i >= 0; --i) {
-                    this.sortFields[i] = new SortField(sortFields[i]);
-                }
+            function SortOrder(other) {
+                this.sortFields = other && other.sortFields;
             }
+            SortOrder.prototype.fromJSON = function (json) {
+                this.sortFields = new Array(json.length);
+                for (var i = json.length - 1; i >= 0; --i) {
+                    this.sortFields[i] = new SortField().fromJSON(json[i]);
+                }
+                return this;
+            };
+            SortOrder.prototype.merge = function (other) {
+                this.sortFields = this.sortFields.concat(other.sortFields);
+            };
+            SortOrder.prototype.optimize = function () {
+                this.sortFields = _.unique(this.sortFields, false, function (sortField) {
+                    return sortField.name;
+                });
+            };
             return SortOrder;
         })();
         LiveData.SortOrder = SortOrder;
         var SortField = (function () {
-            function SortField(sortField) {
-                var order = sortField.length > 0 && sortField.charAt(0);
-                this.name = order === '+' || order === '-' ? sortField.substring(1) : sortField;
-                this.ascending = order !== '-';
+            function SortField(other) {
+                if (other) {
+                    this.name = other.name;
+                    this.ascending = other.ascending;
+                }
             }
+            SortField.prototype.fromJSON = function (json) {
+                var order = json.length > 0 && json.charAt(0);
+                this.name = order === '+' || order === '-' ? json.substring(1) : json;
+                this.ascending = order !== '-';
+                return this;
+            };
+            SortField.prototype.toJSON = function () {
+                return this.ascending ? this.name : '-' + this.name;
+            };
             return SortField;
         })();
         LiveData.SortField = SortField;
@@ -1625,10 +1654,22 @@ var Relution;
         /**
          * compiles a JsonCompareFn from a given SortOrder.
          *
-         * @param sortOrder being compiled.
+         * @param arg defining the SortOrder being compiled.
          * @return {function} a JsonCompareFn function compatible to Array.sort().
          */
-        function jsonCompare(sortOrder) {
+        function jsonCompare(arg) {
+            var sortOrder;
+            if (typeof arg === 'string') {
+                sortOrder = new LiveData.SortOrder();
+                sortOrder.fromJSON.apply(sortOrder, arguments);
+            }
+            else if (_.isArray(arg)) {
+                sortOrder = new LiveData.SortOrder();
+                sortOrder.fromJSON.call(sortOrder, arg);
+            }
+            else {
+                sortOrder = arg;
+            }
             var comparator = new SortOrderComparator(sortOrder);
             return _.bind(comparator.compare, comparator);
         }
@@ -1739,24 +1780,118 @@ var Relution;
  * POSSIBILITY OF SUCH DAMAGE.
  */
 /* jshint indent: 4 */
+/* jshint quotmark: false */
+/// <reference path="../core/livedata.d.ts"/>
 /// <reference path="Filter.ts" />
 /// <reference path="SortOrder.ts" />
 var Relution;
 (function (Relution) {
     var LiveData;
     (function (LiveData) {
+        /**
+         * general query parameters.
+         *
+         * Caution, member fields eventually are shared by multiple instances! You may mutate member fields, but not the
+         * objects and arrays referenced by them.
+         */
         var GetQuery = (function () {
-            function GetQuery(json) {
-                if (json) {
-                    this.limit = json.limit;
-                    this.offset = json.offset;
-                    this.sortOrder = json.sortOrder && new LiveData.SortOrder(json.sortOrder);
-                    this.filter = json.filter;
-                    this.fields = json.fields;
+            /**
+             * default/copy constructor.
+             *
+             * @param other instance to optionally initialize an independent copy of.
+             */
+            function GetQuery(other) {
+                if (other) {
+                    this.limit = other.limit;
+                    this.offset = other.offset;
+                    this.sortOrder = other.sortOrder;
+                    this.filter = other.filter;
+                    this.fields = other.fields;
                 }
             }
+            Object.defineProperty(GetQuery.prototype, "min", {
+                get: function () {
+                    return this.offset | 0;
+                },
+                set: function (value) {
+                    var max = this.max;
+                    this.offset = value;
+                    this.max = max;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(GetQuery.prototype, "max", {
+                get: function () {
+                    return this.limit ? (this.limit + this.min) : Infinity;
+                },
+                set: function (value) {
+                    this.limit = value && value !== Infinity && (value - this.min);
+                },
+                enumerable: true,
+                configurable: true
+            });
+            GetQuery.prototype.fromJSON = function (json) {
+                this.limit = json.limit;
+                this.offset = json.offset;
+                this.sortOrder = json.sortOrder && new LiveData.SortOrder().fromJSON(json.sortOrder);
+                this.filter = json.filter;
+                this.fields = json.fields;
+                return this;
+            };
+            GetQuery.isAndFilter = function (filter) {
+                return filter.type === 'logOp' && filter.operation === 'and';
+            };
             GetQuery.prototype.merge = function (other) {
-                // TODO...
+                this.min = Math.max(this.min, other.min);
+                this.max = Math.min(this.max, other.max);
+                if (!this.sortOrder) {
+                    this.sortOrder = other.sortOrder && new LiveData.SortOrder(other.sortOrder);
+                }
+                else if (other.sortOrder) {
+                    this.sortOrder.merge(other.sortOrder);
+                }
+                if (!this.filter) {
+                    this.filter = other.filter;
+                }
+                else if (other.filter) {
+                    this.filter = {
+                        type: 'logOp',
+                        operation: 'and',
+                        filters: [
+                            this.filter,
+                            other.filter
+                        ]
+                    };
+                }
+                if (!this.fields) {
+                    this.fields = other.fields;
+                }
+                else if (other.fields) {
+                    this.fields = this.fields.concat(other.fields);
+                }
+            };
+            GetQuery.prototype.optimize = function () {
+                if (this.sortOrder) {
+                    this.sortOrder.optimize();
+                }
+                if (this.filter && GetQuery.isAndFilter(this.filter)) {
+                    // following loop flattens nested and filters by recursively replacing them by their children
+                    var filters = this.filter.filters;
+                    for (var i = filters.length; i >= 0;) {
+                        if (GetQuery.isAndFilter(filters[i])) {
+                            Array.prototype.splice.apply(filters, Array.prototype.concat([i, 1], filters[i].filters));
+                        }
+                        else {
+                            --i;
+                        }
+                    }
+                }
+                if (this.fields) {
+                    // not an unsorted unique to have resulting array sorted
+                    Array.prototype.sort.apply(this.fields);
+                    this.fields = _.unique(this.fields, true);
+                }
             };
             return GetQuery;
         })();
@@ -5642,9 +5777,10 @@ var Relution;
                 // merge options forming a GetQuery
                 options.forEach(function (json) {
                     if (json) {
-                        _this.getQuery.merge(new LiveData.GetQuery(json));
+                        _this.getQuery.merge(new LiveData.GetQuery().fromJSON(json));
                     }
                 });
+                this.getQuery.optimize();
             }
             /**
              * receives change messages.
