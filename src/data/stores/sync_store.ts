@@ -88,29 +88,26 @@ module Relution.LiveData {
       }
     }
 
-    initCollection(collection) {
-      debug('Relution.LiveData.SyncStore.initCollection');
-      var url = collection.getUrlRoot();
-      if (url.charAt(url.length - 1) !== '/') {
-        url += '/';
-      }
-      var entity = this.getEntity(collection.entity);
-      if (url && entity) {
+    initEndpoint(model, modelType) {
+      debug('Relution.LiveData.SyncStore.initEndpoint');
+      var urlRoot = model.getUrlRoot();
+      var entity = this.getEntity(model.entity);
+      if (urlRoot && entity) {
         var name = entity.name;
-        var hash = URLUtil.hashLocation(url);
-        var credentials = entity.credentials || collection.credentials || this.options.credentials;
+        var hash = URLUtil.hashLocation(urlRoot);
+        var credentials = entity.credentials || model.credentials || this.options.credentials;
         var user = credentials && credentials.username ? credentials.username : '';
         var channel = name + user + hash;
-        collection.channel = channel;
+        model.channel = channel;
 
         // get or create endpoint for this url
         var endpoint = this.endpoints[hash];
         if (!endpoint) {
-          var href = URLUtil.getLocation(url);
+          var href = URLUtil.getLocation(urlRoot);
           endpoint = {};
+          endpoint.model = modelType;
           endpoint.isConnected = false;
-          endpoint.baseUrl = url;
-          endpoint.readUrl = collection.getUrl();
+          endpoint.urlRoot = urlRoot;
           endpoint.host = href.protocol + '//' + href.host;
           endpoint.path = href.pathname;
           endpoint.entity = entity;
@@ -123,11 +120,22 @@ module Relution.LiveData {
           endpoint.info = this.fetchServerInfo(endpoint);
           this.endpoints[hash] = endpoint;
         }
-        collection.endpoint = endpoint;
+        return endpoint;
+      }
+    }
 
+    initModel(model) {
+      debug('Relution.LiveData.SyncStore.initModel');
+      model.endpoint = this.initEndpoint(model, model.constructor);
+    }
+
+    initCollection(collection) {
+      debug('Relution.LiveData.SyncStore.initCollection');
+      collection.endpoint = this.initEndpoint(collection, collection.model);
+      if (collection.endpoint) {
         if (this.options.useSocketNotify) {
           // otherwise application code must fetch to update collection explicitly
-          collection.listenTo(this, 'sync:' + endpoint.channel, _.bind(this.onMessageCollection, this, collection));
+          collection.listenTo(this, 'sync:' + collection.endpoint.channel, _.bind(this.onMessageCollection, this, collection));
         }
       }
     }
@@ -143,7 +151,8 @@ module Relution.LiveData {
       if (this.options.useLocalStore) {
         var entities = {};
         entities[endpoint.entity.name] = _.extend(new Entity(endpoint.entity), {
-          name: endpoint.channel
+          name: endpoint.channel,
+          idAttribute: endpoint.model.prototype.idAttribute // see Collection.modelId() of backbone.js
         });
         return this.options.localStore.create({
           entities: entities
@@ -238,7 +247,8 @@ module Relution.LiveData {
       } else if (this.lastMesgTime[channel] !== undefined) {
         return this.lastMesgTime[channel];
       }
-      var time = localStorage.getItem('__' + channel + 'lastMesgTime') || 0;
+      // the | 0 below turns strings into numbers
+      var time = localStorage.getItem('__' + channel + 'lastMesgTime') | 0 || 0;
       this.lastMesgTime[channel] = time;
       return time;
     }
@@ -309,7 +319,7 @@ module Relution.LiveData {
           store: endpoint.localStore,
           entity: endpoint.entity
         }, that.options);
-        var model = new Model(msg.data, _.extend({
+        var model = new endpoint.model(msg.data, _.extend({
           parse: true
         }, options));
         q = endpoint.localStore.sync(msg.method, model, _.extend(options, {
@@ -524,21 +534,34 @@ module Relution.LiveData {
     }
 
     private _ajaxMessage(endpoint, msg, options, model) {
-      var channel = endpoint.channel;
-      var that = this;
-      var url = isModel(model) || msg.method !== 'read' ? endpoint.baseUrl : endpoint.readUrl;
-      if (msg.id && msg.method !== 'create') {
-        url += (url.charAt(url.length - 1) === '/' ? '' : '/' ) + msg.id;
+      options = options || {};
+
+      var url = options.url;
+      if (!url) {
+        url = endpoint.urlRoot;
+        if (msg.id && msg.method !== 'create') {
+          // add ID of model
+          url += (url.charAt(url.length - 1) === '/' ? '' : '/' ) + msg.id;
+        }
+        if (msg.method === 'read' && isCollection(model)) {
+          // add query of collection
+          var collectionUrl = _.isFunction(model.url) ? model.url() : model.url;
+          var queryIndex = collectionUrl.lastIndexOf('?');
+          if (queryIndex >= 0) {
+            url += collectionUrl.substr(queryIndex);
+          }
+        }
       }
+
       debug('ajaxMessage ' + msg.method + ' ' + url);
       return model.sync(msg.method, model, {
         // must not take arbitrary options as these won't be replayed on reconnect
         url: url,
         attrs: msg.data,
         store: {},
-        credentials: options ? options.credentials : undefined,
+        credentials: options.credentials,
         // error propagation
-        error: that.options.error
+        error: options.error
       });
     }
 
@@ -629,10 +652,11 @@ module Relution.LiveData {
       var that = this;
       var channel = endpoint ? endpoint.channel : '';
       var time = that.getLastMessageTime(channel);
-      if (endpoint && endpoint.baseUrl && channel && time) {
-        var changes = new Collection();
+      if (endpoint && endpoint.urlRoot && channel && time) {
+        var changes = new endpoint.messages.constructor();
         return changes.fetch({
-          url: endpoint.baseUrl + 'changes/' + time,
+          url: endpoint.urlRoot + 'changes/' + time,
+          store: {}, // really go to remote server
           success: function (model, response, options) {
             changes.each(function (change) {
               var msg = change.attributes;
@@ -649,10 +673,10 @@ module Relution.LiveData {
 
     private fetchServerInfo(endpoint) {
       var that = this;
-      if (endpoint && endpoint.baseUrl) {
+      if (endpoint && endpoint.urlRoot) {
         var info = new Model();
         var time = that.getLastMessageTime(endpoint.channel);
-        var url = endpoint.baseUrl;
+        var url = endpoint.urlRoot;
         if (url.charAt((url.length - 1)) !== '/') {
           url += '/';
         }
@@ -697,7 +721,7 @@ module Relution.LiveData {
         that._fixMessage(endpoint, msg);
 
         var remoteOptions:any = {
-          urlRoot: endpoint.baseUrl,
+          urlRoot: endpoint.urlRoot,
           store: {} // really go to remote server
         };
         var localOptions = {

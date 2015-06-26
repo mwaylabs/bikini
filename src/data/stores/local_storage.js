@@ -64,13 +64,13 @@ var Relution;
                 this.ids = {};
             }
             LocalStorageStore.prototype.sync = function (method, model, options) {
-                options = options || {};
+                options = _.defaults({ entity: model.entity }, options);
                 var that = this;
-                var entity = that.getEntity(model.entity || options.entity);
+                var entity = that.getEntity(options);
                 var attrs;
                 if (entity && model) {
                     var id = model.id || (method === 'create' ? new LiveData.ObjectID().toHexString() : null);
-                    attrs = options.attrs || model.toJSON(options);
+                    attrs = entity.fromAttributes(options.attrs || model.attributes);
                     switch (method) {
                         case 'patch':
                         case 'update':
@@ -105,7 +105,7 @@ var Relution;
                             return;
                     }
                 }
-                return Q.resolve(attrs).then(function (attrs) {
+                return Q.resolve(entity.toAttributes(attrs)).then(function (attrs) {
                     if (attrs) {
                         return that.handleSuccess(options, attrs) || attrs;
                     }

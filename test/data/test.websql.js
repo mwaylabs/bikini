@@ -159,7 +159,9 @@ describe('Relution.LiveData.WebSqlStore', function () {
     TEST.TestModel2 = Relution.LiveData.Model.extend({
       idAttribute: 'key',
       store: TEST.store,
-      entity: 'test'
+      entity: {
+        name: 'test'
+      }
     });
 
     var model = TEST.TestModel2.create({key: TEST.key});

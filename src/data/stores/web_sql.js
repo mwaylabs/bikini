@@ -472,9 +472,10 @@ var Relution;
                         if (!isAutoInc && !amodel.id && amodel.idAttribute) {
                             amodel.set(amodel.idAttribute, new LiveData.ObjectID().toHexString());
                         }
-                        var value = amodel.toJSON(options);
+                        var value = options.attrs || amodel.attributes;
                         var args, keys;
                         if (!_.isEmpty(entity.fields)) {
+                            value = entity.fromAttributes(value);
                             args = _.values(value);
                             keys = _.keys(value);
                         }
@@ -520,7 +521,7 @@ var Relution;
                                 var item = res.rows.item(i);
                                 var attrs;
                                 if (!_.isEmpty(entity.fields) || !that._hasDefaultFields(item)) {
-                                    attrs = item;
+                                    attrs = entity.toAttributes(item);
                                 }
                                 else {
                                     try {

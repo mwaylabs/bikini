@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Thu Jun 25 2015 17:08:34
+* Date:      Fri Jun 26 2015 10:27:50
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 
@@ -2564,6 +2564,7 @@ _.extend(Relution.LiveData.Model.prototype, Relution.LiveData._Object, {
     }
   },
 
+  /*
   toJSON: function (options) {
     options = options || {};
     var entity = options.entity || this.entity;
@@ -2581,6 +2582,7 @@ _.extend(Relution.LiveData.Model.prototype, Relution.LiveData._Object, {
     }
     return resp;
   }
+  */
 
 });
 
@@ -4006,13 +4008,13 @@ var Relution;
                 this.ids = {};
             }
             LocalStorageStore.prototype.sync = function (method, model, options) {
-                options = options || {};
+                options = _.defaults({ entity: model.entity }, options);
                 var that = this;
-                var entity = that.getEntity(model.entity || options.entity);
+                var entity = that.getEntity(options);
                 var attrs;
                 if (entity && model) {
                     var id = model.id || (method === 'create' ? new LiveData.ObjectID().toHexString() : null);
-                    attrs = options.attrs || model.toJSON(options);
+                    attrs = entity.fromAttributes(options.attrs || model.attributes);
                     switch (method) {
                         case 'patch':
                         case 'update':
@@ -4047,7 +4049,7 @@ var Relution;
                             return;
                     }
                 }
-                return Q.resolve(attrs).then(function (attrs) {
+                return Q.resolve(entity.toAttributes(attrs)).then(function (attrs) {
                     if (attrs) {
                         return that.handleSuccess(options, attrs) || attrs;
                     }
@@ -4637,9 +4639,10 @@ var Relution;
                         if (!isAutoInc && !amodel.id && amodel.idAttribute) {
                             amodel.set(amodel.idAttribute, new LiveData.ObjectID().toHexString());
                         }
-                        var value = amodel.toJSON(options);
+                        var value = options.attrs || amodel.attributes;
                         var args, keys;
                         if (!_.isEmpty(entity.fields)) {
+                            value = entity.fromAttributes(value);
                             args = _.values(value);
                             keys = _.keys(value);
                         }
@@ -4685,7 +4688,7 @@ var Relution;
                                 var item = res.rows.item(i);
                                 var attrs;
                                 if (!_.isEmpty(entity.fields) || !that._hasDefaultFields(item)) {
-                                    attrs = item;
+                                    attrs = entity.toAttributes(item);
                                 }
                                 else {
                                     try {
@@ -4898,28 +4901,25 @@ var Relution;
                     this.options.useSocketNotify = false;
                 }
             }
-            SyncStore.prototype.initCollection = function (collection) {
-                Relution.debug('Relution.LiveData.SyncStore.initCollection');
-                var url = collection.getUrlRoot();
-                if (url.charAt(url.length - 1) !== '/') {
-                    url += '/';
-                }
-                var entity = this.getEntity(collection.entity);
-                if (url && entity) {
+            SyncStore.prototype.initEndpoint = function (model, modelType) {
+                Relution.debug('Relution.LiveData.SyncStore.initEndpoint');
+                var urlRoot = model.getUrlRoot();
+                var entity = this.getEntity(model.entity);
+                if (urlRoot && entity) {
                     var name = entity.name;
-                    var hash = LiveData.URLUtil.hashLocation(url);
-                    var credentials = entity.credentials || collection.credentials || this.options.credentials;
+                    var hash = LiveData.URLUtil.hashLocation(urlRoot);
+                    var credentials = entity.credentials || model.credentials || this.options.credentials;
                     var user = credentials && credentials.username ? credentials.username : '';
                     var channel = name + user + hash;
-                    collection.channel = channel;
+                    model.channel = channel;
                     // get or create endpoint for this url
                     var endpoint = this.endpoints[hash];
                     if (!endpoint) {
-                        var href = LiveData.URLUtil.getLocation(url);
+                        var href = LiveData.URLUtil.getLocation(urlRoot);
                         endpoint = {};
+                        endpoint.model = modelType;
                         endpoint.isConnected = false;
-                        endpoint.baseUrl = url;
-                        endpoint.readUrl = collection.getUrl();
+                        endpoint.urlRoot = urlRoot;
                         endpoint.host = href.protocol + '//' + href.host;
                         endpoint.path = href.pathname;
                         endpoint.entity = entity;
@@ -4932,10 +4932,20 @@ var Relution;
                         endpoint.info = this.fetchServerInfo(endpoint);
                         this.endpoints[hash] = endpoint;
                     }
-                    collection.endpoint = endpoint;
+                    return endpoint;
+                }
+            };
+            SyncStore.prototype.initModel = function (model) {
+                Relution.debug('Relution.LiveData.SyncStore.initModel');
+                model.endpoint = this.initEndpoint(model, model.constructor);
+            };
+            SyncStore.prototype.initCollection = function (collection) {
+                Relution.debug('Relution.LiveData.SyncStore.initCollection');
+                collection.endpoint = this.initEndpoint(collection, collection.model);
+                if (collection.endpoint) {
                     if (this.options.useSocketNotify) {
                         // otherwise application code must fetch to update collection explicitly
-                        collection.listenTo(this, 'sync:' + endpoint.channel, _.bind(this.onMessageCollection, this, collection));
+                        collection.listenTo(this, 'sync:' + collection.endpoint.channel, _.bind(this.onMessageCollection, this, collection));
                     }
                 }
             };
@@ -4949,7 +4959,8 @@ var Relution;
                 if (this.options.useLocalStore) {
                     var entities = {};
                     entities[endpoint.entity.name] = _.extend(new LiveData.Entity(endpoint.entity), {
-                        name: endpoint.channel
+                        name: endpoint.channel,
+                        idAttribute: endpoint.model.prototype.idAttribute // see Collection.modelId() of backbone.js
                     });
                     return this.options.localStore.create({
                         entities: entities
@@ -5040,7 +5051,8 @@ var Relution;
                 else if (this.lastMesgTime[channel] !== undefined) {
                     return this.lastMesgTime[channel];
                 }
-                var time = localStorage.getItem('__' + channel + 'lastMesgTime') || 0;
+                // the | 0 below turns strings into numbers
+                var time = localStorage.getItem('__' + channel + 'lastMesgTime') | 0 || 0;
                 this.lastMesgTime[channel] = time;
                 return time;
             };
@@ -5104,7 +5116,7 @@ var Relution;
                         store: endpoint.localStore,
                         entity: endpoint.entity
                     }, that.options);
-                    var model = new LiveData.Model(msg.data, _.extend({
+                    var model = new endpoint.model(msg.data, _.extend({
                         parse: true
                     }, options));
                     q = endpoint.localStore.sync(msg.method, model, _.extend(options, {
@@ -5304,11 +5316,22 @@ var Relution;
                 });
             };
             SyncStore.prototype._ajaxMessage = function (endpoint, msg, options, model) {
-                var channel = endpoint.channel;
-                var that = this;
-                var url = LiveData.isModel(model) || msg.method !== 'read' ? endpoint.baseUrl : endpoint.readUrl;
-                if (msg.id && msg.method !== 'create') {
-                    url += (url.charAt(url.length - 1) === '/' ? '' : '/') + msg.id;
+                options = options || {};
+                var url = options.url;
+                if (!url) {
+                    url = endpoint.urlRoot;
+                    if (msg.id && msg.method !== 'create') {
+                        // add ID of model
+                        url += (url.charAt(url.length - 1) === '/' ? '' : '/') + msg.id;
+                    }
+                    if (msg.method === 'read' && LiveData.isCollection(model)) {
+                        // add query of collection
+                        var collectionUrl = _.isFunction(model.url) ? model.url() : model.url;
+                        var queryIndex = collectionUrl.lastIndexOf('?');
+                        if (queryIndex >= 0) {
+                            url += collectionUrl.substr(queryIndex);
+                        }
+                    }
                 }
                 Relution.debug('ajaxMessage ' + msg.method + ' ' + url);
                 return model.sync(msg.method, model, {
@@ -5316,9 +5339,9 @@ var Relution;
                     url: url,
                     attrs: msg.data,
                     store: {},
-                    credentials: options ? options.credentials : undefined,
+                    credentials: options.credentials,
                     // error propagation
-                    error: that.options.error
+                    error: options.error
                 });
             };
             SyncStore.prototype._applyResponse = function (qXHR, endpoint, msg, options, model) {
@@ -5409,10 +5432,11 @@ var Relution;
                 var that = this;
                 var channel = endpoint ? endpoint.channel : '';
                 var time = that.getLastMessageTime(channel);
-                if (endpoint && endpoint.baseUrl && channel && time) {
-                    var changes = new LiveData.Collection();
+                if (endpoint && endpoint.urlRoot && channel && time) {
+                    var changes = new endpoint.messages.constructor();
                     return changes.fetch({
-                        url: endpoint.baseUrl + 'changes/' + time,
+                        url: endpoint.urlRoot + 'changes/' + time,
+                        store: {},
                         success: function (model, response, options) {
                             changes.each(function (change) {
                                 var msg = change.attributes;
@@ -5429,10 +5453,10 @@ var Relution;
             };
             SyncStore.prototype.fetchServerInfo = function (endpoint) {
                 var that = this;
-                if (endpoint && endpoint.baseUrl) {
+                if (endpoint && endpoint.urlRoot) {
                     var info = new LiveData.Model();
                     var time = that.getLastMessageTime(endpoint.channel);
-                    var url = endpoint.baseUrl;
+                    var url = endpoint.urlRoot;
                     if (url.charAt((url.length - 1)) !== '/') {
                         url += '/';
                     }
@@ -5473,7 +5497,7 @@ var Relution;
                     }
                     that._fixMessage(endpoint, msg);
                     var remoteOptions = {
-                        urlRoot: endpoint.baseUrl,
+                        urlRoot: endpoint.urlRoot,
                         store: {} // really go to remote server
                     };
                     var localOptions = {

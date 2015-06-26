@@ -213,15 +213,24 @@ describe('Relution.LiveData.LocalStorageStore', function () {
     if (TEST.Test.length === 0) {
       done();
     } else {
-      TEST.Test.on('all', function (event) {
-        if (event === 'destroy' && TEST.Test.length == 0) {
-          done();
+      var model, hasError = false, isDone = false;
+      TEST.Test.models.forEach(function (model) {
+        if (!hasError) {
+          model.destroy({
+            success: function () {
+              if (TEST.Test.length == 0 && !isDone) {
+                isDone = true;
+                assert.equal(TEST.Test.length, 0, 'collection is empty');
+                done();
+              }
+            },
+            error: function (model, error) {
+              hasError = isDone = true;
+              backbone_error(done).apply(this, arguments);
+            }
+          });
         }
       });
-      var model;
-      while (model = TEST.Test.first()) {
-        model.destroy();
-      }
     }
   });
 

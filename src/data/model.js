@@ -85,6 +85,7 @@ _.extend(Relution.LiveData.Model.prototype, Relution.LiveData._Object, {
     }
   },
 
+  /*
   toJSON: function (options) {
     options = options || {};
     var entity = options.entity || this.entity;
@@ -102,5 +103,6 @@ _.extend(Relution.LiveData.Model.prototype, Relution.LiveData._Object, {
     }
     return resp;
   }
+  */
 
 });

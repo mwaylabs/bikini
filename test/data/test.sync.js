@@ -129,12 +129,13 @@ describe('Relution.LiveData.SyncStore', function () {
       success: function () {
         assert.ok(true, 'model has been fetched.');
         assert.equal(model.get('firstName'), TEST.data.firstName, "found record has the correct 'firstname' value");
-        assert.equal(model.get('USERNAME'), TEST.data.sureName, "found record has the correct 'USERNAME' value");
+        // following is different to other tests as TEST.store does not recreate localStore and thus does not see entity change
+        assert.equal(model.get('sureName'), TEST.data.sureName, "found record has the correct 'USERNAME' value");
         assert.equal(model.get('age'), TEST.data.age, "found record has the correct 'age' value");
         done();
       },
       error: backbone_error(done)
-    })
+    });
   });
 
   it('fetching collection', function (done) {
@@ -185,21 +186,23 @@ describe('Relution.LiveData.SyncStore', function () {
       done();
     } else {
       var model, hasError = false, isDone = false;
-      while ((model = TEST.Tests.first()) && !hasError) {
-        model.destroy({
-          success: function () {
-            if (TEST.Tests.length == 0 && !isDone) {
-              isDone = true;
-              assert.equal(TEST.Tests.length, 0, 'collection is empty');
-              done();
+      TEST.Tests.models.forEach(function (model) {
+        if (!hasError) {
+          model.destroy({
+            success: function () {
+              if (TEST.Tests.length == 0 && !isDone) {
+                isDone = true;
+                assert.equal(TEST.Tests.length, 0, 'collection is empty');
+                done();
+              }
+            },
+            error: function (model, error) {
+              hasError = isDone = true;
+              backbone_error(done).apply(this, arguments);
             }
-          },
-          error: function (model, error) {
-            hasError = isDone = true;
-            backbone_error(done).apply(this, arguments);
-          }
-        });
-      }
+          });
+        }
+      });
     }
   });
 
