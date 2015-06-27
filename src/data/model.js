@@ -3,12 +3,12 @@
 
 /**
  *
- * @module Bikini.Model
+ * @module Relution.LiveData.Model
  *
  * @type {*}
  * @extends Backbone.Model
  */
-Bikini.Model = Backbone.Model.extend({
+Relution.LiveData.Model = Backbone.Model.extend({
   constructor: function (attributes, options) {
     if (this.url && typeof this.url === 'string') {
       if (this.url.charAt(this.url.length - 1) !== '/') {
@@ -20,22 +20,20 @@ Bikini.Model = Backbone.Model.extend({
   }
 });
 
-Bikini.Model.create = Bikini.create;
-Bikini.Model.design = Bikini.design;
+Relution.LiveData.Model.create = Relution.LiveData.create;
+Relution.LiveData.Model.design = Relution.LiveData.design;
 
-_.extend(Bikini.Model.prototype, Bikini.Object, {
+_.extend(Relution.LiveData.Model.prototype, Relution.LiveData._Object, {
 
-  _type: 'Bikini.Model',
+  _type: 'Relution.LiveData.Model',
 
-  isModel: YES,
+  isModel: true,
 
   entity: null,
 
   defaults: {},
 
   changedSinceSync: {},
-
-  logon: Bikini.Security.logon,
 
   init: function (attributes, options) {
     options = options || {};
@@ -48,7 +46,7 @@ _.extend(Bikini.Model.prototype, Bikini.Object, {
     }
     this.entity = this.entity || (this.collection ? this.collection.entity : null) || options.entity;
     if (this.entity) {
-      this.entity = Bikini.Entity.from(this.entity, {model: this.constructor, typeMapping: options.typeMapping});
+      this.entity = Relution.LiveData.Entity.from(this.entity, {model: this.constructor, typeMapping: options.typeMapping});
       this.idAttribute = this.entity.idAttribute || this.idAttribute;
     }
     this.credentials = this.credentials || (this.collection ? this.collection.credentials : null) || options.credentials;
@@ -56,21 +54,8 @@ _.extend(Bikini.Model.prototype, Bikini.Object, {
     this.on('sync', this.onSync, this);
   },
 
-  sync: function (method, model, options) {
-    options = options || {};
-    options.credentials = options.credentials || this.credentials;
-    var store = (options.store ? options.store : null) || this.store;
-    var that = this;
-    var args = arguments;
-
-    return this.logon(options, function (result) {
-      if (store && _.isFunction(store.sync)) {
-        return store.sync.apply(that, args);
-      } else {
-        return Backbone.sync.apply(that, args);
-      }
-    });
-  },
+  ajax: Relution.LiveData.ajax,
+  sync: Relution.LiveData.sync,
 
   onChange: function (model, options) {
     // For each `set` attribute, update or delete the current value.
@@ -100,10 +85,11 @@ _.extend(Bikini.Model.prototype, Bikini.Object, {
     }
   },
 
+  /*
   toJSON: function (options) {
     options = options || {};
     var entity = options.entity || this.entity;
-    if (Bikini.isEntity(entity)) {
+    if (Relution.LiveData.isEntity(entity)) {
       return entity.fromAttributes(options.attrs || this.attributes);
     }
     return options.attrs || _.clone(this.attributes);
@@ -112,10 +98,11 @@ _.extend(Bikini.Model.prototype, Bikini.Object, {
   parse: function (resp, options) {
     options = options || {};
     var entity = options.entity || this.entity;
-    if (Bikini.isEntity(entity)) {
+    if (Relution.LiveData.isEntity(entity)) {
       return entity.toAttributes(resp);
     }
     return resp;
   }
+  */
 
 });

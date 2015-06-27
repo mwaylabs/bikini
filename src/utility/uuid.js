@@ -5,12 +5,12 @@
 
 /**
  *
- * @module Bikini.UniqueId
+ * @module Relution.LiveData.UniqueId
  *
  * @type {*}
- * @extends Bikini.Object
+ * @extends Relution.LiveData._Object
  */
-Bikini.UniqueId = Bikini.Object.design({
+Relution.LiveData.UniqueId = Relution.LiveData._Object.design({
   uuid: function (len, radix) {
     // based on Robert Kieffer's randomUUID.js at http://www.broofa.com
     var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');

@@ -3,19 +3,19 @@
 
 /**
  *
- * @module Bikini.Entity
+ * @module Relution.LiveData.Entity
  *
  */
 
 /**
  * Holds description about fields and other entity properties.
  * Also helper functions for field and transform operations
- * @module Bikini.Entity
+ * @module Relution.LiveData.Entity
  *
  * @param options
  * @constructor
  */
-Bikini.Entity = function (options) {
+Relution.LiveData.Entity = function (options) {
   var fields = this.fields;
   this.fields = {};
   this._mergeFields(fields);
@@ -38,12 +38,12 @@ Bikini.Entity = function (options) {
  * @param options
  * @returns {*}
  */
-Bikini.Entity.from = function (entity, options) {
-  // is not an instance of Bikini.Entity
-  if (!Bikini.Entity.prototype.isPrototypeOf(entity)) {
+Relution.LiveData.Entity.from = function (entity, options) {
+  // is not an instance of Relution.LiveData.Entity
+  if (!Relution.LiveData.Entity.prototype.isPrototypeOf(entity)) {
     // if this is a prototype of an entity, create an instance
     if (_.isFunction(entity) &&
-      Bikini.Entity.prototype.isPrototypeOf(entity.prototype)) {
+      Relution.LiveData.Entity.prototype.isPrototypeOf(entity.prototype)) {
       var Entity = entity;
       entity = new Entity(options);
     } else {
@@ -53,7 +53,7 @@ Bikini.Entity.from = function (entity, options) {
         };
       }
       // if this is just a config create a new Entity
-      var E = Bikini.Entity.extend(entity);
+      var E = Relution.LiveData.Entity.extend(entity);
       entity = new E(options);
     }
   } else if (options && options.typeMapping) {
@@ -62,18 +62,18 @@ Bikini.Entity.from = function (entity, options) {
   return entity;
 };
 
-Bikini.Entity.extend = Bikini.extend;
-Bikini.Entity.create = Bikini.create;
-Bikini.Entity.design = Bikini.design;
+Relution.LiveData.Entity.extend = Relution.LiveData.extend;
+Relution.LiveData.Entity.create = Relution.LiveData.create;
+Relution.LiveData.Entity.design = Relution.LiveData.design;
 
-_.extend(Bikini.Entity.prototype, Bikini.Object, {
+_.extend(Relution.LiveData.Entity.prototype, Relution.LiveData._Object, {
 
   /**
    * The type of this object.
    *
    * @type String
    */
-  _type: 'Bikini.Entity',
+  _type: 'Relution.LiveData.Entity',
 
   /**
    * Entity name, used for tables or collections
@@ -115,7 +115,7 @@ _.extend(Bikini.Entity.prototype, Bikini.Object, {
    * get a specified field from this entity
    *
    * @param fieldKey
-   * @returns Bikini.Field instance
+   * @returns Relution.LiveData.Field instance
    */
   getField: function (fieldKey) {
     return this.fields[fieldKey];
@@ -138,7 +138,7 @@ _.extend(Bikini.Entity.prototype, Bikini.Object, {
    * @returns String
    */
   getKey: function () {
-    return this.idAttribute || Bikini.Model.idAttribute;
+    return this.idAttribute || Relution.LiveData.Model.idAttribute;
   },
 
   /**
@@ -182,7 +182,7 @@ _.extend(Bikini.Entity.prototype, Bikini.Object, {
     if (_.isObject(newFields)) {
       _.each(newFields, function (value, key) {
         if (!that.fields[key]) {
-          that.fields[key] = new Bikini.Field(value);
+          that.fields[key] = new Relution.LiveData.Field(value);
         } else {
           that.fields[key].merge(value);
         }
@@ -199,8 +199,8 @@ _.extend(Bikini.Entity.prototype, Bikini.Object, {
   _updateFields: function (typeMapping) {
     var that = this;
     _.each(this.fields, function (value, key) {
-      // remove unused properties
-      if (value.persistent === NO) {
+      if (!value.persistent) {
+        // remove unused properties
         delete that.fields[key];
       } else {
         // add missing names

@@ -2,43 +2,43 @@
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
 
 /**
- * Bikini.Cypher defines a prototype for handling decoding, encoding and hashing of string
+ * Relution.LiveData.Cypher defines a prototype for handling decoding, encoding and hashing of string
  * based values.
- * @module Bikini.Cypher
+ * @module Relution.LiveData.Cypher
  *
- * @extends Bikini.Object
+ * @extends Relution.LiveData._Object
  */
-Bikini.Cypher = Bikini.Object.design(/** @scope Bikini.Cypher.prototype */ {
+Relution.LiveData.Cypher = Relution.LiveData._Object.design(/** @scope Relution.LiveData.Cypher.prototype */ {
 
   /**
    * The type of this object.
    *
    * @type String
    */
-  type: 'Bikini.Cypher',
+  type: 'Relution.LiveData.Cypher',
 
   /**
    * The default decoder.
    *
-   * @type Bikini.Base64
+   * @type Relution.LiveData.Base64
    */
-  defaultDecoder: Bikini.Base64,
+  defaultDecoder: Relution.LiveData.Base64,
 
   /**
    * The default encoder.
    *
-   * @type Bikini.Base64
+   * @type Relution.LiveData.Base64
    */
 
-  defaultEncoder: Bikini.Base64,
+  defaultEncoder: Relution.LiveData.Base64,
 
   /**
    * The default hash algorithm.
    *
-   * @type Bikini.SHA256
+   * @type Relution.LiveData.SHA256
    */
 
-  defaultHasher: Bikini.SHA256,
+  defaultHasher: Relution.LiveData.SHA256,
 
   /**
    * This method is the one that initiates the decoding of a given string, based on either

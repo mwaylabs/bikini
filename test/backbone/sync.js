@@ -1,30 +1,32 @@
-(function() {
+(function () {
 
-  var Library = Bikini.Collection.extend({
-    url : function() { return '/library'; }
+  var Library = Relution.LiveData.Collection.extend({
+    url: function () {
+      return '/library';
+    }
   });
   var library;
 
   var attrs = {
-    title  : "The Tempest",
-    author : "Bill Shakespeare",
-    length : 123
+    title: "The Tempest",
+    author: "Bill Shakespeare",
+    length: 123
   };
 
   module("Backbone.sync", {
 
-    setup : function() {
+    setup: function () {
       library = new Library;
       library.create(attrs, {wait: false});
     },
 
-    teardown: function() {
+    teardown: function () {
       Backbone.emulateHTTP = false;
     }
 
   });
 
-  test("read", 4, function() {
+  test("read", 4, function () {
     library.fetch();
     equal(this.ajaxSettings.url, '/library');
     equal(this.ajaxSettings.type, 'GET');
@@ -32,14 +34,14 @@
     ok(_.isEmpty(this.ajaxSettings.data));
   });
 
-  test("passing data", 3, function() {
+  test("passing data", 3, function () {
     library.fetch({data: {a: 'a', one: 1}});
     equal(this.ajaxSettings.url, '/library');
     equal(this.ajaxSettings.data.a, 'a');
     equal(this.ajaxSettings.data.one, 1);
   });
 
-  test("create", 6, function() {
+  test("create", 6, function () {
     equal(this.ajaxSettings.url, '/library');
     equal(this.ajaxSettings.type, 'POST');
     equal(this.ajaxSettings.dataType, 'json');
@@ -49,7 +51,7 @@
     equal(data.length, 123);
   });
 
-  test("update", 7, function() {
+  test("update", 7, function () {
     library.first().save({id: '1-the-tempest', author: 'William Shakespeare'});
     equal(this.ajaxSettings.url, '/library/1-the-tempest');
     equal(this.ajaxSettings.type, 'PUT');
@@ -61,7 +63,7 @@
     equal(data.length, 123);
   });
 
-  test("update with emulateHTTP and emulateJSON", 7, function() {
+  test("update with emulateHTTP and emulateJSON", 7, function () {
     library.first().save({id: '2-the-tempest', author: 'Tim Shakespeare'}, {
       emulateHTTP: true,
       emulateJSON: true
@@ -76,7 +78,7 @@
     equal(data.length, 123);
   });
 
-  test("update with just emulateHTTP", 6, function() {
+  test("update with just emulateHTTP", 6, function () {
     library.first().save({id: '2-the-tempest', author: 'Tim Shakespeare'}, {
       emulateHTTP: true
     });
@@ -89,7 +91,7 @@
     equal(data.length, 123);
   });
 
-  test("update with just emulateJSON", 6, function() {
+  test("update with just emulateJSON", 6, function () {
     library.first().save({id: '2-the-tempest', author: 'Tim Shakespeare'}, {
       emulateJSON: true
     });
@@ -102,7 +104,7 @@
     equal(data.length, 123);
   });
 
-  test("read model", 3, function() {
+  test("read model", 3, function () {
     library.first().save({id: '2-the-tempest', author: 'Tim Shakespeare'});
     library.first().fetch();
     equal(this.ajaxSettings.url, '/library/2-the-tempest');
@@ -110,7 +112,7 @@
     ok(_.isEmpty(this.ajaxSettings.data));
   });
 
-  test("destroy", 3, function() {
+  test("destroy", 3, function () {
     library.first().save({id: '2-the-tempest', author: 'Tim Shakespeare'});
     library.first().destroy({wait: true});
     equal(this.ajaxSettings.url, '/library/2-the-tempest');
@@ -118,7 +120,7 @@
     equal(this.ajaxSettings.data, null);
   });
 
-  test("destroy with emulateHTTP", 3, function() {
+  test("destroy with emulateHTTP", 3, function () {
     library.first().save({id: '2-the-tempest', author: 'Tim Shakespeare'});
     library.first().destroy({
       emulateHTTP: true,
@@ -129,41 +131,43 @@
     equal(JSON.stringify(this.ajaxSettings.data), '{"_method":"DELETE"}');
   });
 
-  test("urlError", 2, function() {
-    var model = new Bikini.Model();
-    raises(function() {
+  test("urlError", 2, function () {
+    var model = new Relution.LiveData.Model();
+    raises(function () {
       model.fetch();
     });
     model.fetch({url: '/one/two'});
     equal(this.ajaxSettings.url, '/one/two');
   });
 
-  test("#1052 - `options` is optional.", 0, function() {
-    var model = new Bikini.Model();
+  test("#1052 - `options` is optional.", 0, function () {
+    var model = new Relution.LiveData.Model();
     model.url = '/test';
     Backbone.sync('create', model);
   });
 
-  test("Backbone.ajax", 1, function() {
-    Backbone.ajax = function(settings){
+  test("Backbone.ajax", 1, function () {
+    Backbone.ajax = function (settings) {
       strictEqual(settings.url, '/test');
     };
-    var model = new Bikini.Model();
+    var model = new Relution.LiveData.Model();
     model.url = '/test';
     Backbone.sync('create', model);
   });
 
-  test("Call provided error callback on error.", 1, function() {
-    var model = new Bikini.Model;
+  test("Call provided error callback on error.", 1, function () {
+    var model = new Relution.LiveData.Model;
     model.url = '/test';
     Backbone.sync('read', model, {
-      error: function() { ok(true); }
+      error: function () {
+        ok(true);
+      }
     });
     this.ajaxSettings.error();
   });
 
-  test('Use Backbone.emulateHTTP as default.', 2, function() {
-    var model = new Bikini.Model;
+  test('Use Backbone.emulateHTTP as default.', 2, function () {
+    var model = new Relution.LiveData.Model;
     model.url = '/test';
 
     Backbone.emulateHTTP = true;
@@ -175,8 +179,8 @@
     strictEqual(this.ajaxSettings.emulateHTTP, false);
   });
 
-  test('Use Backbone.emulateJSON as default.', 2, function() {
-    var model = new Bikini.Model;
+  test('Use Backbone.emulateJSON as default.', 2, function () {
+    var model = new Relution.LiveData.Model;
     model.url = '/test';
 
     Backbone.emulateJSON = true;
@@ -188,18 +192,18 @@
     strictEqual(this.ajaxSettings.emulateJSON, false);
   });
 
-  test("#1756 - Call user provided beforeSend function.", 4, function() {
+  test("#1756 - Call user provided beforeSend function.", 4, function () {
     Backbone.emulateHTTP = true;
-    var model = new Bikini.Model;
+    var model = new Relution.LiveData.Model;
     model.url = '/test';
     var xhr = {
-      setRequestHeader: function(header, value) {
+      setRequestHeader: function (header, value) {
         strictEqual(header, 'X-HTTP-Method-Override');
         strictEqual(value, 'DELETE');
       }
     };
     model.sync('delete', model, {
-      beforeSend: function(_xhr) {
+      beforeSend: function (_xhr) {
         ok(_xhr === xhr);
         return false;
       }
@@ -207,10 +211,10 @@
     strictEqual(this.ajaxSettings.beforeSend(xhr), false);
   });
 
-  test('#2928 - Pass along `textStatus` and `errorThrown`.', 2, function() {
-    var model = new Bikini.Model;
+  test('#2928 - Pass along `textStatus` and `errorThrown`.', 2, function () {
+    var model = new Relution.LiveData.Model;
     model.url = '/test';
-    model.on('error', function(model, xhr, options) {
+    model.on('error', function (model, xhr, options) {
       strictEqual(options.textStatus, 'textStatus');
       strictEqual(options.errorThrown, 'errorThrown');
     });

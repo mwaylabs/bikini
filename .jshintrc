@@ -20,19 +20,20 @@
     "smarttabs": true,
     "jquery": true,
     "globals": {
+        "Relution": true,
         "Bikini": true,
         "Backbone": false,
         "_": false,
+        "Q": false,
         "moment": false,
         "io": false,
-        "YES": true,
-        "NO": true,
         "Modernizr": false,
         "Hammer": false,
         "FastClick": false,
         "enquire": false,
         "describe": false,
         "assert": false,
-        "it": false
+        "it": false,
+        "jsonPath": false
     }
 }

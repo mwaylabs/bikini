@@ -3,7 +3,7 @@
 
 // ===========================================================================
 //
-// Bikini.ObjectId uses code from meteor.js
+// Relution.LiveData.ObjectId uses code from meteor.js
 // https://github.com/meteor/meteor/blob/master/packages/minimongo
 //
 // Thanks for sharing!
@@ -13,21 +13,21 @@
 // m_require('core/foundation/object.js');
 /**
  *
- * @module Bikini.ObjectID
+ * @module Relution.LiveData.ObjectID
  *
  */
-Bikini.ObjectID = function (hexString) {
-  Bikini.ObjectID.counter = Bikini.ObjectID.counter || parseInt(Math.random() * Math.pow(16, 6));
-  Bikini.ObjectID.machineId = Bikini.ObjectID.machineId || parseInt(Math.random() * Math.pow(16, 6));
-  Bikini.ObjectID.processId = Bikini.ObjectID.processId || parseInt(Math.random() * Math.pow(16, 4));
+Relution.LiveData.ObjectID = function (hexString) {
+  Relution.LiveData.ObjectID.counter = Relution.LiveData.ObjectID.counter || parseInt(Math.random() * Math.pow(16, 6));
+  Relution.LiveData.ObjectID.machineId = Relution.LiveData.ObjectID.machineId || parseInt(Math.random() * Math.pow(16, 6));
+  Relution.LiveData.ObjectID.processId = Relution.LiveData.ObjectID.processId || parseInt(Math.random() * Math.pow(16, 4));
   this._ObjectID(hexString);
 };
 
-Bikini.ObjectID._looksLikeObjectID = function (str) {
+Relution.LiveData.ObjectID._looksLikeObjectID = function (str) {
   return str.length === 24 && str.match(/^[0-9a-f]*$/);
 };
 
-_.extend(Bikini.ObjectID.prototype, {
+_.extend(Relution.LiveData.ObjectID.prototype, {
 
   _str: '',
 
@@ -35,7 +35,7 @@ _.extend(Bikini.ObjectID.prototype, {
     //random-based impl of Mongo ObjectID
     if (hexString) {
       hexString = hexString.toLowerCase();
-      if (!Bikini.ObjectID._looksLikeObjectID(hexString)) {
+      if (!Relution.LiveData.ObjectID._looksLikeObjectID(hexString)) {
         throw new Error('Invalid hexadecimal string for creating an ObjectID');
       }
       // meant to work with _.isEqual(), which relies on structural equality
@@ -44,9 +44,9 @@ _.extend(Bikini.ObjectID.prototype, {
 
       this._str =
         this._hexString(8, new Date().getTime() / 1000) +     // a 4-byte value from the Unix timestamp
-        this._hexString(6, Bikini.ObjectID.machineId) +          // a 3-byte machine identifier
-        this._hexString(4, Bikini.ObjectID.processId) +          // a 2-byte process identifier
-        this._hexString(6, Bikini.ObjectID.counter++);   // a 3-byte counter, starting with a random value.
+        this._hexString(6, Relution.LiveData.ObjectID.machineId) +          // a 3-byte machine identifier
+        this._hexString(4, Relution.LiveData.ObjectID.processId) +          // a 2-byte process identifier
+        this._hexString(6, Relution.LiveData.ObjectID.counter++);   // a 3-byte counter, starting with a random value.
     }
     return this._str;
   },
@@ -69,7 +69,7 @@ _.extend(Bikini.ObjectID.prototype, {
   },
 
   clone: function () {
-    return new Bikini.ObjectID(this._str);
+    return new Relution.LiveData.ObjectID(this._str);
   },
 
   typeName: function () {
@@ -108,7 +108,7 @@ _.extend(Bikini.ObjectID.prototype, {
   _selectorIsId: function (selector) {
     return (typeof selector === 'string') ||
       (typeof selector === 'number') ||
-      selector instanceof Bikini.ObjectId;
+      selector instanceof Relution.LiveData.ObjectId;
   },
 
   // Is the selector just lookup by _id (shorthand or not)?

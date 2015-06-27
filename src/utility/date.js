@@ -3,14 +3,14 @@
 
 /**
  *
- * @module Bikini.Date
+ * @module Relution.LiveData.Date
  *
- * @extends Bikini.Object
+ * @extends Relution.LiveData._Object
  */
-Bikini.Date = {
+Relution.LiveData.Date = {
 
   /**
-   * This method is used to create a new instance of Bikini.Date based on the data
+   * This method is used to create a new instance of Relution.LiveData.Date based on the data
    * library moment.js.
    *
    * @returns {Object}

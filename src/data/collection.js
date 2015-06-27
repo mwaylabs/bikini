@@ -2,20 +2,20 @@
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
 
 /**
- * The Bikini.Collection can be used like a Backbone Collection,
+ * The Relution.LiveData.Collection can be used like a Backbone Collection,
  *
  * but there are some enhancements to fetch, save and delete the
  * contained models from or to other "data stores".
  *
- * see LocalStorageStore, WebSqlStore or BikiniStore for examples
+ * see LocalStorageStore, WebSqlStore or SyncStore for examples
  *
- * @module Bikini.Collection
+ * @module Relution.LiveData.Collection
  *
  * @type {*}
  * @extends Backbone.Collection
  *
  */
-Bikini.Collection = Backbone.Collection.extend({
+Relution.LiveData.Collection = Backbone.Collection.extend({
 
   constructor: function (options) {
     if (this.url && this.url.charAt(this.url.length - 1) !== '/') {
@@ -26,22 +26,20 @@ Bikini.Collection = Backbone.Collection.extend({
   }
 });
 
-Bikini.Collection.create = Bikini.create;
-Bikini.Collection.design = Bikini.design;
+Relution.LiveData.Collection.create = Relution.LiveData.create;
+Relution.LiveData.Collection.design = Relution.LiveData.design;
 
-_.extend(Bikini.Collection.prototype, Bikini.Object, {
+_.extend(Relution.LiveData.Collection.prototype, Relution.LiveData._Object, {
 
-  _type: 'Bikini.Collection',
+  _type: 'Relution.LiveData.Collection',
 
-  isCollection: YES,
+  isCollection: true,
 
-  model: Bikini.Model,
+  model: Relution.LiveData.Model,
 
   entity: null,
 
   options: null,
-
-  logon: Bikini.Security.logon,
 
   init: function (options) {
     options = options || {};
@@ -51,7 +49,7 @@ _.extend(Bikini.Collection.prototype, Bikini.Object, {
 
     var entity = this.entity || this.entityFromUrl(this.url);
     if (entity) {
-      this.entity = Bikini.Entity.from(entity, {model: this.model, typeMapping: options.typeMapping});
+      this.entity = Relution.LiveData.Entity.from(entity, {model: this.model, typeMapping: options.typeMapping});
     }
     this._updateUrl();
 
@@ -59,6 +57,9 @@ _.extend(Bikini.Collection.prototype, Bikini.Object, {
       this.store.initCollection(this, options);
     }
   },
+
+  ajax: Relution.LiveData.ajax,
+  sync: Relution.LiveData.sync,
 
   entityFromUrl: function (url) {
     if (url) {
@@ -81,17 +82,17 @@ _.extend(Bikini.Collection.prototype, Bikini.Object, {
 
   sort: function (options) {
     if (_.isObject(options && options.sort)) {
-      this.comparator = Bikini.DataSelector.compileSort(options.sort);
+      this.comparator = Relution.LiveData.DataSelector.compileSort(options.sort);
     }
     Backbone.Collection.prototype.sort.apply(this, arguments);
   },
 
   select: function (options) {
-    var selector = options && options.query ? Bikini.DataSelector.create(options.query) : null;
-    var collection = Bikini.Collection.create(null, {model: this.model});
+    var selector = options && options.query ? Relution.LiveData.DataSelector.create(options.query) : null;
+    var collection = Relution.LiveData.Collection.create(null, {model: this.model});
 
     if (options && options.sort) {
-      collection.comparator = Bikini.DataSelector.compileSort(options.sort);
+      collection.comparator = Relution.LiveData.DataSelector.compileSort(options.sort);
     }
 
     this.each(function (model) {
@@ -134,22 +135,6 @@ _.extend(Bikini.Collection.prototype, Bikini.Object, {
     return this.reset();
   },
 
-  sync: function (method, model, options) {
-    options = options || {};
-    options.credentials = options.credentials || this.credentials;
-    var store = (options.store ? options.store : null) || this.store;
-    var that = this;
-    var args = arguments;
-
-    return this.logon(options, function (result) {
-      if (store && _.isFunction(store.sync)) {
-        return store.sync.apply(that, args);
-      } else {
-        return Backbone.sync.apply(that, args);
-      }
-    });
-  },
-
   /**
    * save all containing models
    */
@@ -184,7 +169,6 @@ _.extend(Bikini.Collection.prototype, Bikini.Object, {
   applyFilter: function (callback) {
     this.trigger('filter', this.filter(callback));
   },
-
   _updateUrl: function () {
     var params = this.getUrlParams();
     if (this.options) {

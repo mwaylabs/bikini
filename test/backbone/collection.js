@@ -1,34 +1,38 @@
-(function() {
+(function () {
 
   var a, b, c, d, e, col, otherCol;
 
-  module("Bikini.Collection", {
+  module("Relution.LiveData.Collection", {
 
-    setup: function() {
-      a         = new Bikini.Model({id: 3, label: 'a'});
-      b         = new Bikini.Model({id: 2, label: 'b'});
-      c         = new Bikini.Model({id: 1, label: 'c'});
-      d         = new Bikini.Model({id: 0, label: 'd'});
-      e         = null;
-      col       = new Bikini.Collection([a,b,c,d]);
-      otherCol  = new Bikini.Collection();
+    setup: function () {
+      a = new Relution.LiveData.Model({id: 3, label: 'a'});
+      b = new Relution.LiveData.Model({id: 2, label: 'b'});
+      c = new Relution.LiveData.Model({id: 1, label: 'c'});
+      d = new Relution.LiveData.Model({id: 0, label: 'd'});
+      e = null;
+      col = new Relution.LiveData.Collection([a, b, c, d]);
+      otherCol = new Relution.LiveData.Collection();
     }
 
   });
 
-  test("new and sort", 9, function() {
+  test("new and sort", 9, function () {
     var counter = 0;
-    col.on('sort', function(){ counter++; });
+    col.on('sort', function () {
+      counter++;
+    });
     equal(col.first(), a, "a should be first");
     equal(col.last(), d, "d should be last");
-    col.comparator = function(a, b) {
+    col.comparator = function (a, b) {
       return a.id > b.id ? -1 : 1;
     };
     col.sort();
     equal(counter, 1);
     equal(col.first(), a, "a should be first");
     equal(col.last(), d, "d should be last");
-    col.comparator = function(model) { return model.id; };
+    col.comparator = function (model) {
+      return model.id;
+    };
     col.sort();
     equal(counter, 2);
     equal(col.first(), d, "d should be first");
@@ -36,8 +40,8 @@
     equal(col.length, 4);
   });
 
-  test("String comparator.", 1, function() {
-    var collection = new Bikini.Collection([
+  test("String comparator.", 1, function () {
+    var collection = new Relution.LiveData.Collection([
       {id: 3},
       {id: 1},
       {id: 2}
@@ -45,10 +49,10 @@
     deepEqual(collection.pluck('id'), [1, 2, 3]);
   });
 
-  test("new and parse", 3, function() {
-    var Collection = Bikini.Collection.extend({
-      parse : function(data) {
-        return _.filter(data, function(datum) {
+  test("new and parse", 3, function () {
+    var Collection = Relution.LiveData.Collection.extend({
+      parse: function (data) {
+        return _.filter(data, function (datum) {
           return datum.a % 2 === 0;
         });
       }
@@ -60,11 +64,13 @@
     strictEqual(collection.last().get('a'), 4);
   });
 
-  test("clone preserves model and comparator", 3, function() {
-    var Model = Bikini.Model.extend();
-    var comparator = function(model){ return model.id; };
+  test("clone preserves model and comparator", 3, function () {
+    var Model = Relution.LiveData.Model.extend();
+    var comparator = function (model) {
+      return model.id;
+    };
 
-    var collection = new Bikini.Collection([{id: 1}], {
+    var collection = new Relution.LiveData.Collection([{id: 1}], {
       model: Model,
       comparator: comparator
     }).clone();
@@ -74,7 +80,7 @@
     strictEqual(collection.comparator, comparator);
   });
 
-  test("get", 6, function() {
+  test("get", 6, function () {
     equal(col.get(0), d);
     equal(col.get(d.clone()), d);
     equal(col.get(2), b);
@@ -83,58 +89,60 @@
     equal(col.get(col.first().cid), col.first());
   });
 
-  test("get with non-default ids", 5, function() {
-    var MongoModel = Bikini.Model.extend({idAttribute: '_id'});
+  test("get with non-default ids", 5, function () {
+    var MongoModel = Relution.LiveData.Model.extend({idAttribute: '_id'});
     var model = new MongoModel({_id: 100});
-    var col = new Bikini.Collection([model], {model: MongoModel});
+    var col = new Relution.LiveData.Collection([model], {model: MongoModel});
     equal(col.get(100), model);
     equal(col.get(model.cid), model);
     equal(col.get(model), model);
     equal(col.get(101), void 0);
 
-    var col2 = new Bikini.Collection();
+    var col2 = new Relution.LiveData.Collection();
     col2.model = MongoModel;
     col2.add(model.attributes);
     equal(col2.get(model.clone()), col2.first());
   });
 
-  test('get with "undefined" id', function() {
-    var collection = new Bikini.Collection([{id: 1}, {id: 'undefined'}]);
+  test('get with "undefined" id', function () {
+    var collection = new Relution.LiveData.Collection([{id: 1}, {id: 'undefined'}]);
     equal(collection.get(1).id, 1);
   }),
 
-  test("update index when id changes", 4, function() {
-    var col = new Bikini.Collection();
-    col.add([
-      {id : 0, name : 'one'},
-      {id : 1, name : 'two'}
-    ]);
-    var one = col.get(0);
-    equal(one.get('name'), 'one');
-    col.on('change:name', function (model) { ok(this.get(model)); });
-    one.set({name: 'dalmatians', id : 101});
-    equal(col.get(0), null);
-    equal(col.get(101).get('name'), 'dalmatians');
-  });
+    test("update index when id changes", 4, function () {
+      var col = new Relution.LiveData.Collection();
+      col.add([
+        {id: 0, name: 'one'},
+        {id: 1, name: 'two'}
+      ]);
+      var one = col.get(0);
+      equal(one.get('name'), 'one');
+      col.on('change:name', function (model) {
+        ok(this.get(model));
+      });
+      one.set({name: 'dalmatians', id: 101});
+      equal(col.get(0), null);
+      equal(col.get(101).get('name'), 'dalmatians');
+    });
 
-  test("at", 2, function() {
+  test("at", 2, function () {
     equal(col.at(2), c);
     equal(col.at(-2), c);
   });
 
-  test("pluck", 1, function() {
+  test("pluck", 1, function () {
     equal(col.pluck('label').join(' '), 'a b c d');
   });
 
-  test("add", 14, function() {
+  test("add", 14, function () {
     var added, opts, secondAdded;
     added = opts = secondAdded = null;
-    e = new Bikini.Model({id: 10, label : 'e'});
+    e = new Relution.LiveData.Model({id: 10, label: 'e'});
     otherCol.add(e);
-    otherCol.on('add', function() {
+    otherCol.on('add', function () {
       secondAdded = true;
     });
-    col.on('add', function(model, collection, options){
+    col.on('add', function (model, collection, options) {
       added = model.get('label');
       opts = options;
     });
@@ -146,20 +154,20 @@
     equal(secondAdded, null);
     ok(opts.amazing);
 
-    var f = new Bikini.Model({id: 20, label : 'f'});
-    var g = new Bikini.Model({id: 21, label : 'g'});
-    var h = new Bikini.Model({id: 22, label : 'h'});
-    var atCol = new Bikini.Collection([f, g, h]);
+    var f = new Relution.LiveData.Model({id: 20, label: 'f'});
+    var g = new Relution.LiveData.Model({id: 21, label: 'g'});
+    var h = new Relution.LiveData.Model({id: 22, label: 'h'});
+    var atCol = new Relution.LiveData.Collection([f, g, h]);
     equal(atCol.length, 3);
     atCol.add(e, {at: 1});
     equal(atCol.length, 4);
     equal(atCol.at(1), e);
     equal(atCol.last(), h);
 
-    var coll = new Bikini.Collection(new Array(2));
+    var coll = new Relution.LiveData.Collection(new Array(2));
     var addCount = 0;
-    coll.on('add', function(){
-        addCount += 1;
+    coll.on('add', function () {
+      addCount += 1;
     });
     coll.add([undefined, f, g]);
     equal(coll.length, 5);
@@ -169,41 +177,41 @@
     equal(addCount, 7);
   });
 
-  test("add multiple models", 6, function() {
-    var col = new Bikini.Collection([{at: 0}, {at: 1}, {at: 9}]);
+  test("add multiple models", 6, function () {
+    var col = new Relution.LiveData.Collection([{at: 0}, {at: 1}, {at: 9}]);
     col.add([{at: 2}, {at: 3}, {at: 4}, {at: 5}, {at: 6}, {at: 7}, {at: 8}], {at: 2});
     for (var i = 0; i <= 5; i++) {
       equal(col.at(i).get('at'), i);
     }
   });
 
-  test("add; at should have preference over comparator", 1, function() {
-    var Col = Bikini.Collection.extend({
-      comparator: function(a,b) {
+  test("add; at should have preference over comparator", 1, function () {
+    var Col = Relution.LiveData.Collection.extend({
+      comparator: function (a, b) {
         return a.id > b.id ? -1 : 1;
       }
     });
 
     var col = new Col([{id: 2}, {id: 3}]);
-    col.add(new Bikini.Model({id: 1}), {at:   1});
+    col.add(new Relution.LiveData.Model({id: 1}), {at: 1});
 
     equal(col.pluck('id').join(' '), '3 1 2');
   });
 
-  test("can't add model to collection twice", function() {
-    var col = new Bikini.Collection([{id: 1}, {id: 2}, {id: 1}, {id: 2}, {id: 3}]);
+  test("can't add model to collection twice", function () {
+    var col = new Relution.LiveData.Collection([{id: 1}, {id: 2}, {id: 1}, {id: 2}, {id: 3}]);
     equal(col.pluck('id').join(' '), '1 2 3');
   });
 
-  test("can't add different model with same id to collection twice", 1, function() {
-    var col = new Bikini.Collection;
+  test("can't add different model with same id to collection twice", 1, function () {
+    var col = new Relution.LiveData.Collection;
     col.unshift({id: 101});
     col.add({id: 101});
     equal(col.length, 1);
   });
 
-  test("merge in duplicate models with {merge: true}", 3, function() {
-    var col = new Bikini.Collection;
+  test("merge in duplicate models with {merge: true}", 3, function () {
+    var col = new Relution.LiveData.Collection;
     col.add([{id: 1, name: 'Moe'}, {id: 2, name: 'Curly'}, {id: 3, name: 'Larry'}]);
     col.add({id: 1, name: 'Moses'});
     equal(col.first().get('name'), 'Moe');
@@ -213,10 +221,10 @@
     equal(col.first().get('name'), 'Tim');
   });
 
-  test("add model to multiple collections", 10, function() {
+  test("add model to multiple collections", 10, function () {
     var counter = 0;
-    var e = new Bikini.Model({id: 10, label : 'e'});
-    e.on('add', function(model, collection) {
+    var e = new Relution.LiveData.Model({id: 10, label: 'e'});
+    e.on('add', function (model, collection) {
       counter++;
       equal(e, model);
       if (counter > 1) {
@@ -225,13 +233,13 @@
         equal(collection, colE);
       }
     });
-    var colE = new Bikini.Collection([]);
-    colE.on('add', function(model, collection) {
+    var colE = new Relution.LiveData.Collection([]);
+    colE.on('add', function (model, collection) {
       equal(e, model);
       equal(colE, collection);
     });
-    var colF = new Bikini.Collection([]);
-    colF.on('add', function(model, collection) {
+    var colF = new Relution.LiveData.Collection([]);
+    colF.on('add', function (model, collection) {
       equal(e, model);
       equal(colF, collection);
     });
@@ -241,24 +249,24 @@
     equal(e.collection, colE);
   });
 
-  test("add model with parse", 1, function() {
-    var Model = Bikini.Model.extend({
-      parse: function(obj) {
+  test("add model with parse", 1, function () {
+    var Model = Relution.LiveData.Model.extend({
+      parse: function (obj) {
         obj.value += 1;
         return obj;
       }
     });
 
-    var Col = Bikini.Collection.extend({model: Model});
+    var Col = Relution.LiveData.Collection.extend({model: Model});
     var col = new Col;
     col.add({value: 1}, {parse: true});
     equal(col.at(0).get('value'), 2);
   });
 
-  test("add with parse and merge", function() {
-    var collection = new Bikini.Collection();
-    collection.parse = function(attrs) {
-      return _.map(attrs, function(model) {
+  test("add with parse and merge", function () {
+    var collection = new Relution.LiveData.Collection();
+    collection.parse = function (attrs) {
+      return _.map(attrs, function (model) {
         if (model.model) return model.model;
         return model;
       });
@@ -268,14 +276,14 @@
     equal(collection.first().get('name'), 'Alf');
   });
 
-  test("add model to collection with sort()-style comparator", 3, function() {
-    var col = new Bikini.Collection;
-    col.comparator = function(a, b) {
+  test("add model to collection with sort()-style comparator", 3, function () {
+    var col = new Relution.LiveData.Collection;
+    col.comparator = function (a, b) {
       return a.get('name') < b.get('name') ? -1 : 1;
     };
-    var tom = new Bikini.Model({name: 'Tom'});
-    var rob = new Bikini.Model({name: 'Rob'});
-    var tim = new Bikini.Model({name: 'Tim'});
+    var tom = new Relution.LiveData.Model({name: 'Tom'});
+    var rob = new Relution.LiveData.Model({name: 'Rob'});
+    var tim = new Relution.LiveData.Model({name: 'Tim'});
     col.add(tom);
     col.add(rob);
     col.add(tim);
@@ -284,31 +292,31 @@
     equal(col.indexOf(tom), 2);
   });
 
-  test("comparator that depends on `this`", 2, function() {
-    var col = new Bikini.Collection;
-    col.negative = function(num) {
+  test("comparator that depends on `this`", 2, function () {
+    var col = new Relution.LiveData.Collection;
+    col.negative = function (num) {
       return -num;
     };
-    col.comparator = function(a) {
+    col.comparator = function (a) {
       return this.negative(a.id);
     };
     col.add([{id: 1}, {id: 2}, {id: 3}]);
     deepEqual(col.pluck('id'), [3, 2, 1]);
-    col.comparator = function(a, b) {
+    col.comparator = function (a, b) {
       return this.negative(b.id) - this.negative(a.id);
     };
     col.sort();
     deepEqual(col.pluck('id'), [1, 2, 3]);
   });
 
-  test("remove", 5, function() {
+  test("remove", 5, function () {
     var removed = null;
     var otherRemoved = null;
-    col.on('remove', function(model, col, options) {
+    col.on('remove', function (model, col, options) {
       removed = model.get('label');
       equal(options.index, 3);
     });
-    otherCol.on('remove', function(model, col, options) {
+    otherCol.on('remove', function (model, col, options) {
       otherRemoved = true;
     });
     col.remove(d);
@@ -318,18 +326,18 @@
     equal(otherRemoved, null);
   });
 
-  test("add and remove return values", 13, function() {
-    var Even = Bikini.Model.extend({
-      validate: function(attrs) {
+  test("add and remove return values", 13, function () {
+    var Even = Relution.LiveData.Model.extend({
+      validate: function (attrs) {
         if (attrs.id % 2 !== 0) return "odd";
       }
     });
-    var col = new Bikini.Collection;
+    var col = new Relution.LiveData.Collection;
     col.model = Even;
 
     var list = col.add([{id: 2}, {id: 4}], {validate: true});
     equal(list.length, 2);
-    ok(list[0] instanceof Bikini.Model);
+    ok(list[0] instanceof Relution.LiveData.Model);
     equal(list[1], col.last());
     equal(list[1].get('id'), 4);
 
@@ -351,45 +359,47 @@
     equal(list[1], null);
   });
 
-  test("shift and pop", 2, function() {
-    var col = new Bikini.Collection([{a: 'a'}, {b: 'b'}, {c: 'c'}]);
+  test("shift and pop", 2, function () {
+    var col = new Relution.LiveData.Collection([{a: 'a'}, {b: 'b'}, {c: 'c'}]);
     equal(col.shift().get('a'), 'a');
     equal(col.pop().get('c'), 'c');
   });
 
-  test("slice", 2, function() {
-    var col = new Bikini.Collection([{a: 'a'}, {b: 'b'}, {c: 'c'}]);
+  test("slice", 2, function () {
+    var col = new Relution.LiveData.Collection([{a: 'a'}, {b: 'b'}, {c: 'c'}]);
     var array = col.slice(1, 3);
     equal(array.length, 2);
     equal(array[0].get('b'), 'b');
   });
 
-  test("events are unbound on remove", 3, function() {
+  test("events are unbound on remove", 3, function () {
     var counter = 0;
-    var dj = new Bikini.Model();
-    var emcees = new Bikini.Collection([dj]);
-    emcees.on('change', function(){ counter++; });
-    dj.set({name : 'Kool'});
+    var dj = new Relution.LiveData.Model();
+    var emcees = new Relution.LiveData.Collection([dj]);
+    emcees.on('change', function () {
+      counter++;
+    });
+    dj.set({name: 'Kool'});
     equal(counter, 1);
     emcees.reset([]);
     equal(dj.collection, undefined);
-    dj.set({name : 'Shadow'});
+    dj.set({name: 'Shadow'});
     equal(counter, 1);
   });
 
-  test("remove in multiple collections", 7, function() {
+  test("remove in multiple collections", 7, function () {
     var modelData = {
-      id : 5,
-      title : 'Othello'
+      id: 5,
+      title: 'Othello'
     };
     var passed = false;
-    var e = new Bikini.Model(modelData);
-    var f = new Bikini.Model(modelData);
-    f.on('remove', function() {
+    var e = new Relution.LiveData.Model(modelData);
+    var f = new Relution.LiveData.Model(modelData);
+    f.on('remove', function () {
       passed = true;
     });
-    var colE = new Bikini.Collection([e]);
-    var colF = new Bikini.Collection([f]);
+    var colE = new Relution.LiveData.Collection([e]);
+    var colF = new Relution.LiveData.Collection([f]);
     ok(e != f);
     ok(colE.length === 1);
     ok(colF.length === 1);
@@ -401,10 +411,10 @@
     equal(passed, true);
   });
 
-  test("remove same model in multiple collection", 16, function() {
+  test("remove same model in multiple collection", 16, function () {
     var counter = 0;
-    var e = new Bikini.Model({id: 5, title: 'Othello'});
-    e.on('remove', function(model, collection) {
+    var e = new Relution.LiveData.Model({id: 5, title: 'Othello'});
+    e.on('remove', function (model, collection) {
       counter++;
       equal(e, model);
       if (counter > 1) {
@@ -413,13 +423,13 @@
         equal(collection, colF);
       }
     });
-    var colE = new Bikini.Collection([e]);
-    colE.on('remove', function(model, collection) {
+    var colE = new Relution.LiveData.Collection([e]);
+    colE.on('remove', function (model, collection) {
       equal(e, model);
       equal(colE, collection);
     });
-    var colF = new Bikini.Collection([e]);
-    colF.on('remove', function(model, collection) {
+    var colF = new Relution.LiveData.Collection([e]);
+    colF.on('remove', function (model, collection) {
       equal(e, model);
       equal(colF, collection);
     });
@@ -435,30 +445,34 @@
     equal(counter, 2);
   });
 
-  test("model destroy removes from all collections", 3, function() {
-    var e = new Bikini.Model({id: 5, title: 'Othello'});
-    e.sync = function(method, model, options) { options.success(); };
-    var colE = new Bikini.Collection([e]);
-    var colF = new Bikini.Collection([e]);
+  test("model destroy removes from all collections", 3, function () {
+    var e = new Relution.LiveData.Model({id: 5, title: 'Othello'});
+    e.sync = function (method, model, options) {
+      options.success();
+    };
+    var colE = new Relution.LiveData.Collection([e]);
+    var colF = new Relution.LiveData.Collection([e]);
     e.destroy();
     ok(colE.length === 0);
     ok(colF.length === 0);
     equal(undefined, e.collection);
   });
 
-  test("Colllection: non-persisted model destroy removes from all collections", 3, function() {
-    var e = new Bikini.Model({title: 'Othello'});
-    e.sync = function(method, model, options) { throw "should not be called"; };
-    var colE = new Bikini.Collection([e]);
-    var colF = new Bikini.Collection([e]);
+  test("Colllection: non-persisted model destroy removes from all collections", 3, function () {
+    var e = new Relution.LiveData.Model({title: 'Othello'});
+    e.sync = function (method, model, options) {
+      throw "should not be called";
+    };
+    var colE = new Relution.LiveData.Collection([e]);
+    var colF = new Relution.LiveData.Collection([e]);
     e.destroy();
     ok(colE.length === 0);
     ok(colF.length === 0);
     equal(undefined, e.collection);
   });
 
-  test("fetch", 4, function() {
-    var collection = new Bikini.Collection;
+  test("fetch", 4, function () {
+    var collection = new Relution.LiveData.Collection;
     collection.url = '/test';
     collection.fetch();
     equal(this.syncArgs.method, 'read');
@@ -470,18 +484,20 @@
   });
 
   test("fetch with an error response triggers an error event", 1, function () {
-    var collection = new Bikini.Collection();
+    var collection = new Relution.LiveData.Collection();
     collection.on('error', function () {
       ok(true);
     });
-    collection.sync = function (method, model, options) { options.error(); };
+    collection.sync = function (method, model, options) {
+      options.error();
+    };
     collection.fetch();
   });
 
-  test("ensure fetch only parses once", 1, function() {
-    var collection = new Bikini.Collection;
+  test("ensure fetch only parses once", 1, function () {
+    var collection = new Relution.LiveData.Collection;
     var counter = 0;
-    collection.parse = function(models) {
+    collection.parse = function (models) {
       counter++;
       return models;
     };
@@ -491,8 +507,8 @@
     equal(counter, 1);
   });
 
-  test("create", 4, function() {
-    var collection = new Bikini.Collection;
+  test("create", 4, function () {
+    var collection = new Relution.LiveData.Collection;
     collection.url = '/test';
     var model = collection.create({label: 'f'}, {wait: true});
     equal(this.syncArgs.method, 'create');
@@ -501,13 +517,13 @@
     equal(model.collection, collection);
   });
 
-  test("create with validate:true enforces validation", 3, function() {
-    var ValidatingModel = Bikini.Model.extend({
-      validate: function(attrs) {
+  test("create with validate:true enforces validation", 3, function () {
+    var ValidatingModel = Relution.LiveData.Model.extend({
+      validate: function (attrs) {
         return "fail";
       }
     });
-    var ValidatingCollection = Bikini.Collection.extend({
+    var ValidatingCollection = Relution.LiveData.Collection.extend({
       model: ValidatingModel
     });
     var col = new ValidatingCollection();
@@ -515,27 +531,27 @@
       equal(error, "fail");
       equal(options.validationError, 'fail');
     });
-    equal(col.create({"foo":"bar"}, {validate:true}), false);
+    equal(col.create({"foo": "bar"}, {validate: true}), false);
   });
 
-  test("a failing create returns model with errors", function() {
-    var ValidatingModel = Bikini.Model.extend({
-      validate: function(attrs) {
+  test("a failing create returns model with errors", function () {
+    var ValidatingModel = Relution.LiveData.Model.extend({
+      validate: function (attrs) {
         return "fail";
       }
     });
-    var ValidatingCollection = Bikini.Collection.extend({
+    var ValidatingCollection = Relution.LiveData.Collection.extend({
       model: ValidatingModel
     });
     var col = new ValidatingCollection();
-    var m = col.create({"foo":"bar"});
+    var m = col.create({"foo": "bar"});
     equal(m.validationError, 'fail');
     equal(col.length, 1);
   });
 
-  test("initialize", 1, function() {
-    var Collection = Bikini.Collection.extend({
-      initialize: function() {
+  test("initialize", 1, function () {
+    var Collection = Relution.LiveData.Collection.extend({
+      initialize: function () {
         this.one = 1;
       }
     });
@@ -543,13 +559,13 @@
     equal(coll.one, 1);
   });
 
-  test("toJSON", 1, function() {
+  test("toJSON", 1, function () {
     equal(JSON.stringify(col), '[{"id":3,"label":"a"},{"id":2,"label":"b"},{"id":1,"label":"c"},{"id":0,"label":"d"}]');
   });
 
-  test("where and findWhere", 8, function() {
-    var model = new Bikini.Model({a: 1});
-    var coll = new Bikini.Collection([
+  test("where and findWhere", 8, function () {
+    var model = new Relution.LiveData.Model({a: 1});
+    var coll = new Relution.LiveData.Collection([
       model,
       {a: 1},
       {a: 1, b: 2},
@@ -566,10 +582,16 @@
     equal(coll.findWhere({a: 4}), void 0);
   });
 
-  test("Underscore methods", 16, function() {
-    equal(col.map(function(model){ return model.get('label'); }).join(' '), 'a b c d');
-    equal(col.any(function(model){ return model.id === 100; }), false);
-    equal(col.any(function(model){ return model.id === 0; }), true);
+  test("Underscore methods", 16, function () {
+    equal(col.map(function (model) {
+      return model.get('label');
+    }).join(' '), 'a b c d');
+    equal(col.any(function (model) {
+      return model.id === 100;
+    }), false);
+    equal(col.any(function (model) {
+      return model.id === 0;
+    }), true);
     equal(col.indexOf(b), 1);
     equal(col.size(), 4);
     equal(col.rest().length, 3);
@@ -577,23 +599,33 @@
     ok(_.include(col.rest(), d));
     ok(!col.isEmpty());
     ok(!_.include(col.without(d), d));
-    equal(col.max(function(model){ return model.id; }).id, 3);
-    equal(col.min(function(model){ return model.id; }).id, 0);
+    equal(col.max(function (model) {
+      return model.id;
+    }).id, 3);
+    equal(col.min(function (model) {
+      return model.id;
+    }).id, 0);
     deepEqual(col.chain()
-            .filter(function(o){ return o.id % 2 === 0; })
-            .map(function(o){ return o.id * 2; })
-            .value(),
-         [4, 0]);
+        .filter(function (o) {
+          return o.id % 2 === 0;
+        })
+        .map(function (o) {
+          return o.id * 2;
+        })
+        .value(),
+      [4, 0]);
     deepEqual(col.difference([c, d]), [a, b]);
     ok(col.include(col.sample()));
     var first = col.first();
     ok(col.indexBy('id')[first.id] === first);
   });
 
-  test("reset", 16, function() {
+  test("reset", 16, function () {
     var resetCount = 0;
     var models = col.models;
-    col.on('reset', function() { resetCount += 1; });
+    col.on('reset', function () {
+      resetCount += 1;
+    });
     col.reset([]);
     equal(resetCount, 1);
     equal(col.length, 0);
@@ -602,7 +634,9 @@
     equal(resetCount, 2);
     equal(col.length, 4);
     equal(col.last(), d);
-    col.reset(_.map(models, function(m){ return m.attributes; }));
+    col.reset(_.map(models, function (m) {
+      return m.attributes;
+    }));
     equal(resetCount, 3);
     equal(col.length, 4);
     ok(col.last() !== d);
@@ -611,7 +645,7 @@
     equal(col.length, 0);
     equal(resetCount, 4);
 
-    var f = new Bikini.Model({id: 20, label : 'f'});
+    var f = new Relution.LiveData.Model({id: 20, label: 'f'});
     col.reset([undefined, f]);
     equal(col.length, 2);
     equal(resetCount, 5);
@@ -621,63 +655,65 @@
     equal(resetCount, 6);
   });
 
-  test ("reset with different values", function(){
-    var col = new Bikini.Collection({id: 1});
+  test("reset with different values", function () {
+    var col = new Relution.LiveData.Collection({id: 1});
     col.reset({id: 1, a: 1});
     equal(col.get(1).get('a'), 1);
   });
 
-  test("same references in reset", function() {
-    var model = new Bikini.Model({id: 1});
-    var collection = new Bikini.Collection({id: 1});
+  test("same references in reset", function () {
+    var model = new Relution.LiveData.Model({id: 1});
+    var collection = new Relution.LiveData.Collection({id: 1});
     collection.reset(model);
     equal(collection.get(1), model);
   });
 
-  test("reset passes caller options", 3, function() {
-    var Model = Bikini.Model.extend({
-      initialize: function(attrs, options) {
+  test("reset passes caller options", 3, function () {
+    var Model = Relution.LiveData.Model.extend({
+      initialize: function (attrs, options) {
         this.model_parameter = options.model_parameter;
       }
     });
-    var col = new (Bikini.Collection.extend({ model: Model }))();
-    col.reset([{ astring: "green", anumber: 1 }, { astring: "blue", anumber: 2 }], { model_parameter: 'model parameter' });
+    var col = new (Relution.LiveData.Collection.extend({model: Model}))();
+    col.reset([{astring: "green", anumber: 1}, {astring: "blue", anumber: 2}], {model_parameter: 'model parameter'});
     equal(col.length, 2);
-    col.each(function(model) {
+    col.each(function (model) {
       equal(model.model_parameter, 'model parameter');
     });
   });
 
-  test("reset does not alter options by reference", 2, function() {
-    var col = new Bikini.Collection([{id:1}]);
+  test("reset does not alter options by reference", 2, function () {
+    var col = new Relution.LiveData.Collection([{id: 1}]);
     var origOpts = {};
-    col.on("reset", function(col, opts){
+    col.on("reset", function (col, opts) {
       equal(origOpts.previousModels, undefined);
       equal(opts.previousModels[0].id, 1);
     });
     col.reset([], origOpts);
   });
 
-  test("trigger custom events on models", 1, function() {
+  test("trigger custom events on models", 1, function () {
     var fired = null;
-    a.on("custom", function() { fired = true; });
+    a.on("custom", function () {
+      fired = true;
+    });
     a.trigger("custom");
     equal(fired, true);
   });
 
-  test("add does not alter arguments", 2, function(){
+  test("add does not alter arguments", 2, function () {
     var attrs = {};
     var models = [attrs];
-    new Bikini.Collection().add(models);
+    new Relution.LiveData.Collection().add(models);
     equal(models.length, 1);
     ok(attrs === models[0]);
   });
 
-  test("#714: access `model.collection` in a brand new model.", 2, function() {
-    var collection = new Bikini.Collection;
+  test("#714: access `model.collection` in a brand new model.", 2, function () {
+    var collection = new Relution.LiveData.Collection;
     collection.url = '/test';
-    var Model = Bikini.Model.extend({
-      set: function(attrs) {
+    var Model = Relution.LiveData.Model.extend({
+      set: function (attrs) {
         equal(attrs.prop, 'value');
         equal(this.collection, collection);
         return this;
@@ -687,8 +723,8 @@
     collection.create({prop: 'value'});
   });
 
-  test("#574, remove its own reference to the .models array.", 2, function() {
-    var col = new Bikini.Collection([
+  test("#574, remove its own reference to the .models array.", 2, function () {
+    var col = new Relution.LiveData.Collection([
       {id: 1}, {id: 2}, {id: 3}, {id: 4}, {id: 5}, {id: 6}
     ]);
     equal(col.length, 6);
@@ -696,32 +732,38 @@
     equal(col.length, 0);
   });
 
-  test("#861, adding models to a collection which do not pass validation, with validate:true", 2, function() {
-    var Model = Bikini.Model.extend({
-      validate: function(attrs) {
+  test("#861, adding models to a collection which do not pass validation, with validate:true", 2, function () {
+    var Model = Relution.LiveData.Model.extend({
+      validate: function (attrs) {
         if (attrs.id == 3) return "id can't be 3";
       }
     });
 
-    var Collection = Bikini.Collection.extend({
+    var Collection = Relution.LiveData.Collection.extend({
       model: Model
     });
 
     var collection = new Collection;
-    collection.on("invalid", function() { ok(true); });
+    collection.on("invalid", function () {
+      ok(true);
+    });
 
-    collection.add([{id: 1}, {id: 2}, {id: 3}, {id: 4}, {id: 5}, {id: 6}], {validate:true});
+    collection.add([{id: 1}, {id: 2}, {id: 3}, {id: 4}, {id: 5}, {id: 6}], {validate: true});
     deepEqual(collection.pluck("id"), [1, 2, 4, 5, 6]);
   });
 
-  test("Invalid models are discarded with validate:true.", 5, function() {
-    var collection = new Bikini.Collection;
-    collection.on('test', function() { ok(true); });
-    collection.model = Bikini.Model.extend({
-      validate: function(attrs){ if (!attrs.valid) return 'invalid'; }
+  test("Invalid models are discarded with validate:true.", 5, function () {
+    var collection = new Relution.LiveData.Collection;
+    collection.on('test', function () {
+      ok(true);
+    });
+    collection.model = Relution.LiveData.Model.extend({
+      validate: function (attrs) {
+        if (!attrs.valid) return 'invalid';
+      }
     });
     var model = new collection.model({id: 1, valid: true});
-    collection.add([model, {id: 2}], {validate:true});
+    collection.add([model, {id: 2}], {validate: true});
     model.trigger('test');
     ok(collection.get(model.cid));
     ok(collection.get(1));
@@ -729,9 +771,9 @@
     equal(collection.length, 1);
   });
 
-  test("multiple copies of the same model", 3, function() {
-    var col = new Bikini.Collection();
-    var model = new Bikini.Model();
+  test("multiple copies of the same model", 3, function () {
+    var col = new Relution.LiveData.Collection();
+    var model = new Relution.LiveData.Model();
     col.add([model, model]);
     equal(col.length, 1);
     col.add([{id: 1}, {id: 1}]);
@@ -739,22 +781,22 @@
     equal(col.last().id, 1);
   });
 
-  test("#964 - collection.get return inconsistent", 2, function() {
-    var c = new Bikini.Collection();
+  test("#964 - collection.get return inconsistent", 2, function () {
+    var c = new Relution.LiveData.Collection();
     ok(c.get(null) === undefined);
     ok(c.get() === undefined);
   });
 
-  test("#1112 - passing options.model sets collection.model", 2, function() {
-    var Model = Bikini.Model.extend({});
-    var c = new Bikini.Collection([{id: 1}], {model: Model});
+  test("#1112 - passing options.model sets collection.model", 2, function () {
+    var Model = Relution.LiveData.Model.extend({});
+    var c = new Relution.LiveData.Collection([{id: 1}], {model: Model});
     ok(c.model === Model);
     ok(c.at(0) instanceof Model);
   });
 
-  test("null and undefined are invalid ids.", 2, function() {
-    var model = new Bikini.Model({id: 1});
-    var collection = new Bikini.Collection([model]);
+  test("null and undefined are invalid ids.", 2, function () {
+    var model = new Relution.LiveData.Model({id: 1});
+    var collection = new Relution.LiveData.Collection([model]);
     model.set({id: null});
     ok(!collection.get('null'));
     model.set({id: 1});
@@ -762,9 +804,11 @@
     ok(!collection.get('undefined'));
   });
 
-  test("falsy comparator", 4, function(){
-    var Col = Bikini.Collection.extend({
-      comparator: function(model){ return model.id; }
+  test("falsy comparator", 4, function () {
+    var Col = Relution.LiveData.Collection.extend({
+      comparator: function (model) {
+        return model.id;
+      }
     });
     var col = new Col();
     var colFalse = new Col(null, {comparator: false});
@@ -776,93 +820,103 @@
     ok(colUndefined.comparator);
   });
 
-  test("#1355 - `options` is passed to success callbacks", 2, function(){
-    var m = new Bikini.Model({x:1});
-    var col = new Bikini.Collection();
+  test("#1355 - `options` is passed to success callbacks", 2, function () {
+    var m = new Relution.LiveData.Model({x: 1});
+    var col = new Relution.LiveData.Collection();
     var opts = {
       opts: true,
-      success: function(collection, resp, options) {
+      success: function (collection, resp, options) {
         ok(options.opts);
       }
     };
-    col.sync = m.sync = function( method, collection, options ){
+    col.sync = m.sync = function (method, collection, options) {
       options.success({});
     };
     col.fetch(opts);
     col.create(m, opts);
   });
 
-  test("#1412 - Trigger 'request' and 'sync' events.", 4, function() {
-    var collection = new Bikini.Collection;
+  test("#1412 - Trigger 'request' and 'sync' events.", 4, function () {
+    var collection = new Relution.LiveData.Collection;
     collection.url = '/test';
-    Backbone.ajax = function(settings){ settings.success(); };
+    Backbone.ajax = function (settings) {
+      settings.success();
+    };
 
-    collection.on('request', function(obj, xhr, options) {
+    collection.on('request', function (obj, xhr, options) {
       ok(obj === collection, "collection has correct 'request' event after fetching");
     });
-    collection.on('sync', function(obj, response, options) {
+    collection.on('sync', function (obj, response, options) {
       ok(obj === collection, "collection has correct 'sync' event after fetching");
     });
     collection.fetch();
     collection.off();
 
-    collection.on('request', function(obj, xhr, options) {
+    collection.on('request', function (obj, xhr, options) {
       ok(obj === collection.get(1), "collection has correct 'request' event after one of its models save");
     });
-    collection.on('sync', function(obj, response, options) {
+    collection.on('sync', function (obj, response, options) {
       ok(obj === collection.get(1), "collection has correct 'sync' event after one of its models save");
     });
     collection.create({id: 1});
     collection.off();
   });
 
-  test("#1447 - create with wait adds model.", 1, function() {
-    var collection = new Bikini.Collection;
-    var model = new Bikini.Model;
-    model.sync = function(method, model, options){ options.success(); };
-    collection.on('add', function(){ ok(true); });
+  test("#1447 - create with wait adds model.", 1, function () {
+    var collection = new Relution.LiveData.Collection;
+    var model = new Relution.LiveData.Model;
+    model.sync = function (method, model, options) {
+      options.success();
+    };
+    collection.on('add', function () {
+      ok(true);
+    });
     collection.create(model, {wait: true});
   });
 
-  test("#1448 - add sorts collection after merge.", 1, function() {
-    var collection = new Bikini.Collection([
+  test("#1448 - add sorts collection after merge.", 1, function () {
+    var collection = new Relution.LiveData.Collection([
       {id: 1, x: 1},
       {id: 2, x: 2}
     ]);
-    collection.comparator = function(model){ return model.get('x'); };
+    collection.comparator = function (model) {
+      return model.get('x');
+    };
     collection.add({id: 1, x: 3}, {merge: true});
     deepEqual(collection.pluck('id'), [2, 1]);
   });
 
-  test("#1655 - groupBy can be used with a string argument.", 3, function() {
-    var collection = new Bikini.Collection([{x: 1}, {x: 2}]);
+  test("#1655 - groupBy can be used with a string argument.", 3, function () {
+    var collection = new Relution.LiveData.Collection([{x: 1}, {x: 2}]);
     var grouped = collection.groupBy('x');
     strictEqual(_.keys(grouped).length, 2);
     strictEqual(grouped[1][0].get('x'), 1);
     strictEqual(grouped[2][0].get('x'), 2);
   });
 
-  test("#1655 - sortBy can be used with a string argument.", 1, function() {
-    var collection = new Bikini.Collection([{x: 3}, {x: 1}, {x: 2}]);
-    var values = _.map(collection.sortBy('x'), function(model) {
+  test("#1655 - sortBy can be used with a string argument.", 1, function () {
+    var collection = new Relution.LiveData.Collection([{x: 3}, {x: 1}, {x: 2}]);
+    var values = _.map(collection.sortBy('x'), function (model) {
       return model.get('x');
     });
     deepEqual(values, [1, 2, 3]);
   });
 
-  test("#1604 - Removal during iteration.", 0, function() {
-    var collection = new Bikini.Collection([{}, {}]);
-    collection.on('add', function() {
+  test("#1604 - Removal during iteration.", 0, function () {
+    var collection = new Relution.LiveData.Collection([{}, {}]);
+    collection.on('add', function () {
       collection.at(0).destroy();
     });
     collection.add({}, {at: 0});
   });
 
-  test("#1638 - `sort` during `add` triggers correctly.", function() {
-    var collection = new Bikini.Collection;
-    collection.comparator = function(model) { return model.get('x'); };
+  test("#1638 - `sort` during `add` triggers correctly.", function () {
+    var collection = new Relution.LiveData.Collection;
+    collection.comparator = function (model) {
+      return model.get('x');
+    };
     var added = [];
-    collection.on('add', function(model) {
+    collection.on('add', function (model) {
       model.set({x: 3});
       collection.sort();
       added.push(model.id);
@@ -871,12 +925,12 @@
     deepEqual(added, [1, 2]);
   });
 
-  test("fetch parses models by default", 1, function() {
+  test("fetch parses models by default", 1, function () {
     var model = {};
-    var Collection = Bikini.Collection.extend({
+    var Collection = Relution.LiveData.Collection.extend({
       url: 'test',
-      model: Bikini.Model.extend({
-        parse: function(resp) {
+      model: Relution.LiveData.Model.extend({
+        parse: function (resp) {
           strictEqual(resp, model);
         }
       })
@@ -885,84 +939,86 @@
     this.ajaxSettings.success([model]);
   });
 
-  test("`sort` shouldn't always fire on `add`", 1, function() {
-    var c = new Bikini.Collection([{id: 1}, {id: 2}, {id: 3}], {
+  test("`sort` shouldn't always fire on `add`", 1, function () {
+    var c = new Relution.LiveData.Collection([{id: 1}, {id: 2}, {id: 3}], {
       comparator: 'id'
     });
-    c.sort = function(){ ok(true); };
+    c.sort = function () {
+      ok(true);
+    };
     c.add([]);
     c.add({id: 1});
     c.add([{id: 2}, {id: 3}]);
     c.add({id: 4});
   });
 
-  test("#1407 parse option on constructor parses collection and models", 2, function() {
+  test("#1407 parse option on constructor parses collection and models", 2, function () {
     var model = {
-      namespace : [{id: 1}, {id:2}]
+      namespace: [{id: 1}, {id: 2}]
     };
-    var Collection = Bikini.Collection.extend({
-      model: Bikini.Model.extend({
-        parse: function(model) {
+    var Collection = Relution.LiveData.Collection.extend({
+      model: Relution.LiveData.Model.extend({
+        parse: function (model) {
           model.name = 'test';
           return model;
         }
       }),
-      parse: function(model) {
+      parse: function (model) {
         return model.namespace;
       }
     });
-    var c = new Collection(model, {parse:true});
+    var c = new Collection(model, {parse: true});
 
     equal(c.length, 2);
     equal(c.at(0).get('name'), 'test');
   });
 
-  test("#1407 parse option on reset parses collection and models", 2, function() {
+  test("#1407 parse option on reset parses collection and models", 2, function () {
     var model = {
-      namespace : [{id: 1}, {id:2}]
+      namespace: [{id: 1}, {id: 2}]
     };
-    var Collection = Bikini.Collection.extend({
-      model: Bikini.Model.extend({
-        parse: function(model) {
+    var Collection = Relution.LiveData.Collection.extend({
+      model: Relution.LiveData.Model.extend({
+        parse: function (model) {
           model.name = 'test';
           return model;
         }
       }),
-      parse: function(model) {
+      parse: function (model) {
         return model.namespace;
       }
     });
     var c = new Collection();
-        c.reset(model, {parse:true});
+    c.reset(model, {parse: true});
 
     equal(c.length, 2);
     equal(c.at(0).get('name'), 'test');
   });
 
 
-  test("Reset includes previous models in triggered event.", 1, function() {
-    var model = new Bikini.Model();
-    var collection = new Bikini.Collection([model])
-    .on('reset', function(collection, options) {
-      deepEqual(options.previousModels, [model]);
-    });
+  test("Reset includes previous models in triggered event.", 1, function () {
+    var model = new Relution.LiveData.Model();
+    var collection = new Relution.LiveData.Collection([model])
+      .on('reset', function (collection, options) {
+        deepEqual(options.previousModels, [model]);
+      });
     collection.reset([]);
   });
 
-  test("set", function() {
-    var m1 = new Bikini.Model();
-    var m2 = new Bikini.Model({id: 2});
-    var m3 = new Bikini.Model();
-    var c = new Bikini.Collection([m1, m2]);
+  test("set", function () {
+    var m1 = new Relution.LiveData.Model();
+    var m2 = new Relution.LiveData.Model({id: 2});
+    var m3 = new Relution.LiveData.Model();
+    var c = new Relution.LiveData.Collection([m1, m2]);
 
     // Test add/change/remove events
-    c.on('add', function(model) {
+    c.on('add', function (model) {
       strictEqual(model, m3);
     });
-    c.on('change', function(model) {
+    c.on('change', function (model) {
       strictEqual(model, m2);
     });
-    c.on('remove', function(model) {
+    c.on('remove', function (model) {
       strictEqual(model, m1);
     });
 
@@ -989,17 +1045,17 @@
     strictEqual(m2.get('a'), 1);
 
     // Test removing models not passing an argument
-    c.off('remove').on('remove', function(model) {
+    c.off('remove').on('remove', function (model) {
       ok(model === m2 || model === m3);
     });
     c.set([]);
     strictEqual(c.length, 0);
   });
 
-  test("set with only cids", 3, function() {
-    var m1 = new Bikini.Model;
-    var m2 = new Bikini.Model;
-    var c = new Bikini.Collection;
+  test("set with only cids", 3, function () {
+    var m1 = new Relution.LiveData.Model;
+    var m2 = new Relution.LiveData.Model;
+    var c = new Relution.LiveData.Collection;
     c.set([m1, m2]);
     equal(c.length, 2);
     c.set([m1]);
@@ -1008,11 +1064,11 @@
     equal(c.length, 2);
   });
 
-  test("set with only idAttribute", 3, function() {
-    var m1 = { _id: 1 };
-    var m2 = { _id: 2 };
-    var col = Bikini.Collection.extend({
-      model: Bikini.Model.extend({
+  test("set with only idAttribute", 3, function () {
+    var m1 = {_id: 1};
+    var m2 = {_id: 2};
+    var col = Relution.LiveData.Collection.extend({
+      model: Relution.LiveData.Model.extend({
         idAttribute: '_id'
       })
     });
@@ -1025,14 +1081,14 @@
     equal(c.length, 2);
   });
 
-  test("set + merge with default values defined", function() {
-    var Model = Bikini.Model.extend({
+  test("set + merge with default values defined", function () {
+    var Model = Relution.LiveData.Model.extend({
       defaults: {
         key: 'value'
       }
     });
     var m = new Model({id: 1});
-    var col = new Bikini.Collection([m], {model: Model});
+    var col = new Relution.LiveData.Collection([m], {model: Model});
     equal(col.first().get('key'), 'value');
 
     col.set({id: 1, key: 'other'});
@@ -1044,14 +1100,14 @@
   });
 
   test('merge without mutation', function () {
-    var Model = Bikini.Model.extend({
+    var Model = Relution.LiveData.Model.extend({
       initialize: function (attrs, options) {
         if (attrs.child) {
           this.set('child', new Model(attrs.child, options), options);
         }
       }
     });
-    var Collection = Bikini.Collection.extend({model: Model});
+    var Collection = Relution.LiveData.Collection.extend({model: Model});
     var data = [{id: 1, child: {id: 2}}];
     var collection = new Collection(data);
     equal(collection.first().id, 1);
@@ -1061,24 +1117,28 @@
     deepEqual(collection.pluck('id'), [2, 1]);
   });
 
-  test("`set` and model level `parse`", function() {
-    var Model = Bikini.Model.extend({});
-    var Collection = Bikini.Collection.extend({
+  test("`set` and model level `parse`", function () {
+    var Model = Relution.LiveData.Model.extend({});
+    var Collection = Relution.LiveData.Collection.extend({
       model: Model,
-      parse: function (res) { return _.pluck(res.models, 'model'); }
+      parse: function (res) {
+        return _.pluck(res.models, 'model');
+      }
     });
     var model = new Model({id: 1});
     var collection = new Collection(model);
-    collection.set({models: [
-      {model: {id: 1}},
-      {model: {id: 2}}
-    ]}, {parse: true});
+    collection.set({
+      models: [
+        {model: {id: 1}},
+        {model: {id: 2}}
+      ]
+    }, {parse: true});
     equal(collection.first(), model);
   });
 
-  test("`set` data is only parsed once", function() {
-    var collection = new Bikini.Collection();
-    collection.model = Bikini.Model.extend({
+  test("`set` data is only parsed once", function () {
+    var collection = new Relution.LiveData.Collection();
+    collection.model = Relution.LiveData.Model.extend({
       parse: function (data) {
         equal(data.parsed, void 0);
         data.parsed = true;
@@ -1089,10 +1149,10 @@
   });
 
   test('`set` matches input order in the absence of a comparator', function () {
-    var one = new Bikini.Model({id: 1});
-    var two = new Bikini.Model({id: 2});
-    var three = new Bikini.Model({id: 3});
-    var collection = new Bikini.Collection([one, two, three]);
+    var one = new Relution.LiveData.Model({id: 1});
+    var two = new Relution.LiveData.Model({id: 2});
+    var three = new Relution.LiveData.Model({id: 3});
+    var collection = new Relution.LiveData.Collection([one, two, three]);
     collection.set([{id: 3}, {id: 2}, {id: 1}]);
     deepEqual(collection.models, [three, two, one]);
     collection.set([{id: 1}, {id: 2}]);
@@ -1107,53 +1167,55 @@
     deepEqual(collection.models, [one, two, three]);
   });
 
-  test("#1894 - Push should not trigger a sort", 0, function() {
-    var Collection = Bikini.Collection.extend({
+  test("#1894 - Push should not trigger a sort", 0, function () {
+    var Collection = Relution.LiveData.Collection.extend({
       comparator: 'id',
-      sort: function() {
+      sort: function () {
         ok(false);
       }
     });
     new Collection().push({id: 1});
   });
 
-  test("#2428 - push duplicate models, return the correct one", 1, function() {
-    var col = new Bikini.Collection;
+  test("#2428 - push duplicate models, return the correct one", 1, function () {
+    var col = new Relution.LiveData.Collection;
     var model1 = col.push({id: 101});
     var model2 = col.push({id: 101})
     ok(model2.cid == model1.cid);
   });
 
-  test("`set` with non-normal id", function() {
-    var Collection = Bikini.Collection.extend({
-      model: Bikini.Model.extend({idAttribute: '_id'})
+  test("`set` with non-normal id", function () {
+    var Collection = Relution.LiveData.Collection.extend({
+      model: Relution.LiveData.Model.extend({idAttribute: '_id'})
     });
     var collection = new Collection({_id: 1});
     collection.set([{_id: 1, a: 1}], {add: false});
     equal(collection.first().get('a'), 1);
   });
 
-  test("#1894 - `sort` can optionally be turned off", 0, function() {
-    var Collection = Bikini.Collection.extend({
+  test("#1894 - `sort` can optionally be turned off", 0, function () {
+    var Collection = Relution.LiveData.Collection.extend({
       comparator: 'id',
-      sort: function() { ok(true); }
+      sort: function () {
+        ok(true);
+      }
     });
     new Collection().add({id: 1}, {sort: false});
   });
 
-  test("#1915 - `parse` data in the right order in `set`", function() {
-    var collection = new (Bikini.Collection.extend({
+  test("#1915 - `parse` data in the right order in `set`", function () {
+    var collection = new (Relution.LiveData.Collection.extend({
       parse: function (data) {
         strictEqual(data.status, 'ok');
         return data.data;
       }
     }));
-    var res = {status: 'ok', data:[{id: 1}]};
+    var res = {status: 'ok', data: [{id: 1}]};
     collection.set(res, {parse: true});
   });
 
   asyncTest("#1939 - `parse` is passed `options`", 1, function () {
-    var collection = new (Bikini.Collection.extend({
+    var collection = new (Relution.LiveData.Collection.extend({
       url: '/',
       parse: function (data, options) {
         strictEqual(options.xhr.someHeader, 'headerValue');
@@ -1166,16 +1228,20 @@
       return {someHeader: 'headerValue'};
     };
     collection.fetch({
-      success: function () { start(); }
+      success: function () {
+        start();
+      }
     });
     Backbone.ajax = ajax;
   });
 
   test("`add` only `sort`s when necessary", 2, function () {
-    var collection = new (Bikini.Collection.extend({
+    var collection = new (Relution.LiveData.Collection.extend({
       comparator: 'a'
     }))([{id: 1}, {id: 2}, {id: 3}]);
-    collection.on('sort', function () { ok(true); });
+    collection.on('sort', function () {
+      ok(true);
+    });
     collection.add({id: 4}); // do sort, new model
     collection.add({id: 1, a: 1}, {merge: true}); // do sort, comparator change
     collection.add({id: 1, b: 1}, {merge: true}); // don't sort, no comparator change
@@ -1185,12 +1251,14 @@
   });
 
   test("`add` only `sort`s when necessary with comparator function", 3, function () {
-    var collection = new (Bikini.Collection.extend({
-      comparator: function(a, b) {
+    var collection = new (Relution.LiveData.Collection.extend({
+      comparator: function (a, b) {
         return a.get('a') > b.get('a') ? 1 : (a.get('a') < b.get('a') ? -1 : 0);
       }
     }))([{id: 1}, {id: 2}, {id: 3}]);
-    collection.on('sort', function () { ok(true); });
+    collection.on('sort', function () {
+      ok(true);
+    });
     collection.add({id: 4}); // do sort, new model
     collection.add({id: 1, a: 1}, {merge: true}); // do sort, model change
     collection.add({id: 1, b: 1}, {merge: true}); // do sort, model change
@@ -1199,11 +1267,12 @@
     collection.add(collection.models, {merge: true}); // don't sort
   });
 
-  test("Attach options to collection.", 2, function() {
-    var Model = Bikini.Model;
-    var comparator = function(){};
+  test("Attach options to collection.", 2, function () {
+    var Model = Relution.LiveData.Model;
+    var comparator = function () {
+    };
 
-    var collection = new Bikini.Collection([], {
+    var collection = new Relution.LiveData.Collection([], {
       model: Model,
       comparator: comparator
     });
@@ -1213,7 +1282,7 @@
   });
 
   test("`add` overrides `set` flags", function () {
-    var collection = new Bikini.Collection();
+    var collection = new Relution.LiveData.Collection();
     collection.once('add', function (model, collection, options) {
       collection.add({id: 2}, options);
     });
@@ -1221,42 +1290,42 @@
     equal(collection.length, 2);
   });
 
-  test("#2606 - Collection#create, success arguments", 1, function() {
-    var collection = new Bikini.Collection;
+  test("#2606 - Collection#create, success arguments", 1, function () {
+    var collection = new Relution.LiveData.Collection;
     collection.url = 'test';
     collection.create({}, {
-      success: function(model, resp, options) {
+      success: function (model, resp, options) {
         strictEqual(resp, 'response');
       }
     });
     this.ajaxSettings.success('response');
   });
 
-  test("#2612 - nested `parse` works with `Collection#set`", function() {
+  test("#2612 - nested `parse` works with `Collection#set`", function () {
 
-    var Job = Bikini.Model.extend({
-      constructor: function() {
+    var Job = Relution.LiveData.Model.extend({
+      constructor: function () {
         this.items = new Items();
-        Bikini.Model.apply(this, arguments);
+        Relution.LiveData.Model.apply(this, arguments);
       },
-      parse: function(attrs) {
+      parse: function (attrs) {
         this.items.set(attrs.items, {parse: true});
         return _.omit(attrs, 'items');
       }
     });
 
-    var Item = Bikini.Model.extend({
-      constructor: function() {
-        this.subItems = new Bikini.Collection();
-        Bikini.Model.apply(this, arguments);
+    var Item = Relution.LiveData.Model.extend({
+      constructor: function () {
+        this.subItems = new Relution.LiveData.Collection();
+        Relution.LiveData.Model.apply(this, arguments);
       },
-      parse: function(attrs) {
+      parse: function (attrs) {
         this.subItems.set(attrs.subItems, {parse: true});
         return _.omit(attrs, 'subItems');
       }
     });
 
-    var Items = Bikini.Collection.extend({
+    var Items = Relution.LiveData.Collection.extend({
       model: Item
     });
 
@@ -1287,15 +1356,15 @@
         id: 1,
         name: 'NewSub1',
         subItems: [
-          {id: 1,subName: 'NewOne'},
-          {id: 2,subName: 'NewTwo'}
+          {id: 1, subName: 'NewOne'},
+          {id: 2, subName: 'NewTwo'}
         ]
       }, {
         id: 2,
         name: 'NewSub2',
         subItems: [
-          {id: 3,subName: 'NewThree'},
-          {id: 4,subName: 'NewFour'}
+          {id: 3, subName: 'NewThree'},
+          {id: 4, subName: 'NewFour'}
         ]
       }]
     };
@@ -1314,22 +1383,22 @@
     equal(job.items.get(2).subItems.get(3).get('subName'), 'NewThree');
   });
 
-  test('_addReference binds all collection events & adds to the lookup hashes', 9, function() {
+  test('_addReference binds all collection events & adds to the lookup hashes', 9, function () {
 
     var calls = {add: 0, remove: 0};
 
-    var Collection = Bikini.Collection.extend({
+    var Collection = Relution.LiveData.Collection.extend({
 
-      _addReference: function(model) {
-        Bikini.Collection.prototype._addReference.apply(this, arguments);
+      _addReference: function (model) {
+        Relution.LiveData.Collection.prototype._addReference.apply(this, arguments);
         calls.add++;
         equal(model, this._byId[model.id]);
         equal(model, this._byId[model.cid]);
         equal(model._events.all.length, 1);
       },
 
-      _removeReference: function(model) {
-        Bikini.Collection.prototype._removeReference.apply(this, arguments);
+      _removeReference: function (model) {
+        Relution.LiveData.Collection.prototype._removeReference.apply(this, arguments);
         calls.remove++;
         equal(this._byId[model.id], void 0);
         equal(this._byId[model.cid], void 0);
@@ -1348,8 +1417,8 @@
 
   });
 
-  test('Do not allow duplicate models to be `add`ed or `set`', function() {
-    var c = new Bikini.Collection();
+  test('Do not allow duplicate models to be `add`ed or `set`', function () {
+    var c = new Relution.LiveData.Collection();
 
     c.add([{id: 1}, {id: 1}]);
     equal(c.length, 1);
@@ -1360,25 +1429,25 @@
     equal(c.models.length, 1);
   });
 
-  test('#3020: #set with {add: false} should not throw.', 2, function() {
-    var collection = new Bikini.Collection;
+  test('#3020: #set with {add: false} should not throw.', 2, function () {
+    var collection = new Relution.LiveData.Collection;
     collection.set([{id: 1}], {add: false});
     strictEqual(collection.length, 0);
     strictEqual(collection.models.length, 0);
   });
 
-  test("create with wait, model instance, #3028", 1, function() {
-    var collection = new Bikini.Collection();
-    var model = new Bikini.Model({id: 1});
-    model.sync = function(){
+  test("create with wait, model instance, #3028", 1, function () {
+    var collection = new Relution.LiveData.Collection();
+    var model = new Relution.LiveData.Model({id: 1});
+    model.sync = function () {
       equal(this.collection, collection);
     };
     collection.create(model, {wait: true});
   });
 
-  test("modelId", function() {
-    var Stooge = Bikini.Model.extend();
-    var StoogeCollection = Bikini.Collection.extend({model: Stooge});
+  test("modelId", function () {
+    var Stooge = Relution.LiveData.Model.extend();
+    var StoogeCollection = Relution.LiveData.Collection.extend({model: Stooge});
 
     // Default to using `Collection::model::idAttribute`.
     equal(StoogeCollection.prototype.modelId({id: 1}), 1);
@@ -1387,9 +1456,9 @@
   });
 
   test('Polymorphic models work with "simple" constructors', function () {
-    var A = Bikini.Model.extend();
-    var B = Bikini.Model.extend();
-    var C = Bikini.Collection.extend({
+    var A = Relution.LiveData.Model.extend();
+    var B = Relution.LiveData.Model.extend();
+    var C = Relution.LiveData.Collection.extend({
       model: function (attrs) {
         return attrs.type === 'a' ? new A(attrs) : new B(attrs);
       }
@@ -1403,10 +1472,10 @@
   });
 
   test('Polymorphic models work with "advanced" constructors', function () {
-    var A = Bikini.Model.extend({idAttribute: '_id'});
-    var B = Bikini.Model.extend({idAttribute: '_id'});
-    var C = Bikini.Collection.extend({
-      model: Bikini.Model.extend({
+    var A = Relution.LiveData.Model.extend({idAttribute: '_id'});
+    var B = Relution.LiveData.Model.extend({idAttribute: '_id'});
+    var C = Relution.LiveData.Collection.extend({
+      model: Relution.LiveData.Model.extend({
         constructor: function (attrs) {
           return attrs.type === 'a' ? new A(attrs) : new B(attrs);
         },
@@ -1421,7 +1490,7 @@
     ok(collection.at(1) instanceof B);
     equal(collection.at(1), collection.get(2));
 
-    C = Bikini.Collection.extend({
+    C = Relution.LiveData.Collection.extend({
       model: function (attrs) {
         return attrs.type === 'a' ? new A(attrs) : new B(attrs);
       },
@@ -1438,18 +1507,18 @@
     equal(collection.at(1), collection.get('b-1'));
   });
 
-  test("#3039: adding at index fires with correct at", 3, function() {
-    var col = new Bikini.Collection([{at: 0}, {at: 4}]);
-    col.on('add', function(model, col, options) {
-        equal(model.get('at'), options.index);
+  test("#3039: adding at index fires with correct at", 3, function () {
+    var col = new Relution.LiveData.Collection([{at: 0}, {at: 4}]);
+    col.on('add', function (model, col, options) {
+      equal(model.get('at'), options.index);
     });
     col.add([{at: 1}, {at: 2}, {at: 3}], {at: 1});
   });
 
-  test("#3039: index is not sent when at is not specified", 2, function() {
-    var col = new Bikini.Collection([{at: 0}]);
-    col.on('add', function(model, col, options) {
-        equal(undefined, options.index);
+  test("#3039: index is not sent when at is not specified", 2, function () {
+    var col = new Relution.LiveData.Collection([{at: 0}]);
+    col.on('add', function (model, col, options) {
+      equal(undefined, options.index);
     });
     col.add([{at: 1}, {at: 2}]);
   });

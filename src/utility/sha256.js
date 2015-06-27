@@ -3,20 +3,20 @@
 
 /**
  * This prototype defines a hashing mechanism based on the SHA256 algorithm. You normally
- * don't call this object respectively its methods directly, but let Bikini.Cypher handle
+ * don't call this object respectively its methods directly, but let Relution.LiveData.Cypher handle
  * this.
- * @module Bikini.SHA256
+ * @module Relution.LiveData.SHA256
  *
- * @extends Bikini.Object
+ * @extends Relution.LiveData._Object
  */
-Bikini.SHA256 = Bikini.Object.design(/** @scope Bikini.SHA256.prototype */ {
+Relution.LiveData.SHA256 = Relution.LiveData._Object.design(/** @scope Relution.LiveData.SHA256.prototype */ {
 
   /**
    * The type of this object.
    *
    * @type String
    */
-  type: 'Bikini.SHA256',
+  type: 'Relution.LiveData.SHA256',
 
   /**
    * Defines the bits per input character: 8 - ASCII, 16 - Unicode
@@ -40,7 +40,7 @@ Bikini.SHA256 = Bikini.Object.design(/** @scope Bikini.SHA256.prototype */ {
    * @returns {String} The sha256 hashed string.
    */
   hash: function (input) {
-    input = Bikini.Cypher.utf8Encode(input);
+    input = Relution.LiveData.Cypher.utf8Encode(input);
     return this.binb2hex(this.coreSha256(this.str2binb(input), input.length * this.chrsz));
   },
 

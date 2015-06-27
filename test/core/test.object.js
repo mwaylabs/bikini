@@ -1,28 +1,24 @@
-describe('Bikini.Object', function () {
+describe('Relution.LiveData._Object', function () {
 
-    it('basic', function () {
-        assert.isDefined(Bikini.Object);
-        assert.isDefined(Bikini.Object._type);
+  it('basic', function () {
+    assert.isDefined(Relution.LiveData._Object);
+    assert.isDefined(Relution.LiveData._Object._type);
 
-        assert.isObject(Bikini.Object);
-        assert.isString(Bikini.Object._type);
-        assert.equal(Bikini.Object._type, 'Bikini.Object');
-    });
+    assert.isObject(Relution.LiveData._Object);
+    assert.isString(Relution.LiveData._Object._type);
+    assert.equal(Relution.LiveData._Object._type, 'Relution.LiveData._Object');
+  });
 
-    it('methods', function () {
-        assert.isDefined(Bikini.Object._create);
-        assert.isDefined(Bikini.Object._normalize);
-        assert.isDefined(Bikini.Object.mergeProperties);
-        assert.isDefined(Bikini.Object.design);
-        assert.isDefined(Bikini.Object.bindToCaller);
-        assert.isDefined(Bikini.Object.handleCallback);
+  it('methods', function () {
+    assert.isDefined(Relution.LiveData._Object._create);
+    assert.isDefined(Relution.LiveData._Object.design);
+    assert.isDefined(Relution.LiveData._Object.bindToCaller);
+    assert.isDefined(Relution.LiveData._Object.handleCallback);
 
-        assert.isFunction(Bikini.Object._create);
-        assert.isFunction(Bikini.Object._normalize);
-        assert.isFunction(Bikini.Object.mergeProperties);
-        assert.isFunction(Bikini.Object.design);
-        assert.isFunction(Bikini.Object.bindToCaller);
-        assert.isFunction(Bikini.Object.handleCallback);
-    });
+    assert.isFunction(Relution.LiveData._Object._create);
+    assert.isFunction(Relution.LiveData._Object.design);
+    assert.isFunction(Relution.LiveData._Object.bindToCaller);
+    assert.isFunction(Relution.LiveData._Object.handleCallback);
+  });
 
 });

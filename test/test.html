@@ -13,9 +13,11 @@
 
 <script src="../bower_components/jquery/dist/jquery.js"></script>
 <script src="../bower_components/underscore/underscore.js"></script>
+<script src="../bower_components/q/q.js"></script>
 <script src="../bower_components/backbone/backbone.js"></script>
 <script src="../bower_components/socket.io-client/dist/socket.io.js"></script>
 <script src="../bower_components/momentjs/moment.js"></script>
+<script src="../bower_components/JSONPath/lib/jsonpath.js"></script>
 <script src="../.tmp/bikini.js"></script>
 
 <script>
@@ -25,19 +27,27 @@
 </script>
 
 <script src="test.js"></script>
-<script src="core/test.bikini.js"></script>
+
+<script src="core/test.livedata.js"></script>
 <script src="core/test.object.js"></script>
+
+<script src="query/data.movies.js"></script>
+<script src="query/test.JsonFilterVisitor.js"></script>
+<script src="query/test.SortOrderComparator.js"></script>
 
 <script src="data/test.field.js"></script>
 <script src="data/test.entity.js"></script>
 <script src="data/test.model.js"></script>
 <script src="data/test.collection.js"></script>
-<script src="data/test.local_storage.js"></script>
-<script src="data/test.websql.js"></script>
-<script src="data/test.bikini.js"></script>
+
+<script src="data/stores/test.LocalStorageStore.js"></script>
+<script src="data/stores/test.WebSqlStore.js"></script>
+<script src="data/stores/test.SyncStore.js"></script>
 
 <script>
     mocha.checkLeaks();
     mocha.globals(['jQuery']);
-    mocha.run();
+    mocha.run().on('test', function (test) {
+      console.log('*** ' + test.parent.title + ': ' + test.title + ' ***');
+    });
 </script>

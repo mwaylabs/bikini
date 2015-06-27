@@ -6,11 +6,11 @@ var express      = require('express');
 var bodyParser   = require('body-parser')
 var server       = express();
 var http_server  = require('http').createServer(server);
-var socketPath   = '/bikini/live';
-var sockets      = require('./bikini_live.js').listen(http_server, socketPath);
+var socketPath   = '/relution/livedata/live';
+var sockets      = require('./livedata_live.js').listen(http_server, socketPath);
 var rest         = require('./mongodb_rest.js').create("test");
 var PORT         = 8200;
-var path         = "/bikini";
+var path         = "/relution/livedata";
 
 http_server.listen(PORT);
 console.log('http://127.0.0.1:' + PORT);
