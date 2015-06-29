@@ -48,15 +48,23 @@ module Relution.LiveData {
       return this.offset | 0;
     }
     public set min(value:number) {
-      var max = this.max;
-      this.offset = value;
-      this.max = max;
+      var offset = value;
+      if (offset !== this.offset) {
+        var max = this.max;
+        this.offset = offset;
+        this.max = max;
+      }
     }
     public get max():number {
       return this.limit ? (this.limit + this.min) : Infinity;
     }
     public set max(value:number) {
-      this.limit = value && value !== Infinity && (value - this.min);
+      var limit = value && value !== Infinity && (value - this.min);
+      if (limit !== this.limit) {
+        var min = this.min;
+        this.limit = limit;
+        this.min = min;
+      }
     }
 
     /**

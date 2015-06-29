@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Fri Jun 26 2015 16:15:56
+* Date:      Mon Jun 29 2015 07:47:31
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 
@@ -1578,9 +1578,20 @@ var Relution;
          * objects and arrays referenced by them.
          */
         var SortOrder = (function () {
+            /**
+             * default/copy constructor.
+             *
+             * @param other instance to optionally initialize an independent copy of.
+             */
             function SortOrder(other) {
                 this.sortFields = other && other.sortFields;
             }
+            /**
+             * parses a JSON literal such as ['-rating', '+date', 'id'] into this instance.
+             *
+             * @param json data, such as ['-rating', '+date'].
+             * @return {Relution.LiveData.SortOrder} this instance.
+             */
             SortOrder.prototype.fromJSON = function (json) {
                 this.sortFields = new Array(json.length);
                 for (var i = json.length - 1; i >= 0; --i) {
@@ -1588,9 +1599,20 @@ var Relution;
                 }
                 return this;
             };
+            /**
+             * combines an other instance such that this order is maintained by priority and equivalent elements are ordered by
+             * the other order.
+             *
+             * You may want to optimize after merging several instances.
+             *
+             * @param other order to merge into this as secondary.
+             */
             SortOrder.prototype.merge = function (other) {
                 this.sortFields = this.sortFields.concat(other.sortFields);
             };
+            /**
+             * eliminates redundant sort fields that do not affect overall order.
+             */
             SortOrder.prototype.optimize = function () {
                 this.sortFields = _.unique(this.sortFields, false, function (sortField) {
                     return sortField.name;
@@ -1600,18 +1622,34 @@ var Relution;
         })();
         LiveData.SortOrder = SortOrder;
         var SortField = (function () {
+            /**
+             * default/copy constructor.
+             *
+             * @param other instance to optionally initialize an independent copy of.
+             */
             function SortField(other) {
                 if (other) {
                     this.name = other.name;
                     this.ascending = other.ascending;
                 }
             }
+            /**
+             * parses a JSON literal such as '-rating' into this instance.
+             *
+             * @param json data, such as '-rating'.
+             * @return {Relution.LiveData.SortOrder} this instance.
+             */
             SortField.prototype.fromJSON = function (json) {
                 var order = json.length > 0 && json.charAt(0);
                 this.name = order === '+' || order === '-' ? json.substring(1) : json;
                 this.ascending = order !== '-';
                 return this;
             };
+            /**
+             * formats a JSON literal such as 'name'.
+             *
+             * @return {string} JSON literal such as 'name'.
+             */
             SortField.prototype.toJSON = function () {
                 return this.ascending ? this.name : '-' + this.name;
             };
@@ -1814,9 +1852,12 @@ var Relution;
                     return this.offset | 0;
                 },
                 set: function (value) {
-                    var max = this.max;
-                    this.offset = value;
-                    this.max = max;
+                    var offset = value;
+                    if (offset !== this.offset) {
+                        var max = this.max;
+                        this.offset = offset;
+                        this.max = max;
+                    }
                 },
                 enumerable: true,
                 configurable: true
@@ -1826,7 +1867,12 @@ var Relution;
                     return this.limit ? (this.limit + this.min) : Infinity;
                 },
                 set: function (value) {
-                    this.limit = value && value !== Infinity && (value - this.min);
+                    var limit = value && value !== Infinity && (value - this.min);
+                    if (limit !== this.limit) {
+                        var min = this.min;
+                        this.limit = limit;
+                        this.min = min;
+                    }
                 },
                 enumerable: true,
                 configurable: true

@@ -56,9 +56,12 @@ var Relution;
                     return this.offset | 0;
                 },
                 set: function (value) {
-                    var max = this.max;
-                    this.offset = value;
-                    this.max = max;
+                    var offset = value;
+                    if (offset !== this.offset) {
+                        var max = this.max;
+                        this.offset = offset;
+                        this.max = max;
+                    }
                 },
                 enumerable: true,
                 configurable: true
@@ -68,7 +71,12 @@ var Relution;
                     return this.limit ? (this.limit + this.min) : Infinity;
                 },
                 set: function (value) {
-                    this.limit = value && value !== Infinity && (value - this.min);
+                    var limit = value && value !== Infinity && (value - this.min);
+                    if (limit !== this.limit) {
+                        var min = this.min;
+                        this.limit = limit;
+                        this.min = min;
+                    }
                 },
                 enumerable: true,
                 configurable: true
