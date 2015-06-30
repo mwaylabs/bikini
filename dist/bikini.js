@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Mon Jun 29 2015 18:14:50
+* Date:      Tue Jun 30 2015 10:12:44
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 
@@ -2943,6 +2943,7 @@ _.extend(Relution.LiveData.Collection.prototype, Relution.LiveData._Object, {
   applyFilter: function (callback) {
     this.trigger('filter', this.filter(callback));
   },
+
   _updateUrl: function () {
     var params = this.getUrlParams();
     if (this.options) {
@@ -2965,6 +2966,29 @@ _.extend(Relution.LiveData.Collection.prototype, Relution.LiveData._Object, {
         this.url += a.join('&');
       }
     }
+  },
+
+  /**
+   * reads an additional page of data into this collection.
+   *
+   * A fetch() must have been performed loading the initial set of data. This method is intended for infinite scrolling
+   * implementation.
+   *
+   * When async processing is done, a more attribute is set on the options object in case additional data might be
+   * available which can be loaded by calling this method again. Likewise an end attribute is set if the data is
+   * fully loaded.
+   *
+   * @param {object} options such as pageSize to retrieve.
+   * @return {Promise} promise of the load operation.
+   *
+   * @see SyncContext#fetchMore()
+   */
+  fetchMore: function (options) {
+    if (!this.syncContext) {
+      return Q.reject(new Error('no context'));
+    }
+
+    return this.syncContext.fetchMore(this, options);
   }
 
 });
@@ -5829,7 +5853,94 @@ var Relution;
                     }
                 });
                 this.getQuery.optimize();
+                // compute local members
+                this.pageSize = this.getQuery.limit;
+                this.compareFn = this.getQuery.sortOrder && LiveData.jsonCompare(this.getQuery.sortOrder);
+                this.filterFn = this.getQuery.filter && LiveData.jsonFilter(this.getQuery.filter);
             }
+            /**
+             * reads an additional page of data into the collection.
+             *
+             * When async processing is done, a more attribute is set on the options object in case additional data might be
+             * available which can be loaded by calling this method again. Likewise an end attribute is set if the data is
+             * fully loaded.
+             *
+             * @param {object} collection to load data into.
+             * @param {object} options such as pageSize to retrieve.
+             * @return {Promise} promise of the load operation.
+             *
+             * @see Collection#fetchMore()
+             */
+            SyncContext.prototype.fetchMore = function (collection, options) {
+                // this must be set in options to state we handle it
+                options = options || {};
+                options.syncContext = this;
+                // prepare a query for the next page of data to load
+                var oldQuery = this.getQuery;
+                var newQuery = new LiveData.GetQuery(oldQuery);
+                newQuery.offset = (newQuery.offset | 0) + collection.models.length;
+                newQuery.limit = options.pageSize || this.pageSize || newQuery.limit;
+                // setup callbacks handling processing of results,
+                // do not use promises as these execute too late...
+                var oldSuccess = options.success;
+                var oldError = options.error;
+                options.success = function fetchMoreSuccess(collection, models, options) {
+                    // restore callbacks
+                    options.success = oldSuccess;
+                    options.error = oldError;
+                    // update models
+                    if (models) {
+                        if (options.syncContext.filterFn) {
+                            // filtering for safety, can be avoided once all stores support filtering
+                            models = models.filter(function (x) {
+                                return options.syncContext.filterFn(x.attributes);
+                            });
+                        }
+                        if (models.length > 0) {
+                            // read additional data
+                            if (options.syncContext.compareFn) {
+                                // sorting for safety, can be avoided once all stores support sorting
+                                models = models.sort(function (a, b) {
+                                    return options.syncContext.compareFn(a.attributes, b.attributes);
+                                });
+                                // notice, existing range of models is sorted by definition already
+                                options.at = options.syncContext.insertionPoint(models[0].attributes, collection.models);
+                            }
+                            models = collection.add(models, options) || models;
+                            // adjust query parameter
+                            oldQuery.limit = collection.models.length;
+                            options.more = true;
+                        }
+                        else {
+                            // reached the end
+                            oldQuery.limit = undefined; // open end
+                            options.end = true;
+                        }
+                    }
+                    // restore query parameter
+                    options.syncContext.getQuery = oldQuery;
+                    // call user success callback
+                    if (options.success) {
+                        models = options.success.apply(this, arguments) || models;
+                    }
+                    return models;
+                };
+                options.error = function fetchMoreError(collection, error, options) {
+                    // restore callbacks
+                    options.success = oldSuccess;
+                    options.error = oldError;
+                    // restore query parameter
+                    options.syncContext.getQuery = oldQuery;
+                    // call user error callback
+                    if (options.error) {
+                        error = options.error.apply(this, arguments) || error;
+                    }
+                    return error;
+                };
+                // fire up the page load
+                this.getQuery = newQuery;
+                return collection.sync(options.method || 'read', collection, options);
+            };
             /**
              * receives change messages.
              *
@@ -5947,7 +6058,7 @@ var Relution;
                 var pivot = (start + end) >> 1;
                 var delta = this.compareFn(attributes, models[pivot].attributes);
                 if (end - start <= 1) {
-                    return delta < 0 ? pivot - 1 : pivot;
+                    return delta < 0 ? pivot : pivot + 1;
                 }
                 else if (delta < 0) {
                     // select lower half

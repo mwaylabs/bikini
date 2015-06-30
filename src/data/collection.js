@@ -169,6 +169,7 @@ _.extend(Relution.LiveData.Collection.prototype, Relution.LiveData._Object, {
   applyFilter: function (callback) {
     this.trigger('filter', this.filter(callback));
   },
+
   _updateUrl: function () {
     var params = this.getUrlParams();
     if (this.options) {
@@ -191,6 +192,29 @@ _.extend(Relution.LiveData.Collection.prototype, Relution.LiveData._Object, {
         this.url += a.join('&');
       }
     }
+  },
+
+  /**
+   * reads an additional page of data into this collection.
+   *
+   * A fetch() must have been performed loading the initial set of data. This method is intended for infinite scrolling
+   * implementation.
+   *
+   * When async processing is done, a more attribute is set on the options object in case additional data might be
+   * available which can be loaded by calling this method again. Likewise an end attribute is set if the data is
+   * fully loaded.
+   *
+   * @param {object} options such as pageSize to retrieve.
+   * @return {Promise} promise of the load operation.
+   *
+   * @see SyncContext#fetchMore()
+   */
+  fetchMore: function (options) {
+    if (!this.syncContext) {
+      return Q.reject(new Error('no context'));
+    }
+
+    return this.syncContext.fetchMore(this, options);
   }
 
 });
