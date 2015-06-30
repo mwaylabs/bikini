@@ -222,7 +222,7 @@ module Relution.LiveData {
     _checkEntity(obj, entity) {
       if (!isEntity(entity)) {
         var error = Store.CONST.ERROR_NO_ENTITY;
-        console.error(error);
+        Relution.LiveData.error(error);
         this.handleError(obj, error);
         return false;
       }
@@ -232,7 +232,7 @@ module Relution.LiveData {
     _checkData(obj, data) {
       if ((!_.isArray(data) || data.length === 0) && !_.isObject(data)) {
         var error = Store.CONST.ERROR_NO_DATA;
-        console.error(error);
+        Relution.LiveData.error(error);
         this.handleError(obj, error);
         return false;
       }

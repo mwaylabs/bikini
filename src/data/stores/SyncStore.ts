@@ -29,6 +29,7 @@
 /// <reference path="Store.ts" />
 /// <reference path="WebSqlStore.ts" />
 /// <reference path="SyncContext.ts" />
+/// <reference path="../../utility/Debug.ts" />
 
 module Relution.LiveData {
 
@@ -66,6 +67,7 @@ module Relution.LiveData {
     private lastMesgTime:any;
 
     constructor(options?:any) {
+
       super(_.extend({
         localStore: WebSqlStore,
 
@@ -83,13 +85,13 @@ module Relution.LiveData {
       }, options));
 
       if (this.options.useSocketNotify && typeof io !== 'object') {
-        console.log('Socket.IO not present !!');
+        Relution.LiveData.Debug.warning('Socket.IO not present !!');
         this.options.useSocketNotify = false;
       }
     }
 
     initEndpoint(model, modelType) {
-      debug('Relution.LiveData.SyncStore.initEndpoint');
+      Relution.LiveData.Debug.info('Relution.LiveData.SyncStore.initEndpoint');
       var urlRoot = model.getUrlRoot();
       var entity = this.getEntity(model.entity);
       if (urlRoot && entity) {
@@ -125,12 +127,12 @@ module Relution.LiveData {
     }
 
     initModel(model) {
-      debug('Relution.LiveData.SyncStore.initModel');
+      Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore.initModel');
       model.endpoint = this.initEndpoint(model, model.constructor);
     }
 
     initCollection(collection) {
-      debug('Relution.LiveData.SyncStore.initCollection');
+      Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore.initCollection');
       collection.endpoint = this.initEndpoint(collection, collection.model);
     }
 
@@ -181,7 +183,7 @@ module Relution.LiveData {
     }
 
     createSocket(endpoint, name) {
-      debug('Relution.LiveData.SyncStore.createSocket');
+      Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore.createSocket');
       if (this.options.useSocketNotify && endpoint && endpoint.socketPath) {
         var that = this;
         var url = endpoint.host;
@@ -211,7 +213,7 @@ module Relution.LiveData {
           return that.onConnect(endpoint).done();
         });
         endpoint.socket.on('disconnect', function () {
-          debug('socket.io: disconnect');
+          Relution.LiveData.Debug.info('socket.io: disconnect');
           return that.onDisconnect(endpoint).done();
         });
         endpoint.socket.on(endpoint.channel, _.bind(this.onMessage, this, endpoint));
@@ -220,7 +222,7 @@ module Relution.LiveData {
     }
 
     _bindChannel(endpoint, name) {
-      debug('Relution.LiveData.SyncStore._bindChannel');
+      Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore._bindChannel');
       var that = this;
       if (endpoint && endpoint.socket) {
         var channel = endpoint.channel;
@@ -343,7 +345,7 @@ module Relution.LiveData {
     }
 
     public sync(method, model, options) {
-      debug('Relution.LiveData.SyncStore.sync');
+      Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore.sync');
       options = options || {};
       try {
         var endpoint = model.endpoint || this.getEndpoint(model.getUrlRoot() /*throws urlError*/);
@@ -519,13 +521,14 @@ module Relution.LiveData {
           // add query of collection
           var collectionUrl = _.isFunction(model.url) ? model.url() : model.url;
           var queryIndex = collectionUrl.lastIndexOf('?');
+
           if (queryIndex >= 0) {
             url += collectionUrl.substr(queryIndex);
           }
         }
       }
 
-      debug('ajaxMessage ' + msg.method + ' ' + url);
+      Relution.LiveData.Debug.trace('ajaxMessage ' + msg.method + ' ' + url);
       return model.sync(msg.method, model, {
         // must not take arbitrary options as these won't be replayed on reconnect
         url: url,
@@ -704,7 +707,7 @@ module Relution.LiveData {
           idAttribute: endpoint.entity.idAttribute,
           entity: endpoint.entity,
         });
-        debug('sendMessage ' + model.id);
+        Relution.LiveData.Debug.info('sendMessage ' + model.id);
         return that._applyResponse(that._ajaxMessage(endpoint, msg, remoteOptions, model), endpoint, msg, remoteOptions, model).catch(function (error) {
           // failed, eventually undo the modifications stored
           if (!endpoint.localStore) {
@@ -744,7 +747,7 @@ module Relution.LiveData {
       return qMsg.then(function (msg) {
         var options;
         var id = endpoint.messages.modelId(msg);
-        debug('storeMessage ' + id);
+        Relution.LiveData.Debug.info('storeMessage ' + id);
         var message = id && endpoint.messages.get(id);
         if (message) {
           // use existing instance, should not be the case usually
@@ -782,7 +785,8 @@ module Relution.LiveData {
             });
           }
         }
-        debug('removeMessage ' + message.id);
+
+        Relution.LiveData.Debug.trace('removeMessage ' + message.id);
         return message.destroy();
       });
     }

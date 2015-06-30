@@ -27,9 +27,9 @@
 /* jshint -W004: '%' is already defined. */
 /// <reference path="../../core/livedata.d.ts" />
 /// <reference path="Store.ts" />
+/// <reference path="../../utility/Debug.ts" />
 
 module Relution.LiveData {
-
   /**
    * The Relution.LiveData.LocalStorageStore can be used to store model collection into
    * the localStorage
@@ -134,7 +134,7 @@ module Relution.LiveData {
             this._delItemId(entity, id);
           }
         } catch (e) {
-          console.error(Store.CONST.ERROR_LOAD_DATA + e.message);
+          Relution.LiveData.error(Store.CONST.ERROR_LOAD_DATA + e.message);
         }
       }
       return attrs;
@@ -146,7 +146,7 @@ module Relution.LiveData {
           localStorage.setItem(this._getKey(entity, id), JSON.stringify(attrs));
           this._addItemId(entity, id);
         } catch (e) {
-          console.error(Store.CONST.ERROR_SAVE_DATA + e.message);
+          Relution.LiveData.error(Store.CONST.ERROR_SAVE_DATA + e.message);
         }
       }
     }
@@ -197,7 +197,7 @@ module Relution.LiveData {
         }
         return this.ids[entity.name];
       } catch (e) {
-        console.error(Store.CONST.ERROR_LOAD_IDS + e.message);
+        Relution.LiveData.error(Store.CONST.ERROR_LOAD_IDS + e.message);
       }
     }
 
@@ -206,7 +206,7 @@ module Relution.LiveData {
         var key = '__ids__' + entity.name;
         localStorage.setItem(key, JSON.stringify(ids));
       } catch (e) {
-        console.error(Store.CONST.ERROR_SAVE_IDS + e.message);
+        Relution.LiveData.error(Store.CONST.ERROR_SAVE_IDS + e.message);
       }
     }
   }

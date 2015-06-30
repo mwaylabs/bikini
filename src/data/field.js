@@ -108,7 +108,7 @@ _.extend(Relution.LiveData.Field.prototype, Relution.LiveData._Object, {
       }
       return value;
     } catch (e) {
-      console.error('Failed converting value! ' + e.message);
+      Relution.LiveData.Debug.error('Failed converting value! ' + e.message);
     }
   },
 

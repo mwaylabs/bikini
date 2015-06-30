@@ -27,6 +27,7 @@
 /* jshint -W004: '%' is already defined. */
 /// <reference path="../../core/livedata.d.ts" />
 /// <reference path="Store.ts" />
+/// <reference path="../../utility/Debug.ts" />
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -144,7 +145,7 @@ var Relution;
                         }
                     }
                     catch (e) {
-                        console.error(LiveData.Store.CONST.ERROR_LOAD_DATA + e.message);
+                        Relution.LiveData.error(LiveData.Store.CONST.ERROR_LOAD_DATA + e.message);
                     }
                 }
                 return attrs;
@@ -156,7 +157,7 @@ var Relution;
                         this._addItemId(entity, id);
                     }
                     catch (e) {
-                        console.error(LiveData.Store.CONST.ERROR_SAVE_DATA + e.message);
+                        Relution.LiveData.error(LiveData.Store.CONST.ERROR_SAVE_DATA + e.message);
                     }
                 }
             };
@@ -203,7 +204,7 @@ var Relution;
                     return this.ids[entity.name];
                 }
                 catch (e) {
-                    console.error(LiveData.Store.CONST.ERROR_LOAD_IDS + e.message);
+                    Relution.LiveData.error(LiveData.Store.CONST.ERROR_LOAD_IDS + e.message);
                 }
             };
             LocalStorageStore.prototype._saveItemIds = function (entity, ids) {
@@ -212,7 +213,7 @@ var Relution;
                     localStorage.setItem(key, JSON.stringify(ids));
                 }
                 catch (e) {
-                    console.error(LiveData.Store.CONST.ERROR_SAVE_IDS + e.message);
+                    Relution.LiveData.error(LiveData.Store.CONST.ERROR_SAVE_IDS + e.message);
                 }
             };
             return LocalStorageStore;

@@ -27,6 +27,7 @@
 /* jshint -W004: '%' is already defined. */
 /// <reference path="../../core/livedata.d.ts" />
 /// <reference path="Store.ts" />
+/// <reference path="../../utility/Debug.ts" />
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -115,7 +116,7 @@ var Relution;
                 var that = this;
                 this._openDb({
                     error: function (error) {
-                        console.error(error);
+                        Relution.LiveData.Debug.error(error);
                         that.trigger('error', error);
                     }
                 });
@@ -237,7 +238,7 @@ var Relution;
                         var arSql = this._sqlUpdateDatabase(this.db.version, this.options.version);
                         this.db.changeVersion(this.db.version, this.options.version, function (tx) {
                             _.each(arSql, function (sql) {
-                                Relution.debug('sql statement: ' + sql);
+                                Relution.LiveData.Debug.info('sql statement: ' + sql);
                                 lastSql = sql;
                                 tx.executeSql(sql);
                             });
@@ -249,7 +250,7 @@ var Relution;
                     }
                     catch (e) {
                         error = e.message;
-                        console.error('webSql change version failed, DB-Version: ' + this.db.version);
+                        Relution.LiveData.Debug.error('webSql change version failed, DB-Version: ' + this.db.version);
                     }
                 }
                 catch (e) {
@@ -511,9 +512,9 @@ var Relution;
                         var statement = stm.statement || stm;
                         var args = stm.arguments;
                         lastStatement = statement;
-                        Relution.debug('sql statement: ' + statement);
+                        Relution.LiveData.Debug.info('sql statement: ' + statement);
                         if (args) {
-                            Relution.debug('    arguments: ' + JSON.stringify(args));
+                            Relution.LiveData.Debug.trace('arguments: ' + JSON.stringify(args));
                         }
                         t.executeSql(statement, args, function (tx, res) {
                             var len = res.rows.length; //, i;
@@ -544,10 +545,10 @@ var Relution;
                             }
                         }, function (t, e) {
                             // error
-                            console.error('webSql error: ' + e.message);
+                            Relution.LiveData.Debug.error('webSql error: ' + e.message);
                         });
                     }, function (sqlError) {
-                        console.error('WebSql Syntax Error: ' + sqlError.message);
+                        Relution.LiveData.Debug.error('WebSql Syntax Error: ' + sqlError.message);
                         that.handleError(options, sqlError.message, lastStatement);
                     }, function () {
                         if (result) {
@@ -586,21 +587,21 @@ var Relution;
                                 var statement = stm.statement || stm;
                                 var args = stm.arguments;
                                 lastStatement = statement;
-                                Relution.debug('sql statement: ' + statement);
+                                Relution.LiveData.Debug.info('sql statement: ' + statement);
                                 if (args) {
-                                    Relution.debug('    arguments: ' + JSON.stringify(args));
+                                    Relution.LiveData.Debug.trace('    arguments: ' + JSON.stringify(args));
                                 }
                                 t.executeSql(statement, args);
                             });
                         }, function (sqlError) {
-                            console.error(sqlError.message);
+                            Relution.LiveData.Debug.error(sqlError.message);
                             that.handleError(options, sqlError.message, lastStatement);
                         }, function () {
                             that.handleSuccess(options, result);
                         });
                     }
                     catch (e) {
-                        console.error(e.message);
+                        Relution.LiveData.Debug.error(e.message);
                         error = e;
                     }
                 }
@@ -617,7 +618,7 @@ var Relution;
                 // has to be initialized first
                 if (!this.db) {
                     var error = 'db handler not initialized.';
-                    console.error(error);
+                    Relution.LiveData.Debug.error(error);
                     this.handleError(options, error);
                     return false;
                 }
@@ -643,4 +644,3 @@ var Relution;
         LiveData.WebSqlStore = WebSqlStore;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=WebSqlStore.js.map

@@ -4,7 +4,7 @@
     "module": "commonjs"
   },
   "filesGlob": [
-    "./src/*.ts",
+    "./src/**/*.ts",
     "!./node_modules/**/*.ts",
     "!./bower_components/**/*.ts"
   ],

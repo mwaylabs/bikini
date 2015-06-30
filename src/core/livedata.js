@@ -1,28 +1,19 @@
 // Copyright (c) 2013 M-Way Solutions GmbH
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
-
-/**
- * Defines the general namespace
- *
- * @type {Object}
- */
-var Relution;
-if (typeof exports !== 'undefined') {
-  Relution = {
-    LiveData: exports
-  };
-} else {
-  Relution = global.Relution = global.Relution || {};
-  Relution.LiveData = {};
-}
-Relution.debug = Relution.debug || _.bind(console.log, console);
-
+//Relution.debug = Relution.debug || _.bind(console.log, console);
+Relution.setDebug = function (args) {
+  Relution.LiveData.DebugMode = args;
+  return new Relution.LiveData.Debug(args);
+};
 /**
  * Version number of current release
  * @type {String}
  */
 Relution.LiveData.Version = Relution.LiveData.version = '/* @echo VERSION */';
 
+Relution.LiveData.isDebugMode = function () {
+  return Relution.LiveData.DebugMode;
+};
 /**
  * Empty function to be used when
  * no functionality is needed
@@ -73,7 +64,6 @@ Relution.LiveData.DATA = {
     NULL: 'null'
   }
 };
-
 Relution.LiveData.http = Backbone.ajax;
 
 Backbone.ajax = function ajax(options) {

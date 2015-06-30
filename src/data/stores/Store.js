@@ -198,7 +198,7 @@ var Relution;
             Store.prototype._checkEntity = function (obj, entity) {
                 if (!LiveData.isEntity(entity)) {
                     var error = Store.CONST.ERROR_NO_ENTITY;
-                    console.error(error);
+                    Relution.LiveData.error(error);
                     this.handleError(obj, error);
                     return false;
                 }
@@ -207,7 +207,7 @@ var Relution;
             Store.prototype._checkData = function (obj, data) {
                 if ((!_.isArray(data) || data.length === 0) && !_.isObject(data)) {
                     var error = Store.CONST.ERROR_NO_DATA;
-                    console.error(error);
+                    Relution.LiveData.error(error);
                     this.handleError(obj, error);
                     return false;
                 }

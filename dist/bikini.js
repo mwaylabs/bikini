@@ -2,12 +2,10 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Tue Jun 30 2015 10:12:44
+* Date:      Tue Jun 30 2015 17:45:17
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
-
 (function (global, Backbone, _, $, Q, jsonPath) {
-
 // Copyright (c) 2013 M-Way Solutions GmbH
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
 
@@ -25,14 +23,57 @@ if (typeof exports !== 'undefined') {
   Relution = global.Relution = global.Relution || {};
   Relution.LiveData = {};
 }
-Relution.debug = Relution.debug || _.bind(console.log, console);
 
+/* jshint indent: 4 */
+/* jshint quotmark: false */
+/// <reference path="../core/livedata.d.ts"/>
+var Relution;
+(function (Relution) {
+    var LiveData;
+    (function (LiveData) {
+        var Debug = (function () {
+            function Debug() {
+            }
+            Debug.log = function (color, message) {
+                if (Relution.LiveData.isDebugMode()) {
+                    console.log("%c%s", "color: " + color + "; font-size: " + this.fontSize + ";font-weight: normal;", message);
+                }
+            };
+            Debug.trace = function (message) {
+                this.log('#378c13', message);
+            };
+            Debug.warning = function (message) {
+                this.log('#e69138', message);
+            };
+            Debug.info = function (message) {
+                this.log('#00f', message);
+            };
+            Debug.error = function (message) {
+                this.log('#f00', message);
+            };
+            Debug.fontSize = '12px';
+            return Debug;
+        })();
+        LiveData.Debug = Debug;
+    })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
+})(Relution || (Relution = {}));
+//# sourceMappingURL=Debug.js.map
+// Copyright (c) 2013 M-Way Solutions GmbH
+// http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
+//Relution.debug = Relution.debug || _.bind(console.log, console);
+Relution.setDebug = function (args) {
+  Relution.LiveData.DebugMode = args;
+  return new Relution.LiveData.Debug(args);
+};
 /**
  * Version number of current release
  * @type {String}
  */
 Relution.LiveData.Version = Relution.LiveData.version = '0.8.4';
 
+Relution.LiveData.isDebugMode = function () {
+  return Relution.LiveData.DebugMode;
+};
 /**
  * Empty function to be used when
  * no functionality is needed
@@ -83,7 +124,6 @@ Relution.LiveData.DATA = {
     NULL: 'null'
   }
 };
-
 Relution.LiveData.http = Backbone.ajax;
 
 Backbone.ajax = function ajax(options) {
@@ -1133,7 +1173,7 @@ var Relution;
         LiveData.JsonPath = JsonPath;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=JsonPath.js.map
+
 /**
  * Filter.ts
  *
@@ -1158,7 +1198,7 @@ var Relution;
  * POSSIBILITY OF SUCH DAMAGE.
  */
 /* jshint indent: 4 */
-//# sourceMappingURL=Filter.js.map
+
 /**
  * FilterVisitor.ts
  *
@@ -1202,7 +1242,7 @@ var Relution;
         LiveData.FilterVisitorBase = FilterVisitorBase;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=FilterVisitor.js.map
+
 /**
  * JsonFilterVisitor.ts
  *
@@ -1278,6 +1318,7 @@ var Relution;
                         return false;
                     }
                     else if (_.isArray(value)) {
+                        // array case
                         for (var i = 0; i < value.length; ++i) {
                             var val = value[i];
                             if (val !== undefined && val !== null && val.toString().indexOf(contains) >= 0) {
@@ -1308,6 +1349,7 @@ var Relution;
                         return false;
                     }
                     else if (_.isArray(value)) {
+                        // array case
                         for (var i = 0; i < value.length; ++i) {
                             var val = value[i];
                             if (val == filter.value) {
@@ -1452,6 +1494,7 @@ var Relution;
                         return false;
                     }
                     else if (_.isArray(value)) {
+                        // array case
                         for (var i = 0; i < value.length; ++i) {
                             var val = value[i];
                             if (pattern.test(val)) {
@@ -1541,7 +1584,7 @@ var Relution;
         })(LiveData.FilterVisitorBase);
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=JsonFilterVisitor.js.map
+
 /**
  * SortOrder.ts
  *
@@ -1658,7 +1701,7 @@ var Relution;
         LiveData.SortField = SortField;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=SortOrder.js.map
+
 /**
  * SortOrderComparator.ts
  *
@@ -1793,7 +1836,7 @@ var Relution;
         })();
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=SortOrderComparator.js.map
+
 /**
  * GetQuery.ts
  *
@@ -1944,7 +1987,7 @@ var Relution;
         LiveData.GetQuery = GetQuery;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=GetQuery.js.map
+
 
 // Copyright (c) 2013 M-Way Solutions GmbH
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
@@ -2056,7 +2099,7 @@ _.extend(Relution.LiveData.Field.prototype, Relution.LiveData._Object, {
       }
       return value;
     } catch (e) {
-      console.error('Failed converting value! ' + e.message);
+      Relution.LiveData.Debug.error('Failed converting value! ' + e.message);
     }
   },
 
@@ -4095,7 +4138,7 @@ var Relution;
             Store.prototype._checkEntity = function (obj, entity) {
                 if (!LiveData.isEntity(entity)) {
                     var error = Store.CONST.ERROR_NO_ENTITY;
-                    console.error(error);
+                    Relution.LiveData.error(error);
                     this.handleError(obj, error);
                     return false;
                 }
@@ -4104,7 +4147,7 @@ var Relution;
             Store.prototype._checkData = function (obj, data) {
                 if ((!_.isArray(data) || data.length === 0) && !_.isObject(data)) {
                     var error = Store.CONST.ERROR_NO_DATA;
-                    console.error(error);
+                    Relution.LiveData.error(error);
                     this.handleError(obj, error);
                     return false;
                 }
@@ -4181,6 +4224,7 @@ var Relution;
 /* jshint -W004: '%' is already defined. */
 /// <reference path="../../core/livedata.d.ts" />
 /// <reference path="Store.ts" />
+/// <reference path="../../utility/Debug.ts" />
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -4298,7 +4342,7 @@ var Relution;
                         }
                     }
                     catch (e) {
-                        console.error(LiveData.Store.CONST.ERROR_LOAD_DATA + e.message);
+                        Relution.LiveData.error(LiveData.Store.CONST.ERROR_LOAD_DATA + e.message);
                     }
                 }
                 return attrs;
@@ -4310,7 +4354,7 @@ var Relution;
                         this._addItemId(entity, id);
                     }
                     catch (e) {
-                        console.error(LiveData.Store.CONST.ERROR_SAVE_DATA + e.message);
+                        Relution.LiveData.error(LiveData.Store.CONST.ERROR_SAVE_DATA + e.message);
                     }
                 }
             };
@@ -4357,7 +4401,7 @@ var Relution;
                     return this.ids[entity.name];
                 }
                 catch (e) {
-                    console.error(LiveData.Store.CONST.ERROR_LOAD_IDS + e.message);
+                    Relution.LiveData.error(LiveData.Store.CONST.ERROR_LOAD_IDS + e.message);
                 }
             };
             LocalStorageStore.prototype._saveItemIds = function (entity, ids) {
@@ -4366,7 +4410,7 @@ var Relution;
                     localStorage.setItem(key, JSON.stringify(ids));
                 }
                 catch (e) {
-                    console.error(LiveData.Store.CONST.ERROR_SAVE_IDS + e.message);
+                    Relution.LiveData.error(LiveData.Store.CONST.ERROR_SAVE_IDS + e.message);
                 }
             };
             return LocalStorageStore;
@@ -4404,6 +4448,7 @@ var Relution;
 /* jshint -W004: '%' is already defined. */
 /// <reference path="../../core/livedata.d.ts" />
 /// <reference path="Store.ts" />
+/// <reference path="../../utility/Debug.ts" />
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -4492,7 +4537,7 @@ var Relution;
                 var that = this;
                 this._openDb({
                     error: function (error) {
-                        console.error(error);
+                        Relution.LiveData.Debug.error(error);
                         that.trigger('error', error);
                     }
                 });
@@ -4614,7 +4659,7 @@ var Relution;
                         var arSql = this._sqlUpdateDatabase(this.db.version, this.options.version);
                         this.db.changeVersion(this.db.version, this.options.version, function (tx) {
                             _.each(arSql, function (sql) {
-                                Relution.debug('sql statement: ' + sql);
+                                Relution.LiveData.Debug.info('sql statement: ' + sql);
                                 lastSql = sql;
                                 tx.executeSql(sql);
                             });
@@ -4626,7 +4671,7 @@ var Relution;
                     }
                     catch (e) {
                         error = e.message;
-                        console.error('webSql change version failed, DB-Version: ' + this.db.version);
+                        Relution.LiveData.Debug.error('webSql change version failed, DB-Version: ' + this.db.version);
                     }
                 }
                 catch (e) {
@@ -4888,9 +4933,9 @@ var Relution;
                         var statement = stm.statement || stm;
                         var args = stm.arguments;
                         lastStatement = statement;
-                        Relution.debug('sql statement: ' + statement);
+                        Relution.LiveData.Debug.info('sql statement: ' + statement);
                         if (args) {
-                            Relution.debug('    arguments: ' + JSON.stringify(args));
+                            Relution.LiveData.Debug.trace('arguments: ' + JSON.stringify(args));
                         }
                         t.executeSql(statement, args, function (tx, res) {
                             var len = res.rows.length; //, i;
@@ -4921,10 +4966,10 @@ var Relution;
                             }
                         }, function (t, e) {
                             // error
-                            console.error('webSql error: ' + e.message);
+                            Relution.LiveData.Debug.error('webSql error: ' + e.message);
                         });
                     }, function (sqlError) {
-                        console.error('WebSql Syntax Error: ' + sqlError.message);
+                        Relution.LiveData.Debug.error('WebSql Syntax Error: ' + sqlError.message);
                         that.handleError(options, sqlError.message, lastStatement);
                     }, function () {
                         if (result) {
@@ -4963,21 +5008,21 @@ var Relution;
                                 var statement = stm.statement || stm;
                                 var args = stm.arguments;
                                 lastStatement = statement;
-                                Relution.debug('sql statement: ' + statement);
+                                Relution.LiveData.Debug.info('sql statement: ' + statement);
                                 if (args) {
-                                    Relution.debug('    arguments: ' + JSON.stringify(args));
+                                    Relution.LiveData.Debug.trace('    arguments: ' + JSON.stringify(args));
                                 }
                                 t.executeSql(statement, args);
                             });
                         }, function (sqlError) {
-                            console.error(sqlError.message);
+                            Relution.LiveData.Debug.error(sqlError.message);
                             that.handleError(options, sqlError.message, lastStatement);
                         }, function () {
                             that.handleSuccess(options, result);
                         });
                     }
                     catch (e) {
-                        console.error(e.message);
+                        Relution.LiveData.Debug.error(e.message);
                         error = e;
                     }
                 }
@@ -4994,7 +5039,7 @@ var Relution;
                 // has to be initialized first
                 if (!this.db) {
                     var error = 'db handler not initialized.';
-                    console.error(error);
+                    Relution.LiveData.Debug.error(error);
                     this.handleError(options, error);
                     return false;
                 }
@@ -5020,7 +5065,7 @@ var Relution;
         LiveData.WebSqlStore = WebSqlStore;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=WebSqlStore.js.map
+
 /**
  * SyncStore.ts
  *
@@ -5052,6 +5097,7 @@ var Relution;
 /// <reference path="Store.ts" />
 /// <reference path="WebSqlStore.ts" />
 /// <reference path="SyncContext.ts" />
+/// <reference path="../../utility/Debug.ts" />
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -5107,12 +5153,12 @@ var Relution;
                 }, options));
                 this.endpoints = {};
                 if (this.options.useSocketNotify && typeof io !== 'object') {
-                    console.log('Socket.IO not present !!');
+                    Relution.LiveData.Debug.warning('Socket.IO not present !!');
                     this.options.useSocketNotify = false;
                 }
             }
             SyncStore.prototype.initEndpoint = function (model, modelType) {
-                Relution.debug('Relution.LiveData.SyncStore.initEndpoint');
+                Relution.LiveData.Debug.info('Relution.LiveData.SyncStore.initEndpoint');
                 var urlRoot = model.getUrlRoot();
                 var entity = this.getEntity(model.entity);
                 if (urlRoot && entity) {
@@ -5146,11 +5192,11 @@ var Relution;
                 }
             };
             SyncStore.prototype.initModel = function (model) {
-                Relution.debug('Relution.LiveData.SyncStore.initModel');
+                Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore.initModel');
                 model.endpoint = this.initEndpoint(model, model.constructor);
             };
             SyncStore.prototype.initCollection = function (collection) {
-                Relution.debug('Relution.LiveData.SyncStore.initCollection');
+                Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore.initCollection');
                 collection.endpoint = this.initEndpoint(collection, collection.model);
             };
             SyncStore.prototype.getEndpoint = function (url) {
@@ -5197,7 +5243,7 @@ var Relution;
                 }
             };
             SyncStore.prototype.createSocket = function (endpoint, name) {
-                Relution.debug('Relution.LiveData.SyncStore.createSocket');
+                Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore.createSocket');
                 if (this.options.useSocketNotify && endpoint && endpoint.socketPath) {
                     var that = this;
                     var url = endpoint.host;
@@ -5226,7 +5272,7 @@ var Relution;
                         return that.onConnect(endpoint).done();
                     });
                     endpoint.socket.on('disconnect', function () {
-                        Relution.debug('socket.io: disconnect');
+                        Relution.LiveData.Debug.info('socket.io: disconnect');
                         return that.onDisconnect(endpoint).done();
                     });
                     endpoint.socket.on(endpoint.channel, _.bind(this.onMessage, this, endpoint));
@@ -5234,7 +5280,7 @@ var Relution;
                 }
             };
             SyncStore.prototype._bindChannel = function (endpoint, name) {
-                Relution.debug('Relution.LiveData.SyncStore._bindChannel');
+                Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore._bindChannel');
                 var that = this;
                 if (endpoint && endpoint.socket) {
                     var channel = endpoint.channel;
@@ -5349,10 +5395,10 @@ var Relution;
                 }).thenResolve(msg);
             };
             SyncStore.prototype.sync = function (method, model, options) {
-                Relution.debug('Relution.LiveData.SyncStore.sync');
+                Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore.sync');
                 options = options || {};
                 try {
-                    var endpoint = model.endpoint || this.getEndpoint(model.getUrlRoot());
+                    var endpoint = model.endpoint || this.getEndpoint(model.getUrlRoot() /*throws urlError*/);
                     if (!endpoint) {
                         throw new Error('no endpoint');
                     }
@@ -5362,7 +5408,8 @@ var Relution;
                             var syncContext = options.syncContext; // sync can be called by SyncContext itself when paging results
                             if (!syncContext) {
                                 // capture GetQuery options
-                                syncContext = new LiveData.SyncContext(options, model.options, this.options);
+                                syncContext = new LiveData.SyncContext(options, model.options, this.options // static options of this store realize filtering client/server
+                                );
                             }
                             if (model.syncContext !== syncContext) {
                                 // assign a different instance
@@ -5515,7 +5562,7 @@ var Relution;
                         }
                     }
                 }
-                Relution.debug('ajaxMessage ' + msg.method + ' ' + url);
+                Relution.LiveData.Debug.trace('ajaxMessage ' + msg.method + ' ' + url);
                 return model.sync(msg.method, model, {
                     // must not take arbitrary options as these won't be replayed on reconnect
                     url: url,
@@ -5688,9 +5735,9 @@ var Relution;
                     };
                     var model = new LiveData.Model(msg.data, {
                         idAttribute: endpoint.entity.idAttribute,
-                        entity: endpoint.entity,
+                        entity: endpoint.entity
                     });
-                    Relution.debug('sendMessage ' + model.id);
+                    Relution.LiveData.Debug.info('sendMessage ' + model.id);
                     return that._applyResponse(that._ajaxMessage(endpoint, msg, remoteOptions, model), endpoint, msg, remoteOptions, model).catch(function (error) {
                         // failed, eventually undo the modifications stored
                         if (!endpoint.localStore) {
@@ -5707,8 +5754,8 @@ var Relution;
                             // original request failed and the code above tried to revert the local modifications by reloading the data, which failed as well...
                             var status = fetchResp && fetchResp.status;
                             switch (status) {
-                                case 404:
-                                case 401:
+                                case 404: // NOT FOUND
+                                case 401: // UNAUTHORIZED
                                 case 410:
                                     // ...because the item is gone by now, maybe someone else changed it to be deleted
                                     return model.destroy(localOptions);
@@ -5728,7 +5775,7 @@ var Relution;
                 return qMsg.then(function (msg) {
                     var options;
                     var id = endpoint.messages.modelId(msg);
-                    Relution.debug('storeMessage ' + id);
+                    Relution.LiveData.Debug.info('storeMessage ' + id);
                     var message = id && endpoint.messages.get(id);
                     if (message) {
                         // use existing instance, should not be the case usually
@@ -5765,7 +5812,7 @@ var Relution;
                             });
                         }
                     }
-                    Relution.debug('removeMessage ' + message.id);
+                    Relution.LiveData.Debug.trace('removeMessage ' + message.id);
                     return message.destroy();
                 });
             };
@@ -5786,7 +5833,7 @@ var Relution;
         LiveData.SyncStore = SyncStore;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=SyncStore.js.map
+
 /**
  * SyncContext.ts
  *
@@ -5974,7 +6021,7 @@ var Relution;
                             // create model in case it does not exist
                             model = new options.collection.model(msg.data, options);
                             if (this.filterFn && !this.filterFn(model.attributes)) {
-                                break;
+                                break; // filtered
                             }
                             if (model.validationError) {
                                 collection.trigger('invalid', this, model.validationError, options);
@@ -5989,6 +6036,7 @@ var Relution;
                             }
                             break;
                         }
+                    /* falls through */
                     case 'patch':
                         if (model) {
                             // update model unless it is filtered
@@ -6078,7 +6126,7 @@ var Relution;
         LiveData.SyncContext = SyncContext;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=SyncContext.js.map
+
 
 // Copyright (c) 2015 M-Way Solutions GmbH
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
