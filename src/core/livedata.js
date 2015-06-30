@@ -94,7 +94,7 @@ Relution.LiveData.sync = function sync(method, model, options) {
   var store = options.store || this.store;
   options.credentials = options.credentials || this.credentials || store && store.options && store.options.credentials;
 
-  Relution.debug('Relution.LiveData.sync ' + method + ' ' + model.id);
+  Relution.LiveData.Debug.info('Relution.LiveData.sync ' + method + ' ' + model.id);
   if (store && store.sync) {
     // store access (this is redundant model argument)
     var storeAjax = store.ajax && _.bind(store.ajax, store);

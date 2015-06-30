@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Tue Jun 30 2015 17:45:17
+* Date:      Tue Jun 30 2015 17:52:20
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -24,6 +24,27 @@ if (typeof exports !== 'undefined') {
   Relution.LiveData = {};
 }
 
+/**
+ * Created by Pascal Brewing
+ * Copyright (c)
+ * 2015
+ * M-Way Solutions GmbH. All rights reserved.
+ * http://www.mwaysolutions.com
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are not permitted.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
 /* jshint indent: 4 */
 /* jshint quotmark: false */
 /// <reference path="../core/livedata.d.ts"/>
@@ -31,26 +52,57 @@ var Relution;
 (function (Relution) {
     var LiveData;
     (function (LiveData) {
+        /**
+         * @description A Static Debug Class
+         * @example ````js
+         * window.Relution.setDebug(true);
+         * ````
+         */
         var Debug = (function () {
             function Debug() {
             }
+            /**
+             * @descriptions logs the messages to the console
+             * @param color
+             * @param message
+             */
             Debug.log = function (color, message) {
                 if (Relution.LiveData.isDebugMode()) {
                     console.log("%c%s", "color: " + color + "; font-size: " + this.fontSize + ";font-weight: normal;", message);
                 }
             };
+            /**
+             * @name trace
+             * @param message
+             */
             Debug.trace = function (message) {
                 this.log('#378c13', message);
             };
+            /**
+             * @name warning
+             * @param message
+             */
             Debug.warning = function (message) {
                 this.log('#e69138', message);
             };
+            /**
+             * @name info
+             * @param message
+             */
             Debug.info = function (message) {
                 this.log('#00f', message);
             };
+            /**
+             * @name error
+             * @param message
+             */
             Debug.error = function (message) {
                 this.log('#f00', message);
             };
+            /**
+             * set the fontSize
+             * @type {string}
+             */
             Debug.fontSize = '12px';
             return Debug;
         })();
@@ -154,7 +206,7 @@ Relution.LiveData.sync = function sync(method, model, options) {
   var store = options.store || this.store;
   options.credentials = options.credentials || this.credentials || store && store.options && store.options.credentials;
 
-  Relution.debug('Relution.LiveData.sync ' + method + ' ' + model.id);
+  Relution.LiveData.Debug.info('Relution.LiveData.sync ' + method + ' ' + model.id);
   if (store && store.sync) {
     // store access (this is redundant model argument)
     var storeAjax = store.ajax && _.bind(store.ajax, store);
