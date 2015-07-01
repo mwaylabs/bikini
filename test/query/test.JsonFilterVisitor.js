@@ -1,5 +1,5 @@
 /**
- * test.JsonFilterVisitor.ts
+ * test.JsonFilterVisitor.js
  *
  * Created by Thomas Beckmann on 23.06.2015
  * Copyright (c)
