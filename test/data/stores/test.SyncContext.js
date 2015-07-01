@@ -87,7 +87,8 @@ describe('Relution.LiveData.SyncContext', function () {
       if (ids.indexOf(approval.id) === -1)
         ids.push(approval.id)
     });
-    debugger;
+    console.log('ids length', ids.length);
+    console.log('approvals length', approvals.length);
     var collection = new Collection();
     return chainDone(loadCollection(collection, approvals), done);
   });
