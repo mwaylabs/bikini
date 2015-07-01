@@ -55,6 +55,12 @@ describe('Q', function () {
       assert.equal(x, undefined, 'undefined');
     }).then(done, done).done();
   });
+
+  it('Q empty resolve all', function (done) {
+    Q.all([]).then(function (x) {
+      assert.deepEqual(x, [], 'undefined');
+    }).then(done, done).done();
+  });
 });
 
 function backbone_error(done) {
