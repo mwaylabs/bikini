@@ -39,17 +39,23 @@ describe('Relution.LiveData.SyncContext', function () {
   var Collection = Relution.LiveData.Collection.extend({
     model: Model,
     store: store,
-    url: serverUrl + '/relution/livedata/test/'
+    url: serverUrl + '/relution/livedata/approvals/'
   });
 
   // loads data using collection, returns promise on collection, collection is empty afterwards
   function loadCollection(collection, data) {
     return collection.fetch().then(function () {
       // delete all before running tests
-      return Q.all(collection.models.map(function (model) {
-        return model.destroy();
-      })).then(function () {
-        assert(collection.models.length, 0, 'collection must be empty initially');
+      if (collection.models.length === 0)
+        return collection;
+
+      var map = [];
+      collection.models.forEach(function (model) {
+        return map.push(model.destroy());
+      });
+
+      return Q.all(map).then(function (destroyed) {
+        assert.equal(collection.models.length, 0, 'collection must be empty initially after destroy');
         return collection;
       });
     }).then(function (collection) {
@@ -59,7 +65,7 @@ describe('Relution.LiveData.SyncContext', function () {
           collection: collection
         }).save();
       })).then(function() {
-        assert(collection.models.length, 0, 'collection must be empty initially');
+        assert.equal(collection.models.length, 0, 'collection must be empty initially after load');
         return collection;
       });
     });
@@ -75,7 +81,13 @@ describe('Relution.LiveData.SyncContext', function () {
   }
 
   it('infinite scrolling', function (done) {
-    var approvals = []/*makeApprovals()*/;
+    var approvals = makeApprovals();
+    var ids = [];
+    approvals.forEach(function(approval){
+      if (ids.indexOf(approval.id) === -1)
+        ids.push(approval.id)
+    });
+    debugger;
     var collection = new Collection();
     return chainDone(loadCollection(collection, approvals), done);
   });
