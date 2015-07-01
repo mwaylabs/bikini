@@ -332,15 +332,16 @@ module Relution.LiveData {
       } else {
         // just update all collections listening
         q = Q.fcall(function () {
-          return that.trigger('sync:' + channel, msg); // SyncContext.onMessage
+          return that.trigger('sync:' + channel, msg) || msg; // SyncContext.onMessage
         });
       }
 
       // finally set the message time
-      return q.then(function () {
+      return q.then(function (result) {
         if (msg.time) {
           that.setLastMessageTime(channel, msg.time);
         }
+        return result;
       }).thenResolve(msg);
     }
 

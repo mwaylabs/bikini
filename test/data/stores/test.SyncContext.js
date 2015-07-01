@@ -26,6 +26,7 @@ var makeApprovals;
 var serverUrl;
 
 describe('Relution.LiveData.SyncContext', function () {
+  this.timeout(30000);
 
   // prepare model/collection types
   var store = Relution.LiveData.SyncStore.design({
@@ -46,15 +47,9 @@ describe('Relution.LiveData.SyncContext', function () {
   function loadCollection(collection, data) {
     return collection.fetch().then(function () {
       // delete all before running tests
-      if (collection.models.length === 0)
-        return collection;
-
-      var map = [];
-      collection.models.forEach(function (model) {
-        return map.push(model.destroy());
-      });
-
-      return Q.all(map).then(function (destroyed) {
+      return Q.all(collection.models.slice().map(function (model) {
+        return model.destroy();
+      })).then(function (results) {
         assert.equal(collection.models.length, 0, 'collection must be empty initially after destroy');
         return collection;
       });
@@ -64,7 +59,7 @@ describe('Relution.LiveData.SyncContext', function () {
         return new Model(attrs, {
           collection: collection
         }).save();
-      })).then(function() {
+      })).then(function () {
         assert.equal(collection.models.length, 0, 'collection must be empty initially after load');
         return collection;
       });
@@ -82,13 +77,6 @@ describe('Relution.LiveData.SyncContext', function () {
 
   it('infinite scrolling', function (done) {
     var approvals = makeApprovals();
-    var ids = [];
-    approvals.forEach(function(approval){
-      if (ids.indexOf(approval.id) === -1)
-        ids.push(approval.id)
-    });
-    console.log('ids length', ids.length);
-    console.log('approvals length', approvals.length);
     var collection = new Collection();
     return chainDone(loadCollection(collection, approvals), done);
   });

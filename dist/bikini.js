@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Wed Jul 01 2015 10:55:24
+* Date:      Wed Jul 01 2015 12:39:53
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -5436,14 +5436,15 @@ var Relution;
                 else {
                     // just update all collections listening
                     q = Q.fcall(function () {
-                        return that.trigger('sync:' + channel, msg); // SyncContext.onMessage
+                        return that.trigger('sync:' + channel, msg) || msg; // SyncContext.onMessage
                     });
                 }
                 // finally set the message time
-                return q.then(function () {
+                return q.then(function (result) {
                     if (msg.time) {
                         that.setLastMessageTime(channel, msg.time);
                     }
+                    return result;
                 }).thenResolve(msg);
             };
             SyncStore.prototype.sync = function (method, model, options) {
