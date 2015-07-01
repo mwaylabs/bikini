@@ -145,7 +145,7 @@ var Relution;
                         }
                     }
                     catch (e) {
-                        Relution.LiveData.error(LiveData.Store.CONST.ERROR_LOAD_DATA + e.message);
+                        Relution.LiveData.Debug.error(LiveData.Store.CONST.ERROR_LOAD_DATA + e.message);
                     }
                 }
                 return attrs;
@@ -157,7 +157,7 @@ var Relution;
                         this._addItemId(entity, id);
                     }
                     catch (e) {
-                        Relution.LiveData.error(LiveData.Store.CONST.ERROR_SAVE_DATA + e.message);
+                        Relution.LiveData.Debug.error(LiveData.Store.CONST.ERROR_SAVE_DATA + e.message);
                     }
                 }
             };
@@ -204,7 +204,7 @@ var Relution;
                     return this.ids[entity.name];
                 }
                 catch (e) {
-                    Relution.LiveData.error(LiveData.Store.CONST.ERROR_LOAD_IDS + e.message);
+                    Relution.LiveData.Debug.error(LiveData.Store.CONST.ERROR_LOAD_IDS + e.message);
                 }
             };
             LocalStorageStore.prototype._saveItemIds = function (entity, ids) {
@@ -213,7 +213,7 @@ var Relution;
                     localStorage.setItem(key, JSON.stringify(ids));
                 }
                 catch (e) {
-                    Relution.LiveData.error(LiveData.Store.CONST.ERROR_SAVE_IDS + e.message);
+                    Relution.LiveData.Debug.error(LiveData.Store.CONST.ERROR_SAVE_IDS + e.message);
                 }
             };
             return LocalStorageStore;

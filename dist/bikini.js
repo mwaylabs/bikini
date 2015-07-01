@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Tue Jun 30 2015 17:52:20
+* Date:      Wed Jul 01 2015 09:09:55
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -23,6 +23,12 @@ if (typeof exports !== 'undefined') {
   Relution = global.Relution = global.Relution || {};
   Relution.LiveData = {};
 }
+
+/**
+ * Version number of current release
+ * @type {String}
+ */
+Relution.LiveData.Version = Relution.LiveData.version = '0.8.4';
 
 /**
  * Created by Pascal Brewing
@@ -112,20 +118,16 @@ var Relution;
 //# sourceMappingURL=Debug.js.map
 // Copyright (c) 2013 M-Way Solutions GmbH
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
-//Relution.debug = Relution.debug || _.bind(console.log, console);
+
 Relution.setDebug = function (args) {
   Relution.LiveData.DebugMode = args;
   return new Relution.LiveData.Debug(args);
 };
-/**
- * Version number of current release
- * @type {String}
- */
-Relution.LiveData.Version = Relution.LiveData.version = '0.8.4';
 
 Relution.LiveData.isDebugMode = function () {
   return Relution.LiveData.DebugMode;
 };
+
 /**
  * Empty function to be used when
  * no functionality is needed
@@ -1225,7 +1227,7 @@ var Relution;
         LiveData.JsonPath = JsonPath;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-
+//# sourceMappingURL=JsonPath.js.map
 /**
  * Filter.ts
  *
@@ -1250,7 +1252,7 @@ var Relution;
  * POSSIBILITY OF SUCH DAMAGE.
  */
 /* jshint indent: 4 */
-
+//# sourceMappingURL=Filter.js.map
 /**
  * FilterVisitor.ts
  *
@@ -1294,7 +1296,7 @@ var Relution;
         LiveData.FilterVisitorBase = FilterVisitorBase;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-
+//# sourceMappingURL=FilterVisitor.js.map
 /**
  * JsonFilterVisitor.ts
  *
@@ -1370,7 +1372,6 @@ var Relution;
                         return false;
                     }
                     else if (_.isArray(value)) {
-                        // array case
                         for (var i = 0; i < value.length; ++i) {
                             var val = value[i];
                             if (val !== undefined && val !== null && val.toString().indexOf(contains) >= 0) {
@@ -1401,7 +1402,6 @@ var Relution;
                         return false;
                     }
                     else if (_.isArray(value)) {
-                        // array case
                         for (var i = 0; i < value.length; ++i) {
                             var val = value[i];
                             if (val == filter.value) {
@@ -1546,7 +1546,6 @@ var Relution;
                         return false;
                     }
                     else if (_.isArray(value)) {
-                        // array case
                         for (var i = 0; i < value.length; ++i) {
                             var val = value[i];
                             if (pattern.test(val)) {
@@ -1636,7 +1635,7 @@ var Relution;
         })(LiveData.FilterVisitorBase);
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-
+//# sourceMappingURL=JsonFilterVisitor.js.map
 /**
  * SortOrder.ts
  *
@@ -1753,7 +1752,7 @@ var Relution;
         LiveData.SortField = SortField;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-
+//# sourceMappingURL=SortOrder.js.map
 /**
  * SortOrderComparator.ts
  *
@@ -1888,7 +1887,7 @@ var Relution;
         })();
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-
+//# sourceMappingURL=SortOrderComparator.js.map
 /**
  * GetQuery.ts
  *
@@ -2039,7 +2038,7 @@ var Relution;
         LiveData.GetQuery = GetQuery;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-
+//# sourceMappingURL=GetQuery.js.map
 
 // Copyright (c) 2013 M-Way Solutions GmbH
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
@@ -4015,6 +4014,7 @@ Relution.LiveData.SqlSelector = Relution.LiveData.DataSelector.design({
  */
 /* jshint indent: 4 */
 /// <reference path="../../core/livedata.d.ts" />
+/// <reference path="../../utility/Debug.ts" />
 var Relution;
 (function (Relution) {
     var LiveData;
@@ -4190,7 +4190,7 @@ var Relution;
             Store.prototype._checkEntity = function (obj, entity) {
                 if (!LiveData.isEntity(entity)) {
                     var error = Store.CONST.ERROR_NO_ENTITY;
-                    Relution.LiveData.error(error);
+                    Relution.LiveData.Debug.error(error);
                     this.handleError(obj, error);
                     return false;
                 }
@@ -4199,7 +4199,7 @@ var Relution;
             Store.prototype._checkData = function (obj, data) {
                 if ((!_.isArray(data) || data.length === 0) && !_.isObject(data)) {
                     var error = Store.CONST.ERROR_NO_DATA;
-                    Relution.LiveData.error(error);
+                    Relution.LiveData.Debug.error(error);
                     this.handleError(obj, error);
                     return false;
                 }
@@ -4394,7 +4394,7 @@ var Relution;
                         }
                     }
                     catch (e) {
-                        Relution.LiveData.error(LiveData.Store.CONST.ERROR_LOAD_DATA + e.message);
+                        Relution.LiveData.Debug.error(LiveData.Store.CONST.ERROR_LOAD_DATA + e.message);
                     }
                 }
                 return attrs;
@@ -4406,7 +4406,7 @@ var Relution;
                         this._addItemId(entity, id);
                     }
                     catch (e) {
-                        Relution.LiveData.error(LiveData.Store.CONST.ERROR_SAVE_DATA + e.message);
+                        Relution.LiveData.Debug.error(LiveData.Store.CONST.ERROR_SAVE_DATA + e.message);
                     }
                 }
             };
@@ -4453,7 +4453,7 @@ var Relution;
                     return this.ids[entity.name];
                 }
                 catch (e) {
-                    Relution.LiveData.error(LiveData.Store.CONST.ERROR_LOAD_IDS + e.message);
+                    Relution.LiveData.Debug.error(LiveData.Store.CONST.ERROR_LOAD_IDS + e.message);
                 }
             };
             LocalStorageStore.prototype._saveItemIds = function (entity, ids) {
@@ -4462,7 +4462,7 @@ var Relution;
                     localStorage.setItem(key, JSON.stringify(ids));
                 }
                 catch (e) {
-                    Relution.LiveData.error(LiveData.Store.CONST.ERROR_SAVE_IDS + e.message);
+                    Relution.LiveData.Debug.error(LiveData.Store.CONST.ERROR_SAVE_IDS + e.message);
                 }
             };
             return LocalStorageStore;
@@ -5117,7 +5117,7 @@ var Relution;
         LiveData.WebSqlStore = WebSqlStore;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-
+//# sourceMappingURL=WebSqlStore.js.map
 /**
  * SyncStore.ts
  *
@@ -5450,7 +5450,7 @@ var Relution;
                 Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore.sync');
                 options = options || {};
                 try {
-                    var endpoint = model.endpoint || this.getEndpoint(model.getUrlRoot() /*throws urlError*/);
+                    var endpoint = model.endpoint || this.getEndpoint(model.getUrlRoot());
                     if (!endpoint) {
                         throw new Error('no endpoint');
                     }
@@ -5460,8 +5460,7 @@ var Relution;
                             var syncContext = options.syncContext; // sync can be called by SyncContext itself when paging results
                             if (!syncContext) {
                                 // capture GetQuery options
-                                syncContext = new LiveData.SyncContext(options, model.options, this.options // static options of this store realize filtering client/server
-                                );
+                                syncContext = new LiveData.SyncContext(options, model.options, this.options);
                             }
                             if (model.syncContext !== syncContext) {
                                 // assign a different instance
@@ -5787,7 +5786,7 @@ var Relution;
                     };
                     var model = new LiveData.Model(msg.data, {
                         idAttribute: endpoint.entity.idAttribute,
-                        entity: endpoint.entity
+                        entity: endpoint.entity,
                     });
                     Relution.LiveData.Debug.info('sendMessage ' + model.id);
                     return that._applyResponse(that._ajaxMessage(endpoint, msg, remoteOptions, model), endpoint, msg, remoteOptions, model).catch(function (error) {
@@ -5806,8 +5805,8 @@ var Relution;
                             // original request failed and the code above tried to revert the local modifications by reloading the data, which failed as well...
                             var status = fetchResp && fetchResp.status;
                             switch (status) {
-                                case 404: // NOT FOUND
-                                case 401: // UNAUTHORIZED
+                                case 404:
+                                case 401:
                                 case 410:
                                     // ...because the item is gone by now, maybe someone else changed it to be deleted
                                     return model.destroy(localOptions);
@@ -5885,7 +5884,7 @@ var Relution;
         LiveData.SyncStore = SyncStore;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-
+//# sourceMappingURL=SyncStore.js.map
 /**
  * SyncContext.ts
  *
@@ -5979,29 +5978,42 @@ var Relution;
                 var newQuery = new LiveData.GetQuery(oldQuery);
                 newQuery.offset = (newQuery.offset | 0) + collection.models.length;
                 newQuery.limit = options.pageSize || this.pageSize || newQuery.limit;
-                // setup callbacks handling processing of results,
-                // do not use promises as these execute too late...
+                // setup callbacks handling processing of results, do not use promises as these execute too late...
+                // Notice, since we call collection.sync() directly, the signature of success/error callbacks here is ajax-style.
+                // However, the user-provided callbacks are to being called backbone.js-style with collection and object.
                 var oldSuccess = options.success;
                 var oldError = options.error;
-                options.success = function fetchMoreSuccess(collection, models, options) {
+                options.success = function fetchMoreSuccess(models) {
                     // restore callbacks
                     options.success = oldSuccess;
                     options.error = oldError;
                     // update models
                     if (models) {
+                        // following is necessary since the local stores do not support GetQuery yet
                         if (options.syncContext.filterFn) {
                             // filtering for safety, can be avoided once all stores support filtering
                             models = models.filter(function (x) {
                                 return options.syncContext.filterFn(x.attributes);
                             });
                         }
+                        if (options.syncContext.compareFn) {
+                            // sorting for safety, can be avoided once all stores support sorting
+                            models = models.sort(function (a, b) {
+                                return options.syncContext.compareFn(a.attributes, b.attributes);
+                            });
+                        }
+                        if (options.syncContext.getQuery.offset > (options.offset | 0)) {
+                            // offset was specified, but our stores don't implement it yet (by setting models.offset)
+                            models = models.splice(0, options.syncContext.getQuery.offset - (options.offset | 0));
+                        }
+                        if (options.syncContext.getQuery.limit > models.length) {
+                            // limit was specified, but our stores don't implement it yet
+                            models.length = options.syncContext.getQuery.limit;
+                        }
+                        // add models to collection, if any
                         if (models.length > 0) {
                             // read additional data
                             if (options.syncContext.compareFn) {
-                                // sorting for safety, can be avoided once all stores support sorting
-                                models = models.sort(function (a, b) {
-                                    return options.syncContext.compareFn(a.attributes, b.attributes);
-                                });
                                 // notice, existing range of models is sorted by definition already
                                 options.at = options.syncContext.insertionPoint(models[0].attributes, collection.models);
                             }
@@ -6020,11 +6032,14 @@ var Relution;
                     options.syncContext.getQuery = oldQuery;
                     // call user success callback
                     if (options.success) {
-                        models = options.success.apply(this, arguments) || models;
+                        models = options.success.call(this, collection, models, options) || models;
+                    }
+                    if (options.finish) {
+                        models = options.finish.call(this, collection, models, options) || models;
                     }
                     return models;
                 };
-                options.error = function fetchMoreError(collection, error, options) {
+                options.error = function fetchMoreError(error) {
                     // restore callbacks
                     options.success = oldSuccess;
                     options.error = oldError;
@@ -6032,7 +6047,10 @@ var Relution;
                     options.syncContext.getQuery = oldQuery;
                     // call user error callback
                     if (options.error) {
-                        error = options.error.apply(this, arguments) || error;
+                        error = options.error.call(this, collection, error, options) || error;
+                    }
+                    if (options.finish) {
+                        error = options.finish.call(this, collection, error, options) || error;
                     }
                     return error;
                 };
@@ -6073,7 +6091,7 @@ var Relution;
                             // create model in case it does not exist
                             model = new options.collection.model(msg.data, options);
                             if (this.filterFn && !this.filterFn(model.attributes)) {
-                                break; // filtered
+                                break;
                             }
                             if (model.validationError) {
                                 collection.trigger('invalid', this, model.validationError, options);
@@ -6083,12 +6101,19 @@ var Relution;
                                 if (this.compareFn && index > 0) {
                                     options.at = index = this.insertionPoint(model.attributes, collection.models);
                                 }
-                                // TODO: look at index and respect offset/limit eventually ignoring model or removing some
-                                collection.add(model, options);
+                                // look at index and respect offset/limit eventually ignoring model or removing some,
+                                // the not operators below cause proper handling when offset or limit is undefined...
+                                /* jshint -W018 */
+                                if ((!(this.getQuery.offset > 0) || index > 0) && !(index >= this.getQuery.limit)) {
+                                    /* jshint +W018 */
+                                    collection.add(model, options);
+                                    if (this.getQuery.limit && collection.models.length >= this.getQuery.limit) {
+                                        collection.remove(collection.models[collection.models.length - 1], options);
+                                    }
+                                }
                             }
                             break;
                         }
-                    /* falls through */
                     case 'patch':
                         if (model) {
                             // update model unless it is filtered
@@ -6178,7 +6203,7 @@ var Relution;
         LiveData.SyncContext = SyncContext;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-
+//# sourceMappingURL=SyncContext.js.map
 
 // Copyright (c) 2015 M-Way Solutions GmbH
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt

@@ -111,30 +111,44 @@ module Relution.LiveData {
       newQuery.offset = (newQuery.offset|0) + collection.models.length;
       newQuery.limit = options.pageSize || this.pageSize || newQuery.limit;
 
-      // setup callbacks handling processing of results,
-      // do not use promises as these execute too late...
+      // setup callbacks handling processing of results, do not use promises as these execute too late...
+      // Notice, since we call collection.sync() directly, the signature of success/error callbacks here is ajax-style.
+      // However, the user-provided callbacks are to being called backbone.js-style with collection and object.
       var oldSuccess = options.success;
       var oldError = options.error;
-      options.success = function fetchMoreSuccess(collection, models, options) {
+      options.success = function fetchMoreSuccess(models) {
         // restore callbacks
         options.success = oldSuccess;
         options.error = oldError;
 
         // update models
         if (models) {
+          // following is necessary since the local stores do not support GetQuery yet
           if (options.syncContext.filterFn) {
             // filtering for safety, can be avoided once all stores support filtering
             models = models.filter(function(x) {
               return options.syncContext.filterFn(x.attributes);
             });
           }
+          if (options.syncContext.compareFn) {
+            // sorting for safety, can be avoided once all stores support sorting
+            models = models.sort(function(a, b) {
+              return options.syncContext.compareFn(a.attributes, b.attributes);
+            });
+          }
+          if (options.syncContext.getQuery.offset > (options.offset|0)) {
+            // offset was specified, but our stores don't implement it yet (by setting models.offset)
+            models = models.splice(0, options.syncContext.getQuery.offset - (options.offset|0));
+          }
+          if (options.syncContext.getQuery.limit > models.length) {
+            // limit was specified, but our stores don't implement it yet
+            models.length = options.syncContext.getQuery.limit;
+          }
+
+          // add models to collection, if any
           if (models.length > 0) {
             // read additional data
             if (options.syncContext.compareFn) {
-              // sorting for safety, can be avoided once all stores support sorting
-              models = models.sort(function(a, b) {
-                return options.syncContext.compareFn(a.attributes, b.attributes);
-              });
               // notice, existing range of models is sorted by definition already
               options.at = options.syncContext.insertionPoint(models[0].attributes, collection.models);
             }
@@ -155,11 +169,14 @@ module Relution.LiveData {
 
         // call user success callback
         if (options.success) {
-          models = options.success.apply(this, arguments) || models;
+          models = options.success.call(this, collection, models, options) || models;
+        }
+        if (options.finish) {
+          models = options.finish.call(this, collection, models, options) || models;
         }
         return models;
       };
-      options.error = function fetchMoreError(collection, error, options) {
+      options.error = function fetchMoreError(error) {
         // restore callbacks
         options.success = oldSuccess;
         options.error = oldError;
@@ -169,7 +186,10 @@ module Relution.LiveData {
 
         // call user error callback
         if (options.error) {
-          error = options.error.apply(this, arguments) || error;
+          error = options.error.call(this, collection, error, options) || error;
+        }
+        if (options.finish) {
+          error = options.finish.call(this, collection, error, options) || error;
         }
         return error;
       };
@@ -222,8 +242,16 @@ module Relution.LiveData {
               if (this.compareFn && index > 0) {
                 options.at = index = this.insertionPoint(model.attributes, collection.models);
               }
-              // TODO: look at index and respect offset/limit eventually ignoring model or removing some
-              collection.add(model, options);
+              // look at index and respect offset/limit eventually ignoring model or removing some,
+              // the not operators below cause proper handling when offset or limit is undefined...
+              /* jshint -W018 */
+              if ((!(this.getQuery.offset > 0) || index > 0) && !(index >= this.getQuery.limit)) {
+                /* jshint +W018 */
+                collection.add(model, options);
+                if (this.getQuery.limit && collection.models.length >= this.getQuery.limit) {
+                  collection.remove(collection.models[collection.models.length-1], options);
+                }
+              }
             }
             break;
           }

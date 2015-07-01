@@ -15,3 +15,9 @@ if (typeof exports !== 'undefined') {
   Relution = global.Relution = global.Relution || {};
   Relution.LiveData = {};
 }
+
+/**
+ * Version number of current release
+ * @type {String}
+ */
+Relution.LiveData.Version = Relution.LiveData.version = '/* @echo VERSION */';

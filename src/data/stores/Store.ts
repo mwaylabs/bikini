@@ -23,6 +23,7 @@
  */
 /* jshint indent: 4 */
 /// <reference path="../../core/livedata.d.ts" />
+/// <reference path="../../utility/Debug.ts" />
 
 module Relution.LiveData {
 
@@ -222,7 +223,7 @@ module Relution.LiveData {
     _checkEntity(obj, entity) {
       if (!isEntity(entity)) {
         var error = Store.CONST.ERROR_NO_ENTITY;
-        Relution.LiveData.error(error);
+        Relution.LiveData.Debug.error(error);
         this.handleError(obj, error);
         return false;
       }
@@ -232,7 +233,7 @@ module Relution.LiveData {
     _checkData(obj, data) {
       if ((!_.isArray(data) || data.length === 0) && !_.isObject(data)) {
         var error = Store.CONST.ERROR_NO_DATA;
-        Relution.LiveData.error(error);
+        Relution.LiveData.Debug.error(error);
         this.handleError(obj, error);
         return false;
       }

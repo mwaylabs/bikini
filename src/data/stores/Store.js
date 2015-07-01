@@ -23,6 +23,7 @@
  */
 /* jshint indent: 4 */
 /// <reference path="../../core/livedata.d.ts" />
+/// <reference path="../../utility/Debug.ts" />
 var Relution;
 (function (Relution) {
     var LiveData;
@@ -198,7 +199,7 @@ var Relution;
             Store.prototype._checkEntity = function (obj, entity) {
                 if (!LiveData.isEntity(entity)) {
                     var error = Store.CONST.ERROR_NO_ENTITY;
-                    Relution.LiveData.error(error);
+                    Relution.LiveData.Debug.error(error);
                     this.handleError(obj, error);
                     return false;
                 }
@@ -207,7 +208,7 @@ var Relution;
             Store.prototype._checkData = function (obj, data) {
                 if ((!_.isArray(data) || data.length === 0) && !_.isObject(data)) {
                     var error = Store.CONST.ERROR_NO_DATA;
-                    Relution.LiveData.error(error);
+                    Relution.LiveData.Debug.error(error);
                     this.handleError(obj, error);
                     return false;
                 }

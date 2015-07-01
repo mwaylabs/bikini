@@ -330,7 +330,7 @@ var Relution;
                 Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore.sync');
                 options = options || {};
                 try {
-                    var endpoint = model.endpoint || this.getEndpoint(model.getUrlRoot() /*throws urlError*/);
+                    var endpoint = model.endpoint || this.getEndpoint(model.getUrlRoot());
                     if (!endpoint) {
                         throw new Error('no endpoint');
                     }
@@ -340,8 +340,7 @@ var Relution;
                             var syncContext = options.syncContext; // sync can be called by SyncContext itself when paging results
                             if (!syncContext) {
                                 // capture GetQuery options
-                                syncContext = new LiveData.SyncContext(options, model.options, this.options // static options of this store realize filtering client/server
-                                );
+                                syncContext = new LiveData.SyncContext(options, model.options, this.options);
                             }
                             if (model.syncContext !== syncContext) {
                                 // assign a different instance
@@ -667,7 +666,7 @@ var Relution;
                     };
                     var model = new LiveData.Model(msg.data, {
                         idAttribute: endpoint.entity.idAttribute,
-                        entity: endpoint.entity
+                        entity: endpoint.entity,
                     });
                     Relution.LiveData.Debug.info('sendMessage ' + model.id);
                     return that._applyResponse(that._ajaxMessage(endpoint, msg, remoteOptions, model), endpoint, msg, remoteOptions, model).catch(function (error) {
@@ -686,8 +685,8 @@ var Relution;
                             // original request failed and the code above tried to revert the local modifications by reloading the data, which failed as well...
                             var status = fetchResp && fetchResp.status;
                             switch (status) {
-                                case 404: // NOT FOUND
-                                case 401: // UNAUTHORIZED
+                                case 404:
+                                case 401:
                                 case 410:
                                     // ...because the item is gone by now, maybe someone else changed it to be deleted
                                     return model.destroy(localOptions);
@@ -765,3 +764,4 @@ var Relution;
         LiveData.SyncStore = SyncStore;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
+//# sourceMappingURL=SyncStore.js.map

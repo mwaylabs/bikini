@@ -1,19 +1,15 @@
 // Copyright (c) 2013 M-Way Solutions GmbH
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
-//Relution.debug = Relution.debug || _.bind(console.log, console);
+
 Relution.setDebug = function (args) {
   Relution.LiveData.DebugMode = args;
   return new Relution.LiveData.Debug(args);
 };
-/**
- * Version number of current release
- * @type {String}
- */
-Relution.LiveData.Version = Relution.LiveData.version = '/* @echo VERSION */';
 
 Relution.LiveData.isDebugMode = function () {
   return Relution.LiveData.DebugMode;
 };
+
 /**
  * Empty function to be used when
  * no functionality is needed
