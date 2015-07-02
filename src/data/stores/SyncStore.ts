@@ -396,8 +396,8 @@ module Relution.LiveData {
           return endpoint.localStore.sync(method, model, opts).then(function (resp) {
             // backbone success callback alters the collection now
             resp = that.handleSuccess(options, resp) || resp;
-            if (endpoint.isConnected && endpoint.socket) {
-              // no need to fetch changes as we got a connected websocket
+            if (endpoint.socket) {
+              // no need to fetch changes as we got a websocket, that is either connected or attempts reconnection
               return resp;
             }
 
