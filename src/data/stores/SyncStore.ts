@@ -67,7 +67,6 @@ module Relution.LiveData {
     private lastMesgTime:any;
 
     constructor(options?:any) {
-
       super(_.extend({
         localStore: WebSqlStore,
 
@@ -365,6 +364,7 @@ module Relution.LiveData {
                 model.options,  // static options on collection implement screen-specific stuff
                 this.options    // static options of this store realize filtering client/server
               );
+              options.syncContext = syncContext;
             }
             if (model.syncContext !== syncContext) {
               // assign a different instance

@@ -89,6 +89,9 @@ module Relution.LiveData {
                   attrs.push(itemData);
                 }
               }
+              if (options.syncContext) {
+                attrs = options.syncContext.processAttributes(attrs);
+              }
             }
             break;
           default:

@@ -100,6 +100,9 @@ var Relution;
                                         attrs.push(itemData);
                                     }
                                 }
+                                if (options.syncContext) {
+                                    attrs = options.syncContext.processAttributes(attrs);
+                                }
                             }
                             break;
                         default:

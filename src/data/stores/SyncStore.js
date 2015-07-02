@@ -342,6 +342,7 @@ var Relution;
                             if (!syncContext) {
                                 // capture GetQuery options
                                 syncContext = new LiveData.SyncContext(options, model.options, this.options);
+                                options.syncContext = syncContext;
                             }
                             if (model.syncContext !== syncContext) {
                                 // assign a different instance

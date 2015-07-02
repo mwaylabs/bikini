@@ -102,27 +102,6 @@ var Relution;
                     options.error = oldError;
                     // update models
                     if (models) {
-                        // following is necessary since the local stores do not support GetQuery yet
-                        if (options.syncContext.filterFn) {
-                            // filtering for safety, can be avoided once all stores support filtering
-                            models = models.filter(function (x) {
-                                return options.syncContext.filterFn(x.attributes);
-                            });
-                        }
-                        if (options.syncContext.compareFn) {
-                            // sorting for safety, can be avoided once all stores support sorting
-                            models = models.sort(function (a, b) {
-                                return options.syncContext.compareFn(a.attributes, b.attributes);
-                            });
-                        }
-                        if (options.syncContext.getQuery.offset > (options.offset | 0)) {
-                            // offset was specified, but our stores don't implement it yet (by setting models.offset)
-                            models = models.splice(0, options.syncContext.getQuery.offset - (options.offset | 0));
-                        }
-                        if (options.syncContext.getQuery.limit > models.length) {
-                            // limit was specified, but our stores don't implement it yet
-                            models.length = options.syncContext.getQuery.limit;
-                        }
                         // add models to collection, if any
                         if (models.length > 0) {
                             // read additional data
@@ -170,6 +149,27 @@ var Relution;
                 // fire up the page load
                 this.getQuery = newQuery;
                 return collection.sync(options.method || 'read', collection, options);
+            };
+            SyncContext.prototype.filterAttributes = function (attrs) {
+                return this.filterFn ? attrs.filter(this.filterFn) : attrs;
+            };
+            SyncContext.prototype.sortAttributes = function (attrs) {
+                return this.compareFn ? attrs.sort(this.compareFn) : attrs;
+            };
+            SyncContext.prototype.rangeAttributes = function (attrs) {
+                if (this.getQuery.offset > 0) {
+                    attrs = attrs.splice(0, this.getQuery.offset);
+                }
+                if (this.getQuery.limit < attrs.length) {
+                    attrs.length = this.getQuery.limit;
+                }
+                return attrs;
+            };
+            SyncContext.prototype.processAttributes = function (attrs) {
+                attrs = this.filterAttributes(attrs);
+                attrs = this.sortAttributes(attrs);
+                attrs = this.rangeAttributes(attrs);
+                return attrs;
             };
             /**
              * receives change messages.

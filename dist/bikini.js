@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Wed Jul 01 2015 12:39:53
+* Date:      Thu Jul 02 2015 10:23:18
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -1946,7 +1946,7 @@ var Relution;
                     return this.offset | 0;
                 },
                 set: function (value) {
-                    var offset = value;
+                    var offset = value && value !== 0 ? value : undefined;
                     if (offset !== this.offset) {
                         var max = this.max;
                         this.offset = offset;
@@ -1961,7 +1961,7 @@ var Relution;
                     return this.limit ? (this.limit + this.min) : Infinity;
                 },
                 set: function (value) {
-                    var limit = value && value !== Infinity && (value - this.min);
+                    var limit = value && value !== Infinity ? (value - this.min) : undefined;
                     if (limit !== this.limit) {
                         var min = this.min;
                         this.limit = limit;
@@ -4349,6 +4349,9 @@ var Relution;
                                         attrs.push(itemData);
                                     }
                                 }
+                                if (options.syncContext) {
+                                    attrs = options.syncContext.processAttributes(attrs);
+                                }
                             }
                             break;
                         default:
@@ -4839,6 +4842,13 @@ var Relution;
                 return '';
             };
             WebSqlStore.prototype._sqlSelect = function (options, entity) {
+                if (options.syncContext) {
+                    // new code
+                    var sql = 'SELECT ';
+                    sql += '*';
+                    sql += ' FROM \'' + entity.name + '\'';
+                    return sql;
+                }
                 var sql = 'SELECT ';
                 if (options.fields) {
                     if (options.fields.length > 1) {
@@ -5025,6 +5035,9 @@ var Relution;
                         that.handleError(options, sqlError.message, lastStatement);
                     }, function () {
                         if (result) {
+                            if (options.syncContext) {
+                                result = options.syncContext.processAttributes(result);
+                            }
                             that.handleSuccess(options, result);
                         }
                         else {
@@ -5462,6 +5475,7 @@ var Relution;
                             if (!syncContext) {
                                 // capture GetQuery options
                                 syncContext = new LiveData.SyncContext(options, model.options, this.options);
+                                options.syncContext = syncContext;
                             }
                             if (model.syncContext !== syncContext) {
                                 // assign a different instance
@@ -5990,27 +6004,6 @@ var Relution;
                     options.error = oldError;
                     // update models
                     if (models) {
-                        // following is necessary since the local stores do not support GetQuery yet
-                        if (options.syncContext.filterFn) {
-                            // filtering for safety, can be avoided once all stores support filtering
-                            models = models.filter(function (x) {
-                                return options.syncContext.filterFn(x.attributes);
-                            });
-                        }
-                        if (options.syncContext.compareFn) {
-                            // sorting for safety, can be avoided once all stores support sorting
-                            models = models.sort(function (a, b) {
-                                return options.syncContext.compareFn(a.attributes, b.attributes);
-                            });
-                        }
-                        if (options.syncContext.getQuery.offset > (options.offset | 0)) {
-                            // offset was specified, but our stores don't implement it yet (by setting models.offset)
-                            models = models.splice(0, options.syncContext.getQuery.offset - (options.offset | 0));
-                        }
-                        if (options.syncContext.getQuery.limit > models.length) {
-                            // limit was specified, but our stores don't implement it yet
-                            models.length = options.syncContext.getQuery.limit;
-                        }
                         // add models to collection, if any
                         if (models.length > 0) {
                             // read additional data
@@ -6058,6 +6051,27 @@ var Relution;
                 // fire up the page load
                 this.getQuery = newQuery;
                 return collection.sync(options.method || 'read', collection, options);
+            };
+            SyncContext.prototype.filterAttributes = function (attrs) {
+                return this.filterFn ? attrs.filter(this.filterFn) : attrs;
+            };
+            SyncContext.prototype.sortAttributes = function (attrs) {
+                return this.compareFn ? attrs.sort(this.compareFn) : attrs;
+            };
+            SyncContext.prototype.rangeAttributes = function (attrs) {
+                if (this.getQuery.offset > 0) {
+                    attrs = attrs.splice(0, this.getQuery.offset);
+                }
+                if (this.getQuery.limit < attrs.length) {
+                    attrs.length = this.getQuery.limit;
+                }
+                return attrs;
+            };
+            SyncContext.prototype.processAttributes = function (attrs) {
+                attrs = this.filterAttributes(attrs);
+                attrs = this.sortAttributes(attrs);
+                attrs = this.rangeAttributes(attrs);
+                return attrs;
             };
             /**
              * receives change messages.

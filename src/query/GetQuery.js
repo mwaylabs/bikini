@@ -56,7 +56,7 @@ var Relution;
                     return this.offset | 0;
                 },
                 set: function (value) {
-                    var offset = value;
+                    var offset = value && value !== 0 ? value : undefined;
                     if (offset !== this.offset) {
                         var max = this.max;
                         this.offset = offset;
@@ -71,7 +71,7 @@ var Relution;
                     return this.limit ? (this.limit + this.min) : Infinity;
                 },
                 set: function (value) {
-                    var limit = value && value !== Infinity && (value - this.min);
+                    var limit = value && value !== Infinity ? (value - this.min) : undefined;
                     if (limit !== this.limit) {
                         var min = this.min;
                         this.limit = limit;

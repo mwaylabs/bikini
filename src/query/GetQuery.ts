@@ -48,7 +48,7 @@ module Relution.LiveData {
       return this.offset | 0;
     }
     public set min(value:number) {
-      var offset = value;
+      var offset = value && value !== 0 ? value : undefined;
       if (offset !== this.offset) {
         var max = this.max;
         this.offset = offset;
@@ -59,7 +59,7 @@ module Relution.LiveData {
       return this.limit ? (this.limit + this.min) : Infinity;
     }
     public set max(value:number) {
-      var limit = value && value !== Infinity && (value - this.min);
+      var limit = value && value !== Infinity ? (value - this.min) : undefined;
       if (limit !== this.limit) {
         var min = this.min;
         this.limit = limit;

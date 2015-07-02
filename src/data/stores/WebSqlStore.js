@@ -366,6 +366,13 @@ var Relution;
                 return '';
             };
             WebSqlStore.prototype._sqlSelect = function (options, entity) {
+                if (options.syncContext) {
+                    // new code
+                    var sql = 'SELECT ';
+                    sql += '*';
+                    sql += ' FROM \'' + entity.name + '\'';
+                    return sql;
+                }
                 var sql = 'SELECT ';
                 if (options.fields) {
                     if (options.fields.length > 1) {
@@ -552,6 +559,9 @@ var Relution;
                         that.handleError(options, sqlError.message, lastStatement);
                     }, function () {
                         if (result) {
+                            if (options.syncContext) {
+                                result = options.syncContext.processAttributes(result);
+                            }
                             that.handleSuccess(options, result);
                         }
                         else {

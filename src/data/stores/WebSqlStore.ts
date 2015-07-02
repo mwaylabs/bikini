@@ -378,6 +378,13 @@ module Relution.LiveData {
     }
 
     private _sqlSelect(options, entity) {
+      if (options.syncContext) {
+        // new code
+        var sql = 'SELECT ';
+        sql += '*';
+        sql += ' FROM \'' + entity.name + '\'';
+        return sql;
+      }
 
       var sql = 'SELECT ';
       if (options.fields) {
@@ -573,6 +580,9 @@ module Relution.LiveData {
           that.handleError(options, sqlError.message, lastStatement);
         }, function () { // voidCallback (success)
           if (result) {
+            if (options.syncContext) {
+              result = options.syncContext.processAttributes(result);
+            }
             that.handleSuccess(options, result);
           } else {
             that.handleError(options, 'no result');

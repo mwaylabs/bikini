@@ -26,7 +26,7 @@ var makeApprovals;
 var serverUrl;
 
 describe('Relution.LiveData.SyncContext', function () {
-  this.timeout(30000);
+  this.timeout(300000);
 
   // prepare model/collection types
   var store = Relution.LiveData.SyncStore.design({
@@ -49,7 +49,7 @@ describe('Relution.LiveData.SyncContext', function () {
       // delete all before running tests
       return Q.all(collection.models.slice().map(function (model) {
         return model.destroy();
-      })).then(function (results) {
+      })).then(function () {
         assert.equal(collection.models.length, 0, 'collection must be empty initially after destroy');
         return collection;
       });
@@ -60,7 +60,7 @@ describe('Relution.LiveData.SyncContext', function () {
           collection: collection
         }).save();
       })).then(function () {
-        assert.equal(collection.models.length, 0, 'collection must be empty initially after load');
+        assert.equal(collection.models.length, data.length, 'collection was updated by async events');
         return collection;
       });
     });
@@ -78,7 +78,21 @@ describe('Relution.LiveData.SyncContext', function () {
   it('infinite scrolling', function (done) {
     var approvals = makeApprovals();
     var collection = new Collection();
-    return chainDone(loadCollection(collection, approvals), done);
+    return chainDone(loadCollection(collection, approvals).then(function () {
+      approvals.sort(function (a, b) {
+        return a.id.localeCompare(b.id);
+      });
+    }).then(function () {
+      return collection.fetch({
+        limit: 10,
+        sortOrder: [ 'id' ]
+      }).then(function () {
+        assert.deepEqual(collection.models.map(function (x) {
+          delete x.attributes._time; // server adds this, we don't want it
+          return x.attributes;
+        }), approvals.slice(0, 10), 'first ten elements are fetched properly');
+      });
+    }), done);
   });
 
 });
