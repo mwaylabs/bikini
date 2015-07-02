@@ -394,12 +394,18 @@ module Relution.LiveData {
           delete opts.error;
           var that = this;
           return endpoint.localStore.sync(method, model, opts).then(function (resp) {
+            // backbone success callback alters the collection now
+            resp = that.handleSuccess(options, resp) || resp;
+            if (endpoint.isConnected && endpoint.socket) {
+              // no need to fetch changes as we got a connected websocket
+              return resp;
+            }
+
             // load changes only (will happen AFTER success callback is invoked,
             // but returned promise will resolve only after changes were processed.
-            // This is because backbone success callback alters the collection...
             return that.fetchChanges(endpoint).catch(function (error) {
               that.trigger('error:' + channel, error); // can not do much about it...
-            }).thenResolve(that.handleSuccess(options, resp) || resp); // caller expects original XHR response as changes body data is NOT compatible
+            }).thenResolve(resp); // caller expects original XHR response as changes body data is NOT compatible
           }, function () {
             // fall-back to loading full data set
             return that._addMessage(method, model, options, endpoint);

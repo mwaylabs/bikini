@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Thu Jul 02 2015 14:44:40
+* Date:      Thu Jul 02 2015 15:18:29
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -5505,12 +5505,17 @@ var Relution;
                         delete opts.error;
                         var that = this;
                         return endpoint.localStore.sync(method, model, opts).then(function (resp) {
+                            // backbone success callback alters the collection now
+                            resp = that.handleSuccess(options, resp) || resp;
+                            if (endpoint.isConnected && endpoint.socket) {
+                                // no need to fetch changes as we got a connected websocket
+                                return resp;
+                            }
                             // load changes only (will happen AFTER success callback is invoked,
                             // but returned promise will resolve only after changes were processed.
-                            // This is because backbone success callback alters the collection...
                             return that.fetchChanges(endpoint).catch(function (error) {
                                 that.trigger('error:' + channel, error); // can not do much about it...
-                            }).thenResolve(that.handleSuccess(options, resp) || resp); // caller expects original XHR response as changes body data is NOT compatible
+                            }).thenResolve(resp); // caller expects original XHR response as changes body data is NOT compatible
                         }, function () {
                             // fall-back to loading full data set
                             return that._addMessage(method, model, options, endpoint);
