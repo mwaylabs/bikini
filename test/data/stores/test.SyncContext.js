@@ -26,7 +26,7 @@ var makeApprovals;
 var serverUrl;
 
 describe('Relution.LiveData.SyncContext', function () {
-  this.timeout(300000);
+  this.timeout(60000);
 
   // prepare model/collection types
   var store = Relution.LiveData.SyncStore.design({
@@ -78,20 +78,37 @@ describe('Relution.LiveData.SyncContext', function () {
   it('infinite scrolling', function (done) {
     var approvals = makeApprovals();
     var collection = new Collection();
+    var counter = 10;
     return chainDone(loadCollection(collection, approvals).then(function () {
       approvals.sort(function (a, b) {
         return a.id.localeCompare(b.id);
       });
     }).then(function () {
-      return collection.fetch({
-        limit: 10,
+      var options = {
+        limit: counter,
         sortOrder: [ 'id' ]
-      }).then(function () {
-        assert.deepEqual(collection.models.map(function (x) {
-          delete x.attributes._time; // server adds this, we don't want it
-          return x.attributes;
-        }), approvals.slice(0, 10), 'first ten elements are fetched properly');
-      });
+      };
+      return collection.fetch(options).thenResolve(options);
+    }).then(function scroll(options) {
+      assert.equal(collection.models.length, counter, 'number of models retrieved so far');
+      assert.deepEqual(collection.models.map(function (x) {
+        delete x.attributes._time; // server adds this, we don't want it
+        return x.attributes;
+      }), approvals.slice(0, counter), 'elements are fetched properly');
+      if (options.end) {
+        return options;
+      }
+      return collection.fetchMore(options).then(function (results) {
+        if(results.length === 0) {
+          assert.equal(options.end, true, 'at end of scrolling');
+        } else {
+          var oldCounter = counter;
+          counter = Math.min(approvals.length, counter + 10);
+          assert.equal(results.length, counter - oldCounter, 'number of results returned');
+          assert.equal(options.more, true, 'can scroll more');
+        }
+        return options;
+      }).then(scroll);
     }), done);
   });
 

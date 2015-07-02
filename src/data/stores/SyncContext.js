@@ -107,17 +107,19 @@ var Relution;
                             // read additional data
                             if (options.syncContext.compareFn) {
                                 // notice, existing range of models is sorted by definition already
-                                options.at = options.syncContext.insertionPoint(models[0].attributes, collection.models);
+                                options.at = options.syncContext.insertionPoint(models[0], collection.models);
                             }
                             models = collection.add(models, options) || models;
                             // adjust query parameter
                             oldQuery.limit = collection.models.length;
                             options.more = true;
+                            delete options.end;
                         }
                         else {
                             // reached the end
                             oldQuery.limit = undefined; // open end
                             options.end = true;
+                            delete options.more;
                         }
                     }
                     // restore query parameter
@@ -158,7 +160,7 @@ var Relution;
             };
             SyncContext.prototype.rangeAttributes = function (attrs) {
                 if (this.getQuery.offset > 0) {
-                    attrs = attrs.splice(0, this.getQuery.offset);
+                    attrs.splice(0, this.getQuery.offset);
                 }
                 if (this.getQuery.limit < attrs.length) {
                     attrs.length = this.getQuery.limit;
