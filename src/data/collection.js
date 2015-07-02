@@ -215,6 +215,50 @@ _.extend(Relution.LiveData.Collection.prototype, Relution.LiveData._Object, {
     }
 
     return this.syncContext.fetchMore(this, options);
+  },
+
+  /**
+   * reads the next page of data into this collection.
+   *
+   * A fetch() must have been performed loading the initial set of data. This method is intended for paging
+   * implementation.
+   *
+   * When async processing is done, a next/prev attribute is set on the options object in case additional pages might be
+   * available which can be loaded by calling the corresponding method.
+   *
+   * @param {object} options such as pageSize to retrieve.
+   * @return {Promise} promise of the load operation.
+   *
+   * @see SyncContext#fetchNext()
+   */
+  fetchNext: function (options) {
+    if (!this.syncContext) {
+      return Q.reject(new Error('no context'));
+    }
+
+    return this.syncContext.fetchNext(this, options);
+  },
+
+  /**
+   * reads the previous page of data into this collection.
+   *
+   * A fetch() must have been performed loading the initial set of data. This method is intended for paging
+   * implementation.
+   *
+   * When async processing is done, a next/prev attribute is set on the options object in case additional pages might be
+   * available which can be loaded by calling the corresponding method.
+   *
+   * @param {object} options such as pageSize to retrieve.
+   * @return {Promise} promise of the load operation.
+   *
+   * @see SyncContext#fetchPrev()
+   */
+  fetchPrev: function (options) {
+    if (!this.syncContext) {
+      return Q.reject(new Error('no context'));
+    }
+
+    return this.syncContext.fetchPrev(this, options);
   }
 
 });

@@ -152,6 +152,119 @@ var Relution;
                 this.getQuery = newQuery;
                 return collection.sync(options.method || 'read', collection, options);
             };
+            /**
+             * reads a page of data into the collection.
+             *
+             * When async processing is done, a next/prev attribute is set on the options object in case additional pages might
+             * be available which can be loaded by calling this method again.
+             *
+             * @param {object} collection to load data into.
+             * @param {object} options incl. offset and limit of page to retrieve.
+             * @return {Promise} promise of the load operation.
+             */
+            SyncContext.prototype.fetchRange = function (collection, options) {
+                // this must be set in options to state we handle it
+                options = options || {};
+                options.syncContext = this;
+                // prepare a query for the page of data to load
+                var oldQuery = this.getQuery;
+                var newQuery = new LiveData.GetQuery(oldQuery);
+                if (options.offset >= 0) {
+                    newQuery.offset = options.offset;
+                }
+                else if (options.offset < 0) {
+                    newQuery.offset = undefined;
+                }
+                if (options.limit > 0) {
+                    newQuery.limit = options.limit + 1;
+                }
+                else if (options.limit <= 0) {
+                    newQuery.limit = undefined;
+                }
+                // setup callbacks handling processing of results, do not use promises as these execute too late...
+                // Notice, since we call collection.sync() directly, the signature of success/error callbacks here is ajax-style.
+                // However, the user-provided callbacks are to being called backbone.js-style with collection and object.
+                var oldSuccess = options.success;
+                var oldError = options.error;
+                options.success = function fetchRangeSuccess(models) {
+                    // restore callbacks
+                    options.success = oldSuccess;
+                    options.error = oldError;
+                    // update models
+                    if (models) {
+                        // add models to collection, if any
+                        if (models.length > 0) {
+                            // adjust query parameter
+                            options.next = newQuery.limit && models.length >= newQuery.limit;
+                            if (options.next) {
+                                // trick here was to read one more item to see if there is more to come
+                                models.length = models.length - 1;
+                            }
+                            // realize the page
+                            models = collection.reset(models, options) || models;
+                        }
+                        else {
+                            // reached the end
+                            delete options.next;
+                        }
+                        options.prev = newQuery.offset > 0;
+                    }
+                    // call user success callback
+                    if (options.success) {
+                        models = options.success.call(this, collection, models, options) || models;
+                    }
+                    if (options.finish) {
+                        models = options.finish.call(this, collection, models, options) || models;
+                    }
+                    return models;
+                };
+                options.error = function fetchMoreError(error) {
+                    // restore callbacks
+                    options.success = oldSuccess;
+                    options.error = oldError;
+                    // restore query parameter
+                    options.syncContext.getQuery = oldQuery;
+                    // call user error callback
+                    if (options.error) {
+                        error = options.error.call(this, collection, error, options) || error;
+                    }
+                    if (options.finish) {
+                        error = options.finish.call(this, collection, error, options) || error;
+                    }
+                    return error;
+                };
+                // fire up the page load
+                this.getQuery = newQuery;
+                return collection.sync(options.method || 'read', collection, options);
+            };
+            /**
+             * reads the next page of data into the collection.
+             *
+             * @param {object} options such as pageSize to retrieve.
+             * @return {Promise} promise of the load operation.
+             *
+             * @see Collection#fetchNext()
+             */
+            SyncContext.prototype.fetchNext = function (collection, options) {
+                options = options || {};
+                options.limit = options.pageSize || this.pageSize || this.getQuery.limit;
+                options.offset = (this.getQuery.offset | 0) + collection.models.length;
+                return this.fetchRange(collection, options);
+            };
+            /**
+             * reads the previous page of data into the collection.
+             *
+             * @param {object} options such as pageSize to retrieve.
+             * @return {Promise} promise of the load operation.
+             *
+             * @see Collection#fetchPrev()
+             */
+            SyncContext.prototype.fetchPrev = function (collection, options) {
+                options = options || {};
+                options.limit = options.pageSize || this.pageSize || this.getQuery.limit;
+                options.offset = (this.getQuery.offset | 0) - options.limit;
+                return this.fetchRange(collection, options);
+            };
             SyncContext.prototype.filterAttributes = function (attrs) {
                 return this.filterFn ? attrs.filter(this.filterFn) : attrs;
             };

@@ -29,7 +29,7 @@ describe('Relution.LiveData.SyncContext', function () {
   this.timeout(60000);
 
   // prepare model/collection types
-  var store = Relution.LiveData.SyncStore.design({
+  var store = new Relution.LiveData.SyncStore({
   });
   var Model = Relution.LiveData.Model.extend({
     idAttribute: 'id',
@@ -75,15 +75,32 @@ describe('Relution.LiveData.SyncContext', function () {
     }).done();
   }
 
+  var qApprovals;
+
+  function loadApprovals() {
+    if (!qApprovals) {
+      var approvals = makeApprovals();
+      var collection = new Collection();
+      qApprovals = loadCollection(collection, approvals).then(function () {
+        collection.stopListening(); // no longer live
+        return approvals.sort(function (a, b) {
+          return a.id.localeCompare(b.id);
+        });
+      });
+    }
+    return qApprovals;
+  }
+
+  it('preloads sample data', function (done) {
+    return chainDone(loadApprovals(), done);
+  });
+
   it('infinite scrolling', function (done) {
-    var approvals = makeApprovals();
+    var approvals;
     var collection = new Collection();
     var counter = 10;
-    return chainDone(loadCollection(collection, approvals).then(function () {
-      approvals.sort(function (a, b) {
-        return a.id.localeCompare(b.id);
-      });
-    }).then(function () {
+    return chainDone(loadApprovals().then(function (data) {
+      approvals = data;
       var options = {
         limit: counter,
         sortOrder: [ 'id' ]
@@ -99,7 +116,7 @@ describe('Relution.LiveData.SyncContext', function () {
         return options;
       }
       return collection.fetchMore(options).then(function (results) {
-        if(results.length === 0) {
+        if (results.length === 0) {
           assert.equal(options.end, true, 'at end of scrolling');
         } else {
           var oldCounter = counter;
@@ -109,6 +126,52 @@ describe('Relution.LiveData.SyncContext', function () {
         }
         return options;
       }).then(scroll);
+    }), done);
+  });
+
+  it('next/prev paging', function (done) {
+    var approvals;
+    var collection = new Collection();
+    var i = 0;
+    return chainDone(loadApprovals().then(function (data) {
+      approvals = data;
+      var options = {
+        limit: 1,
+        sortOrder: [ 'id' ]
+      };
+      return collection.fetch(options).thenResolve(options);
+    }).then(function next(options) {
+      assert.equal(collection.models.length, 1, 'number of models retrieved so far');
+      assert.deepEqual(collection.models.map(function (x) {
+        delete x.attributes._time; // server adds this, we don't want it
+        return x.attributes;
+      }), approvals.slice(i, i + 1), 'element fetched properly');
+      if (!options.next && i > 1) {
+        return options;
+      }
+      ++i;
+      return collection.fetchNext(options).then(function (results) {
+        assert.equal(options.prev, true, 'can page prev');
+        assert.equal(results.length, 1, 'number of results returned');
+        assert.equal(options.next, i + 1 < approvals.length, 'can page next');
+        return options;
+      }).then(next);
+    }).then(function prev(options) {
+      assert.equal(options.prev, i > 0, 'can page prev');
+      assert.equal(options.next, i + 1 < approvals.length, 'can page next');
+      if (!options.prev) {
+        return options;
+      }
+      return collection.fetchPrev(options).then(function (results) {
+        assert.equal(results.length, 1, 'number of results returned');
+        assert.equal(collection.models.length, 1, 'number of models retrieved so far');
+        assert.deepEqual(collection.models.map(function (x) {
+          delete x.attributes._time; // server adds this, we don't want it
+          return x.attributes;
+        }), approvals.slice(i - 1, i), 'element fetched properly');
+        --i;
+        return options;
+      }).then(prev);
     }), done);
   });
 
