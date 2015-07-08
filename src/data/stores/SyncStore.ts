@@ -561,23 +561,26 @@ module Relution.LiveData {
           // no data if server asks not to alter state
           // that.setLastMessageTime(channel, msg.time);
           var promises = [];
+          var dataIds;
           if (msg.method !== 'read') {
             promises.push(that.onMessage(endpoint, data === msg.data ? msg : _.defaults({
               data: data // just accepts new data
             }, msg)));
           } else if (isCollection(model) && _.isArray(data)) {
             // synchronize the collection contents with the data read
-            var ids = {};
+            var syncIds = {};
             model.models.forEach(function (m) {
-              ids[m.id] = m;
+              syncIds[m.id] = m;
             });
+            dataIds = {};
             data.forEach(function (d) {
               if (d) {
                 var id = d[endpoint.entity.idAttribute] || d._id;
-                var m = ids[id];
+                dataIds[id] = d;
+                var m = syncIds[id];
                 if (m) {
                   // update the item
-                  delete ids[id]; // so that it is deleted below
+                  delete syncIds[id]; // so that it is deleted below
                   if (!_.isEqual(_.pick.call(m, m.attributes, Object.keys(d)), d)) {
                     // above checked that all attributes in d are in m with equal values and found some mismatch
                     promises.push(that.onMessage(endpoint, {
@@ -596,9 +599,9 @@ module Relution.LiveData {
                 }
               }
             });
-            Object.keys(ids).forEach(function (id) {
+            Object.keys(syncIds).forEach(function (id) {
               // delete the item
-              var m = ids[id];
+              var m = syncIds[id];
               promises.push(that.onMessage(endpoint, {
                 id: id,
                 method: 'delete',
@@ -619,7 +622,27 @@ module Relution.LiveData {
               }
             }
           }
-          return Q.all(promises).thenResolve(data); // delayed till operations complete
+          return Q.all(promises).thenResolve(function () {
+            // delayed till operations complete
+            if (!dataIds) {
+              return data;
+            }
+
+            // when collection was updated only pass data of models that were synced on to the success callback,
+            // as the callback will set the models again causing our sorting and filtering to be without effect.
+            var response = [];
+            for (var i = model.models.length; i-- > 0;) {
+              var m = model.models[i];
+              if (dataIds[m.id]) {
+                response.push(m.attributes);
+                delete dataIds[m.id];
+                if (dataIds.length <= 0) {
+                  break;
+                }
+              }
+            }
+            return response.reverse();
+          });
         }
       }).then(function (response) {
         // invoke success callback, if any
