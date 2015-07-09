@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Thu Jul 09 2015 18:09:16
+* Date:      Thu Jul 09 2015 18:13:06
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -6308,7 +6308,7 @@ var Relution;
                                 if ((!(this.getQuery.offset > 0) || index > 0) && !(index >= this.getQuery.limit)) {
                                     /* jshint +W018 */
                                     collection.add(model, options);
-                                    if (this.getQuery.limit && collection.models.length >= this.getQuery.limit) {
+                                    if (this.getQuery.limit && collection.models.length > this.getQuery.limit) {
                                         collection.remove(collection.models[collection.models.length - 1], options);
                                     }
                                 }

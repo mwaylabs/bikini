@@ -374,7 +374,7 @@ module Relution.LiveData {
               if ((!(this.getQuery.offset > 0) || index > 0) && !(index >= this.getQuery.limit)) {
                 /* jshint +W018 */
                 collection.add(model, options);
-                if (this.getQuery.limit && collection.models.length >= this.getQuery.limit) {
+                if (this.getQuery.limit && collection.models.length > this.getQuery.limit) {
                   collection.remove(collection.models[collection.models.length-1], options);
                 }
               }
