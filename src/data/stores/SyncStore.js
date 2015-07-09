@@ -588,7 +588,7 @@ var Relution;
                                 }
                             }
                         }
-                        return Q.all(promises).thenResolve(function () {
+                        return Q.all(promises).then(function () {
                             // delayed till operations complete
                             if (!dataIds) {
                                 return data;
