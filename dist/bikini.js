@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Thu Jul 09 2015 18:13:06
+* Date:      Fri Jul 10 2015 12:47:43
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -185,22 +185,28 @@ Backbone.ajax = function ajax(options) {
   return superAjax.apply(this, arguments);
 };
 
-Relution.LiveData.ajax = function ajax(url, options) {
+Relution.LiveData.ajax = function ajax(options) {
   var that = this;
   var args = arguments;
-  return Relution.LiveData.Security.logon.apply(this, arguments).then(function () {
+  var promise = Relution.LiveData.Security.logon.apply(this, arguments).then(function () {
     var superAjax = that.super_ && that.super_.ajax || Relution.LiveData.http;
     var xhr = superAjax.apply(that, args);
-    if (xhr) {
+    if (!xhr) {
+      return Q.reject(new Error('ajax failed'));
+    }
+
+    promise.xhr = xhr;
+    if (Q.isPromiseAlike(xhr) && typeof xhr.catch === 'function') {
+      return xhr;
+    } else {
       var q = Q.defer();
       xhr.success(_.bind(q.resolve, q));
       xhr.error(_.bind(q.reject, q));
-      q.promise.xhr = xhr;
+      options.xhr = xhr;
       return q.promise;
-    } else {
-      return Q.reject(new Error('ajax failed'));
     }
   });
+  return promise;
 };
 
 Relution.LiveData.sync = function sync(method, model, options) {
@@ -4394,7 +4400,7 @@ var Relution;
                                     }
                                 }
                                 if (options.syncContext) {
-                                    attrs = options.syncContext.processAttributes(attrs);
+                                    attrs = options.syncContext.processAttributes(attrs, options);
                                 }
                             }
                             break;
@@ -5080,7 +5086,7 @@ var Relution;
                     }, function () {
                         if (result) {
                             if (options.syncContext) {
-                                result = options.syncContext.processAttributes(result);
+                                result = options.syncContext.processAttributes(result, options);
                             }
                             that.handleSuccess(options, result);
                         }
@@ -5411,7 +5417,7 @@ var Relution;
                     return this.lastMesgTime[channel];
                 }
                 // the | 0 below turns strings into numbers
-                var time = localStorage.getItem('__' + channel + 'lastMesgTime') | 0 || 0;
+                var time = localStorage.getItem('__' + channel + 'lastMesgTime') || 0;
                 this.lastMesgTime[channel] = time;
                 return time;
             };
@@ -5678,7 +5684,7 @@ var Relution;
                     }
                 }
                 Relution.LiveData.Debug.trace('ajaxMessage ' + msg.method + ' ' + url);
-                return model.sync(msg.method, model, {
+                var opts = {
                     // must not take arbitrary options as these won't be replayed on reconnect
                     url: url,
                     attrs: msg.data,
@@ -5686,11 +5692,17 @@ var Relution;
                     credentials: options.credentials,
                     // error propagation
                     error: options.error
+                };
+                delete options.xhr; // make sure not to use old value
+                return model.sync(msg.method, model, opts).then(function (data) {
+                    options.xhr = opts.xhr.xhr || opts.xhr;
+                    return data;
                 });
             };
             SyncStore.prototype._applyResponse = function (qXHR, endpoint, msg, options, model) {
                 var channel = endpoint.channel;
                 var that = this;
+                var clientTime = new Date().getTime();
                 return qXHR.then(function (data) {
                     // delete on server does not respond a body
                     if (!data && msg.method === 'delete') {
@@ -5787,6 +5799,10 @@ var Relution;
                         });
                     }
                 }).then(function (response) {
+                    if (msg.method === 'read' && LiveData.isCollection(model)) {
+                        // TODO: extract Date header from options.xhr instead of using clientTime
+                        that.setLastMessageTime(endpoint.channel, clientTime);
+                    }
                     // invoke success callback, if any
                     return that.handleSuccess(options, response) || response;
                 }, function (error) {
@@ -6056,14 +6072,17 @@ var Relution;
              * @see Collection#fetchMore()
              */
             SyncContext.prototype.fetchMore = function (collection, options) {
-                // this must be set in options to state we handle it
-                options = options || {};
-                options.syncContext = this;
+                var getQuery = this.getQuery;
+                options = _.defaults(options || {}, {
+                    limit: options.pageSize || this.pageSize || getQuery.limit,
+                    sortOrder: getQuery.sortOrder,
+                    filter: getQuery.filter,
+                    fields: getQuery.fields
+                });
                 // prepare a query for the next page of data to load
-                var oldQuery = this.getQuery;
-                var newQuery = new LiveData.GetQuery(oldQuery);
-                newQuery.offset = (newQuery.offset | 0) + collection.models.length;
-                newQuery.limit = options.pageSize || this.pageSize || newQuery.limit;
+                options.offset = (getQuery.offset | 0) + collection.models.length;
+                // this must be set in options to state we handle it
+                options.syncContext = this;
                 // setup callbacks handling processing of results, do not use promises as these execute too late...
                 // Notice, since we call collection.sync() directly, the signature of success/error callbacks here is ajax-style.
                 // However, the user-provided callbacks are to being called backbone.js-style with collection and object.
@@ -6076,7 +6095,11 @@ var Relution;
                     // update models
                     if (models) {
                         // add models to collection, if any
-                        if (models.length > 0) {
+                        if (models.length <= 0) {
+                            // reached the end
+                            delete options.more;
+                        }
+                        else {
                             // read additional data
                             if (options.syncContext.compareFn) {
                                 // notice, existing range of models is sorted by definition already
@@ -6084,19 +6107,25 @@ var Relution;
                             }
                             models = collection.add(models, options) || models;
                             // adjust query parameter
-                            oldQuery.limit = collection.models.length;
-                            options.more = true;
-                            delete options.end;
+                            getQuery.limit = collection.models.length;
+                            if (options.syncContext.getQuery.limit > getQuery.limit) {
+                                // reached the end
+                                delete options.more;
+                            }
+                            else {
+                                // more data to load
+                                options.more = true;
+                                delete options.end;
+                            }
                         }
-                        else {
-                            // reached the end
-                            oldQuery.limit = undefined; // open end
+                        // reached the end?
+                        if (!options.more) {
+                            getQuery.limit = undefined; // open end
                             options.end = true;
-                            delete options.more;
                         }
                     }
                     // restore query parameter
-                    options.syncContext.getQuery = oldQuery;
+                    options.syncContext.getQuery = getQuery;
                     // call user success callback
                     if (options.success) {
                         models = options.success.call(this, collection, models, options) || models;
@@ -6111,7 +6140,7 @@ var Relution;
                     options.success = oldSuccess;
                     options.error = oldError;
                     // restore query parameter
-                    options.syncContext.getQuery = oldQuery;
+                    options.syncContext.getQuery = getQuery;
                     // call user error callback
                     if (options.error) {
                         error = options.error.call(this, collection, error, options) || error;
@@ -6122,7 +6151,8 @@ var Relution;
                     return error;
                 };
                 // fire up the page load
-                this.getQuery = newQuery;
+                this.getQuery = new LiveData.GetQuery(getQuery);
+                this.getQuery.limit = getQuery.limit + options.limit;
                 return collection.sync(options.method || 'read', collection, options);
             };
             /**
@@ -6238,25 +6268,27 @@ var Relution;
                 options.offset = (this.getQuery.offset | 0) - options.limit;
                 return this.fetchRange(collection, options);
             };
-            SyncContext.prototype.filterAttributes = function (attrs) {
+            SyncContext.prototype.filterAttributes = function (attrs, options) {
                 return this.filterFn ? attrs.filter(this.filterFn) : attrs;
             };
-            SyncContext.prototype.sortAttributes = function (attrs) {
+            SyncContext.prototype.sortAttributes = function (attrs, options) {
                 return this.compareFn ? attrs.sort(this.compareFn) : attrs;
             };
-            SyncContext.prototype.rangeAttributes = function (attrs) {
-                if (this.getQuery.offset > 0) {
-                    attrs.splice(0, this.getQuery.offset);
+            SyncContext.prototype.rangeAttributes = function (attrs, options) {
+                var offset = options && options.offset || this.getQuery.offset;
+                if (offset > 0) {
+                    attrs.splice(0, offset);
                 }
-                if (this.getQuery.limit < attrs.length) {
-                    attrs.length = this.getQuery.limit;
+                var limit = options && options.limit || this.getQuery.limit;
+                if (limit < attrs.length) {
+                    attrs.length = limit;
                 }
                 return attrs;
             };
-            SyncContext.prototype.processAttributes = function (attrs) {
-                attrs = this.filterAttributes(attrs);
-                attrs = this.sortAttributes(attrs);
-                attrs = this.rangeAttributes(attrs);
+            SyncContext.prototype.processAttributes = function (attrs, options) {
+                attrs = this.filterAttributes(attrs, options);
+                attrs = this.sortAttributes(attrs, options);
+                attrs = this.rangeAttributes(attrs, options);
                 return attrs;
             };
             /**
@@ -6358,7 +6390,7 @@ var Relution;
                         }
                         else if (point < start) {
                             // select lower interval
-                            if (point >= 0) {
+                            if (point > 0) {
                                 point = this.insertionPointBinarySearch(attributes, models, 0, point);
                             }
                         }
@@ -6392,7 +6424,9 @@ var Relution;
                 }
                 else if (delta > 0) {
                     // select upper half
-                    return this.insertionPointBinarySearch(attributes, models, pivot, end);
+                    if (++pivot < end) {
+                        return this.insertionPointBinarySearch(attributes, models, pivot, end);
+                    }
                 }
                 else {
                     // exact match

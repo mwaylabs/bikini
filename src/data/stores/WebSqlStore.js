@@ -560,7 +560,7 @@ var Relution;
                     }, function () {
                         if (result) {
                             if (options.syncContext) {
-                                result = options.syncContext.processAttributes(result);
+                                result = options.syncContext.processAttributes(result, options);
                             }
                             that.handleSuccess(options, result);
                         }

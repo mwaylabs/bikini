@@ -67,22 +67,28 @@ Backbone.ajax = function ajax(options) {
   return superAjax.apply(this, arguments);
 };
 
-Relution.LiveData.ajax = function ajax(url, options) {
+Relution.LiveData.ajax = function ajax(options) {
   var that = this;
   var args = arguments;
-  return Relution.LiveData.Security.logon.apply(this, arguments).then(function () {
+  var promise = Relution.LiveData.Security.logon.apply(this, arguments).then(function () {
     var superAjax = that.super_ && that.super_.ajax || Relution.LiveData.http;
     var xhr = superAjax.apply(that, args);
-    if (xhr) {
+    if (!xhr) {
+      return Q.reject(new Error('ajax failed'));
+    }
+
+    promise.xhr = xhr;
+    if (Q.isPromiseAlike(xhr) && typeof xhr.catch === 'function') {
+      return xhr;
+    } else {
       var q = Q.defer();
       xhr.success(_.bind(q.resolve, q));
       xhr.error(_.bind(q.reject, q));
-      q.promise.xhr = xhr;
+      options.xhr = xhr;
       return q.promise;
-    } else {
-      return Q.reject(new Error('ajax failed'));
     }
   });
+  return promise;
 };
 
 Relution.LiveData.sync = function sync(method, model, options) {

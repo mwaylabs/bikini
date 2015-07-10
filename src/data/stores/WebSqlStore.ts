@@ -581,7 +581,7 @@ module Relution.LiveData {
         }, function () { // voidCallback (success)
           if (result) {
             if (options.syncContext) {
-              result = options.syncContext.processAttributes(result);
+              result = options.syncContext.processAttributes(result, options);
             }
             that.handleSuccess(options, result);
           } else {

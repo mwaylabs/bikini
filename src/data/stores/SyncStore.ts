@@ -243,7 +243,7 @@ module Relution.LiveData {
         return this.lastMesgTime[channel];
       }
       // the | 0 below turns strings into numbers
-      var time = localStorage.getItem('__' + channel + 'lastMesgTime') | 0 || 0;
+      var time = localStorage.getItem('__' + channel + 'lastMesgTime') || 0;
       this.lastMesgTime[channel] = time;
       return time;
     }
@@ -536,7 +536,7 @@ module Relution.LiveData {
       }
 
       Relution.LiveData.Debug.trace('ajaxMessage ' + msg.method + ' ' + url);
-      return model.sync(msg.method, model, {
+      var opts:any = {
         // must not take arbitrary options as these won't be replayed on reconnect
         url: url,
         attrs: msg.data,
@@ -544,12 +544,18 @@ module Relution.LiveData {
         credentials: options.credentials,
         // error propagation
         error: options.error
+      };
+      delete options.xhr; // make sure not to use old value
+      return model.sync(msg.method, model, opts).then(function (data) {
+        options.xhr = opts.xhr.xhr || opts.xhr;
+        return data;
       });
     }
 
     private _applyResponse(qXHR, endpoint, msg, options, model) {
       var channel = endpoint.channel;
       var that = this;
+      var clientTime = new Date().getTime();
       return qXHR.then(function (data) {
         // delete on server does not respond a body
         if (!data && msg.method === 'delete') {
@@ -645,6 +651,10 @@ module Relution.LiveData {
           });
         }
       }).then(function (response) {
+        if (msg.method === 'read' && isCollection(model)) {
+          // TODO: extract Date header from options.xhr instead of using clientTime
+          that.setLastMessageTime(endpoint.channel, clientTime);
+        }
         // invoke success callback, if any
         return that.handleSuccess(options, response) || response;
       }, function (error) {

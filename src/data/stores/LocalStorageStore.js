@@ -101,7 +101,7 @@ var Relution;
                                     }
                                 }
                                 if (options.syncContext) {
-                                    attrs = options.syncContext.processAttributes(attrs);
+                                    attrs = options.syncContext.processAttributes(attrs, options);
                                 }
                             }
                             break;

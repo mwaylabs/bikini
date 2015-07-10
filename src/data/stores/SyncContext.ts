@@ -101,15 +101,17 @@ module Relution.LiveData {
      * @see Collection#fetchMore()
      */
     public fetchMore(collection, options) {
-      // this must be set in options to state we handle it
-      options = options || {};
-      options.syncContext = this;
-
+      var getQuery = this.getQuery;
+      options = _.defaults(options || {}, {
+        limit: options.pageSize || this.pageSize || getQuery.limit,
+        sortOrder: getQuery.sortOrder,
+        filter: getQuery.filter,
+        fields: getQuery.fields
+      });
       // prepare a query for the next page of data to load
-      var oldQuery = this.getQuery;
-      var newQuery = new GetQuery(oldQuery);
-      newQuery.offset = (newQuery.offset|0) + collection.models.length;
-      newQuery.limit = options.pageSize || this.pageSize || newQuery.limit;
+      options.offset = (getQuery.offset|0) + collection.models.length;
+      // this must be set in options to state we handle it
+      options.syncContext = this;
 
       // setup callbacks handling processing of results, do not use promises as these execute too late...
       // Notice, since we call collection.sync() directly, the signature of success/error callbacks here is ajax-style.
@@ -124,7 +126,10 @@ module Relution.LiveData {
         // update models
         if (models) {
           // add models to collection, if any
-          if (models.length > 0) {
+          if (models.length <= 0) {
+            // reached the end
+            delete options.more;
+          } else {
             // read additional data
             if (options.syncContext.compareFn) {
               // notice, existing range of models is sorted by definition already
@@ -133,19 +138,26 @@ module Relution.LiveData {
             models = collection.add(models, options) || models;
 
             // adjust query parameter
-            oldQuery.limit = collection.models.length;
-            options.more = true;
-            delete options.end;
-          } else {
-            // reached the end
-            oldQuery.limit = undefined; // open end
+            getQuery.limit = collection.models.length;
+            if (options.syncContext.getQuery.limit > getQuery.limit) {
+              // reached the end
+              delete options.more;
+            } else {
+              // more data to load
+              options.more = true;
+              delete options.end;
+            }
+          }
+
+          // reached the end?
+          if (!options.more) {
+            getQuery.limit = undefined; // open end
             options.end = true;
-            delete options.more;
           }
         }
 
         // restore query parameter
-        options.syncContext.getQuery = oldQuery;
+        options.syncContext.getQuery = getQuery;
 
         // call user success callback
         if (options.success) {
@@ -162,7 +174,7 @@ module Relution.LiveData {
         options.error = oldError;
 
         // restore query parameter
-        options.syncContext.getQuery = oldQuery;
+        options.syncContext.getQuery = getQuery;
 
         // call user error callback
         if (options.error) {
@@ -175,7 +187,8 @@ module Relution.LiveData {
       };
 
       // fire up the page load
-      this.getQuery = newQuery;
+      this.getQuery = new GetQuery(getQuery);
+      this.getQuery.limit = getQuery.limit + options.limit;
       return collection.sync(options.method || 'read', collection, options);
     }
 
@@ -300,28 +313,30 @@ module Relution.LiveData {
       return this.fetchRange(collection, options);
     }
 
-    public filterAttributes<T>(attrs:T[]):T[] {
+    public filterAttributes<T>(attrs:T[], options?):T[] {
       return this.filterFn ? attrs.filter(this.filterFn) : attrs;
     }
 
-    public sortAttributes<T>(attrs:T[]):T[] {
+    public sortAttributes<T>(attrs:T[], options?):T[] {
       return this.compareFn ? attrs.sort(this.compareFn) : attrs;
     }
 
-    public rangeAttributes<T>(attrs:T[]):T[] {
-      if (this.getQuery.offset > 0) {
-        attrs.splice(0, this.getQuery.offset);
+    public rangeAttributes<T>(attrs:T[], options?):T[] {
+      var offset = options && options.offset || this.getQuery.offset;
+      if (offset > 0) {
+        attrs.splice(0, offset);
       }
-      if (this.getQuery.limit < attrs.length) {
-        attrs.length = this.getQuery.limit;
+      var limit = options && options.limit ||  this.getQuery.limit;
+      if (limit < attrs.length) {
+        attrs.length = limit;
       }
       return attrs;
     }
 
-    public processAttributes<T>(attrs:T[]):T[] {
-      attrs = this.filterAttributes(attrs);
-      attrs = this.sortAttributes(attrs);
-      attrs = this.rangeAttributes(attrs);
+    public processAttributes<T>(attrs:T[], options?):T[] {
+      attrs = this.filterAttributes(attrs, options);
+      attrs = this.sortAttributes(attrs, options);
+      attrs = this.rangeAttributes(attrs, options);
       return attrs;
     }
 
@@ -425,7 +440,7 @@ module Relution.LiveData {
             }
           } else if(point < start) {
             // select lower interval
-            if (point >= 0) {
+            if (point > 0) {
               point = this.insertionPointBinarySearch(attributes, models, 0, point);
             }
           }
@@ -459,7 +474,9 @@ module Relution.LiveData {
         return this.insertionPointBinarySearch(attributes, models, start, pivot);
       } else if (delta > 0) {
         // select upper half
-        return this.insertionPointBinarySearch(attributes, models, pivot, end);
+        if (++pivot < end) {
+          return this.insertionPointBinarySearch(attributes, models, pivot, end);
+        }
       } else {
         // exact match
         return pivot;
