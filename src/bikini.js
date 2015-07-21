@@ -1,5 +1,19 @@
 // @echo BANNER
-(function (global, Backbone, _, $, Q, jsonPath) {
+(function(factory) {
+  "use strict";
+  var root = (typeof self == 'object' && self.self == self && self) ||
+    (typeof global == 'object' && global.global == global && global);
+  if (typeof exports !== undefined) {
+    var Backbone = require('backbone');
+    var _ = require('underscore'), $;
+    var Q = require('q');
+    var jsonPath = require('JSONPath');
+    var vm = {};
+    try { $ = require('jquery'); } catch(e) {}
+    factory(root, exports, Backbone, _, $, Q, jsonPath);
+  }
+  console.log(Backbone);
+}(function (root, global, Backbone, _, $, Q, jsonPath) {
 // @include ./core/livedata.require.js
 // @include ./utility/debug.js
 // @include ./core/livedata.js
@@ -35,4 +49,7 @@
 
 // @include ./core/bikini.js
 
-})(this, Backbone, _, $, Q, jsonPath);
+}));
+
+
+

@@ -2,10 +2,24 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Fri Jul 10 2015 12:47:43
+* Date:      Tue Jul 21 2015 11:21:43
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
-(function (global, Backbone, _, $, Q, jsonPath) {
+(function(factory) {
+  "use strict";
+  var root = (typeof self == 'object' && self.self == self && self) ||
+    (typeof global == 'object' && global.global == global && global);
+  if (typeof exports !== undefined) {
+    var Backbone = require('backbone');
+    var _ = require('underscore'), $;
+    var Q = require('q');
+    var jsonPath = require('JSONPath');
+    var vm = {};
+    try { $ = require('jquery'); } catch(e) {}
+    factory(root, exports, Backbone, _, $, Q, jsonPath);
+  }
+  console.log(Backbone);
+}(function (root, global, Backbone, _, $, Q, jsonPath) {
 // Copyright (c) 2013 M-Way Solutions GmbH
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
 
@@ -6450,4 +6464,7 @@ if (global.Relution) {
 }
 
 
-})(this, Backbone, _, $, Q, jsonPath);
+}));
+
+
+
