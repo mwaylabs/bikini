@@ -3,7 +3,8 @@
   "use strict";
   var root = (typeof self == 'object' && self.self == self && self) ||
     (typeof global == 'object' && global.global == global && global);
-  if (typeof exports !== undefined) {
+
+  if (typeof exports !== 'undefined' && require !== 'undefined') {
     var Backbone = require('backbone');
     var _ = require('underscore'), $;
     var Q = require('q');
@@ -11,8 +12,9 @@
     var vm = {};
     try { $ = require('jquery'); } catch(e) {}
     factory(root, exports, Backbone, _, $, Q, jsonPath);
+  }else {
+    root.Relution = factory(root, {},root.Backbone, root._, (root.jQuery || root.Zepto || root.ender || root.$), root.Q, root.jsonPath);
   }
-  console.log(Backbone);
 }(function (root, global, Backbone, _, $, Q, jsonPath) {
 // @include ./core/livedata.require.js
 // @include ./utility/debug.js
@@ -48,7 +50,7 @@
 // @include ./data/stores/SyncContext.js
 
 // @include ./core/bikini.js
-
+return Relution;
 }));
 
 
