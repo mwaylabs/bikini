@@ -392,8 +392,12 @@ Bikini.BikiniStore = Bikini.Store.extend({
       // or for initial load
       if (method !== 'read' || !endpoint.localStore || !time) {
         // do backbone rest
-        promise = that.addMessage(method, model, // we don't need to call callbacks if an other store handle this
-          endpoint.localStore ? {} : options, endpoint);
+        var localOptions = {};
+        if (options.error) {
+          // we don't need to call success callback if an other store handle this
+          localOptions.error = options.error
+        };
+        promise = that.addMessage(method, model, endpoint.localStore ? localOptions : options, endpoint);
       } else if (method === 'read') {
         promise = that.fetchChanges(endpoint);
       }
