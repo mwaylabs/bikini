@@ -1,8 +1,8 @@
 /*!
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
-* Version:   0.8.4
-* Date:      Tue May 19 2015 11:02:12
+* Version:   0.8.5
+* Date:      Wed Oct 21 2015 09:22:06
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 
@@ -27,7 +27,7 @@
    * Version number of current release
    * @type {String}
    */
-  Bikini.Version = Bikini.version = '0.8.4';
+  Bikini.Version = Bikini.version = '0.8.5';
   
   /**
    * Empty function to be used when
@@ -4416,8 +4416,12 @@
         // or for initial load
         if (method !== 'read' || !endpoint.localStore || !time) {
           // do backbone rest
-          promise = that.addMessage(method, model, // we don't need to call callbacks if an other store handle this
-            endpoint.localStore ? {} : options, endpoint);
+          var localOptions = {};
+          if (options.error) {
+            // we don't need to call success callback if an other store handle this
+            localOptions.error = options.error;
+          }
+          promise = that.addMessage(method, model, endpoint.localStore ? localOptions : options, endpoint);
         } else if (method === 'read') {
           promise = that.fetchChanges(endpoint);
         }

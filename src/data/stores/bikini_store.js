@@ -395,8 +395,8 @@ Bikini.BikiniStore = Bikini.Store.extend({
         var localOptions = {};
         if (options.error) {
           // we don't need to call success callback if an other store handle this
-          localOptions.error = options.error
-        };
+          localOptions.error = options.error;
+        }
         promise = that.addMessage(method, model, endpoint.localStore ? localOptions : options, endpoint);
       } else if (method === 'read') {
         promise = that.fetchChanges(endpoint);
