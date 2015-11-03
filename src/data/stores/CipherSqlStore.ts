@@ -1,7 +1,7 @@
 /**
- * WebSqlStore.ts
+ * CipherSqlStore.ts
  *
- * Created by Thomas Beckmann on 24.06.2015
+ * Created by Pascal Brewing on 04.11.2015
  * Copyright (c)
  * 2015
  * M-Way Solutions GmbH. All rights reserved.
@@ -31,13 +31,13 @@
 
 module Relution.LiveData {
   /**
-   * The Relution.LiveData.WebSqlStore can be used to store model collection into
+   * The Relution.LiveData.CipherSqlStore can be used to store model collection into
    * the webSql database
    *
-   * @module Relution.LiveData.WebSqlStore
+   * @module Relution.LiveData.CipherSqlStore
    *
    * @type {*}
-   * @extends Relution.LiveData.Store
+   * @extends Relution.LiveData.AbstractSqlStore
    *
    * @example
    *
@@ -47,7 +47,7 @@ module Relution.LiveData {
    * var MyCollection = Relution.LiveData.Collection.extend({
    *      model: MyModel,
    *      entity: 'MyTableName',
-   *      store: new Relution.LiveData.WebSqlStorageStore()
+   *      store: new Relution.LiveData.CipherSqlStore()
    * });
    *
    * // If you want to use specific columns you can specify the fields
@@ -66,13 +66,12 @@ module Relution.LiveData {
    *
    */
 
-  export class WebSqlStore extends AbstractSqlStore {
+  export class CipherSqlStore extends AbstractSqlStore {
 
     constructor(options?:any) {
       super(_.extend({
         name: 'relution-livedata',
-        size: 1024 * 1024, // 1 MB
-        version: '1.0',
+        key: null
       }, options));
 
       var that = this;
@@ -92,10 +91,10 @@ module Relution.LiveData {
       /* openDatabase(db_name, version, description, estimated_size, callback) */
       if (!this.db) {
         try {
-          if (!global.openDatabase) {
+          if (!window.sqlitePlugin) {
             error = 'Your browser does not support WebSQL databases.';
           } else {
-            this.db = global.openDatabase(this.options.name, '', '', this.options.size);
+            this.db = window.sqlitePlugin.openDatabase(this.options.name, '', '', this.options.size);
             if (this.entities) {
               for (var key in this.entities) {
                 this._createTable({entity: this.entities[key]});
@@ -129,7 +128,7 @@ module Relution.LiveData {
       var that = this;
       try {
         if (!this.db) {
-          this.db = global.openDatabase(this.options.name, '', '', this.options.size);
+          this.db = window.sqlitePlugin.openDatabase(this.options.name, '', '', this.options.size);
         }
         try {
           var arSql = this._sqlUpdateDatabase(this.db.version, this.options.version);

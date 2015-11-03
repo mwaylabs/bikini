@@ -1,5 +1,5 @@
 /**
- * WebSqlStore.ts
+ * CipherSqlStore.ts
  *
  * Created by Thomas Beckmann on 24.06.2015
  * Copyright (c)
@@ -39,13 +39,13 @@ var Relution;
     var LiveData;
     (function (LiveData) {
         /**
-         * The Relution.LiveData.WebSqlStore can be used to store model collection into
+         * The Relution.LiveData.CipherSqlStore can be used to store model collection into
          * the webSql database
          *
-         * @module Relution.LiveData.WebSqlStore
+         * @module Relution.LiveData.CipherSqlStore
          *
          * @type {*}
-         * @extends Relution.LiveData.Store
+         * @extends Relution.LiveData.AbstractSqlStore
          *
          * @example
          *
@@ -55,7 +55,7 @@ var Relution;
          * var MyCollection = Relution.LiveData.Collection.extend({
          *      model: MyModel,
          *      entity: 'MyTableName',
-         *      store: new Relution.LiveData.WebSqlStorageStore()
+         *      store: new Relution.LiveData.CipherSqlStore()
          * });
          *
          * // If you want to use specific columns you can specify the fields
@@ -73,13 +73,12 @@ var Relution;
          *
          *
          */
-        var WebSqlStore = (function (_super) {
-            __extends(WebSqlStore, _super);
-            function WebSqlStore(options) {
+        var CipherSqlStore = (function (_super) {
+            __extends(CipherSqlStore, _super);
+            function CipherSqlStore(options) {
                 _super.call(this, _.extend({
                     name: 'relution-livedata',
-                    size: 1024 * 1024,
-                    version: '1.0'
+                    key: null
                 }, options));
                 var that = this;
                 this._openDb({
@@ -92,16 +91,16 @@ var Relution;
             /**
              * @private
              */
-            WebSqlStore.prototype._openDb = function (options) {
+            CipherSqlStore.prototype._openDb = function (options) {
                 var error, dbError;
                 /* openDatabase(db_name, version, description, estimated_size, callback) */
                 if (!this.db) {
                     try {
-                        if (!global.openDatabase) {
+                        if (!window.sqlitePlugin) {
                             error = 'Your browser does not support WebSQL databases.';
                         }
                         else {
-                            this.db = global.openDatabase(this.options.name, '', '', this.options.size);
+                            this.db = window.sqlitePlugin.openDatabase(this.options.name, '', '', this.options.size);
                             if (this.entities) {
                                 for (var key in this.entities) {
                                     this._createTable({ entity: this.entities[key] });
@@ -132,13 +131,13 @@ var Relution;
                     this.handleSuccess(options, error);
                 }
             };
-            WebSqlStore.prototype._updateDb = function (options) {
+            CipherSqlStore.prototype._updateDb = function (options) {
                 var error;
                 var lastSql;
                 var that = this;
                 try {
                     if (!this.db) {
-                        this.db = global.openDatabase(this.options.name, '', '', this.options.size);
+                        this.db = window.sqlitePlugin.openDatabase(this.options.name, '', '', this.options.size);
                     }
                     try {
                         var arSql = this._sqlUpdateDatabase(this.db.version, this.options.version);
@@ -166,8 +165,8 @@ var Relution;
                     this.handleError(options, error);
                 }
             };
-            return WebSqlStore;
+            return CipherSqlStore;
         })(LiveData.AbstractSqlStore);
-        LiveData.WebSqlStore = WebSqlStore;
+        LiveData.CipherSqlStore = CipherSqlStore;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
