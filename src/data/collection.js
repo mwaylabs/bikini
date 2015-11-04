@@ -18,6 +18,7 @@
 Relution.LiveData.Collection = Backbone.Collection.extend({
 
   constructor: function (options) {
+    console.log('Collection', options);
     if (this.url && this.url.charAt(this.url.length - 1) !== '/') {
       this.url += '/';
     }
@@ -42,6 +43,7 @@ _.extend(Relution.LiveData.Collection.prototype, Relution.LiveData._Object, {
   options: null,
 
   init: function (options) {
+
     options = options || {};
     this.store = options.store || this.store || (this.model ? this.model.prototype.store : null);
     this.entity = options.entity || this.entity || (this.model ? this.model.prototype.entity : null);

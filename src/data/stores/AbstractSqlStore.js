@@ -53,7 +53,7 @@ var Relution;
                     name: 'relution-livedata',
                     size: 1024 * 1024,
                     version: '1.0',
-                    key: '',
+                    security: '',
                     typeMapping: (function () {
                         var map = {};
                         map[LiveData.DATA.TYPE.OBJECTID] = LiveData.DATA.TYPE.STRING;

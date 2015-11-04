@@ -68,8 +68,7 @@ module Relution.LiveData {
 
     constructor(options?:any) {
       super(_.extend({
-        localStore: WebSqlStore,
-
+        localStore: CipherSqlStore,
         useLocalStore: true,
         useSocketNotify: true,
         useOfflineChanges: true,
@@ -82,7 +81,7 @@ module Relution.LiveData {
           return map;
         })()
       }, options));
-
+      console.log('SyncStore', options);
       if (this.options.useSocketNotify && typeof io !== 'object') {
         Relution.LiveData.Debug.warning('Socket.IO not present !!');
         this.options.useSocketNotify = false;

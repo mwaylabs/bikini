@@ -79,7 +79,8 @@ var Relution;
                 _super.call(this, _.extend({
                     name: 'relution-livedata',
                     size: 1024 * 1024,
-                    version: '1.0'
+                    version: '1.0',
+                    security: ''
                 }, options));
                 var that = this;
                 this._openDb({
@@ -94,6 +95,7 @@ var Relution;
              */
             WebSqlStore.prototype._openDb = function (options) {
                 var error, dbError;
+                debugger;
                 /* openDatabase(db_name, version, description, estimated_size, callback) */
                 if (!this.db) {
                     try {

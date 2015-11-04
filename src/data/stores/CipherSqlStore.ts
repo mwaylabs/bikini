@@ -62,7 +62,9 @@ module Relution.LiveData {
    *          age:         { type: Relution.LiveData.DATA.TYPE.INTEGER }
    *      }
    * });
-   *
+   * 0 (default): Documents - visible to iTunes and backed up by iCloud
+   * 1: Library - backed up by iCloud, NOT visible to iTunes
+   * 2: Library/LocalDatabase - NOT visible to iTunes and NOT backed up by iCloud
    *
    */
 
@@ -71,9 +73,13 @@ module Relution.LiveData {
     constructor(options?:any) {
       super(_.extend({
         name: 'relution-livedata',
-        key: null
+        security: null
       }, options));
 
+      if (options && !options.security) {
+        return console.error('security Key is required on a CipherSqlStore');
+      }
+      console.log('CipherSqlStore', options);
       var that = this;
       this._openDb({
         error: function (error) {
@@ -88,13 +94,14 @@ module Relution.LiveData {
      */
     private _openDb(options) {
       var error, dbError;
+      debugger;
       /* openDatabase(db_name, version, description, estimated_size, callback) */
       if (!this.db) {
         try {
-          if (!window.sqlitePlugin) {
+          if (!global.openDatabase) {
             error = 'Your browser does not support WebSQL databases.';
           } else {
-            this.db = window.sqlitePlugin.openDatabase(this.options.name, '', '', this.options.size);
+            this.db = global.openDatabase(this.options.name, '', '', this.options.size);
             if (this.entities) {
               for (var key in this.entities) {
                 this._createTable({entity: this.entities[key]});
@@ -128,7 +135,7 @@ module Relution.LiveData {
       var that = this;
       try {
         if (!this.db) {
-          this.db = window.sqlitePlugin.openDatabase(this.options.name, '', '', this.options.size);
+          this.db = global.openDatabase(this.options.name, '', '', this.options.size);
         }
         try {
           var arSql = this._sqlUpdateDatabase(this.db.version, this.options.version);

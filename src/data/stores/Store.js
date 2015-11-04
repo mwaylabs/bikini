@@ -48,6 +48,7 @@ var Relution;
                         return map;
                     })()
                 }, options);
+                console.log('Store', options);
                 this.setEntities(this.options.entities);
             }
             Store.prototype.setEntities = function (entities) {

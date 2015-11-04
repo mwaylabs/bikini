@@ -60,7 +60,7 @@ module Relution.LiveData {
         name: 'relution-livedata',
         size: 1024 * 1024, // 1 MB
         version: '1.0',
-        key: '',
+        security: '',
 
         typeMapping: (function () {
           var map = {};

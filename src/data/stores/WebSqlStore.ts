@@ -73,6 +73,7 @@ module Relution.LiveData {
         name: 'relution-livedata',
         size: 1024 * 1024, // 1 MB
         version: '1.0',
+        security: ''
       }, options));
 
       var that = this;
@@ -89,6 +90,7 @@ module Relution.LiveData {
      */
     private _openDb(options) {
       var error, dbError;
+      debugger;
       /* openDatabase(db_name, version, description, estimated_size, callback) */
       if (!this.db) {
         try {
