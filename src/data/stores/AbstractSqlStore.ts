@@ -43,7 +43,7 @@ module Relution.LiveData {
     _selector;
 
     protected db:any = null;
-
+    protected options:any;
     protected dataField = {
       name: 'data',
       type: 'text',

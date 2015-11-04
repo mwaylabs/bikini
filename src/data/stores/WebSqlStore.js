@@ -95,7 +95,6 @@ var Relution;
              */
             WebSqlStore.prototype._openDb = function (options) {
                 var error, dbError;
-                debugger;
                 /* openDatabase(db_name, version, description, estimated_size, callback) */
                 if (!this.db) {
                     try {

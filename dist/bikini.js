@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Wed Nov 04 2015 10:07:25
+* Date:      Wed Nov 04 2015 12:21:47
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -5176,7 +5176,6 @@ var Relution;
              */
             WebSqlStore.prototype._openDb = function (options) {
                 var error, dbError;
-                debugger;
                 /* openDatabase(db_name, version, description, estimated_size, callback) */
                 if (!this.db) {
                     try {
@@ -5337,26 +5336,29 @@ var Relution;
             function CipherSqlStore(options) {
                 _super.call(this, _.extend({
                     name: 'relution-livedata',
+                    size: 1024 * 1024,
                     security: null
                 }, options));
                 if (options && !options.security) {
                     return console.error('security Key is required on a CipherSqlStore');
                 }
                 console.log('CipherSqlStore', options);
-                var that = this;
+                var self = this;
                 this._openDb({
                     error: function (error) {
                         Relution.LiveData.Debug.error(error);
-                        that.trigger('error', error);
+                        self.trigger('error', error);
                     }
                 });
             }
             /**
              * @private
              */
-            CipherSqlStore.prototype._openDb = function (options) {
+            CipherSqlStore.prototype._openDb = function (errorCallback) {
                 var error, dbError;
-                debugger;
+                if (this.options && !this.options.security) {
+                    return console.error('A CipherSqlStore need a Security Token!', this.options);
+                }
                 /* openDatabase(db_name, version, description, estimated_size, callback) */
                 if (!this.db) {
                     try {
@@ -5378,21 +5380,21 @@ var Relution;
                 }
                 if (this.db) {
                     if (this.options.version && this.db.version !== this.options.version) {
-                        this._updateDb(options);
+                        this._updateDb(errorCallback);
                     }
                     else {
-                        this.handleSuccess(options, this.db);
+                        this.handleSuccess(errorCallback, this.db);
                     }
                 }
                 else if (dbError === 2 || dbError === '2') {
                     // Version number mismatch.
-                    this._updateDb(options);
+                    this._updateDb(errorCallback);
                 }
                 else {
                     if (!error && dbError) {
                         error = dbError;
                     }
-                    this.handleSuccess(options, error);
+                    this.handleSuccess(errorCallback, error);
                 }
             };
             CipherSqlStore.prototype._updateDb = function (options) {
@@ -5465,6 +5467,7 @@ var Relution;
 /// <reference path="../../core/livedata.d.ts" />
 /// <reference path="Store.ts" />
 /// <reference path="WebSqlStore.ts" />
+/// <reference path="CipherSqlStore.ts" />
 /// <reference path="SyncContext.ts" />
 /// <reference path="../../utility/Debug.ts" />
 var __extends = this.__extends || function (d, b) {
@@ -5508,7 +5511,7 @@ var Relution;
             __extends(SyncStore, _super);
             function SyncStore(options) {
                 _super.call(this, _.extend({
-                    localStore: LiveData.CipherSqlStore,
+                    localStore: LiveData.WebSqlStore,
                     useLocalStore: true,
                     useSocketNotify: true,
                     useOfflineChanges: true,
@@ -5582,9 +5585,14 @@ var Relution;
                         name: endpoint.channel,
                         idAttribute: endpoint.model.prototype.idAttribute // see Collection.modelId() of backbone.js
                     });
-                    return this.options.localStore.create({
+                    var storeOption = {
                         entities: entities
-                    });
+                    };
+                    if (this.options.localStoreOptions && typeof this.options.localStoreOptions === 'object') {
+                        storeOption = _.clone(this.options.localStoreOptions);
+                        storeOption.entities = entities;
+                    }
+                    return this.options.localStore.create(storeOption);
                 }
             };
             /**
@@ -5600,11 +5608,16 @@ var Relution;
                         name: entity,
                         idAttribute: 'id'
                     });
+                    var storeOption = {
+                        entities: entities
+                    };
+                    if (this.options.localStoreOptions && typeof this.options.localStoreOptions === 'object') {
+                        storeOption = _.clone(this.options.localStoreOptions);
+                        storeOption.entities = entities;
+                    }
                     var messages = LiveData.Collection.design({
                         entity: entity,
-                        store: this.options.localStore.create({
-                            entities: entities
-                        })
+                        store: this.options.localStore.create(storeOption)
                     });
                     if (endpoint.isConnected) {
                         this._sendMessages(endpoint);

@@ -39,7 +39,7 @@ module Relution.LiveData {
 
     protected entities:any;
 
-    constructor(options?:any) {
+    constructor(options?: any) {
       this.options = _.extend({
         name: '',
         entities: {},

@@ -67,7 +67,7 @@ module Relution.LiveData {
    */
 
   export class WebSqlStore extends AbstractSqlStore {
-
+    protected options:any;
     constructor(options?:any) {
       super(_.extend({
         name: 'relution-livedata',
@@ -90,7 +90,6 @@ module Relution.LiveData {
      */
     private _openDb(options) {
       var error, dbError;
-      debugger;
       /* openDatabase(db_name, version, description, estimated_size, callback) */
       if (!this.db) {
         try {

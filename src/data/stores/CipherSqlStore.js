@@ -80,26 +80,29 @@ var Relution;
             function CipherSqlStore(options) {
                 _super.call(this, _.extend({
                     name: 'relution-livedata',
+                    size: 1024 * 1024,
                     security: null
                 }, options));
                 if (options && !options.security) {
                     return console.error('security Key is required on a CipherSqlStore');
                 }
                 console.log('CipherSqlStore', options);
-                var that = this;
+                var self = this;
                 this._openDb({
                     error: function (error) {
                         Relution.LiveData.Debug.error(error);
-                        that.trigger('error', error);
+                        self.trigger('error', error);
                     }
                 });
             }
             /**
              * @private
              */
-            CipherSqlStore.prototype._openDb = function (options) {
+            CipherSqlStore.prototype._openDb = function (errorCallback) {
                 var error, dbError;
-                debugger;
+                if (this.options && !this.options.security) {
+                    return console.error('A CipherSqlStore need a Security Token!', this.options);
+                }
                 /* openDatabase(db_name, version, description, estimated_size, callback) */
                 if (!this.db) {
                     try {
@@ -121,21 +124,21 @@ var Relution;
                 }
                 if (this.db) {
                     if (this.options.version && this.db.version !== this.options.version) {
-                        this._updateDb(options);
+                        this._updateDb(errorCallback);
                     }
                     else {
-                        this.handleSuccess(options, this.db);
+                        this.handleSuccess(errorCallback, this.db);
                     }
                 }
                 else if (dbError === 2 || dbError === '2') {
                     // Version number mismatch.
-                    this._updateDb(options);
+                    this._updateDb(errorCallback);
                 }
                 else {
                     if (!error && dbError) {
                         error = dbError;
                     }
-                    this.handleSuccess(options, error);
+                    this.handleSuccess(errorCallback, error);
                 }
             };
             CipherSqlStore.prototype._updateDb = function (options) {

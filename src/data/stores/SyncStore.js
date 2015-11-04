@@ -28,6 +28,7 @@
 /// <reference path="../../core/livedata.d.ts" />
 /// <reference path="Store.ts" />
 /// <reference path="WebSqlStore.ts" />
+/// <reference path="CipherSqlStore.ts" />
 /// <reference path="SyncContext.ts" />
 /// <reference path="../../utility/Debug.ts" />
 var __extends = this.__extends || function (d, b) {
@@ -71,7 +72,7 @@ var Relution;
             __extends(SyncStore, _super);
             function SyncStore(options) {
                 _super.call(this, _.extend({
-                    localStore: LiveData.CipherSqlStore,
+                    localStore: LiveData.WebSqlStore,
                     useLocalStore: true,
                     useSocketNotify: true,
                     useOfflineChanges: true,
@@ -145,9 +146,14 @@ var Relution;
                         name: endpoint.channel,
                         idAttribute: endpoint.model.prototype.idAttribute // see Collection.modelId() of backbone.js
                     });
-                    return this.options.localStore.create({
+                    var storeOption = {
                         entities: entities
-                    });
+                    };
+                    if (this.options.localStoreOptions && typeof this.options.localStoreOptions === 'object') {
+                        storeOption = _.clone(this.options.localStoreOptions);
+                        storeOption.entities = entities;
+                    }
+                    return this.options.localStore.create(storeOption);
                 }
             };
             /**
@@ -163,11 +169,16 @@ var Relution;
                         name: entity,
                         idAttribute: 'id'
                     });
+                    var storeOption = {
+                        entities: entities
+                    };
+                    if (this.options.localStoreOptions && typeof this.options.localStoreOptions === 'object') {
+                        storeOption = _.clone(this.options.localStoreOptions);
+                        storeOption.entities = entities;
+                    }
                     var messages = LiveData.Collection.design({
                         entity: entity,
-                        store: this.options.localStore.create({
-                            entities: entities
-                        })
+                        store: this.options.localStore.create(storeOption)
                     });
                     if (endpoint.isConnected) {
                         this._sendMessages(endpoint);

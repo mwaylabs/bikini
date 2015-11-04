@@ -69,10 +69,11 @@ module Relution.LiveData {
    */
 
   export class CipherSqlStore extends AbstractSqlStore {
-
+    protected options:any;
     constructor(options?:any) {
       super(_.extend({
         name: 'relution-livedata',
+        size: 1024*1024,
         security: null
       }, options));
 
@@ -80,11 +81,11 @@ module Relution.LiveData {
         return console.error('security Key is required on a CipherSqlStore');
       }
       console.log('CipherSqlStore', options);
-      var that = this;
+      var self = this;
       this._openDb({
         error: function (error) {
           Relution.LiveData.Debug.error(error);
-          that.trigger('error', error);
+          self.trigger('error', error);
         }
       });
     }
@@ -92,9 +93,11 @@ module Relution.LiveData {
     /**
      * @private
      */
-    private _openDb(options) {
+    private _openDb(errorCallback) {
       var error, dbError;
-      debugger;
+      if (this.options && !this.options.security) {
+        return console.error('A CipherSqlStore need a Security Token!', this.options);
+      }
       /* openDatabase(db_name, version, description, estimated_size, callback) */
       if (!this.db) {
         try {
@@ -114,18 +117,18 @@ module Relution.LiveData {
       }
       if (this.db) {
         if (this.options.version && this.db.version !== this.options.version) {
-          this._updateDb(options);
+          this._updateDb(errorCallback);
         } else {
-          this.handleSuccess(options, this.db);
+          this.handleSuccess(errorCallback, this.db);
         }
       } else if (dbError === 2 || dbError === '2') {
         // Version number mismatch.
-        this._updateDb(options);
+        this._updateDb(errorCallback);
       } else {
         if (!error && dbError) {
           error = dbError;
         }
-        this.handleSuccess(options, error);
+        this.handleSuccess(errorCallback, error);
       }
     }
 

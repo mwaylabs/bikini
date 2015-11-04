@@ -28,6 +28,7 @@
 /// <reference path="../../core/livedata.d.ts" />
 /// <reference path="Store.ts" />
 /// <reference path="WebSqlStore.ts" />
+/// <reference path="CipherSqlStore.ts" />
 /// <reference path="SyncContext.ts" />
 /// <reference path="../../utility/Debug.ts" />
 
@@ -68,7 +69,7 @@ module Relution.LiveData {
 
     constructor(options?:any) {
       super(_.extend({
-        localStore: CipherSqlStore,
+        localStore: WebSqlStore,
         useLocalStore: true,
         useSocketNotify: true,
         useOfflineChanges: true,
@@ -148,9 +149,14 @@ module Relution.LiveData {
           name: endpoint.channel,
           idAttribute: endpoint.model.prototype.idAttribute // see Collection.modelId() of backbone.js
         });
-        return this.options.localStore.create({
+        var storeOption = {
           entities: entities
-        });
+        };
+        if (this.options.localStoreOptions && typeof this.options.localStoreOptions === 'object') {
+          storeOption = _.clone(this.options.localStoreOptions);
+          storeOption.entities = entities;
+        }
+        return this.options.localStore.create(storeOption);
       }
     }
 
@@ -167,11 +173,16 @@ module Relution.LiveData {
           name: entity,
           idAttribute: 'id'
         });
+        var storeOption = {
+          entities: entities
+        };
+        if (this.options.localStoreOptions && typeof this.options.localStoreOptions === 'object') {
+          storeOption = _.clone(this.options.localStoreOptions);
+          storeOption.entities = entities;
+        }
         var messages = Collection.design({
           entity: entity,
-          store: this.options.localStore.create({
-            entities: entities
-          })
+          store: this.options.localStore.create(storeOption)
         });
         if (endpoint.isConnected) {
           this._sendMessages(endpoint);
