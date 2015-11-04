@@ -104,7 +104,7 @@ module Relution.LiveData {
           if (!global.openDatabase) {
             error = 'Your browser does not support WebSQL databases.';
           } else {
-            this.db = window.sqlitePlugin.openDatabase(this.options.name, this.options.security);
+            this.db = window.sqlitePlugin.openDatabase(this.options.name, this.options.security, 2);
             if (this.entities) {
               for (var key in this.entities) {
                 this._createTable({entity: this.entities[key]});
@@ -117,7 +117,7 @@ module Relution.LiveData {
       }
       if (this.db) {
         if (this.options.version && this.db.version !== this.options.version) {
-          // this._updateDb(errorCallback);
+          this._updateDb(errorCallback);
         } else {
           this.handleSuccess(errorCallback, this.db);
         }
@@ -138,21 +138,22 @@ module Relution.LiveData {
       var that = this;
       try {
         if (!this.db) {
-          this.db = window.sqlitePlugin.openDatabase(this.options.name, this.options.security);
+          this.db = window.sqlitePlugin.openDatabase(this.options.name, this.options.security, 2);
         }
         try {
           var arSql = this._sqlUpdateDatabase(this.db.version, this.options.version);
-          this.db.changeVersion(this.db.version, this.options.version, function (tx) {
-            _.each(arSql, function (sql) {
-              Relution.LiveData.Debug.info('sql statement: ' + sql);
-              lastSql = sql;
-              tx.executeSql(sql);
-            });
-          }, function (msg) {
-            that.handleError(options, msg, lastSql);
-          }, function () {
-            that.handleSuccess(options, that.db);
-          });
+          console.log('sqlcipher cant change the version its still not supported check out https://github.com/litehelpers/Cordova-sqlcipher-adapter#other-limitations');
+          // this.db.changeVersion(this.db.version, this.options.version, function (tx) {
+          //   _.each(arSql, function (sql) {
+          //     Relution.LiveData.Debug.info('sql statement: ' + sql);
+          //     lastSql = sql;
+          //     tx.executeSql(sql);
+          //   });
+          // }, function (msg) {
+          //   that.handleError(options, msg, lastSql);
+          // }, function () {
+          //   that.handleSuccess(options, that.db);
+          // });
         } catch (e) {
           error = e.message;
           Relution.LiveData.Debug.error('webSql change version failed, DB-Version: ' + this.db.version);

@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Wed Nov 04 2015 12:24:34
+* Date:      Wed Nov 04 2015 17:27:27
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -5366,7 +5366,7 @@ var Relution;
                             error = 'Your browser does not support WebSQL databases.';
                         }
                         else {
-                            this.db = window.sqlitePlugin.openDatabase(this.options.name, this.options.security);
+                            this.db = window.sqlitePlugin.openDatabase(this.options.name, this.options.security, 2);
                             if (this.entities) {
                                 for (var key in this.entities) {
                                     this._createTable({ entity: this.entities[key] });
@@ -5403,21 +5403,11 @@ var Relution;
                 var that = this;
                 try {
                     if (!this.db) {
-                        this.db = window.sqlitePlugin.openDatabase(this.options.name, this.options.security);
+                        this.db = window.sqlitePlugin.openDatabase(this.options.name, this.options.security, 2);
                     }
                     try {
                         var arSql = this._sqlUpdateDatabase(this.db.version, this.options.version);
-                        this.db.changeVersion(this.db.version, this.options.version, function (tx) {
-                            _.each(arSql, function (sql) {
-                                Relution.LiveData.Debug.info('sql statement: ' + sql);
-                                lastSql = sql;
-                                tx.executeSql(sql);
-                            });
-                        }, function (msg) {
-                            that.handleError(options, msg, lastSql);
-                        }, function () {
-                            that.handleSuccess(options, that.db);
-                        });
+                        console.log('sqlcipher cant change the version its still not supported check out https://github.com/litehelpers/Cordova-sqlcipher-adapter#other-limitations');
                     }
                     catch (e) {
                         error = e.message;
