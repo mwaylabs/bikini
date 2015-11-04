@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Wed Nov 04 2015 12:21:47
+* Date:      Wed Nov 04 2015 12:24:34
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -5366,7 +5366,7 @@ var Relution;
                             error = 'Your browser does not support WebSQL databases.';
                         }
                         else {
-                            this.db = global.openDatabase(this.options.name, '', '', this.options.size);
+                            this.db = window.sqlitePlugin.openDatabase(this.options.name, this.options.security);
                             if (this.entities) {
                                 for (var key in this.entities) {
                                     this._createTable({ entity: this.entities[key] });
@@ -5403,7 +5403,7 @@ var Relution;
                 var that = this;
                 try {
                     if (!this.db) {
-                        this.db = global.openDatabase(this.options.name, '', '', this.options.size);
+                        this.db = window.sqlitePlugin.openDatabase(this.options.name, this.options.security);
                     }
                     try {
                         var arSql = this._sqlUpdateDatabase(this.db.version, this.options.version);

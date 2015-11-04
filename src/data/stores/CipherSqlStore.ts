@@ -104,7 +104,7 @@ module Relution.LiveData {
           if (!global.openDatabase) {
             error = 'Your browser does not support WebSQL databases.';
           } else {
-            this.db = global.openDatabase(this.options.name, '', '', this.options.size);
+            this.db = window.sqlitePlugin.openDatabase(this.options.name, this.options.security);
             if (this.entities) {
               for (var key in this.entities) {
                 this._createTable({entity: this.entities[key]});
@@ -117,7 +117,7 @@ module Relution.LiveData {
       }
       if (this.db) {
         if (this.options.version && this.db.version !== this.options.version) {
-          this._updateDb(errorCallback);
+          // this._updateDb(errorCallback);
         } else {
           this.handleSuccess(errorCallback, this.db);
         }
@@ -138,7 +138,7 @@ module Relution.LiveData {
       var that = this;
       try {
         if (!this.db) {
-          this.db = global.openDatabase(this.options.name, '', '', this.options.size);
+          this.db = window.sqlitePlugin.openDatabase(this.options.name, this.options.security);
         }
         try {
           var arSql = this._sqlUpdateDatabase(this.db.version, this.options.version);
