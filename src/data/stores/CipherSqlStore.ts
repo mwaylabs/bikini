@@ -92,6 +92,10 @@ module Relution.LiveData {
 
     /**
      * @private
+     * The new location option is used to select the database subdirectory location (iOS only) with the following choices:
+     * 0 (default): Documents - visible to iTunes and backed up by iCloud
+     * 1: Library - backed up by iCloud, NOT visible to iTunes
+     * 2: Library/LocalDatabase - NOT visible to iTunes and NOT backed up by iCloud
      */
     private _openDb(errorCallback) {
       var error, dbError;
@@ -104,7 +108,7 @@ module Relution.LiveData {
           if (!global.openDatabase) {
             error = 'Your browser does not support WebSQL databases.';
           } else {
-            this.db = window.sqlitePlugin.openDatabase(this.options.name, this.options.security, 2);
+            this.db = window.sqlitePlugin.openDatabase({ name: this.options.name, key: this.options.security, location: 2 });
             if (this.entities) {
               for (var key in this.entities) {
                 this._createTable({entity: this.entities[key]});
@@ -138,7 +142,7 @@ module Relution.LiveData {
       var that = this;
       try {
         if (!this.db) {
-          this.db = window.sqlitePlugin.openDatabase(this.options.name, this.options.security, 2);
+          this.db = window.sqlitePlugin.openDatabase({ name: this.options.name, key: this.options.security, location: 2 });
         }
         try {
           var arSql = this._sqlUpdateDatabase(this.db.version, this.options.version);
