@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Wed Nov 04 2015 17:38:51
+* Date:      Fri Nov 06 2015 15:54:08
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -4285,6 +4285,8 @@ var Relution;
                     this.handleCallback.apply(this, [obj.finish].concat(args));
                 }
             };
+            Store.prototype.close = function () {
+            };
             Store.extend = LiveData.extend;
             Store.create = LiveData.create;
             Store.design = LiveData.design;
@@ -5248,6 +5250,12 @@ var Relution;
                     this.handleError(options, error);
                 }
             };
+            WebSqlStore.prototype.close = function () {
+                console.log('WebSQL Store close');
+                if (this.db) {
+                    this.db = null;
+                }
+            };
             return WebSqlStore;
         })(LiveData.AbstractSqlStore);
         LiveData.WebSqlStore = WebSqlStore;
@@ -5425,6 +5433,14 @@ var Relution;
                     this.handleError(options, error);
                 }
             };
+            /**
+             * @description close the exist database
+             */
+            CipherSqlStore.prototype.close = function () {
+                if (this.db) {
+                    this.db.close();
+                }
+            };
             return CipherSqlStore;
         })(LiveData.AbstractSqlStore);
         LiveData.CipherSqlStore = CipherSqlStore;
@@ -5518,6 +5534,23 @@ var Relution;
                     })()
                 }, options));
                 this.endpoints = {};
+                /**
+                 * close the socket explicit
+                 */
+                this.closeEndpoint = function () {
+                    if (this.socket) {
+                        this.socket.socket.close();
+                        this.socket = null;
+                    }
+                    if (this.messages.store) {
+                        this.messages.store.close();
+                        this.messages = null;
+                    }
+                    if (this.localStore) {
+                        this.localStore.close();
+                        this.localStore = null;
+                    }
+                };
                 console.log('SyncStore', options);
                 if (this.options.useSocketNotify && typeof io !== 'object') {
                     Relution.LiveData.Debug.warning('Socket.IO not present !!');
@@ -5553,6 +5586,7 @@ var Relution;
                         endpoint.messages = this.createMsgCollection(endpoint);
                         endpoint.socket = this.createSocket(endpoint, name);
                         endpoint.info = this.fetchServerInfo(endpoint);
+                        endpoint.close = this.closeEndpoint;
                         this.endpoints[hash] = endpoint;
                     }
                     return endpoint;
@@ -6242,6 +6276,15 @@ var Relution;
                         collection.reset();
                         this.setLastMessageTime(endpoint.channel, '');
                     }
+                }
+            };
+            /**
+             * close the socket explicit
+             */
+            SyncStore.prototype.close = function () {
+                var keys = Object.keys(this.endpoints);
+                for (var i = 0, l = keys.length; i < l; i++) {
+                    this.endpoints[keys[i]].close();
                 }
             };
             return SyncStore;

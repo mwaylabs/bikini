@@ -156,5 +156,11 @@ module Relution.LiveData {
         this.handleError(options, error);
       }
     }
+    public close() {
+      console.log('WebSQL Store close');
+      if (this.db) {
+        this.db = null;
+      }
+    }
   }
 }

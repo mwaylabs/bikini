@@ -167,6 +167,12 @@ var Relution;
                     this.handleError(options, error);
                 }
             };
+            WebSqlStore.prototype.close = function () {
+                console.log('WebSQL Store close');
+                if (this.db) {
+                    this.db = null;
+                }
+            };
             return WebSqlStore;
         })(LiveData.AbstractSqlStore);
         LiveData.WebSqlStore = WebSqlStore;

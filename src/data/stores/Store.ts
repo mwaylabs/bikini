@@ -35,19 +35,19 @@ module Relution.LiveData {
    * @module Relution.LiveData.Store
    */
   export class Store {
-    protected options:any;
+    protected options: any;
 
-    protected entities:any;
+    protected entities: any;
 
     constructor(options?: any) {
       this.options = _.extend({
         name: '',
         entities: {},
-        typeMapping: (function () {
+        typeMapping: (function() {
           var map = {};
-          map [DATA.TYPE.OBJECTID] = DATA.TYPE.STRING;
-          map [DATA.TYPE.DATE] = DATA.TYPE.STRING;
-          map [DATA.TYPE.BINARY] = DATA.TYPE.TEXT;
+          map[DATA.TYPE.OBJECTID] = DATA.TYPE.STRING;
+          map[DATA.TYPE.DATE] = DATA.TYPE.STRING;
+          map[DATA.TYPE.BINARY] = DATA.TYPE.TEXT;
           return map;
         })()
       }, options);
@@ -71,7 +71,7 @@ module Relution.LiveData {
         entity.name = entity.name || name;
 
         // connect collection and model to this store
-        var collection = entity.collection || Collection.extend({model: Model.extend({})});
+        var collection = entity.collection || Collection.extend({ model: Model.extend({}) });
         var model = collection.prototype.model;
         // set new entity and name
         collection.prototype.entity = model.prototype.entity = name;
@@ -86,7 +86,7 @@ module Relution.LiveData {
         var entity = obj.entity || obj;
         var name = _.isString(entity) ? entity : entity.name;
         if (name) {
-          return this.entities[name] || (entity && entity.name ? entity : {name: name});
+          return this.entities[name] || (entity && entity.name ? entity : { name: name });
         }
       }
     }
@@ -128,7 +128,7 @@ module Relution.LiveData {
     getDataArray(data) {
       var array = [];
       if (_.isArray(data) || Backbone.Collection.prototype.isPrototypeOf(data)) {
-        _.each(data, function (d) {
+        _.each(data, function(d) {
           var attrs = this.getAttributes(d);
           if (attrs) {
             array.push(attrs);
@@ -180,7 +180,7 @@ module Relution.LiveData {
         collection = this.getCollection(options.entity);
       }
       if (collection && collection.fetch) {
-        var opts = _.extend({}, options || {}, {store: this});
+        var opts = _.extend({}, options || {}, { store: this });
         return collection.fetch(opts);
       }
     }
@@ -194,7 +194,7 @@ module Relution.LiveData {
         collection = this.getCollection(options.entity);
       }
       if (collection && collection.create) {
-        var opts = _.extend({}, options || {}, {store: this});
+        var opts = _.extend({}, options || {}, { store: this });
         collection.create(model, opts);
       }
     }
@@ -208,14 +208,14 @@ module Relution.LiveData {
         model = this.createModel(options.entity);
       }
       if (model && model.save) {
-        var opts = _.extend({}, options || {}, {store: this});
+        var opts = _.extend({}, options || {}, { store: this });
         model.save(attr, opts);
       }
     }
 
     destroy(model, options) {
       if (model && model.destroy) {
-        var opts = _.extend({}, options || {}, {store: this});
+        var opts = _.extend({}, options || {}, { store: this });
         model.destroy(opts);
       }
     }
@@ -267,7 +267,10 @@ module Relution.LiveData {
       ERROR_SAVE_DATA: 'Error while saving data to the store. ',
       ERROR_LOAD_IDS: 'Error while loading ids from store. ',
       ERROR_SAVE_IDS: 'Error while saving ids to the store. '
-      }
+    }
+    public close() {
+
+    }
   }
 
   _.extend(Store.prototype, Backbone.Events, _Object);

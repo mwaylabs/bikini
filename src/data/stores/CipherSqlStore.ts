@@ -147,17 +147,6 @@ module Relution.LiveData {
         try {
           var arSql = this._sqlUpdateDatabase(this.db.version, this.options.version);
           console.log('sqlcipher cant change the version its still not supported check out https://github.com/litehelpers/Cordova-sqlcipher-adapter#other-limitations');
-          // this.db.changeVersion(this.db.version, this.options.version, function (tx) {
-          //   _.each(arSql, function (sql) {
-          //     Relution.LiveData.Debug.info('sql statement: ' + sql);
-          //     lastSql = sql;
-          //     tx.executeSql(sql);
-          //   });
-          // }, function (msg) {
-          //   that.handleError(options, msg, lastSql);
-          // }, function () {
-          //   that.handleSuccess(options, that.db);
-          // });
         } catch (e) {
           error = e.message;
           Relution.LiveData.Debug.error('webSql change version failed, DB-Version: ' + this.db.version);
@@ -167,6 +156,14 @@ module Relution.LiveData {
       }
       if (error) {
         this.handleError(options, error);
+      }
+    }
+    /**
+     * @description close the exist database
+     */
+    public close() {
+      if (this.db) {
+        this.db.close();
       }
     }
   }

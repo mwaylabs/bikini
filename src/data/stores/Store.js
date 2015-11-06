@@ -239,6 +239,8 @@ var Relution;
                     this.handleCallback.apply(this, [obj.finish].concat(args));
                 }
             };
+            Store.prototype.close = function () {
+            };
             Store.extend = LiveData.extend;
             Store.create = LiveData.create;
             Store.design = LiveData.design;

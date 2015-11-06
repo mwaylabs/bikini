@@ -169,6 +169,14 @@ var Relution;
                     this.handleError(options, error);
                 }
             };
+            /**
+             * @description close the exist database
+             */
+            CipherSqlStore.prototype.close = function () {
+                if (this.db) {
+                    this.db.close();
+                }
+            };
             return CipherSqlStore;
         })(LiveData.AbstractSqlStore);
         LiveData.CipherSqlStore = CipherSqlStore;

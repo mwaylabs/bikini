@@ -85,6 +85,23 @@ var Relution;
                     })()
                 }, options));
                 this.endpoints = {};
+                /**
+                 * close the socket explicit
+                 */
+                this.closeEndpoint = function () {
+                    if (this.socket) {
+                        this.socket.socket.close();
+                        this.socket = null;
+                    }
+                    if (this.messages.store) {
+                        this.messages.store.close();
+                        this.messages = null;
+                    }
+                    if (this.localStore) {
+                        this.localStore.close();
+                        this.localStore = null;
+                    }
+                };
                 console.log('SyncStore', options);
                 if (this.options.useSocketNotify && typeof io !== 'object') {
                     Relution.LiveData.Debug.warning('Socket.IO not present !!');
@@ -120,6 +137,7 @@ var Relution;
                         endpoint.messages = this.createMsgCollection(endpoint);
                         endpoint.socket = this.createSocket(endpoint, name);
                         endpoint.info = this.fetchServerInfo(endpoint);
+                        endpoint.close = this.closeEndpoint;
                         this.endpoints[hash] = endpoint;
                     }
                     return endpoint;
@@ -809,6 +827,15 @@ var Relution;
                         collection.reset();
                         this.setLastMessageTime(endpoint.channel, '');
                     }
+                }
+            };
+            /**
+             * close the socket explicit
+             */
+            SyncStore.prototype.close = function () {
+                var keys = Object.keys(this.endpoints);
+                for (var i = 0, l = keys.length; i < l; i++) {
+                    this.endpoints[keys[i]].close();
                 }
             };
             return SyncStore;
