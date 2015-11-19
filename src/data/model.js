@@ -10,9 +10,9 @@
  */
 Relution.LiveData.Model = Backbone.Model.extend({
   constructor: function (attributes, options) {
-    if (this.url && typeof this.url === 'string') {
-      if (this.url.charAt(this.url.length - 1) !== '/') {
-        this.url += '/';
+    if (this.urlRoot && typeof this.urlRoot === 'string') {
+      if (this.urlRoot.charAt(this.urlRoot.length - 1) !== '/') {
+        this.urlRoot += '/';
       }
     }
     this.init(attributes, options);

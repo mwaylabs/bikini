@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Fri Jul 10 2015 12:47:43
+* Date:      Thu Nov 19 2015 08:57:55
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -2775,9 +2775,9 @@ Relution.LiveData.Security = Relution.LiveData._Object.design({
  */
 Relution.LiveData.Model = Backbone.Model.extend({
   constructor: function (attributes, options) {
-    if (this.url && typeof this.url === 'string') {
-      if (this.url.charAt(this.url.length - 1) !== '/') {
-        this.url += '/';
+    if (this.urlRoot && typeof this.urlRoot === 'string') {
+      if (this.urlRoot.charAt(this.urlRoot.length - 1) !== '/') {
+        this.urlRoot += '/';
       }
     }
     this.init(attributes, options);
