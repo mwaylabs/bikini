@@ -139,4 +139,45 @@ describe('Relution.LiveData.JsonFilterVisitor', function () {
     }
   });
 
+  it('filter movies with links containing key similar', function () {
+    var testdata = makeMovies();
+    var filtered = testdata.filter(Relution.LiveData.jsonFilter({
+      type: 'stringMap',
+      fieldName: 'links',
+      key: 'similar'
+    }));
+    var expected = testdata.filter(function (movie) {
+      /* jshint -W106 */
+      return movie.links && Object.keys(movie.links).indexOf('similar') >= 0;
+    });
+    assert.isTrue(expected.length > 0);
+    assert.equal(filtered.length, expected.length, 'expected ' + expected.length + ' elements');
+    for (var i = 0; i < expected.length; ++i) {
+      assert.equal(filtered[i], expected[i], 'filter at #' + i);
+    }
+  });
+
+  it('filter movies with links containing value http://api.rottentomatoes.com/api/public/v1.0/movies/771324839/similar.json', function () {
+    var testdata = makeMovies();
+    var filtered = testdata.filter(Relution.LiveData.jsonFilter({
+      type: 'stringMap',
+      fieldName: 'links',
+      value: 'http://api.rottentomatoes.com/api/public/v1.0/movies/771324839/similar.json'
+    }));
+    var expected = testdata.filter(function (movie) {
+      /* jshint -W106 */
+      for (var key in movie.links || {}) {
+        if (movie.links[key] === 'http://api.rottentomatoes.com/api/public/v1.0/movies/771324839/similar.json') {
+          return true;
+        }
+      }
+      return false;
+    });
+    assert.isTrue(expected.length > 0);
+    assert.equal(filtered.length, expected.length, 'expected ' + expected.length + ' elements');
+    for (var i = 0; i < expected.length; ++i) {
+      assert.equal(filtered[i], expected[i], 'filter at #' + i);
+    }
+  });
+
 });

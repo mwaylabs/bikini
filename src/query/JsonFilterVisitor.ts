@@ -211,25 +211,37 @@ module Relution.LiveData {
 
     stringMap(filter:StringMapFilter):JsonFilterFn<T> {
       var expression = new JsonPath(filter.fieldName);
-      var property = filter.key && new JsonPath(filter.key);
+      var property = filter.key !== undefined && filter.key !== null && new JsonPath(filter.key);
       var expected = filter.value;
       if (!property && (expected === undefined || expected === null)) {
+        // no key and no value --> at least one entry in dictionary
         return (obj:T) => {
           var value = expression.evaluate(obj);
-          return value === undefined || value === null;
+          return value && _.keys(value).length > 0;
         }
       } else if (!property) {
+        // no key but some value
         return (obj:T) => {
           var value = expression.evaluate(obj);
-          return value == expected;
+          if (value) {
+            for (var key in value) {
+              var val = value[key];
+              if (val == expected) {
+                return true;
+              }
+            }
+          }
+          return false;
         }
       } else if (expected === undefined || expected === null) {
+        // key but no value --> any value will do
         return (obj:T) => {
           var value = expression.evaluate(obj);
           var val = property.evaluate(value);
-          return val === undefined || val === null;
+          return val !== undefined && val !== null;
         }
       } else {
+        // key and value --> must have exact entry
         return (obj:T) => {
           var value = expression.evaluate(obj);
           var val = property.evaluate(value);

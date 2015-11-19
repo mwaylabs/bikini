@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Thu Nov 19 2015 08:57:55
+* Date:      Thu Nov 19 2015 09:48:06
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -1505,28 +1505,40 @@ var Relution;
             };
             JsonFilterVisitor.prototype.stringMap = function (filter) {
                 var expression = new LiveData.JsonPath(filter.fieldName);
-                var property = filter.key && new LiveData.JsonPath(filter.key);
+                var property = filter.key !== undefined && filter.key !== null && new LiveData.JsonPath(filter.key);
                 var expected = filter.value;
                 if (!property && (expected === undefined || expected === null)) {
+                    // no key and no value --> at least one entry in dictionary
                     return function (obj) {
                         var value = expression.evaluate(obj);
-                        return value === undefined || value === null;
+                        return value && _.keys(value).length > 0;
                     };
                 }
                 else if (!property) {
+                    // no key but some value
                     return function (obj) {
                         var value = expression.evaluate(obj);
-                        return value == expected;
+                        if (value) {
+                            for (var key in value) {
+                                var val = value[key];
+                                if (val == expected) {
+                                    return true;
+                                }
+                            }
+                        }
+                        return false;
                     };
                 }
                 else if (expected === undefined || expected === null) {
+                    // key but no value --> any value will do
                     return function (obj) {
                         var value = expression.evaluate(obj);
                         var val = property.evaluate(value);
-                        return val === undefined || val === null;
+                        return val !== undefined && val !== null;
                     };
                 }
                 else {
+                    // key and value --> must have exact entry
                     return function (obj) {
                         var value = expression.evaluate(obj);
                         var val = property.evaluate(value);
