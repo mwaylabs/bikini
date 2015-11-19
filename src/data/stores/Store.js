@@ -48,6 +48,7 @@ var Relution;
                         return map;
                     })()
                 }, options);
+                console.log('Store', options);
                 this.setEntities(this.options.entities);
             }
             Store.prototype.setEntities = function (entities) {
@@ -238,6 +239,8 @@ var Relution;
                     this.handleCallback.apply(this, [obj.finish].concat(args));
                 }
             };
+            Store.prototype.close = function () {
+            };
             Store.extend = LiveData.extend;
             Store.create = LiveData.create;
             Store.design = LiveData.design;
@@ -255,4 +258,3 @@ var Relution;
         _.extend(Store.prototype, Backbone.Events, LiveData._Object);
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=Store.js.map

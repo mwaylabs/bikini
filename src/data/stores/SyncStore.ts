@@ -28,6 +28,7 @@
 /// <reference path="../../core/livedata.d.ts" />
 /// <reference path="Store.ts" />
 /// <reference path="WebSqlStore.ts" />
+/// <reference path="CipherSqlStore.ts" />
 /// <reference path="SyncContext.ts" />
 /// <reference path="../../utility/Debug.ts" />
 
@@ -69,7 +70,6 @@ module Relution.LiveData {
     constructor(options?:any) {
       super(_.extend({
         localStore: WebSqlStore,
-
         useLocalStore: true,
         useSocketNotify: true,
         useOfflineChanges: true,
@@ -82,7 +82,7 @@ module Relution.LiveData {
           return map;
         })()
       }, options));
-
+      console.log('SyncStore', options);
       if (this.options.useSocketNotify && typeof io !== 'object') {
         Relution.LiveData.Debug.warning('Socket.IO not present !!');
         this.options.useSocketNotify = false;
@@ -119,6 +119,7 @@ module Relution.LiveData {
           endpoint.messages = this.createMsgCollection(endpoint);
           endpoint.socket = this.createSocket(endpoint, name);
           endpoint.info = this.fetchServerInfo(endpoint);
+          endpoint.close = this.closeEndpoint;
           this.endpoints[hash] = endpoint;
         }
         return endpoint;
@@ -149,9 +150,14 @@ module Relution.LiveData {
           name: endpoint.channel,
           idAttribute: endpoint.model.prototype.idAttribute // see Collection.modelId() of backbone.js
         });
-        return this.options.localStore.create({
+        var storeOption = {
           entities: entities
-        });
+        };
+        if (this.options.localStoreOptions && typeof this.options.localStoreOptions === 'object') {
+          storeOption = _.clone(this.options.localStoreOptions);
+          storeOption.entities = entities;
+        }
+        return this.options.localStore.create(storeOption);
       }
     }
 
@@ -168,11 +174,16 @@ module Relution.LiveData {
           name: entity,
           idAttribute: 'id'
         });
+        var storeOption = {
+          entities: entities
+        };
+        if (this.options.localStoreOptions && typeof this.options.localStoreOptions === 'object') {
+          storeOption = _.clone(this.options.localStoreOptions);
+          storeOption.entities = entities;
+        }
         var messages = Collection.design({
           entity: entity,
-          store: this.options.localStore.create({
-            entities: entities
-          })
+          store: this.options.localStore.create(storeOption)
         });
         if (endpoint.isConnected) {
           this._sendMessages(endpoint);
@@ -843,7 +854,31 @@ module Relution.LiveData {
         }
       }
     }
-
+    /**
+     * close the socket explicit
+     */
+    public closeEndpoint = function() {
+      if (this.socket) {
+        this.socket.socket.close();
+        this.socket = null;
+      }
+      if (this.messages.store) {
+        this.messages.store.close();
+        this.messages = null;
+      }
+      if (this.localStore) {
+        this.localStore.close();
+        this.localStore = null;
+      }
+    }
+    /**
+     * close the socket explicit
+     */
+    public close() {
+      var keys = Object.keys(this.endpoints);
+      for (var i = 0, l = keys.length; i < l; i++) {
+        this.endpoints[keys[i]].close();
+      }
+    }
   }
-
 }

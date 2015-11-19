@@ -28,6 +28,7 @@
 /// <reference path="../../core/livedata.d.ts" />
 /// <reference path="Store.ts" />
 /// <reference path="WebSqlStore.ts" />
+/// <reference path="CipherSqlStore.ts" />
 /// <reference path="SyncContext.ts" />
 /// <reference path="../../utility/Debug.ts" />
 var __extends = this.__extends || function (d, b) {
@@ -84,6 +85,24 @@ var Relution;
                     })()
                 }, options));
                 this.endpoints = {};
+                /**
+                 * close the socket explicit
+                 */
+                this.closeEndpoint = function () {
+                    if (this.socket) {
+                        this.socket.socket.close();
+                        this.socket = null;
+                    }
+                    if (this.messages.store) {
+                        this.messages.store.close();
+                        this.messages = null;
+                    }
+                    if (this.localStore) {
+                        this.localStore.close();
+                        this.localStore = null;
+                    }
+                };
+                console.log('SyncStore', options);
                 if (this.options.useSocketNotify && typeof io !== 'object') {
                     Relution.LiveData.Debug.warning('Socket.IO not present !!');
                     this.options.useSocketNotify = false;
@@ -118,6 +137,7 @@ var Relution;
                         endpoint.messages = this.createMsgCollection(endpoint);
                         endpoint.socket = this.createSocket(endpoint, name);
                         endpoint.info = this.fetchServerInfo(endpoint);
+                        endpoint.close = this.closeEndpoint;
                         this.endpoints[hash] = endpoint;
                     }
                     return endpoint;
@@ -144,9 +164,14 @@ var Relution;
                         name: endpoint.channel,
                         idAttribute: endpoint.model.prototype.idAttribute // see Collection.modelId() of backbone.js
                     });
-                    return this.options.localStore.create({
+                    var storeOption = {
                         entities: entities
-                    });
+                    };
+                    if (this.options.localStoreOptions && typeof this.options.localStoreOptions === 'object') {
+                        storeOption = _.clone(this.options.localStoreOptions);
+                        storeOption.entities = entities;
+                    }
+                    return this.options.localStore.create(storeOption);
                 }
             };
             /**
@@ -162,11 +187,16 @@ var Relution;
                         name: entity,
                         idAttribute: 'id'
                     });
+                    var storeOption = {
+                        entities: entities
+                    };
+                    if (this.options.localStoreOptions && typeof this.options.localStoreOptions === 'object') {
+                        storeOption = _.clone(this.options.localStoreOptions);
+                        storeOption.entities = entities;
+                    }
                     var messages = LiveData.Collection.design({
                         entity: entity,
-                        store: this.options.localStore.create({
-                            entities: entities
-                        })
+                        store: this.options.localStore.create(storeOption)
                     });
                     if (endpoint.isConnected) {
                         this._sendMessages(endpoint);
@@ -331,7 +361,7 @@ var Relution;
                 Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore.sync');
                 options = options || {};
                 try {
-                    var endpoint = model.endpoint || this.getEndpoint(model.getUrlRoot());
+                    var endpoint = model.endpoint || this.getEndpoint(model.getUrlRoot() /*throws urlError*/);
                     if (!endpoint) {
                         throw new Error('no endpoint');
                     }
@@ -341,7 +371,8 @@ var Relution;
                             var syncContext = options.syncContext; // sync can be called by SyncContext itself when paging results
                             if (!syncContext) {
                                 // capture GetQuery options
-                                syncContext = new LiveData.SyncContext(options, model.options, this.options);
+                                syncContext = new LiveData.SyncContext(options, model.options, this.options // static options of this store realize filtering client/server
+                                );
                                 options.syncContext = syncContext;
                             }
                             if (model.syncContext !== syncContext) {
@@ -705,7 +736,7 @@ var Relution;
                     };
                     var model = new LiveData.Model(msg.data, {
                         idAttribute: endpoint.entity.idAttribute,
-                        entity: endpoint.entity,
+                        entity: endpoint.entity
                     });
                     Relution.LiveData.Debug.info('sendMessage ' + model.id);
                     return that._applyResponse(that._ajaxMessage(endpoint, msg, remoteOptions, model), endpoint, msg, remoteOptions, model).catch(function (error) {
@@ -724,8 +755,8 @@ var Relution;
                             // original request failed and the code above tried to revert the local modifications by reloading the data, which failed as well...
                             var status = fetchResp && fetchResp.status;
                             switch (status) {
-                                case 404:
-                                case 401:
+                                case 404: // NOT FOUND
+                                case 401: // UNAUTHORIZED
                                 case 410:
                                     // ...because the item is gone by now, maybe someone else changed it to be deleted
                                     return model.destroy(localOptions);
@@ -798,9 +829,17 @@ var Relution;
                     }
                 }
             };
+            /**
+             * close the socket explicit
+             */
+            SyncStore.prototype.close = function () {
+                var keys = Object.keys(this.endpoints);
+                for (var i = 0, l = keys.length; i < l; i++) {
+                    this.endpoints[keys[i]].close();
+                }
+            };
             return SyncStore;
         })(LiveData.Store);
         LiveData.SyncStore = SyncStore;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=SyncStore.js.map

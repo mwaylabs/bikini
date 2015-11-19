@@ -1,7 +1,7 @@
 /**
- * WebSqlStore.ts
+ * CipherSqlStore.ts
  *
- * Created by Thomas Beckmann on 24.06.2015
+ * Created by Pascal Brewing on 04.11.2015
  * Copyright (c)
  * 2015
  * M-Way Solutions GmbH. All rights reserved.
@@ -39,13 +39,13 @@ var Relution;
     var LiveData;
     (function (LiveData) {
         /**
-         * The Relution.LiveData.WebSqlStore can be used to store model collection into
+         * The Relution.LiveData.CipherSqlStore can be used to store model collection into
          * the webSql database
          *
-         * @module Relution.LiveData.WebSqlStore
+         * @module Relution.LiveData.CipherSqlStore
          *
          * @type {*}
-         * @extends Relution.LiveData.Store
+         * @extends Relution.LiveData.AbstractSqlStore
          *
          * @example
          *
@@ -55,7 +55,7 @@ var Relution;
          * var MyCollection = Relution.LiveData.Collection.extend({
          *      model: MyModel,
          *      entity: 'MyTableName',
-         *      store: new Relution.LiveData.WebSqlStorageStore()
+         *      store: new Relution.LiveData.CipherSqlStore()
          * });
          *
          * // If you want to use specific columns you can specify the fields
@@ -70,31 +70,43 @@ var Relution;
          *          age:         { type: Relution.LiveData.DATA.TYPE.INTEGER }
          *      }
          * });
-         *
+         * 0 (default): Documents - visible to iTunes and backed up by iCloud
+         * 1: Library - backed up by iCloud, NOT visible to iTunes
+         * 2: Library/LocalDatabase - NOT visible to iTunes and NOT backed up by iCloud
          *
          */
-        var WebSqlStore = (function (_super) {
-            __extends(WebSqlStore, _super);
-            function WebSqlStore(options) {
+        var CipherSqlStore = (function (_super) {
+            __extends(CipherSqlStore, _super);
+            function CipherSqlStore(options) {
                 _super.call(this, _.extend({
                     name: 'relution-livedata',
                     size: 1024 * 1024,
-                    version: '1.0',
-                    security: ''
+                    security: null
                 }, options));
-                var that = this;
+                if (options && !options.security) {
+                    return console.error('security Key is required on a CipherSqlStore');
+                }
+                console.log('CipherSqlStore', options);
+                var self = this;
                 this._openDb({
                     error: function (error) {
                         Relution.LiveData.Debug.error(error);
-                        that.trigger('error', error);
+                        self.trigger('error', error);
                     }
                 });
             }
             /**
              * @private
+             * The new location option is used to select the database subdirectory location (iOS only) with the following choices:
+             * 0 (default): Documents - visible to iTunes and backed up by iCloud
+             * 1: Library - backed up by iCloud, NOT visible to iTunes
+             * 2: Library/LocalDatabase - NOT visible to iTunes and NOT backed up by iCloud
              */
-            WebSqlStore.prototype._openDb = function (options) {
+            CipherSqlStore.prototype._openDb = function (errorCallback) {
                 var error, dbError;
+                if (this.options && !this.options.security) {
+                    return console.error('A CipherSqlStore need a Security Token!', this.options);
+                }
                 /* openDatabase(db_name, version, description, estimated_size, callback) */
                 if (!this.db) {
                     try {
@@ -102,7 +114,7 @@ var Relution;
                             error = 'Your browser does not support WebSQL databases.';
                         }
                         else {
-                            this.db = global.openDatabase(this.options.name, '', '', this.options.size);
+                            this.db = window.sqlitePlugin.openDatabase({ name: this.options.name, key: this.options.security, location: 2 });
                             if (this.entities) {
                                 for (var key in this.entities) {
                                     this._createTable({ entity: this.entities[key] });
@@ -116,44 +128,34 @@ var Relution;
                 }
                 if (this.db) {
                     if (this.options.version && this.db.version !== this.options.version) {
-                        this._updateDb(options);
+                        this._updateDb(errorCallback);
                     }
                     else {
-                        this.handleSuccess(options, this.db);
+                        this.handleSuccess(errorCallback, this.db);
                     }
                 }
                 else if (dbError === 2 || dbError === '2') {
                     // Version number mismatch.
-                    this._updateDb(options);
+                    this._updateDb(errorCallback);
                 }
                 else {
                     if (!error && dbError) {
                         error = dbError;
                     }
-                    this.handleSuccess(options, error);
+                    this.handleSuccess(errorCallback, error);
                 }
             };
-            WebSqlStore.prototype._updateDb = function (options) {
+            CipherSqlStore.prototype._updateDb = function (options) {
                 var error;
                 var lastSql;
                 var that = this;
                 try {
                     if (!this.db) {
-                        this.db = global.openDatabase(this.options.name, '', '', this.options.size);
+                        this.db = window.sqlitePlugin.openDatabase({ name: this.options.name, key: this.options.security, location: 2 });
                     }
                     try {
                         var arSql = this._sqlUpdateDatabase(this.db.version, this.options.version);
-                        this.db.changeVersion(this.db.version, this.options.version, function (tx) {
-                            _.each(arSql, function (sql) {
-                                Relution.LiveData.Debug.info('sql statement: ' + sql);
-                                lastSql = sql;
-                                tx.executeSql(sql);
-                            });
-                        }, function (msg) {
-                            that.handleError(options, msg, lastSql);
-                        }, function () {
-                            that.handleSuccess(options, that.db);
-                        });
+                        console.log('sqlcipher cant change the version its still not supported check out https://github.com/litehelpers/Cordova-sqlcipher-adapter#other-limitations');
                     }
                     catch (e) {
                         error = e.message;
@@ -167,14 +169,16 @@ var Relution;
                     this.handleError(options, error);
                 }
             };
-            WebSqlStore.prototype.close = function () {
-                console.log('WebSQL Store close');
+            /**
+             * @description close the exist database
+             */
+            CipherSqlStore.prototype.close = function () {
                 if (this.db) {
-                    this.db = null;
+                    this.db.close();
                 }
             };
-            return WebSqlStore;
+            return CipherSqlStore;
         })(LiveData.AbstractSqlStore);
-        LiveData.WebSqlStore = WebSqlStore;
+        LiveData.CipherSqlStore = CipherSqlStore;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));

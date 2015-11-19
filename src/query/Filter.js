@@ -22,4 +22,3 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 /* jshint indent: 4 */
-//# sourceMappingURL=Filter.js.map
