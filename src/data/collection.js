@@ -18,7 +18,7 @@
 Relution.LiveData.Collection = Backbone.Collection.extend({
 
   constructor: function (options) {
-    console.log('Collection', options);
+    Relution.LiveData.Debug.trace('Collection', options);
     if (this.url && this.url.charAt(this.url.length - 1) !== '/') {
       this.url += '/';
     }

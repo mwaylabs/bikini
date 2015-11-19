@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Thu Nov 19 2015 10:51:43
+* Date:      Thu Nov 19 2015 13:54:38
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -59,73 +59,64 @@ var Relution;
     var LiveData;
     (function (LiveData) {
         /**
-         * @description A Static Debug Class
+         * @description A DebugConsole Class
          * @example ````js
          * window.Relution.setDebug(true);
          * ````
          */
-        var Debug = (function () {
-            function Debug() {
-            }
-            /**
-             * @descriptions logs the messages to the console
-             * @param color
-             * @param message
-             */
-            Debug.log = function (color, message) {
-                if (Relution.LiveData.isDebugMode()) {
-                    console.log("%c%s", "color: " + color + "; font-size: " + this.fontSize + ";font-weight: normal;", message);
+        var DebugConsole = (function () {
+            function DebugConsole(enabled, fontSize) {
+                if (enabled === void 0) { enabled = false; }
+                if (fontSize === void 0) { fontSize = '12px'; }
+                if (enabled) {
+                    this.log = DebugConsole.logEnabled;
                 }
+                else {
+                    this.log = DebugConsole.logDisabled;
+                }
+                this.trace = _.bind(this.log, console, "color: #378c13; font-size: " + fontSize + ";font-weight: normal;");
+                this.warning = _.bind(this.log, console, "color: #e69138; font-size: " + fontSize + ";font-weight: normal;");
+                this.info = _.bind(this.log, console, "color: #00f; font-size: " + fontSize + ";font-weight: normal;");
+                this.error = _.bind(this.log, console, "color: #f00; font-size: " + fontSize + ";font-weight: normal;");
+            }
+            Object.defineProperty(DebugConsole.prototype, "enabled", {
+                get: function () {
+                    return this.log === DebugConsole.logEnabled;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            // Caution, entire class uses bound functions to avoid browsers outputting incorrect line numbers
+            DebugConsole.logEnabled = _.bind(console.log, console, '%c%s');
+            DebugConsole.logDisabled = function () {
             };
-            /**
-             * @name trace
-             * @param message
-             */
-            Debug.trace = function (message) {
-                this.log('#378c13', message);
-            };
-            /**
-             * @name warning
-             * @param message
-             */
-            Debug.warning = function (message) {
-                this.log('#e69138', message);
-            };
-            /**
-             * @name info
-             * @param message
-             */
-            Debug.info = function (message) {
-                this.log('#00f', message);
-            };
-            /**
-             * @name error
-             * @param message
-             */
-            Debug.error = function (message) {
-                this.log('#f00', message);
-            };
-            /**
-             * set the fontSize
-             * @type {string}
-             */
-            Debug.fontSize = '12px';
-            return Debug;
+            return DebugConsole;
         })();
-        LiveData.Debug = Debug;
+        LiveData.DebugConsole = DebugConsole;
+        /**
+         * @description default instance not outputting anything.
+         *
+         * @type {Relution.LiveData.DebugConsole}
+         */
+        LiveData.Debug = new DebugConsole();
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=Debug.js.map
 // Copyright (c) 2013 M-Way Solutions GmbH
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
 
-Relution.setDebug = function (args) {
-  Relution.LiveData.DebugMode = args;
-  return new Relution.LiveData.Debug(args);
+Relution.setDebug = function () {
+  // following forwards any arguments to Relution.LiveData.DebugConsole ctor
+  function Debug(args) {
+    return Relution.LiveData.DebugConsole.apply(this, args);
+  }
+  Debug.prototype = Relution.LiveData.DebugConsole.prototype;
+  Relution.LiveData.Debug = new Debug(arguments);
+  return Relution.LiveData.Debug;
 };
 
 Relution.LiveData.isDebugMode = function () {
-  return Relution.LiveData.DebugMode;
+  return Relution.LiveData.Debug.enabled;
 };
 
 /**
@@ -2904,7 +2895,7 @@ _.extend(Relution.LiveData.Model.prototype, Relution.LiveData._Object, {
 Relution.LiveData.Collection = Backbone.Collection.extend({
 
   constructor: function (options) {
-    console.log('Collection', options);
+    Relution.LiveData.Debug.trace('Collection', options);
     if (this.url && this.url.charAt(this.url.length - 1) !== '/') {
       this.url += '/';
     }
@@ -4103,7 +4094,7 @@ var Relution;
                         return map;
                     })()
                 }, options);
-                console.log('Store', options);
+                Relution.LiveData.Debug.trace('Store', options);
                 this.setEntities(this.options.entities);
             }
             Store.prototype.setEntities = function (entities) {
@@ -4344,10 +4335,11 @@ var Relution;
 /// <reference path="../../core/livedata.d.ts" />
 /// <reference path="Store.ts" />
 /// <reference path="../../utility/Debug.ts" />
-var __extends = (this && this.__extends) || function (d, b) {
+var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    __.prototype = b.prototype;
+    d.prototype = new __();
 };
 var Relution;
 (function (Relution) {
@@ -4539,7 +4531,7 @@ var Relution;
         LiveData.LocalStorageStore = LocalStorageStore;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-
+//# sourceMappingURL=LocalStorageStore.js.map
 /**
  * AbstractSqlStore.ts
  *
@@ -5260,7 +5252,7 @@ var Relution;
                 }
             };
             WebSqlStore.prototype.close = function () {
-                console.log('WebSQL Store close');
+                Relution.LiveData.Debug.info('WebSQL Store close');
                 if (this.db) {
                     this.db = null;
                 }
@@ -5357,9 +5349,9 @@ var Relution;
                     security: null
                 }, options));
                 if (options && !options.security) {
-                    return console.error('security Key is required on a CipherSqlStore');
+                    throw new Error('security Key is required on a CipherSqlStore');
                 }
-                console.log('CipherSqlStore', options);
+                Relution.LiveData.Debug.trace('CipherSqlStore', options);
                 var self = this;
                 this._openDb({
                     error: function (error) {
@@ -5369,25 +5361,27 @@ var Relution;
                 });
             }
             /**
-             * @private
              * The new location option is used to select the database subdirectory location (iOS only) with the following choices:
+             *
              * 0 (default): Documents - visible to iTunes and backed up by iCloud
              * 1: Library - backed up by iCloud, NOT visible to iTunes
              * 2: Library/LocalDatabase - NOT visible to iTunes and NOT backed up by iCloud
+             *
+             * @private
              */
             CipherSqlStore.prototype._openDb = function (errorCallback) {
                 var error, dbError;
                 if (this.options && !this.options.security) {
-                    return console.error('A CipherSqlStore need a Security Token!', this.options);
+                    return Relution.LiveData.Debug.error('A CipherSqlStore need a Security Token!', this.options);
                 }
                 /* openDatabase(db_name, version, description, estimated_size, callback) */
                 if (!this.db) {
                     try {
-                        if (!global.openDatabase) {
-                            error = 'Your browser does not support WebSQL databases.';
+                        if (!global.sqlitePlugin) {
+                            error = 'Your browser does not support SQLite plugin.';
                         }
                         else {
-                            this.db = window.sqlitePlugin.openDatabase({ name: this.options.name, key: this.options.security, location: 2 });
+                            this.db = global.sqlitePlugin.openDatabase({ name: this.options.name, key: this.options.security, location: 2 });
                             if (this.entities) {
                                 for (var key in this.entities) {
                                     this._createTable({ entity: this.entities[key] });
@@ -5424,11 +5418,11 @@ var Relution;
                 var that = this;
                 try {
                     if (!this.db) {
-                        this.db = window.sqlitePlugin.openDatabase({ name: this.options.name, key: this.options.security, location: 2 });
+                        this.db = global.sqlitePlugin.openDatabase({ name: this.options.name, key: this.options.security, location: 2 });
                     }
                     try {
                         var arSql = this._sqlUpdateDatabase(this.db.version, this.options.version);
-                        console.log('sqlcipher cant change the version its still not supported check out https://github.com/litehelpers/Cordova-sqlcipher-adapter#other-limitations');
+                        Relution.LiveData.Debug.warning('sqlcipher cant change the version its still not supported check out https://github.com/litehelpers/Cordova-sqlcipher-adapter#other-limitations');
                     }
                     catch (e) {
                         error = e.message;
@@ -5560,7 +5554,7 @@ var Relution;
                         this.localStore = null;
                     }
                 };
-                console.log('SyncStore', options);
+                Relution.LiveData.Debug.trace('SyncStore', options);
                 if (this.options.useSocketNotify && typeof io !== 'object') {
                     Relution.LiveData.Debug.warning('Socket.IO not present !!');
                     this.options.useSocketNotify = false;

@@ -27,60 +27,46 @@ var Relution;
     var LiveData;
     (function (LiveData) {
         /**
-         * @description A Static Debug Class
+         * @description A DebugConsole Class
          * @example ````js
          * window.Relution.setDebug(true);
          * ````
          */
-        var Debug = (function () {
-            function Debug() {
-            }
-            /**
-             * @descriptions logs the messages to the console
-             * @param color
-             * @param message
-             */
-            Debug.log = function (color, message) {
-                if (Relution.LiveData.isDebugMode()) {
-                    console.log("%c%s", "color: " + color + "; font-size: " + this.fontSize + ";font-weight: normal;", message);
+        var DebugConsole = (function () {
+            function DebugConsole(enabled, fontSize) {
+                if (enabled === void 0) { enabled = false; }
+                if (fontSize === void 0) { fontSize = '12px'; }
+                if (enabled) {
+                    this.log = DebugConsole.logEnabled;
                 }
+                else {
+                    this.log = DebugConsole.logDisabled;
+                }
+                this.trace = _.bind(this.log, console, "color: #378c13; font-size: " + fontSize + ";font-weight: normal;");
+                this.warning = _.bind(this.log, console, "color: #e69138; font-size: " + fontSize + ";font-weight: normal;");
+                this.info = _.bind(this.log, console, "color: #00f; font-size: " + fontSize + ";font-weight: normal;");
+                this.error = _.bind(this.log, console, "color: #f00; font-size: " + fontSize + ";font-weight: normal;");
+            }
+            Object.defineProperty(DebugConsole.prototype, "enabled", {
+                get: function () {
+                    return this.log === DebugConsole.logEnabled;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            // Caution, entire class uses bound functions to avoid browsers outputting incorrect line numbers
+            DebugConsole.logEnabled = _.bind(console.log, console, '%c%s');
+            DebugConsole.logDisabled = function () {
             };
-            /**
-             * @name trace
-             * @param message
-             */
-            Debug.trace = function (message) {
-                this.log('#378c13', message);
-            };
-            /**
-             * @name warning
-             * @param message
-             */
-            Debug.warning = function (message) {
-                this.log('#e69138', message);
-            };
-            /**
-             * @name info
-             * @param message
-             */
-            Debug.info = function (message) {
-                this.log('#00f', message);
-            };
-            /**
-             * @name error
-             * @param message
-             */
-            Debug.error = function (message) {
-                this.log('#f00', message);
-            };
-            /**
-             * set the fontSize
-             * @type {string}
-             */
-            Debug.fontSize = '12px';
-            return Debug;
+            return DebugConsole;
         })();
-        LiveData.Debug = Debug;
+        LiveData.DebugConsole = DebugConsole;
+        /**
+         * @description default instance not outputting anything.
+         *
+         * @type {Relution.LiveData.DebugConsole}
+         */
+        LiveData.Debug = new DebugConsole();
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=Debug.js.map

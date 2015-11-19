@@ -157,7 +157,7 @@ module Relution.LiveData {
       }
     }
     public close() {
-      console.log('WebSQL Store close');
+      Relution.LiveData.Debug.info('WebSQL Store close');
       if (this.db) {
         this.db = null;
       }

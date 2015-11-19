@@ -47,6 +47,7 @@
 <script src="data/stores/test.SyncContext.js"></script>
 
 <script>
+    Relution.setDebug(true);
     mocha.checkLeaks();
     mocha.globals(['jQuery']);
     mocha.run().on('test', function (test) {

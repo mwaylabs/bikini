@@ -78,9 +78,9 @@ module Relution.LiveData {
       }, options));
 
       if (options && !options.security) {
-        return console.error('security Key is required on a CipherSqlStore');
+        throw new Error('security Key is required on a CipherSqlStore');
       }
-      console.log('CipherSqlStore', options);
+      Relution.LiveData.Debug.trace('CipherSqlStore', options);
       var self = this;
       this._openDb({
         error: function (error) {
@@ -91,24 +91,26 @@ module Relution.LiveData {
     }
 
     /**
-     * @private
      * The new location option is used to select the database subdirectory location (iOS only) with the following choices:
+     *
      * 0 (default): Documents - visible to iTunes and backed up by iCloud
      * 1: Library - backed up by iCloud, NOT visible to iTunes
      * 2: Library/LocalDatabase - NOT visible to iTunes and NOT backed up by iCloud
+     *
+     * @private
      */
     private _openDb(errorCallback) {
       var error, dbError;
       if (this.options && !this.options.security) {
-        return console.error('A CipherSqlStore need a Security Token!', this.options);
+        return Relution.LiveData.Debug.error('A CipherSqlStore need a Security Token!', this.options);
       }
       /* openDatabase(db_name, version, description, estimated_size, callback) */
       if (!this.db) {
         try {
-          if (!global.openDatabase) {
-            error = 'Your browser does not support WebSQL databases.';
+          if (!global.sqlitePlugin) {
+            error = 'Your browser does not support SQLite plugin.';
           } else {
-            this.db = window.sqlitePlugin.openDatabase({ name: this.options.name, key: this.options.security, location: 2 });
+            this.db = global.sqlitePlugin.openDatabase({ name: this.options.name, key: this.options.security, location: 2 });
             if (this.entities) {
               for (var key in this.entities) {
                 this._createTable({entity: this.entities[key]});
@@ -142,11 +144,11 @@ module Relution.LiveData {
       var that = this;
       try {
         if (!this.db) {
-          this.db = window.sqlitePlugin.openDatabase({ name: this.options.name, key: this.options.security, location: 2 });
+          this.db = global.sqlitePlugin.openDatabase({ name: this.options.name, key: this.options.security, location: 2 });
         }
         try {
           var arSql = this._sqlUpdateDatabase(this.db.version, this.options.version);
-          console.log('sqlcipher cant change the version its still not supported check out https://github.com/litehelpers/Cordova-sqlcipher-adapter#other-limitations');
+          Relution.LiveData.Debug.warning('sqlcipher cant change the version its still not supported check out https://github.com/litehelpers/Cordova-sqlcipher-adapter#other-limitations');
         } catch (e) {
           error = e.message;
           Relution.LiveData.Debug.error('webSql change version failed, DB-Version: ' + this.db.version);

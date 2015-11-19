@@ -168,7 +168,7 @@ var Relution;
                 }
             };
             WebSqlStore.prototype.close = function () {
-                console.log('WebSQL Store close');
+                Relution.LiveData.Debug.info('WebSQL Store close');
                 if (this.db) {
                     this.db = null;
                 }

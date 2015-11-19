@@ -82,7 +82,7 @@ module Relution.LiveData {
           return map;
         })()
       }, options));
-      console.log('SyncStore', options);
+      Relution.LiveData.Debug.trace('SyncStore', options);
       if (this.options.useSocketNotify && typeof io !== 'object') {
         Relution.LiveData.Debug.warning('Socket.IO not present !!');
         this.options.useSocketNotify = false;

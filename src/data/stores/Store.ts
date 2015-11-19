@@ -51,7 +51,7 @@ module Relution.LiveData {
           return map;
         })()
       }, options);
-      console.log('Store', options);
+      Relution.LiveData.Debug.trace('Store', options);
       this.setEntities(this.options.entities);
     }
 
