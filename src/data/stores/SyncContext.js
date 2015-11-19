@@ -335,7 +335,7 @@ var Relution;
                             // create model in case it does not exist
                             model = new options.collection.model(msg.data, options);
                             if (this.filterFn && !this.filterFn(model.attributes)) {
-                                break; // filtered
+                                break;
                             }
                             if (model.validationError) {
                                 collection.trigger('invalid', this, model.validationError, options);
@@ -358,7 +358,6 @@ var Relution;
                             }
                             break;
                         }
-                    /* falls through */
                     case 'patch':
                         if (model) {
                             // update model unless it is filtered
@@ -450,3 +449,4 @@ var Relution;
         LiveData.SyncContext = SyncContext;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
+//# sourceMappingURL=SyncContext.js.map

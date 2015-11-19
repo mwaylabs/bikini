@@ -148,3 +148,4 @@ var Relution;
         LiveData.GetQuery = GetQuery;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
+//# sourceMappingURL=GetQuery.js.map
