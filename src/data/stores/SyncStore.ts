@@ -683,14 +683,16 @@ module Relution.LiveData {
         return changes.fetch({
           url: endpoint.urlRoot + 'changes/' + time,
           store: {}, // really go to remote server
-          success: function (model, response, options) {
-            changes.each(function (change) {
-              var msg = change.attributes;
-              that.onMessage(endpoint, msg);
-            });
-            return response || options.xhr;
-          },
           credentials: endpoint.credentials
+        }).then(function(models) {
+          models.forEach(function (model) {
+            var msg = model;
+            msg.method = 'update';
+            that.onMessage(endpoint, msg);
+          });
+          return endpoint;
+          }).catch(function(err) {
+            return err;
         });
       } else {
         return Q.resolve();
@@ -708,21 +710,22 @@ module Relution.LiveData {
         }
         return info.fetch({
           url: url + 'info',
-          success: function (model, response, options) {
-            //@todo why we set a server time here ?
-            if (!time && info.get('time')) {
-              that.setLastMessageTime(endpoint.channel, info.get('time'));
-            }
-            if (!endpoint.socketPath && info.get('socketPath')) {
-              endpoint.socketPath = info.get('socketPath');
-              var name = info.get('entity') || endpoint.entity.name;
-              if (that.options.useSocketNotify) {
-                endpoint.socket = that.createSocket(endpoint, name);
-              }
-            }
-            return response || options.xhr;
-          },
           credentials: endpoint.credentials
+        }).then(function (model) {
+          //@todo why we set a server time here ?
+          if (!time && info.get('time')) {
+            that.setLastMessageTime(endpoint.channel, info.get('time'));
+          }
+          if (!endpoint.socketPath && info.get('socketPath')) {
+            endpoint.socketPath = info.get('socketPath');
+            var name = info.get('entity') || endpoint.entity.name;
+            if (that.options.useSocketNotify) {
+              endpoint.socket = that.createSocket(endpoint, name);
+            }
+          }
+          return model;
+          }).catch(function(err) {
+            return err;
         });
       }
     }

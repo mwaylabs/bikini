@@ -361,7 +361,7 @@ var Relution;
                 Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore.sync');
                 options = options || {};
                 try {
-                    var endpoint = model.endpoint || this.getEndpoint(model.getUrlRoot());
+                    var endpoint = model.endpoint || this.getEndpoint(model.getUrlRoot() /*throws urlError*/);
                     if (!endpoint) {
                         throw new Error('no endpoint');
                     }
@@ -371,7 +371,8 @@ var Relution;
                             var syncContext = options.syncContext; // sync can be called by SyncContext itself when paging results
                             if (!syncContext) {
                                 // capture GetQuery options
-                                syncContext = new LiveData.SyncContext(options, model.options, this.options);
+                                syncContext = new LiveData.SyncContext(options, model.options, this.options // static options of this store realize filtering client/server
+                                );
                                 options.syncContext = syncContext;
                             }
                             if (model.syncContext !== syncContext) {
@@ -666,14 +667,16 @@ var Relution;
                     return changes.fetch({
                         url: endpoint.urlRoot + 'changes/' + time,
                         store: {},
-                        success: function (model, response, options) {
-                            changes.each(function (change) {
-                                var msg = change.attributes;
-                                that.onMessage(endpoint, msg);
-                            });
-                            return response || options.xhr;
-                        },
                         credentials: endpoint.credentials
+                    }).then(function (models) {
+                        models.forEach(function (model) {
+                            var msg = model;
+                            msg.method = 'update';
+                            that.onMessage(endpoint, msg);
+                        });
+                        return endpoint;
+                    }).catch(function (err) {
+                        return err;
                     });
                 }
                 else {
@@ -691,21 +694,22 @@ var Relution;
                     }
                     return info.fetch({
                         url: url + 'info',
-                        success: function (model, response, options) {
-                            //@todo why we set a server time here ?
-                            if (!time && info.get('time')) {
-                                that.setLastMessageTime(endpoint.channel, info.get('time'));
-                            }
-                            if (!endpoint.socketPath && info.get('socketPath')) {
-                                endpoint.socketPath = info.get('socketPath');
-                                var name = info.get('entity') || endpoint.entity.name;
-                                if (that.options.useSocketNotify) {
-                                    endpoint.socket = that.createSocket(endpoint, name);
-                                }
-                            }
-                            return response || options.xhr;
-                        },
                         credentials: endpoint.credentials
+                    }).then(function (model) {
+                        //@todo why we set a server time here ?
+                        if (!time && info.get('time')) {
+                            that.setLastMessageTime(endpoint.channel, info.get('time'));
+                        }
+                        if (!endpoint.socketPath && info.get('socketPath')) {
+                            endpoint.socketPath = info.get('socketPath');
+                            var name = info.get('entity') || endpoint.entity.name;
+                            if (that.options.useSocketNotify) {
+                                endpoint.socket = that.createSocket(endpoint, name);
+                            }
+                        }
+                        return model;
+                    }).catch(function (err) {
+                        return err;
                     });
                 }
             };
@@ -735,7 +739,7 @@ var Relution;
                     };
                     var model = new LiveData.Model(msg.data, {
                         idAttribute: endpoint.entity.idAttribute,
-                        entity: endpoint.entity,
+                        entity: endpoint.entity
                     });
                     Relution.LiveData.Debug.info('sendMessage ' + model.id);
                     return that._applyResponse(that._ajaxMessage(endpoint, msg, remoteOptions, model), endpoint, msg, remoteOptions, model).catch(function (error) {
@@ -754,8 +758,8 @@ var Relution;
                             // original request failed and the code above tried to revert the local modifications by reloading the data, which failed as well...
                             var status = fetchResp && fetchResp.status;
                             switch (status) {
-                                case 404:
-                                case 401:
+                                case 404: // NOT FOUND
+                                case 401: // UNAUTHORIZED
                                 case 410:
                                     // ...because the item is gone by now, maybe someone else changed it to be deleted
                                     return model.destroy(localOptions);
@@ -842,4 +846,3 @@ var Relution;
         LiveData.SyncStore = SyncStore;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=SyncStore.js.map

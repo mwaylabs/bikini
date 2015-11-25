@@ -73,6 +73,7 @@ var Relution;
                         return false;
                     }
                     else if (_.isArray(value)) {
+                        // array case
                         for (var i = 0; i < value.length; ++i) {
                             var val = value[i];
                             if (val !== undefined && val !== null && val.toString().indexOf(contains) >= 0) {
@@ -103,6 +104,7 @@ var Relution;
                         return false;
                     }
                     else if (_.isArray(value)) {
+                        // array case
                         for (var i = 0; i < value.length; ++i) {
                             var val = value[i];
                             if (val == filter.value) {
@@ -259,6 +261,7 @@ var Relution;
                         return false;
                     }
                     else if (_.isArray(value)) {
+                        // array case
                         for (var i = 0; i < value.length; ++i) {
                             var val = value[i];
                             if (pattern.test(val)) {
@@ -348,4 +351,3 @@ var Relution;
         })(LiveData.FilterVisitorBase);
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=JsonFilterVisitor.js.map

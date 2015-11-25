@@ -178,4 +178,3 @@ var Relution;
         LiveData.WebSqlStore = WebSqlStore;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=WebSqlStore.js.map
