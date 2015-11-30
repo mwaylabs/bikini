@@ -75,6 +75,10 @@ Backbone.ajax = function ajax(options) {
 Relution.LiveData.ajax = function ajax(options) {
   var that = this;
   var args = arguments;
+  var fnSuccess = options.success;
+  delete options.success;
+  var fnError = options.error;
+  delete options.error;
   var promise = Relution.LiveData.Security.logon.apply(this, arguments).then(function () {
     var superAjax = that.super_ && that.super_.ajax || Relution.LiveData.http;
     var xhr = superAjax.apply(that, args);
@@ -93,6 +97,9 @@ Relution.LiveData.ajax = function ajax(options) {
       return q.promise;
     }
   });
+  if (fnSuccess || fnError) {
+    promise = promise.then(fnSuccess, fnError);
+  }
   return promise;
 };
 
