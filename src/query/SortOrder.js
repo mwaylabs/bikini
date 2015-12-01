@@ -114,4 +114,3 @@ var Relution;
         LiveData.SortField = SortField;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=SortOrder.js.map

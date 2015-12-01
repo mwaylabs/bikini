@@ -56,8 +56,7 @@ var Relution;
             });
             // Caution, entire class uses bound functions to avoid browsers outputting incorrect line numbers
             DebugConsole.logEnabled = _.bind(console.log, console, '%c%s');
-            DebugConsole.logDisabled = function () {
-            };
+            DebugConsole.logDisabled = function () { };
             return DebugConsole;
         })();
         LiveData.DebugConsole = DebugConsole;
@@ -69,4 +68,3 @@ var Relution;
         LiveData.Debug = new DebugConsole();
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=Debug.js.map

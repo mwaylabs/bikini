@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Mon Nov 30 2015 14:18:26
+* Date:      Tue Dec 01 2015 09:48:29
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -88,8 +88,7 @@ var Relution;
             });
             // Caution, entire class uses bound functions to avoid browsers outputting incorrect line numbers
             DebugConsole.logEnabled = _.bind(console.log, console, '%c%s');
-            DebugConsole.logDisabled = function () {
-            };
+            DebugConsole.logDisabled = function () { };
             return DebugConsole;
         })();
         LiveData.DebugConsole = DebugConsole;
@@ -101,7 +100,7 @@ var Relution;
         LiveData.Debug = new DebugConsole();
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=Debug.js.map
+
 // Copyright (c) 2013 M-Way Solutions GmbH
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
 
@@ -183,6 +182,7 @@ Relution.LiveData.ajax = function ajax(options) {
   delete options.success;
   var fnError = options.error;
   delete options.error;
+  options.method = options.type;//set method because some ajax libs need this
   var promise = Relution.LiveData.Security.logon.apply(this, arguments).then(function () {
     var superAjax = that.super_ && that.super_.ajax || Relution.LiveData.http;
     var xhr = superAjax.apply(that, args);
@@ -1231,7 +1231,7 @@ var Relution;
         LiveData.JsonPath = JsonPath;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=JsonPath.js.map
+
 /**
  * Filter.ts
  *
@@ -1256,7 +1256,7 @@ var Relution;
  * POSSIBILITY OF SUCH DAMAGE.
  */
 /* jshint indent: 4 */
-//# sourceMappingURL=Filter.js.map
+
 /**
  * FilterVisitor.ts
  *
@@ -1300,7 +1300,7 @@ var Relution;
         LiveData.FilterVisitorBase = FilterVisitorBase;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=FilterVisitor.js.map
+
 /**
  * JsonFilterVisitor.ts
  *
@@ -1376,6 +1376,7 @@ var Relution;
                         return false;
                     }
                     else if (_.isArray(value)) {
+                        // array case
                         for (var i = 0; i < value.length; ++i) {
                             var val = value[i];
                             if (val !== undefined && val !== null && val.toString().indexOf(contains) >= 0) {
@@ -1406,6 +1407,7 @@ var Relution;
                         return false;
                     }
                     else if (_.isArray(value)) {
+                        // array case
                         for (var i = 0; i < value.length; ++i) {
                             var val = value[i];
                             if (val == filter.value) {
@@ -1562,6 +1564,7 @@ var Relution;
                         return false;
                     }
                     else if (_.isArray(value)) {
+                        // array case
                         for (var i = 0; i < value.length; ++i) {
                             var val = value[i];
                             if (pattern.test(val)) {
@@ -1651,7 +1654,7 @@ var Relution;
         })(LiveData.FilterVisitorBase);
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=JsonFilterVisitor.js.map
+
 /**
  * SortOrder.ts
  *
@@ -1768,7 +1771,7 @@ var Relution;
         LiveData.SortField = SortField;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=SortOrder.js.map
+
 /**
  * SortOrderComparator.ts
  *
@@ -1903,7 +1906,7 @@ var Relution;
         })();
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=SortOrderComparator.js.map
+
 /**
  * GetQuery.ts
  *
@@ -2054,7 +2057,7 @@ var Relution;
         LiveData.GetQuery = GetQuery;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=GetQuery.js.map
+
 
 // Copyright (c) 2013 M-Way Solutions GmbH
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
@@ -4311,7 +4314,7 @@ var Relution;
         _.extend(Store.prototype, Backbone.Events, LiveData._Object);
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=Store.js.map
+
 /**
  * LocalStorageStore.ts
  *
@@ -5088,7 +5091,7 @@ var Relution;
         LiveData.AbstractSqlStore = AbstractSqlStore;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=AbstractSqlStore.js.map
+
 /**
  * WebSqlStore.ts
  *
@@ -5269,7 +5272,7 @@ var Relution;
         LiveData.WebSqlStore = WebSqlStore;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=WebSqlStore.js.map
+
 /**
  * CipherSqlStore.ts
  *
@@ -5456,7 +5459,7 @@ var Relution;
         LiveData.CipherSqlStore = CipherSqlStore;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=CipherSqlStore.js.map
+
 /**
  * SyncStore.ts
  *
@@ -5820,7 +5823,7 @@ var Relution;
                 Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore.sync');
                 options = options || {};
                 try {
-                    var endpoint = model.endpoint || this.getEndpoint(model.getUrlRoot());
+                    var endpoint = model.endpoint || this.getEndpoint(model.getUrlRoot() /*throws urlError*/);
                     if (!endpoint) {
                         throw new Error('no endpoint');
                     }
@@ -5830,7 +5833,8 @@ var Relution;
                             var syncContext = options.syncContext; // sync can be called by SyncContext itself when paging results
                             if (!syncContext) {
                                 // capture GetQuery options
-                                syncContext = new LiveData.SyncContext(options, model.options, this.options);
+                                syncContext = new LiveData.SyncContext(options, model.options, this.options // static options of this store realize filtering client/server
+                                );
                                 options.syncContext = syncContext;
                             }
                             if (model.syncContext !== syncContext) {
@@ -6194,7 +6198,7 @@ var Relution;
                     };
                     var model = new LiveData.Model(msg.data, {
                         idAttribute: endpoint.entity.idAttribute,
-                        entity: endpoint.entity,
+                        entity: endpoint.entity
                     });
                     Relution.LiveData.Debug.info('sendMessage ' + model.id);
                     return that._applyResponse(that._ajaxMessage(endpoint, msg, remoteOptions, model), endpoint, msg, remoteOptions, model).catch(function (error) {
@@ -6213,8 +6217,8 @@ var Relution;
                             // original request failed and the code above tried to revert the local modifications by reloading the data, which failed as well...
                             var status = fetchResp && fetchResp.status;
                             switch (status) {
-                                case 404:
-                                case 401:
+                                case 404: // NOT FOUND
+                                case 401: // UNAUTHORIZED
                                 case 410:
                                     // ...because the item is gone by now, maybe someone else changed it to be deleted
                                     return model.destroy(localOptions);
@@ -6301,7 +6305,7 @@ var Relution;
         LiveData.SyncStore = SyncStore;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=SyncStore.js.map
+
 /**
  * SyncContext.ts
  *
@@ -6639,7 +6643,7 @@ var Relution;
                             // create model in case it does not exist
                             model = new options.collection.model(msg.data, options);
                             if (this.filterFn && !this.filterFn(model.attributes)) {
-                                break;
+                                break; // filtered
                             }
                             if (model.validationError) {
                                 collection.trigger('invalid', this, model.validationError, options);
@@ -6662,6 +6666,7 @@ var Relution;
                             }
                             break;
                         }
+                    /* falls through */
                     case 'patch':
                         if (model) {
                             // update model unless it is filtered
@@ -6753,7 +6758,7 @@ var Relution;
         LiveData.SyncContext = SyncContext;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-//# sourceMappingURL=SyncContext.js.map
+
 
 // Copyright (c) 2015 M-Way Solutions GmbH
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt

@@ -79,6 +79,7 @@ Relution.LiveData.ajax = function ajax(options) {
   delete options.success;
   var fnError = options.error;
   delete options.error;
+  options.method = options.type;//set method because some ajax libs need this
   var promise = Relution.LiveData.Security.logon.apply(this, arguments).then(function () {
     var superAjax = that.super_ && that.super_.ajax || Relution.LiveData.http;
     var xhr = superAjax.apply(that, args);
