@@ -148,8 +148,14 @@ var Relution;
                                 lastSql = sql;
                                 tx.executeSql(sql);
                             });
-                        }, function (msg) {
-                            that.handleError(options, msg, lastSql);
+                        }, function (err) {
+                            if (!lastSql && that.db.version === that.options.version) {
+                                // not a real error, concurrent migration attempt completed already
+                                that.handleSuccess(options, that.db);
+                            }
+                            else {
+                                that.handleError(options, err.message, lastSql);
+                            }
                         }, function () {
                             that.handleSuccess(options, that.db);
                         });
