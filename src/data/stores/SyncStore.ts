@@ -30,6 +30,7 @@
 /// <reference path="WebSqlStore.ts" />
 /// <reference path="CipherSqlStore.ts" />
 /// <reference path="SyncContext.ts" />
+/// <reference path="SyncEndpoint.ts" />
 /// <reference path="../../utility/Debug.ts" />
 
 module Relution.LiveData {
@@ -63,7 +64,10 @@ module Relution.LiveData {
    */
   export class SyncStore extends Store {
 
-    private endpoints = {};
+    private endpoints: {
+      // map of hashed urlRoot to SyncEndpoint
+      [hash: string]: SyncEndpoint;
+    } = {};
 
     private lastMesgTime:any;
 
@@ -89,38 +93,32 @@ module Relution.LiveData {
       }
     }
 
-    initEndpoint(model, modelType) {
+    initEndpoint(modelOrCollection, modelType): SyncEndpoint {
       Relution.LiveData.Debug.info('Relution.LiveData.SyncStore.initEndpoint');
-      var urlRoot = model.getUrlRoot();
-      var entity = this.getEntity(model.entity);
+      var urlRoot = modelOrCollection.getUrlRoot();
+      var entity = this.getEntity(modelOrCollection.entity);
       if (urlRoot && entity) {
         var name = entity.name;
+        var credentials = entity.credentials || modelOrCollection.credentials || this.options.credentials;
         var hash = URLUtil.hashLocation(urlRoot);
-        var credentials = entity.credentials || model.credentials || this.options.credentials;
-        var user = credentials && credentials.username ? credentials.username : '';
-        var channel = name + user + hash;
-        model.channel = channel;
 
         // get or create endpoint for this url
         var endpoint = this.endpoints[hash];
         if (!endpoint) {
           var href = URLUtil.getLocation(urlRoot);
-          endpoint = {};
-          endpoint.model = modelType;
-          endpoint.isConnected = false;
-          endpoint.urlRoot = urlRoot;
-          endpoint.host = href.protocol + '//' + href.host;
-          endpoint.path = href.pathname;
-          endpoint.entity = entity;
-          endpoint.channel = channel;
-          endpoint.credentials = credentials;
-          endpoint.socketPath = this.options.socketPath;
+          endpoint = new SyncEndpoint({
+            entity: entity,
+            modelType: modelType,
+            urlRoot: urlRoot,
+            socketPath: this.options.socketPath,
+            credentials: credentials
+          });
+          this.endpoints[hash] = endpoint;
+
           endpoint.localStore = this.createLocalStore(endpoint);
           endpoint.messages = this.createMsgCollection(endpoint);
           endpoint.socket = this.createSocket(endpoint, name);
           endpoint.info = this.fetchServerInfo(endpoint);
-          endpoint.close = this.closeEndpoint;
-          this.endpoints[hash] = endpoint;
         }
         return endpoint;
       }
@@ -136,19 +134,19 @@ module Relution.LiveData {
       collection.endpoint = this.initEndpoint(collection, collection.model);
     }
 
-    getEndpoint(url) {
+    getEndpoint(url): SyncEndpoint {
       if (url) {
         var hash = URLUtil.hashLocation(url);
         return this.endpoints[hash];
       }
     }
 
-    createLocalStore(endpoint) {
+    createLocalStore(endpoint: SyncEndpoint) {
       if (this.options.useLocalStore) {
         var entities = {};
         entities[endpoint.entity.name] = _.extend(new Entity(endpoint.entity), {
           name: endpoint.channel,
-          idAttribute: endpoint.model.prototype.idAttribute // see Collection.modelId() of backbone.js
+          idAttribute: endpoint.modelType.prototype.idAttribute // see Collection.modelId() of backbone.js
         });
         var storeOption = {
           entities: entities
@@ -166,7 +164,7 @@ module Relution.LiveData {
      * @param endpoint {string}
      * @returns {*}
      */
-    createMsgCollection(endpoint) {
+    createMsgCollection(endpoint: SyncEndpoint) {
       if (this.options.useOfflineChanges) {
         var entity = 'msg-' + endpoint.channel;
         var entities = {};
@@ -192,7 +190,7 @@ module Relution.LiveData {
       }
     }
 
-    createSocket(endpoint, name) {
+    createSocket(endpoint: SyncEndpoint, name) {
       Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore.createSocket');
       if (this.options.useSocketNotify && endpoint && endpoint.socketPath) {
         var that = this;
@@ -231,7 +229,7 @@ module Relution.LiveData {
       }
     }
 
-    _bindChannel(endpoint, name) {
+    _bindChannel(endpoint: SyncEndpoint, name) {
       Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore._bindChannel');
       var that = this;
       if (endpoint && endpoint.socket) {
@@ -266,7 +264,7 @@ module Relution.LiveData {
       }
     }
 
-    onConnect(endpoint) {
+    onConnect(endpoint: SyncEndpoint) {
       if (endpoint.isConnected) {
         return Q.resolve();
       }
@@ -282,7 +280,7 @@ module Relution.LiveData {
       });
     }
 
-    onDisconnect(endpoint) {
+    onDisconnect(endpoint: SyncEndpoint) {
       if (!endpoint.isConnected) {
         return Q.resolve();
       }
@@ -309,7 +307,7 @@ module Relution.LiveData {
       }
     }
 
-    onMessage(endpoint, msg) {
+    onMessage(endpoint: SyncEndpoint, msg) {
       // this is called by the store itself for a particular endpoint!
       var that = this;
       if (!msg || !msg.method) {
@@ -325,7 +323,7 @@ module Relution.LiveData {
           store: endpoint.localStore,
           entity: endpoint.entity
         }, that.options);
-        var model = new endpoint.model(msg.data, _.extend({
+        var model = new endpoint.modelType(msg.data, _.extend({
           parse: true
         }, options));
         q = endpoint.localStore.sync(msg.method, model, _.extend(options, {
@@ -359,7 +357,7 @@ module Relution.LiveData {
       Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore.sync');
       options = options || {};
       try {
-        var endpoint = model.endpoint || this.getEndpoint(model.getUrlRoot() /*throws urlError*/);
+        var endpoint: SyncEndpoint = model.endpoint || this.getEndpoint(model.getUrlRoot() /*throws urlError*/);
         if (!endpoint) {
           throw new Error('no endpoint');
         }
@@ -367,7 +365,7 @@ module Relution.LiveData {
         if (isCollection(model)) {
           // collections can be filtered, etc.
           if (method === 'read') {
-            var syncContext = options.syncContext; // sync can be called by SyncContext itself when paging results
+            var syncContext: SyncContext = options.syncContext; // sync can be called by SyncContext itself when paging results
             if (!syncContext) {
               // capture GetQuery options
               syncContext = new SyncContext(
@@ -430,7 +428,7 @@ module Relution.LiveData {
       }
     }
 
-    private _addMessage(method, model, options, endpoint) {
+    private _addMessage(method, model, options, endpoint: SyncEndpoint) {
       var that = this;
       if (method && model) {
         var changes = model.changedSinceSync;
@@ -481,7 +479,7 @@ module Relution.LiveData {
       }
     }
 
-    private _emitMessage(endpoint, msg, options, model, qMessage) {
+    private _emitMessage(endpoint: SyncEndpoint, msg, options, model, qMessage) {
       var that = this;
       var channel = endpoint.channel;
       var qAjax = this._ajaxMessage(endpoint, msg, options, model);
@@ -525,7 +523,7 @@ module Relution.LiveData {
       });
     }
 
-    private _ajaxMessage(endpoint, msg, options, model) {
+    private _ajaxMessage(endpoint: SyncEndpoint, msg, options, model) {
       options = options || {};
 
       var url = options.url;
@@ -576,7 +574,7 @@ module Relution.LiveData {
       });
     }
 
-    private _applyResponse(qXHR, endpoint, msg, options, model) {
+    private _applyResponse(qXHR, endpoint: SyncEndpoint, msg, options, model) {
       var channel = endpoint.channel;
       var that = this;
       var clientTime = new Date().getTime();
@@ -687,7 +685,7 @@ module Relution.LiveData {
       });
     }
 
-    private fetchChanges(endpoint) {
+    private fetchChanges(endpoint: SyncEndpoint) {
       var that = this;
       var channel = endpoint ? endpoint.channel : '';
       var time = that.getLastMessageTime(channel);
@@ -710,7 +708,7 @@ module Relution.LiveData {
       }
     }
 
-    private fetchServerInfo(endpoint) {
+    private fetchServerInfo(endpoint: SyncEndpoint) {
       var that = this;
       if (endpoint && endpoint.urlRoot) {
         var info = new Model();
@@ -740,7 +738,7 @@ module Relution.LiveData {
       }
     }
 
-    private _sendMessages(endpoint) {
+    private _sendMessages(endpoint: SyncEndpoint) {
       if (!endpoint || !endpoint.messages) {
         return Q.resolve();
       }
@@ -807,7 +805,7 @@ module Relution.LiveData {
       });
     }
 
-    private storeMessage(endpoint, qMsg) {
+    private storeMessage(endpoint: SyncEndpoint, qMsg) {
       return qMsg.then(function (msg) {
         var options;
         var id = endpoint.messages.modelId(msg);
@@ -829,7 +827,7 @@ module Relution.LiveData {
       });
     }
 
-    private removeMessage(endpoint, msg, qMessage) {
+    private removeMessage(endpoint: SyncEndpoint, msg, qMessage) {
       return qMessage.then(function (message) {
         if (!message) {
           var id = endpoint.messages.modelId(msg);
@@ -857,7 +855,7 @@ module Relution.LiveData {
 
     public clear(collection) {
       if (collection) {
-        var endpoint = this.getEndpoint(collection.getUrlRoot());
+        var endpoint: SyncEndpoint = this.getEndpoint(collection.getUrlRoot());
         if (endpoint) {
           if (endpoint.messages) {
             endpoint.messages.destroy();
@@ -867,23 +865,7 @@ module Relution.LiveData {
         }
       }
     }
-    /**
-     * close the socket explicit
-     */
-    public closeEndpoint = function() {
-      if (this.socket) {
-        this.socket.socket.close();
-        this.socket = null;
-      }
-      if (this.messages.store) {
-        this.messages.store.close();
-        this.messages = null;
-      }
-      if (this.localStore) {
-        this.localStore.close();
-        this.localStore = null;
-      }
-    }
+
     /**
      * close the socket explicit
      */

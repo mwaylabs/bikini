@@ -30,6 +30,7 @@
 /// <reference path="WebSqlStore.ts" />
 /// <reference path="CipherSqlStore.ts" />
 /// <reference path="SyncContext.ts" />
+/// <reference path="SyncEndpoint.ts" />
 /// <reference path="../../utility/Debug.ts" />
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -84,60 +85,36 @@ var Relution;
                     })()
                 }, options));
                 this.endpoints = {};
-                /**
-                 * close the socket explicit
-                 */
-                this.closeEndpoint = function () {
-                    if (this.socket) {
-                        this.socket.socket.close();
-                        this.socket = null;
-                    }
-                    if (this.messages.store) {
-                        this.messages.store.close();
-                        this.messages = null;
-                    }
-                    if (this.localStore) {
-                        this.localStore.close();
-                        this.localStore = null;
-                    }
-                };
                 Relution.LiveData.Debug.trace('SyncStore', options);
                 if (this.options.useSocketNotify && typeof io !== 'object') {
                     Relution.LiveData.Debug.warning('Socket.IO not present !!');
                     this.options.useSocketNotify = false;
                 }
             }
-            SyncStore.prototype.initEndpoint = function (model, modelType) {
+            SyncStore.prototype.initEndpoint = function (modelOrCollection, modelType) {
                 Relution.LiveData.Debug.info('Relution.LiveData.SyncStore.initEndpoint');
-                var urlRoot = model.getUrlRoot();
-                var entity = this.getEntity(model.entity);
+                var urlRoot = modelOrCollection.getUrlRoot();
+                var entity = this.getEntity(modelOrCollection.entity);
                 if (urlRoot && entity) {
                     var name = entity.name;
+                    var credentials = entity.credentials || modelOrCollection.credentials || this.options.credentials;
                     var hash = LiveData.URLUtil.hashLocation(urlRoot);
-                    var credentials = entity.credentials || model.credentials || this.options.credentials;
-                    var user = credentials && credentials.username ? credentials.username : '';
-                    var channel = name + user + hash;
-                    model.channel = channel;
                     // get or create endpoint for this url
                     var endpoint = this.endpoints[hash];
                     if (!endpoint) {
                         var href = LiveData.URLUtil.getLocation(urlRoot);
-                        endpoint = {};
-                        endpoint.model = modelType;
-                        endpoint.isConnected = false;
-                        endpoint.urlRoot = urlRoot;
-                        endpoint.host = href.protocol + '//' + href.host;
-                        endpoint.path = href.pathname;
-                        endpoint.entity = entity;
-                        endpoint.channel = channel;
-                        endpoint.credentials = credentials;
-                        endpoint.socketPath = this.options.socketPath;
+                        endpoint = new LiveData.SyncEndpoint({
+                            entity: entity,
+                            modelType: modelType,
+                            urlRoot: urlRoot,
+                            socketPath: this.options.socketPath,
+                            credentials: credentials
+                        });
+                        this.endpoints[hash] = endpoint;
                         endpoint.localStore = this.createLocalStore(endpoint);
                         endpoint.messages = this.createMsgCollection(endpoint);
                         endpoint.socket = this.createSocket(endpoint, name);
                         endpoint.info = this.fetchServerInfo(endpoint);
-                        endpoint.close = this.closeEndpoint;
-                        this.endpoints[hash] = endpoint;
                     }
                     return endpoint;
                 }
@@ -161,7 +138,7 @@ var Relution;
                     var entities = {};
                     entities[endpoint.entity.name] = _.extend(new LiveData.Entity(endpoint.entity), {
                         name: endpoint.channel,
-                        idAttribute: endpoint.model.prototype.idAttribute // see Collection.modelId() of backbone.js
+                        idAttribute: endpoint.modelType.prototype.idAttribute // see Collection.modelId() of backbone.js
                     });
                     var storeOption = {
                         entities: entities
@@ -327,7 +304,7 @@ var Relution;
                         store: endpoint.localStore,
                         entity: endpoint.entity
                     }, that.options);
-                    var model = new endpoint.model(msg.data, _.extend({
+                    var model = new endpoint.modelType(msg.data, _.extend({
                         parse: true
                     }, options));
                     q = endpoint.localStore.sync(msg.method, model, _.extend(options, {

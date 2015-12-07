@@ -32,6 +32,7 @@
 // @include ./data/stores/AbstractSqlStore.js
 // @include ./data/stores/WebSqlStore.js
 // @include ./data/stores/CipherSqlStore.js
+// @include ./data/stores/SyncEndpoint.js
 // @include ./data/stores/SyncStore.js
 // @include ./data/stores/SyncContext.js
 
