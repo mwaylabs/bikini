@@ -31,6 +31,7 @@
 /// <reference path="CipherSqlStore.ts" />
 /// <reference path="SyncContext.ts" />
 /// <reference path="SyncEndpoint.ts" />
+/// <reference path="LiveDataMessage.ts" />
 /// <reference path="../../utility/Debug.ts" />
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -580,6 +581,7 @@ var Relution;
                                             promises.push(that.onMessage(endpoint, {
                                                 id: id,
                                                 method: 'update',
+                                                time: msg.time,
                                                 data: d
                                             }));
                                         }
@@ -589,6 +591,7 @@ var Relution;
                                         promises.push(that.onMessage(endpoint, {
                                             id: id,
                                             method: 'create',
+                                            time: msg.time,
                                             data: d
                                         }));
                                     }
@@ -600,6 +603,7 @@ var Relution;
                                 promises.push(that.onMessage(endpoint, {
                                     id: id,
                                     method: 'delete',
+                                    time: msg.time,
                                     data: m.attributes
                                 }));
                             });
@@ -613,6 +617,7 @@ var Relution;
                                     promises.push(that.onMessage(endpoint, {
                                         id: data[endpoint.entity.idAttribute] || data._id,
                                         method: 'update',
+                                        time: msg.time,
                                         data: data
                                     }));
                                 }
@@ -798,7 +803,6 @@ var Relution;
                         message = endpoint.messages.get(id);
                         if (!message) {
                             message = new endpoint.messages.model({
-                                _id: msg._id,
                                 id: msg.id
                             }, {
                                 collection: endpoint.messages,

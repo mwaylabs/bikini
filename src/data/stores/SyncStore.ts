@@ -31,6 +31,7 @@
 /// <reference path="CipherSqlStore.ts" />
 /// <reference path="SyncContext.ts" />
 /// <reference path="SyncEndpoint.ts" />
+/// <reference path="LiveDataMessage.ts" />
 /// <reference path="../../utility/Debug.ts" />
 
 module Relution.LiveData {
@@ -298,7 +299,7 @@ module Relution.LiveData {
       });
     }
 
-    _fixMessage(endpoint, msg) {
+    _fixMessage(endpoint: SyncEndpoint, msg: LiveDataMessage) {
       if (msg.data && !msg.data[endpoint.entity.idAttribute] && msg.data._id) {
         msg.data[endpoint.entity.idAttribute] = msg.data._id; // server bug!
       } else if (!msg.data && msg.method === 'delete' && msg[endpoint.entity.idAttribute]) {
@@ -307,7 +308,7 @@ module Relution.LiveData {
       }
     }
 
-    onMessage(endpoint: SyncEndpoint, msg) {
+    onMessage(endpoint: SyncEndpoint, msg: LiveDataMessage) {
       // this is called by the store itself for a particular endpoint!
       var that = this;
       if (!msg || !msg.method) {
@@ -479,7 +480,7 @@ module Relution.LiveData {
       }
     }
 
-    private _emitMessage(endpoint: SyncEndpoint, msg, options, model, qMessage) {
+    private _emitMessage(endpoint: SyncEndpoint, msg: LiveDataMessage, options, model, qMessage) {
       var that = this;
       var channel = endpoint.channel;
       var qAjax = this._ajaxMessage(endpoint, msg, options, model);
@@ -523,7 +524,7 @@ module Relution.LiveData {
       });
     }
 
-    private _ajaxMessage(endpoint: SyncEndpoint, msg, options, model) {
+    private _ajaxMessage(endpoint: SyncEndpoint, msg: LiveDataMessage, options, model) {
       options = options || {};
 
       var url = options.url;
@@ -574,7 +575,7 @@ module Relution.LiveData {
       });
     }
 
-    private _applyResponse(qXHR, endpoint: SyncEndpoint, msg, options, model) {
+    private _applyResponse(qXHR, endpoint: SyncEndpoint, msg: LiveDataMessage, options, model) {
       var channel = endpoint.channel;
       var that = this;
       var clientTime = new Date().getTime();
@@ -614,6 +615,7 @@ module Relution.LiveData {
                     promises.push(that.onMessage(endpoint, {
                       id: id,
                       method: 'update',
+                      time: msg.time,
                       data: d
                     }));
                   }
@@ -622,6 +624,7 @@ module Relution.LiveData {
                   promises.push(that.onMessage(endpoint, {
                     id: id,
                     method: 'create',
+                    time: msg.time,
                     data: d
                   }));
                 }
@@ -633,6 +636,7 @@ module Relution.LiveData {
               promises.push(that.onMessage(endpoint, {
                 id: id,
                 method: 'delete',
+                time: msg.time,
                 data: m.attributes
               }));
             });
@@ -645,6 +649,7 @@ module Relution.LiveData {
                 promises.push(that.onMessage(endpoint, {
                   id: data[endpoint.entity.idAttribute] || data._id,
                   method: 'update',
+                  time: msg.time,
                   data: data
                 }));
               }
@@ -696,7 +701,7 @@ module Relution.LiveData {
           store: {}, // really go to remote server
           success: function (model, response, options) {
             changes.each(function (change) {
-              var msg = change.attributes;
+              var msg: LiveDataMessage = change.attributes;
               that.onMessage(endpoint, msg);
             });
             return response || options.xhr;
@@ -750,7 +755,7 @@ module Relution.LiveData {
         }
 
         var message = endpoint.messages.models[0];
-        var msg = message.attributes;
+        var msg: LiveDataMessage = message.attributes;
         var channel = message.get('channel');
         if (!msg || !channel) {
           return message.destroy();
@@ -806,7 +811,7 @@ module Relution.LiveData {
     }
 
     private storeMessage(endpoint: SyncEndpoint, qMsg) {
-      return qMsg.then(function (msg) {
+      return qMsg.then(function (msg: LiveDataMessage) {
         var options;
         var id = endpoint.messages.modelId(msg);
         Relution.LiveData.Debug.info('storeMessage ' + id);
@@ -827,7 +832,7 @@ module Relution.LiveData {
       });
     }
 
-    private removeMessage(endpoint: SyncEndpoint, msg, qMessage) {
+    private removeMessage(endpoint: SyncEndpoint, msg: LiveDataMessage, qMessage) {
       return qMessage.then(function (message) {
         if (!message) {
           var id = endpoint.messages.modelId(msg);
@@ -839,7 +844,6 @@ module Relution.LiveData {
           message = endpoint.messages.get(id);
           if (!message) {
             message = new endpoint.messages.model({
-              _id: msg._id,
               id: msg.id
             }, {
               collection: endpoint.messages,
