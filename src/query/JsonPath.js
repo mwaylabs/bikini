@@ -68,3 +68,4 @@ var Relution;
         LiveData.JsonPath = JsonPath;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
+//# sourceMappingURL=JsonPath.js.map

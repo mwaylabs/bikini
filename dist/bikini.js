@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Tue Dec 01 2015 09:48:29
+* Date:      Mon Dec 07 2015 10:44:27
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -100,7 +100,7 @@ var Relution;
         LiveData.Debug = new DebugConsole();
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-
+//# sourceMappingURL=Debug.js.map
 // Copyright (c) 2013 M-Way Solutions GmbH
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
 
@@ -1231,7 +1231,7 @@ var Relution;
         LiveData.JsonPath = JsonPath;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-
+//# sourceMappingURL=JsonPath.js.map
 /**
  * Filter.ts
  *
@@ -1256,7 +1256,7 @@ var Relution;
  * POSSIBILITY OF SUCH DAMAGE.
  */
 /* jshint indent: 4 */
-
+//# sourceMappingURL=Filter.js.map
 /**
  * FilterVisitor.ts
  *
@@ -1293,14 +1293,14 @@ var Relution;
                 return this[filter.type].apply(this, arguments);
             };
             FilterVisitorBase.prototype.logOp = function (filter) {
-                return this[filter.operation + 'Op'].apply(this, arguments);
+                return this[filter.operation.toLowerCase() + 'Op'].apply(this, arguments);
             };
             return FilterVisitorBase;
         })();
         LiveData.FilterVisitorBase = FilterVisitorBase;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-
+//# sourceMappingURL=FilterVisitor.js.map
 /**
  * JsonFilterVisitor.ts
  *
@@ -1332,11 +1332,10 @@ var Relution;
 /* jshint -W018: Confusing use of '!' */
 /// <reference path="FilterVisitor.ts" />
 /// <reference path="JsonPath.ts" />
-var __extends = this.__extends || function (d, b) {
+var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var Relution;
 (function (Relution) {
@@ -1654,7 +1653,7 @@ var Relution;
         })(LiveData.FilterVisitorBase);
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-
+//# sourceMappingURL=JsonFilterVisitor.js.map
 /**
  * SortOrder.ts
  *
@@ -1713,6 +1712,22 @@ var Relution;
                 return this;
             };
             /**
+             * formats a string such as '+name,-id'.
+             *
+             * @return {string} representation of SortOrder, may be the empty string when this is empty.
+               */
+            SortOrder.prototype.toString = function () {
+                var str = '';
+                var length = this.sortFields.length;
+                for (var i = 0; i < length; ++i) {
+                    if (i > 0) {
+                        str += ',';
+                    }
+                    str += this.sortFields[i].toString();
+                }
+                return str;
+            };
+            /**
              * combines an other instance such that this order is maintained by priority and equivalent elements are ordered by
              * the other order.
              *
@@ -1766,12 +1781,20 @@ var Relution;
             SortField.prototype.toJSON = function () {
                 return this.ascending ? this.name : '-' + this.name;
             };
+            /**
+             * formats a string such as '+name'.
+             *
+             * @return {string} such as '+name'.
+             */
+            SortField.prototype.toString = function () {
+                return this.ascending ? '+' + this.name : '-' + this.name;
+            };
             return SortField;
         })();
         LiveData.SortField = SortField;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-
+//# sourceMappingURL=SortOrder.js.map
 /**
  * SortOrderComparator.ts
  *
@@ -1906,7 +1929,7 @@ var Relution;
         })();
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-
+//# sourceMappingURL=SortOrderComparator.js.map
 /**
  * GetQuery.ts
  *
@@ -2052,12 +2075,42 @@ var Relution;
                     this.fields = _.unique(this.fields, true);
                 }
             };
+            /**
+             * computes query string from this instance.
+             *
+             * @return {string} of query parameters encoded for URIs, may be undefined if this object is empty.
+             */
+            GetQuery.prototype.toQueryParams = function () {
+                var params = '';
+                if (this.limit) {
+                    params += '&limit=' + this.limit;
+                }
+                if (this.offset) {
+                    params += '&offset=' + this.offset;
+                }
+                if (this.sortOrder) {
+                    var sortOrder = this.sortOrder.toString();
+                    if (sortOrder) {
+                        params += '&sortOrder=' + encodeURIComponent(sortOrder);
+                    }
+                }
+                if (this.filter) {
+                    params += '&filter=' + encodeURIComponent(JSON.stringify(this.filter));
+                }
+                if (this.fields) {
+                    var length = this.fields.length;
+                    for (var i = 0; i < length; ++i) {
+                        params += '&field=' + this.fields[i];
+                    }
+                }
+                return params && params.substr(1);
+            };
             return GetQuery;
         })();
         LiveData.GetQuery = GetQuery;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-
+//# sourceMappingURL=GetQuery.js.map
 
 // Copyright (c) 2013 M-Way Solutions GmbH
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
@@ -4314,7 +4367,7 @@ var Relution;
         _.extend(Store.prototype, Backbone.Events, LiveData._Object);
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-
+//# sourceMappingURL=Store.js.map
 /**
  * LocalStorageStore.ts
  *
@@ -4345,11 +4398,10 @@ var Relution;
 /// <reference path="../../core/livedata.d.ts" />
 /// <reference path="Store.ts" />
 /// <reference path="../../utility/Debug.ts" />
-var __extends = this.__extends || function (d, b) {
+var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var Relution;
 (function (Relution) {
@@ -4572,11 +4624,10 @@ var Relution;
 /// <reference path="../../core/livedata.d.ts" />
 /// <reference path="Store.ts" />
 /// <reference path="../../utility/Debug.ts" />
-var __extends = this.__extends || function (d, b) {
+var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var Relution;
 (function (Relution) {
@@ -5091,7 +5142,7 @@ var Relution;
         LiveData.AbstractSqlStore = AbstractSqlStore;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-
+//# sourceMappingURL=AbstractSqlStore.js.map
 /**
  * WebSqlStore.ts
  *
@@ -5122,11 +5173,10 @@ var Relution;
 /// <reference path="../../core/livedata.d.ts" />
 /// <reference path="AbstractSqlStore.ts" />
 /// <reference path="../../utility/Debug.ts" />
-var __extends = this.__extends || function (d, b) {
+var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var Relution;
 (function (Relution) {
@@ -5272,7 +5322,7 @@ var Relution;
         LiveData.WebSqlStore = WebSqlStore;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-
+//# sourceMappingURL=WebSqlStore.js.map
 /**
  * CipherSqlStore.ts
  *
@@ -5303,11 +5353,10 @@ var Relution;
 /// <reference path="../../core/livedata.d.ts" />
 /// <reference path="AbstractSqlStore.ts" />
 /// <reference path="../../utility/Debug.ts" />
-var __extends = this.__extends || function (d, b) {
+var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var Relution;
 (function (Relution) {
@@ -5459,7 +5508,7 @@ var Relution;
         LiveData.CipherSqlStore = CipherSqlStore;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-
+//# sourceMappingURL=CipherSqlStore.js.map
 /**
  * SyncStore.ts
  *
@@ -5493,11 +5542,10 @@ var Relution;
 /// <reference path="CipherSqlStore.ts" />
 /// <reference path="SyncContext.ts" />
 /// <reference path="../../utility/Debug.ts" />
-var __extends = this.__extends || function (d, b) {
+var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var Relution;
 (function (Relution) {
@@ -5833,7 +5881,9 @@ var Relution;
                             var syncContext = options.syncContext; // sync can be called by SyncContext itself when paging results
                             if (!syncContext) {
                                 // capture GetQuery options
-                                syncContext = new LiveData.SyncContext(options, model.options, this.options // static options of this store realize filtering client/server
+                                syncContext = new LiveData.SyncContext(options, // dynamic options passed to fetch() implement UI filters, etc.
+                                model.options, // static options on collection implement screen-specific stuff
+                                this.options // static options of this store realize filtering client/server
                                 );
                                 options.syncContext = syncContext;
                             }
@@ -5988,8 +6038,23 @@ var Relution;
                         // add query of collection
                         var collectionUrl = _.isFunction(model.url) ? model.url() : model.url;
                         var queryIndex = collectionUrl.lastIndexOf('?');
+                        var getQuery = new LiveData.GetQuery().fromJSON(options);
+                        // currently only sortOrder can be supported as we require the initial data load to yield full dataset
+                        getQuery.limit = null;
+                        getQuery.offset = null;
+                        getQuery.filter = null;
+                        getQuery.fields = null;
+                        var getParams = getQuery.toQueryParams();
                         if (queryIndex >= 0) {
                             url += collectionUrl.substr(queryIndex);
+                            if (getParams) {
+                                url += '&' + getParams;
+                            }
+                        }
+                        else {
+                            if (getParams) {
+                                url += '?' + getParams;
+                            }
                         }
                     }
                 }
@@ -6198,7 +6263,7 @@ var Relution;
                     };
                     var model = new LiveData.Model(msg.data, {
                         idAttribute: endpoint.entity.idAttribute,
-                        entity: endpoint.entity
+                        entity: endpoint.entity,
                     });
                     Relution.LiveData.Debug.info('sendMessage ' + model.id);
                     return that._applyResponse(that._ajaxMessage(endpoint, msg, remoteOptions, model), endpoint, msg, remoteOptions, model).catch(function (error) {
@@ -6305,7 +6370,7 @@ var Relution;
         LiveData.SyncStore = SyncStore;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-
+//# sourceMappingURL=SyncStore.js.map
 /**
  * SyncContext.ts
  *
@@ -6758,7 +6823,7 @@ var Relution;
         LiveData.SyncContext = SyncContext;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
-
+//# sourceMappingURL=SyncContext.js.map
 
 // Copyright (c) 2015 M-Way Solutions GmbH
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt

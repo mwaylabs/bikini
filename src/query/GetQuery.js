@@ -143,8 +143,39 @@ var Relution;
                     this.fields = _.unique(this.fields, true);
                 }
             };
+            /**
+             * computes query string from this instance.
+             *
+             * @return {string} of query parameters encoded for URIs, may be undefined if this object is empty.
+             */
+            GetQuery.prototype.toQueryParams = function () {
+                var params = '';
+                if (this.limit) {
+                    params += '&limit=' + this.limit;
+                }
+                if (this.offset) {
+                    params += '&offset=' + this.offset;
+                }
+                if (this.sortOrder) {
+                    var sortOrder = this.sortOrder.toString();
+                    if (sortOrder) {
+                        params += '&sortOrder=' + encodeURIComponent(sortOrder);
+                    }
+                }
+                if (this.filter) {
+                    params += '&filter=' + encodeURIComponent(JSON.stringify(this.filter));
+                }
+                if (this.fields) {
+                    var length = this.fields.length;
+                    for (var i = 0; i < length; ++i) {
+                        params += '&field=' + this.fields[i];
+                    }
+                }
+                return params && params.substr(1);
+            };
             return GetQuery;
         })();
         LiveData.GetQuery = GetQuery;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
+//# sourceMappingURL=GetQuery.js.map

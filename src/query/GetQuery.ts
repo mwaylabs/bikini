@@ -121,7 +121,7 @@ module Relution.LiveData {
       if (!this.filter) {
         this.filter = other.filter;
       } else if(other.filter) {
-        this.filter = {
+        this.filter = <LogOpFilter>{
           type: 'logOp',
           operation: 'and',
           filters: [
@@ -160,6 +160,37 @@ module Relution.LiveData {
         Array.prototype.sort.apply(this.fields);
         this.fields = _.unique(this.fields, true);
       }
+    }
+
+    /**
+     * computes query string from this instance.
+     *
+     * @return {string} of query parameters encoded for URIs, may be undefined if this object is empty.
+     */
+    public toQueryParams(): string {
+      var params = '';
+      if (this.limit) {
+        params += '&limit=' + this.limit;
+      }
+      if (this.offset) {
+        params += '&offset=' + this.offset;
+      }
+      if (this.sortOrder) {
+        var sortOrder = this.sortOrder.toString();
+        if (sortOrder) {
+          params += '&sortOrder=' + encodeURIComponent(sortOrder);
+        }
+      }
+      if (this.filter) {
+        params += '&filter=' +  encodeURIComponent(JSON.stringify(this.filter));
+      }
+      if (this.fields) {
+        var length = this.fields.length;
+        for (var i = 0; i < length; ++i) {
+          params += '&field=' + this.fields[i];
+        }
+      }
+      return params && params.substr(1);
     }
   }
 

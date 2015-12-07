@@ -53,7 +53,7 @@ module Relution.LiveData {
     }
 
     logOp(filter:LogOpFilter):T {
-      return this[filter.operation + 'Op'].apply(this, arguments);
+      return this[filter.operation.toLowerCase() + 'Op'].apply(this, arguments);
     }
   }
 

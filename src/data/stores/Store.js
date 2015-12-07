@@ -258,3 +258,4 @@ var Relution;
         _.extend(Store.prototype, Backbone.Events, LiveData._Object);
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
+//# sourceMappingURL=Store.js.map

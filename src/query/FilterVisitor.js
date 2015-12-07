@@ -34,10 +34,11 @@ var Relution;
                 return this[filter.type].apply(this, arguments);
             };
             FilterVisitorBase.prototype.logOp = function (filter) {
-                return this[filter.operation + 'Op'].apply(this, arguments);
+                return this[filter.operation.toLowerCase() + 'Op'].apply(this, arguments);
             };
             return FilterVisitorBase;
         })();
         LiveData.FilterVisitorBase = FilterVisitorBase;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
+//# sourceMappingURL=FilterVisitor.js.map

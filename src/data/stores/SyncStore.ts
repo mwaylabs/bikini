@@ -539,9 +539,22 @@ module Relution.LiveData {
           // add query of collection
           var collectionUrl = _.isFunction(model.url) ? model.url() : model.url;
           var queryIndex = collectionUrl.lastIndexOf('?');
-
+          var getQuery = new GetQuery().fromJSON(options);
+          // currently only sortOrder can be supported as we require the initial data load to yield full dataset
+          getQuery.limit = null;
+          getQuery.offset = null;
+          getQuery.filter = null;
+          getQuery.fields = null;
+          var getParams = getQuery.toQueryParams();
           if (queryIndex >= 0) {
             url += collectionUrl.substr(queryIndex);
+            if (getParams) {
+              url += '&' + getParams;
+            }
+          } else {
+            if (getParams) {
+              url += '?' + getParams;
+            }
           }
         }
       }

@@ -62,6 +62,23 @@ module Relution.LiveData {
     }
 
     /**
+     * formats a string such as '+name,-id'.
+     *
+     * @return {string} representation of SortOrder, may be the empty string when this is empty.
+       */
+    public toString(): string {
+      var str = '';
+      var length = this.sortFields.length;
+      for (var i = 0; i < length; ++i) {
+        if (i > 0) {
+          str += ',';
+        }
+        str += this.sortFields[i].toString();
+      }
+      return str;
+    }
+
+    /**
      * combines an other instance such that this order is maintained by priority and equivalent elements are ordered by
      * the other order.
      *
@@ -126,6 +143,15 @@ module Relution.LiveData {
      */
     public toJSON():string {
       return this.ascending ? this.name : '-' + this.name;
+    }
+
+    /**
+     * formats a string such as '+name'.
+     *
+     * @return {string} such as '+name'.
+     */
+    public toString():string {
+      return this.ascending ? '+' + this.name : '-' + this.name;
     }
   }
 

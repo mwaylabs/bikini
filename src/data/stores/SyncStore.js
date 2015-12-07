@@ -31,11 +31,10 @@
 /// <reference path="CipherSqlStore.ts" />
 /// <reference path="SyncContext.ts" />
 /// <reference path="../../utility/Debug.ts" />
-var __extends = this.__extends || function (d, b) {
+var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var Relution;
 (function (Relution) {
@@ -371,7 +370,9 @@ var Relution;
                             var syncContext = options.syncContext; // sync can be called by SyncContext itself when paging results
                             if (!syncContext) {
                                 // capture GetQuery options
-                                syncContext = new LiveData.SyncContext(options, model.options, this.options // static options of this store realize filtering client/server
+                                syncContext = new LiveData.SyncContext(options, // dynamic options passed to fetch() implement UI filters, etc.
+                                model.options, // static options on collection implement screen-specific stuff
+                                this.options // static options of this store realize filtering client/server
                                 );
                                 options.syncContext = syncContext;
                             }
@@ -526,8 +527,23 @@ var Relution;
                         // add query of collection
                         var collectionUrl = _.isFunction(model.url) ? model.url() : model.url;
                         var queryIndex = collectionUrl.lastIndexOf('?');
+                        var getQuery = new LiveData.GetQuery().fromJSON(options);
+                        // currently only sortOrder can be supported as we require the initial data load to yield full dataset
+                        getQuery.limit = null;
+                        getQuery.offset = null;
+                        getQuery.filter = null;
+                        getQuery.fields = null;
+                        var getParams = getQuery.toQueryParams();
                         if (queryIndex >= 0) {
                             url += collectionUrl.substr(queryIndex);
+                            if (getParams) {
+                                url += '&' + getParams;
+                            }
+                        }
+                        else {
+                            if (getParams) {
+                                url += '?' + getParams;
+                            }
                         }
                     }
                 }
@@ -736,7 +752,7 @@ var Relution;
                     };
                     var model = new LiveData.Model(msg.data, {
                         idAttribute: endpoint.entity.idAttribute,
-                        entity: endpoint.entity
+                        entity: endpoint.entity,
                     });
                     Relution.LiveData.Debug.info('sendMessage ' + model.id);
                     return that._applyResponse(that._ajaxMessage(endpoint, msg, remoteOptions, model), endpoint, msg, remoteOptions, model).catch(function (error) {
@@ -843,3 +859,4 @@ var Relution;
         LiveData.SyncStore = SyncStore;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
+//# sourceMappingURL=SyncStore.js.map

@@ -56,6 +56,22 @@ var Relution;
                 return this;
             };
             /**
+             * formats a string such as '+name,-id'.
+             *
+             * @return {string} representation of SortOrder, may be the empty string when this is empty.
+               */
+            SortOrder.prototype.toString = function () {
+                var str = '';
+                var length = this.sortFields.length;
+                for (var i = 0; i < length; ++i) {
+                    if (i > 0) {
+                        str += ',';
+                    }
+                    str += this.sortFields[i].toString();
+                }
+                return str;
+            };
+            /**
              * combines an other instance such that this order is maintained by priority and equivalent elements are ordered by
              * the other order.
              *
@@ -109,8 +125,17 @@ var Relution;
             SortField.prototype.toJSON = function () {
                 return this.ascending ? this.name : '-' + this.name;
             };
+            /**
+             * formats a string such as '+name'.
+             *
+             * @return {string} such as '+name'.
+             */
+            SortField.prototype.toString = function () {
+                return this.ascending ? '+' + this.name : '-' + this.name;
+            };
             return SortField;
         })();
         LiveData.SortField = SortField;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
+//# sourceMappingURL=SortOrder.js.map

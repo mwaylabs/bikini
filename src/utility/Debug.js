@@ -68,3 +68,4 @@ var Relution;
         LiveData.Debug = new DebugConsole();
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
+//# sourceMappingURL=Debug.js.map
