@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Mon Dec 07 2015 14:24:39
+* Date:      Mon Dec 07 2015 16:36:29
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -5844,7 +5844,9 @@ var Relution;
                         Relution.LiveData.Debug.info('socket.io: disconnect');
                         return that.onDisconnect(endpoint).done();
                     });
-                    endpoint.socket.on(endpoint.channel, _.bind(this.onMessage, this, endpoint));
+                    endpoint.socket.on(endpoint.channel, function (msg) {
+                        return that.onMessage(endpoint, that._fixMessage(endpoint, msg));
+                    });
                     return endpoint.socket;
                 }
             };
@@ -5919,6 +5921,7 @@ var Relution;
                     msg.data = {};
                     msg.data[endpoint.entity.idAttribute] = msg[endpoint.entity.idAttribute]; // server bug!
                 }
+                return msg;
             };
             SyncStore.prototype.onMessage = function (endpoint, msg) {
                 // this is called by the store itself for a particular endpoint!
@@ -5926,7 +5929,6 @@ var Relution;
                 if (!msg || !msg.method) {
                     return Q.reject('no message or method given');
                 }
-                this._fixMessage(endpoint, msg);
                 var q;
                 var channel = endpoint.channel;
                 if (endpoint.localStore) {
@@ -6187,9 +6189,9 @@ var Relution;
                         var promises = [];
                         var dataIds;
                         if (msg.method !== 'read') {
-                            promises.push(that.onMessage(endpoint, data === msg.data ? msg : _.defaults({
+                            promises.push(that.onMessage(endpoint, that._fixMessage(endpoint, data === msg.data ? msg : _.defaults({
                                 data: data // just accepts new data
-                            }, msg)));
+                            }, msg))));
                         }
                         else if (LiveData.isCollection(model) && _.isArray(data)) {
                             // synchronize the collection contents with the data read
@@ -6208,34 +6210,34 @@ var Relution;
                                         delete syncIds[id]; // so that it is deleted below
                                         if (!_.isEqual(_.pick.call(m, m.attributes, Object.keys(d)), d)) {
                                             // above checked that all attributes in d are in m with equal values and found some mismatch
-                                            promises.push(that.onMessage(endpoint, {
+                                            promises.push(that.onMessage(endpoint, that._fixMessage(endpoint, {
                                                 id: id,
                                                 method: 'update',
                                                 time: msg.time,
                                                 data: d
-                                            }));
+                                            })));
                                         }
                                     }
                                     else {
                                         // create the item
-                                        promises.push(that.onMessage(endpoint, {
+                                        promises.push(that.onMessage(endpoint, that._fixMessage(endpoint, {
                                             id: id,
                                             method: 'create',
                                             time: msg.time,
                                             data: d
-                                        }));
+                                        })));
                                     }
                                 }
                             });
                             Object.keys(syncIds).forEach(function (id) {
                                 // delete the item
                                 var m = syncIds[id];
-                                promises.push(that.onMessage(endpoint, {
+                                promises.push(that.onMessage(endpoint, that._fixMessage(endpoint, {
                                     id: id,
                                     method: 'delete',
                                     time: msg.time,
                                     data: m.attributes
-                                }));
+                                })));
                             });
                         }
                         else {
@@ -6244,12 +6246,12 @@ var Relution;
                             for (var i = 0; i < array.length; i++) {
                                 data = array[i];
                                 if (data) {
-                                    promises.push(that.onMessage(endpoint, {
+                                    promises.push(that.onMessage(endpoint, that._fixMessage(endpoint, {
                                         id: data[endpoint.entity.idAttribute] || data._id,
                                         method: 'update',
                                         time: msg.time,
                                         data: data
-                                    }));
+                                    })));
                                 }
                             }
                         }
@@ -6298,7 +6300,7 @@ var Relution;
                         success: function (model, response, options) {
                             changes.each(function (change) {
                                 var msg = change.attributes;
-                                that.onMessage(endpoint, msg);
+                                that.onMessage(endpoint, that._fixMessage(endpoint, msg));
                             });
                             return response || options.xhr;
                         },

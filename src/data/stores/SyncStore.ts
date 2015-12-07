@@ -225,7 +225,9 @@ module Relution.LiveData {
           Relution.LiveData.Debug.info('socket.io: disconnect');
           return that.onDisconnect(endpoint).done();
         });
-        endpoint.socket.on(endpoint.channel, _.bind(this.onMessage, this, endpoint));
+        endpoint.socket.on(endpoint.channel, function (msg: LiveDataMessage) {
+          return that.onMessage(endpoint, that._fixMessage(endpoint, msg));
+        });
         return endpoint.socket;
       }
     }
@@ -299,13 +301,14 @@ module Relution.LiveData {
       });
     }
 
-    _fixMessage(endpoint: SyncEndpoint, msg: LiveDataMessage) {
+    _fixMessage(endpoint: SyncEndpoint, msg: LiveDataMessage): LiveDataMessage {
       if (msg.data && !msg.data[endpoint.entity.idAttribute] && msg.data._id) {
         msg.data[endpoint.entity.idAttribute] = msg.data._id; // server bug!
       } else if (!msg.data && msg.method === 'delete' && msg[endpoint.entity.idAttribute]) {
         msg.data = {};
         msg.data[endpoint.entity.idAttribute] = msg[endpoint.entity.idAttribute]; // server bug!
       }
+      return msg;
     }
 
     onMessage(endpoint: SyncEndpoint, msg: LiveDataMessage) {
@@ -314,7 +317,6 @@ module Relution.LiveData {
       if (!msg || !msg.method) {
         return Q.reject('no message or method given');
       }
-      this._fixMessage(endpoint, msg);
 
       var q;
       var channel = endpoint.channel;
@@ -592,9 +594,9 @@ module Relution.LiveData {
           var promises = [];
           var dataIds;
           if (msg.method !== 'read') {
-            promises.push(that.onMessage(endpoint, data === msg.data ? msg : _.defaults({
+            promises.push(that.onMessage(endpoint, that._fixMessage(endpoint, data === msg.data ? msg : _.defaults({
               data: data // just accepts new data
-            }, msg)));
+            }, msg))));
           } else if (isCollection(model) && _.isArray(data)) {
             // synchronize the collection contents with the data read
             var syncIds = {};
@@ -612,33 +614,33 @@ module Relution.LiveData {
                   delete syncIds[id]; // so that it is deleted below
                   if (!_.isEqual(_.pick.call(m, m.attributes, Object.keys(d)), d)) {
                     // above checked that all attributes in d are in m with equal values and found some mismatch
-                    promises.push(that.onMessage(endpoint, {
+                    promises.push(that.onMessage(endpoint, that._fixMessage(endpoint, {
                       id: id,
                       method: 'update',
                       time: msg.time,
                       data: d
-                    }));
+                    })));
                   }
                 } else {
                   // create the item
-                  promises.push(that.onMessage(endpoint, {
+                  promises.push(that.onMessage(endpoint, that._fixMessage(endpoint, {
                     id: id,
                     method: 'create',
                     time: msg.time,
                     data: d
-                  }));
+                  })));
                 }
               }
             });
             Object.keys(syncIds).forEach(function (id) {
               // delete the item
               var m = syncIds[id];
-              promises.push(that.onMessage(endpoint, {
+              promises.push(that.onMessage(endpoint, that._fixMessage(endpoint, {
                 id: id,
                 method: 'delete',
                 time: msg.time,
                 data: m.attributes
-              }));
+              })));
             });
           } else {
             // trigger an update to load the data read
@@ -646,12 +648,12 @@ module Relution.LiveData {
             for (var i = 0; i < array.length; i++) {
               data = array[i];
               if (data) {
-                promises.push(that.onMessage(endpoint, {
+                promises.push(that.onMessage(endpoint, that._fixMessage(endpoint, {
                   id: data[endpoint.entity.idAttribute] || data._id,
                   method: 'update',
                   time: msg.time,
                   data: data
-                }));
+                })));
               }
             }
           }
@@ -702,7 +704,7 @@ module Relution.LiveData {
           success: function (model, response, options) {
             changes.each(function (change) {
               var msg: LiveDataMessage = change.attributes;
-              that.onMessage(endpoint, msg);
+              that.onMessage(endpoint, that._fixMessage(endpoint, msg));
             });
             return response || options.xhr;
           },
