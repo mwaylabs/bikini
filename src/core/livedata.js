@@ -99,7 +99,12 @@ Relution.LiveData.ajax = function ajax(options) {
     }
   });
   if (fnSuccess || fnError) {
-    promise = promise.then(fnSuccess, fnError);
+    promise = promise.then(fnSuccess, function () {
+      if (fnError) {
+        fnError.apply(this, arguments);
+      }
+      return Q.reject.apply(Q, arguments);
+    });
   }
   return promise;
 };
