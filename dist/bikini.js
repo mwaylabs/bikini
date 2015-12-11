@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Mon Dec 07 2015 10:44:27
+* Date:      Fri Dec 11 2015 09:11:46
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -202,7 +202,12 @@ Relution.LiveData.ajax = function ajax(options) {
     }
   });
   if (fnSuccess || fnError) {
-    promise = promise.then(fnSuccess, fnError);
+    promise = promise.then(fnSuccess, function () {
+      if (fnError) {
+        fnError.apply(this, arguments);
+      }
+      return Q.reject.apply(Q, arguments);
+    });
   }
   return promise;
 };
