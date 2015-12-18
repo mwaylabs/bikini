@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2015 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Fri Dec 18 2015 11:32:44
+* Date:      Fri Dec 18 2015 13:58:16
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -68,27 +68,31 @@ var Relution;
             function DebugConsole(enabled, fontSize) {
                 if (enabled === void 0) { enabled = false; }
                 if (fontSize === void 0) { fontSize = '12px'; }
+                // uses bound functions to avoid browsers outputting incorrect line numbers
                 if (enabled) {
-                    this.log = DebugConsole.logEnabled;
+                    this.log = _.bind(console.log, console, '%c%s');
+                    this.trace = _.bind(console.trace, console, '%c%s', "color: #378c13; font-size: " + fontSize + ";font-weight: normal;");
+                    this.warn = _.bind(console.warn, console, '%c%s', "color: #e69138; font-size: " + fontSize + ";font-weight: normal;");
+                    this.info = _.bind(console.info, console, '%c%s', "color: #00f; font-size: " + fontSize + ";font-weight: normal;");
+                    this.error = _.bind(console.error, console, '%c%s', "color: #f00; font-size: " + fontSize + ";font-weight: normal;");
                 }
                 else {
-                    this.log = DebugConsole.logDisabled;
+                    this.log = DebugConsole.STUB;
+                    this.trace = DebugConsole.STUB;
+                    this.warn = DebugConsole.STUB;
+                    this.info = DebugConsole.STUB;
+                    this.error = DebugConsole.STUB;
                 }
-                this.trace = _.bind(this.log, console, "color: #378c13; font-size: " + fontSize + ";font-weight: normal;");
-                this.warning = _.bind(this.log, console, "color: #e69138; font-size: " + fontSize + ";font-weight: normal;");
-                this.info = _.bind(this.log, console, "color: #00f; font-size: " + fontSize + ";font-weight: normal;");
-                this.error = _.bind(this.log, console, "color: #f00; font-size: " + fontSize + ";font-weight: normal;");
+                this.warning = this.warn; // alias only
             }
             Object.defineProperty(DebugConsole.prototype, "enabled", {
                 get: function () {
-                    return this.log === DebugConsole.logEnabled;
+                    return this.log !== DebugConsole.STUB;
                 },
                 enumerable: true,
                 configurable: true
             });
-            // Caution, entire class uses bound functions to avoid browsers outputting incorrect line numbers
-            DebugConsole.logEnabled = _.bind(console.log, console, '%c%s');
-            DebugConsole.logDisabled = function () { };
+            DebugConsole.STUB = function () { };
             return DebugConsole;
         })();
         LiveData.DebugConsole = DebugConsole;
@@ -6303,16 +6307,16 @@ var Relution;
                 var promise = endpoint.promiseFetchingChanges;
                 if (promise && now - endpoint.timestampFetchingChanges < 1000) {
                     // reuse existing eventually completed request for changes
-                    console.warn(channel + ' skipping changes request...');
+                    Relution.LiveData.Debug.warning(channel + ' skipping changes request...');
                     return promise;
                 }
                 var time = that.getLastMessageTime(channel);
                 if (!time) {
-                    console.error(channel + ' can not fetch changes at this time!');
+                    Relution.LiveData.Debug.error(channel + ' can not fetch changes at this time!');
                     return promise || Q.resolve();
                 }
                 // initiate a new request for changes
-                console.info(channel + ' initiating changes request...');
+                Relution.LiveData.Debug.info(channel + ' initiating changes request...');
                 var changes = new endpoint.messages.constructor();
                 promise = changes.fetch({
                     url: endpoint.urlRoot + 'changes/' + time,

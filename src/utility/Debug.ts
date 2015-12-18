@@ -32,32 +32,35 @@ module Relution.LiveData {
    */
   export class DebugConsole {
 
-    // Caution, entire class uses bound functions to avoid browsers outputting incorrect line numbers
-
-    private static logEnabled = _.bind(console.log, console, '%c%s');
-    private static logDisabled = function () { /* no op */ };
+    private static STUB = function () { /* no op */ };
 
     public constructor(enabled: boolean = false, fontSize = '12px') {
+      // uses bound functions to avoid browsers outputting incorrect line numbers
       if (enabled) {
-        this.log = DebugConsole.logEnabled;
+        this.log = _.bind(console.log, console, '%c%s');
+        this.trace = _.bind(console.trace, console, '%c%s', `color: #378c13; font-size: ${fontSize};font-weight: normal;`);
+        this.warn = _.bind(console.warn, console, '%c%s', `color: #e69138; font-size: ${fontSize};font-weight: normal;`);
+        this.info = _.bind(console.info, console, '%c%s', `color: #00f; font-size: ${fontSize};font-weight: normal;`);
+        this.error = _.bind(console.error, console, '%c%s', `color: #f00; font-size: ${fontSize};font-weight: normal;`);
       } else {
-        this.log = DebugConsole.logDisabled;
+        this.log = DebugConsole.STUB;
+        this.trace = DebugConsole.STUB;
+        this.warn = DebugConsole.STUB;
+        this.info = DebugConsole.STUB;
+        this.error = DebugConsole.STUB;
       }
-
-      this.trace = _.bind(this.log, console, `color: #378c13; font-size: ${fontSize};font-weight: normal;`);
-      this.warning = _.bind(this.log, console, `color: #e69138; font-size: ${fontSize};font-weight: normal;`);
-      this.info = _.bind(this.log, console, `color: #00f; font-size: ${fontSize};font-weight: normal;`);
-      this.error = _.bind(this.log, console, `color: #f00; font-size: ${fontSize};font-weight: normal;`);
+      this.warning = this.warn; // alias only
     }
 
     public get enabled(): boolean {
-      return this.log === DebugConsole.logEnabled;
+      return this.log !== DebugConsole.STUB;
     }
 
     private log: (color: string, message: string, ...parameters: any[]) => void;
 
     public trace: (message: string, ...parameters: any[]) => void;
     public info: (message: string, ...parameters: any[]) => void;
+    public warn: (message: string, ...parameters: any[]) => void;
     public warning: (message: string, ...parameters: any[]) => void;
     public error: (message: string, ...parameters: any[]) => void;
 
