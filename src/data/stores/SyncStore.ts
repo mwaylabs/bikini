@@ -703,18 +703,18 @@ module Relution.LiveData {
       var promise = endpoint.promiseFetchingChanges;
       if (promise && now - endpoint.timestampFetchingChanges < 1000) {
         // reuse existing eventually completed request for changes
-        console.warn(channel + ' skipping changes request...');
+        Relution.LiveData.Debug.warning(channel + ' skipping changes request...');
         return promise;
       }
 
       var time = that.getLastMessageTime(channel);
       if (!time) {
-        console.error(channel + ' can not fetch changes at this time!');
+        Relution.LiveData.Debug.error(channel + ' can not fetch changes at this time!');
         return promise || Q.resolve();
       }
 
       // initiate a new request for changes
-      console.info(channel + ' initiating changes request...');
+      Relution.LiveData.Debug.info(channel + ' initiating changes request...');
       var changes = new endpoint.messages.constructor();
       promise = changes.fetch({
         url: endpoint.urlRoot + 'changes/' + time,
