@@ -660,26 +660,46 @@ var Relution;
             };
             SyncStore.prototype.fetchChanges = function (endpoint) {
                 var that = this;
-                var channel = endpoint ? endpoint.channel : '';
+                var channel = endpoint.channel;
+                if (!endpoint.urlRoot || !channel) {
+                    return Q.resolve();
+                }
+                var now = Date.now();
+                var promise = endpoint.promiseFetchingChanges;
+                if (promise && now - endpoint.timestampFetchingChanges < 1000) {
+                    // reuse existing eventually completed request for changes
+                    console.warn(channel + ' skipping changes request...');
+                    return promise;
+                }
                 var time = that.getLastMessageTime(channel);
-                if (endpoint && endpoint.urlRoot && channel && time) {
-                    var changes = new endpoint.messages.constructor();
-                    return changes.fetch({
-                        url: endpoint.urlRoot + 'changes/' + time,
-                        store: {},
-                        success: function (model, response, options) {
+                if (!time) {
+                    console.error(channel + ' can not fetch changes at this time!');
+                    return promise || Q.resolve();
+                }
+                // initiate a new request for changes
+                console.info(channel + ' initiating changes request...');
+                var changes = new endpoint.messages.constructor();
+                promise = changes.fetch({
+                    url: endpoint.urlRoot + 'changes/' + time,
+                    credentials: endpoint.credentials,
+                    store: {},
+                    success: function fetchChangesSuccess(model, response, options) {
+                        if (changes.models.length > 0) {
                             changes.each(function (change) {
                                 var msg = change.attributes;
                                 that.onMessage(endpoint, that._fixMessage(endpoint, msg));
                             });
-                            return response || options.xhr;
-                        },
-                        credentials: endpoint.credentials
-                    });
-                }
-                else {
-                    return Q.resolve();
-                }
+                        }
+                        else {
+                            // following should use server time!
+                            that.setLastMessageTime(channel, now);
+                        }
+                        return response || options.xhr;
+                    }
+                });
+                endpoint.promiseFetchingChanges = promise;
+                endpoint.timestampFetchingChanges = now;
+                return promise;
             };
             SyncStore.prototype.fetchServerInfo = function (endpoint) {
                 var that = this;

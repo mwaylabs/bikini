@@ -57,6 +57,11 @@ module Relution.LiveData {
     public messages: any;
     public socket: any;
 
+    // promise of last SyncStore.fetchChanges
+    public promiseFetchingChanges: any;
+    // timestamp of last SyncStore.fetchChanges, 0 while request is outstanding
+    public timestampFetchingChanges: number;
+
     constructor(options:{
       entity: any,
       modelType: string,
