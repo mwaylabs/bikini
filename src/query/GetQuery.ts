@@ -146,11 +146,12 @@ module Relution.LiveData {
       if (this.filter && GetQuery.isAndFilter(this.filter)) {
         // following loop flattens nested and filters by recursively replacing them by their children
         var filters = (<LogOpFilter>this.filter).filters;
-        for (var i = filters.length; i >= 0;) {
+        for (var i = filters.length - 1; i >= 0; --i) {
           if (GetQuery.isAndFilter(filters[i])) {
-            Array.prototype.splice.apply(filters, Array.prototype.concat([i, 1], (<LogOpFilter>filters[i]).filters));
-          } else {
-            --i;
+            // replace current filter with nested filters
+            var nestedFilters = (<LogOpFilter>filters[i]).filters;
+            Array.prototype.splice.apply(filters, Array.prototype.concat([i, 1], nestedFilters));
+            i += nestedFilters.length;
           }
         }
       }
