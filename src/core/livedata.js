@@ -75,11 +75,13 @@ Backbone.ajax = function ajax(options) {
 Relution.LiveData.ajax = function ajax(options) {
   var that = this;
   var args = arguments;
+
   var fnSuccess = options.success;
   delete options.success;
   var fnError = options.error;
   delete options.error;
-  options.method = options.type;//set method because some ajax libs need this
+
+  options.method = options.type;  // set method because some ajax libs need this
   var promise = Relution.LiveData.Security.logon.apply(this, arguments).then(function () {
     var superAjax = that.super_ && that.super_.ajax || Relution.LiveData.http;
     var xhr = superAjax.apply(that, args);
@@ -88,24 +90,46 @@ Relution.LiveData.ajax = function ajax(options) {
     }
 
     promise.xhr = xhr;
+    options.xhr = xhr;
     if (Q.isPromiseAlike(xhr) && typeof xhr.catch === 'function') {
-      return xhr;
+      // promise-based XHR
+      return xhr.then(function onSuccess (response) {
+        // AJAX success function( Anything data, String textStatus, jqXHR jqXHR )
+        if (fnSuccess) {
+          fnSuccess(response.data, response.status, response);
+        }
+        return xhr;
+      }, function onError (response) {
+        // AJAX error function( jqXHR jqXHR, String textStatus, String errorThrown )
+        response.responseText = response.statusText;  // jQuery compatibility
+        response.responseJSON = response.data;        // jQuery compatibility
+        if (fnError) {
+          fnError(response, response.statusText, response.data);
+        }
+        return xhr;
+      });
     } else {
+      // jQuery-based XHR
       var q = Q.defer();
-      xhr.success(_.bind(q.resolve, q));
-      xhr.error(_.bind(q.reject, q));
-      options.xhr = xhr;
+      xhr.success(function onSuccess(data, textStatus, jqXHR) {
+        var result;
+        if (fnSuccess) {
+          result = fnSuccess.apply(this, arguments);
+        }
+        q.resolve(data);
+        return result;
+      });
+      xhr.error(function onError (jqXHR, textStatus, errorThrown) {
+        var result;
+        if (fnError) {
+          result = fnError.apply(this, arguments);
+        }
+        q.reject(errorThrown || jqXHR);
+        return result;
+      });
       return q.promise;
     }
   });
-  if (fnSuccess || fnError) {
-    promise = promise.then(fnSuccess, function () {
-      if (fnError) {
-        fnError.apply(this, arguments);
-      }
-      return Q.reject.apply(Q, arguments);
-    });
-  }
   return promise;
 };
 
