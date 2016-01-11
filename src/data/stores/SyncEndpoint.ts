@@ -55,6 +55,8 @@ module Relution.LiveData {
     public localStore: Store;
     public info: any;
     public messages: any;
+    public messagesPromise: any;
+    public messagesPriority: number;
     public socket: any;
 
     // promise of last SyncStore.fetchChanges

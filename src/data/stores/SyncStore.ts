@@ -95,7 +95,6 @@ module Relution.LiveData {
     }
 
     initEndpoint(modelOrCollection, modelType): SyncEndpoint {
-      Relution.LiveData.Debug.info('Relution.LiveData.SyncStore.initEndpoint');
       var urlRoot = modelOrCollection.getUrlRoot();
       var entity = this.getEntity(modelOrCollection.entity);
       if (urlRoot && entity) {
@@ -106,6 +105,7 @@ module Relution.LiveData {
         // get or create endpoint for this url
         var endpoint = this.endpoints[hash];
         if (!endpoint) {
+          Relution.LiveData.Debug.info('Relution.LiveData.SyncStore.initEndpoint: ' + name);
           var href = URLUtil.getLocation(urlRoot);
           endpoint = new SyncEndpoint({
             entity: entity,
@@ -126,12 +126,10 @@ module Relution.LiveData {
     }
 
     initModel(model) {
-      Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore.initModel');
       model.endpoint = this.initEndpoint(model, model.constructor);
     }
 
     initCollection(collection) {
-      Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore.initCollection');
       collection.endpoint = this.initEndpoint(collection, collection.model);
     }
 
@@ -166,7 +164,7 @@ module Relution.LiveData {
      * @returns {*}
      */
     createMsgCollection(endpoint: SyncEndpoint) {
-      if (this.options.useOfflineChanges) {
+      if (this.options.useOfflineChanges && !endpoint.messages) {
         var entity = 'msg-' + endpoint.channel;
         var entities = {};
         entities[entity] = new Entity({
@@ -180,20 +178,22 @@ module Relution.LiveData {
           storeOption = _.clone(this.options.localStoreOptions);
           storeOption.entities = entities;
         }
-        var messages = Collection.design({
+        endpoint.messagesPriority = this.options.orderOfflineChanges && (_.lastIndexOf(this.options.orderOfflineChanges, endpoint.entity.name) + 1);
+        endpoint.messages = Collection.design({
           entity: entity,
           store: this.options.localStore.create(storeOption)
         });
         if (endpoint.isConnected) {
           this._sendMessages(endpoint);
         }
-        return messages;
       }
+      return endpoint.messages;
     }
 
     createSocket(endpoint: SyncEndpoint, name) {
-      Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore.createSocket');
       if (this.options.useSocketNotify && endpoint && endpoint.socketPath) {
+        Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore.createSocket: ' + name);
+
         var that = this;
         var url = endpoint.host;
         var path = endpoint.path;
@@ -233,9 +233,10 @@ module Relution.LiveData {
     }
 
     _bindChannel(endpoint: SyncEndpoint, name) {
-      Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore._bindChannel');
       var that = this;
       if (endpoint && endpoint.socket) {
+        Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore._bindChannel: ' + name);
+
         var channel = endpoint.channel;
         var socket = endpoint.socket;
         var time = this.getLastMessageTime(channel);
@@ -337,7 +338,7 @@ module Relution.LiveData {
           },
           error: function (error) {
             // report error as event on store
-            that.trigger('error:' + channel, error);
+            that.trigger('error:' + channel, error, model);
           }
         }));
       } else {
@@ -445,7 +446,7 @@ module Relution.LiveData {
               }
 
               // can not do much about it...
-              that.trigger('error:' + channel, xhr.responseJSON || xhr.responseText);
+              that.trigger('error:' + channel, xhr.responseJSON || xhr.responseText, model);
               return resp;
             }).thenResolve(resp); // caller expects original XHR response as changes body data is NOT compatible
           }, function () {
@@ -523,7 +524,7 @@ module Relution.LiveData {
         q = q.then(function (data) {
           // success, remove message stored, if any
           return that.removeMessage(endpoint, msg, qMessage).then(data, function (error) {
-            that.trigger('error:' + channel, error); // can not do much about it...
+            that.trigger('error:' + channel, error, model); // can not do much about it...
             return data;
           }).thenResolve(data); // resolve again yielding data
         }, function (xhr) {
@@ -534,7 +535,7 @@ module Relution.LiveData {
           } else {
             // remove message stored and keep rejection as is
             return that.removeMessage(endpoint, msg, qMessage).then(xhr, function (error) {
-              that.trigger('error:' + channel, error); // can not do much about it...
+              that.trigger('error:' + channel, error, model); // can not do much about it...
               return xhr;
             }).thenResolve(Q.reject.apply(Q, arguments));
           }
@@ -815,72 +816,115 @@ module Relution.LiveData {
     }
 
     private _sendMessages(endpoint: SyncEndpoint) {
+      // not ready yet
       if (!endpoint || !endpoint.messages) {
         return Q.resolve();
       }
 
+      // stacked endpoints relevant by priority of messages playback
+      var endpoints;
+      if (endpoint.messagesPriority) {
+        // process dependent endpoints as well
+        endpoints = _.values(this.endpoints).filter(function (otherEndpoint) {
+          return otherEndpoint.messages && otherEndpoint.messagesPriority && otherEndpoint.messagesPriority <= endpoint.messagesPriority;
+        }).sort(function (a, b) {
+          return b.messagesPriority - a.messagesPriority;
+        });
+        if (endpoints.length !== endpoint.messagesPriority || endpoints[0] !== endpoint) {
+          return Q.resolve(); // some endpoints are not yet initialized
+        }
+      } else {
+        endpoints = [
+          endpoint
+        ];
+      }
+
+      // walk stack of endpoints
       var that = this;
-      return endpoint.messages.fetch().then(function next(result) {
-        if (endpoint.messages.models.length <= 0) {
-          return result;
+      return (function nextEndpoint() {
+        var endpoint = endpoints.pop();
+        if (!endpoint) {
+          return Q.resolve();
         }
 
-        var message = endpoint.messages.models[0];
-        var msg: LiveDataMessage = message.attributes;
-        var channel = message.get('channel');
-        if (!msg || !channel) {
-          return message.destroy();
-        }
-        that._fixMessage(endpoint, msg);
-
-        var remoteOptions:any = {
-          urlRoot: endpoint.urlRoot,
-          store: {} // really go to remote server
-        };
-        var localOptions = {
-          // just affect local store
-          store: endpoint.localStore
-        };
-        var model = new Model(msg.data, {
-          idAttribute: endpoint.entity.idAttribute,
-          entity: endpoint.entity,
-        });
-        Relution.LiveData.Debug.info('sendMessage ' + model.id);
-        return that._applyResponse(that._ajaxMessage(endpoint, msg, remoteOptions, model), endpoint, msg, remoteOptions, model).catch(function (error) {
-          // failed, eventually undo the modifications stored
-          if (!endpoint.localStore) {
-            return Q.reject(error);
-          }
-
-          // revert modification by reloading data
-          if (msg.id) {
-            remoteOptions.url = remoteOptions.urlRoot + (remoteOptions.urlRoot.charAt(remoteOptions.urlRoot.length - 1) === '/' ? '' : '/' ) + msg.id;
-          }
-          return model.fetch(remoteOptions).then(function (data) {
-            // original request failed and the code above reloaded the data to revert the local modifications, which succeeded...
-            return model.save(data, localOptions).tap(function () {
-              that.trigger('error:' + channel, error);
-            });
-          }, function (fetchResp) {
-            // original request failed and the code above tried to revert the local modifications by reloading the data, which failed as well...
-            var status = fetchResp && fetchResp.status;
-            switch (status) {
-              case 404: // NOT FOUND
-              case 401: // UNAUTHORIZED
-              case 410: // GONE*
-                // ...because the item is gone by now, maybe someone else changed it to be deleted
-                return model.destroy(localOptions);
-              default:
-                return Q.reject(fetchResp);
+        // serialized for each endpoint, one at a time
+        var deferred = Q.defer();
+        function qEndpoint() {
+          Relution.LiveData.Debug.info('Relution.LiveData.SyncStore._sendMessages: ' + endpoint.entity.name);
+          var q = endpoint.messages.fetch().then(function nextMessage(result) {
+            if (endpoint.messages.models.length <= 0) {
+              return result;
             }
-          });
-        }).then(function () {
-          // succeeded or reverted
-          return message.destroy();
-        }).then(function (result) {
-          return next(result);
-        });
-      });
+
+            var message = endpoint.messages.models[0];
+            var msg:LiveDataMessage = message.attributes;
+            var channel = message.get('channel');
+            if (!msg || !channel) {
+              return message.destroy();
+            }
+            that._fixMessage(endpoint, msg);
+
+            var remoteOptions:any = {
+              urlRoot: endpoint.urlRoot,
+              store: {} // really go to remote server
+            };
+            var localOptions = {
+              // just affect local store
+              store: endpoint.localStore
+            };
+            var model = new Model(msg.data, {
+              idAttribute: endpoint.entity.idAttribute,
+              entity: endpoint.entity,
+            });
+            Relution.LiveData.Debug.info('sendMessage ' + model.id);
+            return that._applyResponse(that._ajaxMessage(endpoint, msg, remoteOptions, model), endpoint, msg, remoteOptions, model).catch(function (error) {
+              // failed, eventually undo the modifications stored
+              if (!endpoint.localStore) {
+                return Q.reject(error);
+              }
+
+              // revert modification by reloading data
+              if (msg.id) {
+                remoteOptions.url = remoteOptions.urlRoot + (remoteOptions.urlRoot.charAt(remoteOptions.urlRoot.length - 1) === '/' ? '' : '/' ) + msg.id;
+              }
+              return model.fetch(remoteOptions).then(function (data) {
+                // original request failed and the code above reloaded the data to revert the local modifications, which succeeded...
+                return model.save(data, localOptions).tap(function () {
+                  that.trigger('error:' + channel, error, model);
+                });
+              }, function (fetchResp) {
+                // original request failed and the code above tried to revert the local modifications by reloading the data, which failed as well...
+                var status = fetchResp && fetchResp.status;
+                switch (status) {
+                  case 404: // NOT FOUND
+                  case 401: // UNAUTHORIZED
+                  case 410: // GONE*
+                    // ...because the item is gone by now, maybe someone else changed it to be deleted
+                    return model.destroy(localOptions);
+                  default:
+                    return Q.reject(fetchResp);
+                }
+              });
+            }).then(function () {
+              // succeeded or reverted
+              return message.destroy();
+            }).then(function (result) {
+              return nextMessage(result);
+            });
+          }).then(nextEndpoint);
+          deferred.resolve(q);
+          return q;
+        }
+
+        // link to promise of endpoint to force seqential processing
+        if (endpoint.messagesPromise) {
+          endpoint.messagesPromise.finally(qEndpoint);
+        } else {
+          qEndpoint();
+        }
+        endpoint.messagesPromise = deferred.promise;
+        return endpoint.messagesPromise;
+      })(/* immediately call first endpoint */);
     }
 
     private storeMessage(endpoint: SyncEndpoint, qMsg) {
