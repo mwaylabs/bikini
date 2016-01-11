@@ -54,8 +54,12 @@ _.extend(Relution.LiveData.Model.prototype, Relution.LiveData._Object, {
     this.on('sync', this.onSync, this);
   },
 
-  ajax: Relution.LiveData.ajax,
-  sync: Relution.LiveData.sync,
+  ajax: function () {
+    return Relution.LiveData.ajax.apply(this, arguments);
+  },
+  sync: function () {
+    return Relution.LiveData.sync.apply(this, arguments);
+  },
 
   onChange: function (model, options) {
     // For each `set` attribute, update or delete the current value.

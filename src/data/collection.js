@@ -60,8 +60,12 @@ _.extend(Relution.LiveData.Collection.prototype, Relution.LiveData._Object, {
     }
   },
 
-  ajax: Relution.LiveData.ajax,
-  sync: Relution.LiveData.sync,
+  ajax: function () {
+    return Relution.LiveData.ajax.apply(this, arguments);
+  },
+  sync: function () {
+    return Relution.LiveData.sync.apply(this, arguments);
+  },
 
   entityFromUrl: function (url) {
     if (url) {
