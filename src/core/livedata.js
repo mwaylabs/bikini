@@ -1,20 +1,6 @@
 // Copyright (c) 2013 M-Way Solutions GmbH
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
 
-Relution.setDebug = function () {
-  // following forwards any arguments to Relution.LiveData.DebugConsole ctor
-  function Debug(args) {
-    return Relution.LiveData.DebugConsole.apply(this, args);
-  }
-  Debug.prototype = Relution.LiveData.DebugConsole.prototype;
-  Relution.LiveData.Debug = new Debug(arguments);
-  return Relution.LiveData.Debug;
-};
-
-Relution.LiveData.isDebugMode = function () {
-  return Relution.LiveData.Debug.enabled;
-};
-
 /**
  * Empty function to be used when
  * no functionality is needed

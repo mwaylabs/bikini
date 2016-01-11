@@ -22,6 +22,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 /* jshint indent: 4 */
+/// <reference path="../utility/Debug.ts" />
 
 declare var global;
 
@@ -30,12 +31,9 @@ declare var _;
 declare var Q;
 declare var io;
 
-declare module Relution {
-  function setDebug(...arguments:any[]);
-  function debug(...arguments:any[]);
-}
-
 declare module Relution.LiveData {
+  var Debug: Relution.DebugConsole;
+
   var _Object;
   var Entity;
   var Model;
@@ -43,13 +41,11 @@ declare module Relution.LiveData {
 
   var Field;
   var SqlSelector;
-  var DebugMode;
   var DATA;
 
   function extend(...arguments:any[]);
   function create(...arguments:any[]);
   function design(...arguments:any[]);
-  function isDebugMode();
 
   function isEntity(object);
   function isModel(object);

@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2016 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Mon Jan 11 2016 14:36:33
+* Date:      Mon Jan 11 2016 18:48:12
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -53,76 +53,93 @@ Relution.LiveData.Version = Relution.LiveData.version = '0.8.4';
  */
 /* jshint indent: 4 */
 /* jshint quotmark: false */
-/// <reference path="../core/livedata.d.ts"/>
 var Relution;
 (function (Relution) {
+    /**
+     * @description A DebugConsole Class
+     * @example ````js
+     * window.Relution.setDebug(true);
+     * ````
+     */
+    var DebugConsole = (function () {
+        function DebugConsole(enabled, fontSize) {
+            if (enabled === void 0) { enabled = false; }
+            if (fontSize === void 0) { fontSize = '12px'; }
+            this.enabled_ = enabled;
+            this.fontSize_ = fontSize;
+            this.reset();
+        }
+        DebugConsole.STUB = function () {
+            // empty by intention
+        };
+        DebugConsole.prototype.reset = function () {
+            // uses bound functions to avoid browsers outputting incorrect line numbers
+            if (this.enabled_) {
+                this.log = _.bind(console.log, console, '%c%s');
+                this.trace = _.bind(console.trace, console, '%c%s', "color: #378c13; font-size: " + this.fontSize_ + ";font-weight: normal;");
+                this.debug = _.bind(console.trace, console, '%c%s', "color: #008c13; font-size: " + this.fontSize_ + ";font-weight: normal;");
+                this.warn = _.bind(console.warn, console, '%c%s', "color: #e69138; font-size: " + this.fontSize_ + ";font-weight: normal;");
+                this.info = _.bind(console.info, console, '%c%s', "color: #00f; font-size: " + this.fontSize_ + ";font-weight: normal;");
+                this.error = _.bind(console.error, console, '%c%s', "color: #f00; font-size: " + this.fontSize_ + ";font-weight: normal;");
+            }
+            else {
+                this.log = DebugConsole.STUB;
+                this.trace = DebugConsole.STUB;
+                this.debug = DebugConsole.STUB;
+                this.warn = DebugConsole.STUB;
+                this.info = DebugConsole.STUB;
+                this.error = DebugConsole.STUB;
+            }
+            this.warning = this.warn; // alias only
+        };
+        Object.defineProperty(DebugConsole.prototype, "enabled", {
+            get: function () {
+                return this.enabled_;
+            },
+            set: function (enabled) {
+                if (this.enabled_ !== enabled) {
+                    this.enabled_ = enabled;
+                    this.reset();
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(DebugConsole.prototype, "fontSize", {
+            get: function () {
+                return this.fontSize_;
+            },
+            set: function (fontSize) {
+                if (this.fontSize_ !== fontSize) {
+                    this.fontSize_ = fontSize;
+                    this.reset();
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        DebugConsole.DebugConsole = DebugConsole;
+        return DebugConsole;
+    })();
+    Relution.DebugConsole = DebugConsole;
+    Relution.Debug = new DebugConsole();
+    function isDebugMode() {
+        return Relution.Debug.enabled;
+    }
+    Relution.isDebugMode = isDebugMode;
+    function setDebug(enabled) {
+        Relution.Debug.enabled = enabled;
+        return Relution.Debug;
+    }
+    Relution.setDebug = setDebug;
     var LiveData;
     (function (LiveData) {
-        /**
-         * @description A DebugConsole Class
-         * @example ````js
-         * window.Relution.setDebug(true);
-         * ````
-         */
-        var DebugConsole = (function () {
-            function DebugConsole(enabled, fontSize) {
-                if (enabled === void 0) { enabled = false; }
-                if (fontSize === void 0) { fontSize = '12px'; }
-                // uses bound functions to avoid browsers outputting incorrect line numbers
-                if (enabled) {
-                    this.log = _.bind(console.log, console, '%c%s');
-                    this.trace = _.bind(console.trace, console, '%c%s', "color: #378c13; font-size: " + fontSize + ";font-weight: normal;");
-                    this.debug = _.bind(console.trace, console, '%c%s', "color: #008c13; font-size: " + fontSize + ";font-weight: normal;");
-                    this.warn = _.bind(console.warn, console, '%c%s', "color: #e69138; font-size: " + fontSize + ";font-weight: normal;");
-                    this.info = _.bind(console.info, console, '%c%s', "color: #00f; font-size: " + fontSize + ";font-weight: normal;");
-                    this.error = _.bind(console.error, console, '%c%s', "color: #f00; font-size: " + fontSize + ";font-weight: normal;");
-                }
-                else {
-                    this.log = DebugConsole.STUB;
-                    this.trace = DebugConsole.STUB;
-                    this.debug = DebugConsole.STUB;
-                    this.warn = DebugConsole.STUB;
-                    this.info = DebugConsole.STUB;
-                    this.error = DebugConsole.STUB;
-                }
-                this.warning = this.warn; // alias only
-            }
-            Object.defineProperty(DebugConsole.prototype, "enabled", {
-                get: function () {
-                    return this.log !== DebugConsole.STUB;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            DebugConsole.STUB = function () { };
-            return DebugConsole;
-        })();
-        LiveData.DebugConsole = DebugConsole;
-        /**
-         * @description default instance not outputting anything.
-         *
-         * @type {Relution.LiveData.DebugConsole}
-         */
-        LiveData.Debug = new DebugConsole();
+        LiveData.Debug = Relution.Debug;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=Debug.js.map
 // Copyright (c) 2013 M-Way Solutions GmbH
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
-
-Relution.setDebug = function () {
-  // following forwards any arguments to Relution.LiveData.DebugConsole ctor
-  function Debug(args) {
-    return Relution.LiveData.DebugConsole.apply(this, args);
-  }
-  Debug.prototype = Relution.LiveData.DebugConsole.prototype;
-  Relution.LiveData.Debug = new Debug(arguments);
-  return Relution.LiveData.Debug;
-};
-
-Relution.LiveData.isDebugMode = function () {
-  return Relution.LiveData.Debug.enabled;
-};
 
 /**
  * Empty function to be used when
