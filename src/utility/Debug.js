@@ -40,6 +40,7 @@ var Relution;
                 if (enabled) {
                     this.log = _.bind(console.log, console, '%c%s');
                     this.trace = _.bind(console.trace, console, '%c%s', "color: #378c13; font-size: " + fontSize + ";font-weight: normal;");
+                    this.debug = _.bind(console.trace, console, '%c%s', "color: #008c13; font-size: " + fontSize + ";font-weight: normal;");
                     this.warn = _.bind(console.warn, console, '%c%s', "color: #e69138; font-size: " + fontSize + ";font-weight: normal;");
                     this.info = _.bind(console.info, console, '%c%s', "color: #00f; font-size: " + fontSize + ";font-weight: normal;");
                     this.error = _.bind(console.error, console, '%c%s', "color: #f00; font-size: " + fontSize + ";font-weight: normal;");
@@ -47,6 +48,7 @@ var Relution;
                 else {
                     this.log = DebugConsole.STUB;
                     this.trace = DebugConsole.STUB;
+                    this.debug = DebugConsole.STUB;
                     this.warn = DebugConsole.STUB;
                     this.info = DebugConsole.STUB;
                     this.error = DebugConsole.STUB;
