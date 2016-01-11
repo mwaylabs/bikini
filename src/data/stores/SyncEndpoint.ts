@@ -62,6 +62,11 @@ module Relution.LiveData {
     // timestamp of last SyncStore.fetchChanges, 0 while request is outstanding
     public timestampFetchingChanges: number;
 
+    // promise of last SyncStore.fetchServerInfo
+    public promiseFetchingServerInfo: any;
+    // timestamp of last SyncStore.fetchServerInfo, 0 while request is outstanding
+    public timestampFetchingServerInfo: number;
+
     constructor(options:{
       entity: any,
       modelType: string,

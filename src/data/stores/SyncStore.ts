@@ -413,10 +413,40 @@ module Relution.LiveData {
               return resp;
             }
 
+            // when we are disconnected, try to connect now
+            if (!endpoint.isConnected) {
+              var qInfo = that.fetchServerInfo(endpoint);
+              if (!qInfo) {
+                return resp;
+              }
+
+              return qInfo.then(function (info) {
+                // trigger reconnection when disconnected
+                var result;
+                if (!endpoint.isConnected) {
+                  result = that.onConnect(endpoint);
+                }
+                return result || info;
+              }, function (xhr) {
+                // trigger disconnection when disconnected
+                var result;
+                if (!xhr.responseText && endpoint.isConnected) {
+                  result = that.onDisconnect(endpoint);
+                }
+                return result || resp;
+              }).thenResolve(resp);
+            }
+
             // load changes only (will happen AFTER success callback is invoked,
             // but returned promise will resolve only after changes were processed.
-            return that.fetchChanges(endpoint).catch(function (error) {
-              that.trigger('error:' + channel, error); // can not do much about it...
+            return that.fetchChanges(endpoint).catch(function (xhr) {
+              if (!xhr.responseText && endpoint.isConnected) {
+                return that.onDisconnect(endpoint) || resp;
+              }
+
+              // can not do much about it...
+              that.trigger('error:' + channel, xhr.responseJSON || xhr.responseText);
+              return resp;
             }).thenResolve(resp); // caller expects original XHR response as changes body data is NOT compatible
           }, function () {
             // fall-back to loading full data set
@@ -502,8 +532,11 @@ module Relution.LiveData {
             // this seams to be only a connection problem, so we keep the message and call success
             return Q.resolve(msg.data);
           } else {
-            // keep rejection as is
-            return Q.reject.apply(Q, arguments);
+            // remove message stored and keep rejection as is
+            return that.removeMessage(endpoint, msg, qMessage).then(xhr, function (error) {
+              that.trigger('error:' + channel, error); // can not do much about it...
+              return xhr;
+            }).thenResolve(Q.reject.apply(Q, arguments));
           }
         });
       }
@@ -743,13 +776,21 @@ module Relution.LiveData {
     private fetchServerInfo(endpoint: SyncEndpoint) {
       var that = this;
       if (endpoint && endpoint.urlRoot) {
+        var now = Date.now();
+        var promise = endpoint.promiseFetchingServerInfo;
+        if (promise && now - endpoint.timestampFetchingServerInfo < 1000) {
+          // reuse existing eventually completed request for changes
+          Relution.LiveData.Debug.warning(endpoint.channel + ' skipping info request...');
+          return promise;
+        }
+
         var info = new Model();
         var time = that.getLastMessageTime(endpoint.channel);
         var url = endpoint.urlRoot;
         if (url.charAt((url.length - 1)) !== '/') {
           url += '/';
         }
-        return info.fetch({
+        promise = info.fetch({
           url: url + 'info',
           success: function (model, response, options) {
             //@todo why we set a server time here ?
@@ -767,6 +808,9 @@ module Relution.LiveData {
           },
           credentials: endpoint.credentials
         });
+        endpoint.promiseFetchingServerInfo = promise;
+        endpoint.timestampFetchingServerInfo = now;
+        return promise;
       }
     }
 
@@ -814,7 +858,9 @@ module Relution.LiveData {
           }
           return model.fetch(remoteOptions).then(function (data) {
             // original request failed and the code above reloaded the data to revert the local modifications, which succeeded...
-            return model.save(data, localOptions);
+            return model.save(data, localOptions).tap(function () {
+              that.trigger('error:' + channel, error);
+            });
           }, function (fetchResp) {
             // original request failed and the code above tried to revert the local modifications by reloading the data, which failed as well...
             var status = fetchResp && fetchResp.status;
