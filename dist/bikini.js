@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2016 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Mon Jan 11 2016 18:48:12
+* Date:      Tue Jan 12 2016 11:01:42
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -6827,8 +6827,10 @@ var Relution;
                 else if (options.offset < 0) {
                     newQuery.offset = undefined;
                 }
+                var oldLimit = options.limit;
                 if (options.limit > 0) {
                     newQuery.limit = options.limit + 1;
+                    options.limit = newQuery.limit;
                 }
                 else if (options.limit <= 0) {
                     newQuery.limit = undefined;
@@ -6839,9 +6841,12 @@ var Relution;
                 var oldSuccess = options.success;
                 var oldError = options.error;
                 options.success = function fetchRangeSuccess(models) {
-                    // restore callbacks
+                    // restore callbacks and limit
                     options.success = oldSuccess;
                     options.error = oldError;
+                    if (oldLimit !== undefined) {
+                        options.limit = oldLimit;
+                    }
                     // update models
                     if (models) {
                         // add models to collection, if any
@@ -6871,9 +6876,12 @@ var Relution;
                     return models;
                 };
                 options.error = function fetchMoreError(error) {
-                    // restore callbacks
+                    // restore callbacks and limit
                     options.success = oldSuccess;
                     options.error = oldError;
+                    if (oldLimit !== undefined) {
+                        options.limit = oldLimit;
+                    }
                     // restore query parameter
                     options.syncContext.getQuery = oldQuery;
                     // call user error callback

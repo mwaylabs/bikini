@@ -215,8 +215,10 @@ module Relution.LiveData {
       } else if (options.offset < 0) {
         newQuery.offset = undefined;
       }
+      var oldLimit = options.limit;
       if (options.limit > 0) {
         newQuery.limit = options.limit + 1;
+        options.limit = newQuery.limit;
       } else if (options.limit <= 0) {
         newQuery.limit = undefined;
       }
@@ -227,9 +229,12 @@ module Relution.LiveData {
       var oldSuccess = options.success;
       var oldError = options.error;
       options.success = function fetchRangeSuccess(models) {
-        // restore callbacks
+        // restore callbacks and limit
         options.success = oldSuccess;
         options.error = oldError;
+        if (oldLimit !== undefined) {
+          options.limit = oldLimit;
+        }
 
         // update models
         if (models) {
@@ -237,7 +242,7 @@ module Relution.LiveData {
           if (models.length > 0) {
             // adjust query parameter
             options.next = newQuery.limit && models.length >= newQuery.limit;
-            if(options.next) {
+            if (options.next) {
               // trick here was to read one more item to see if there is more to come
               models.length = models.length - 1;
             }
@@ -261,9 +266,12 @@ module Relution.LiveData {
         return models;
       };
       options.error = function fetchMoreError(error) {
-        // restore callbacks
+        // restore callbacks and limit
         options.success = oldSuccess;
         options.error = oldError;
+        if (oldLimit !== undefined) {
+          options.limit = oldLimit;
+        }
 
         // restore query parameter
         options.syncContext.getQuery = oldQuery;
