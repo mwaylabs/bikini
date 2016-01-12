@@ -84,7 +84,7 @@ Relution.LiveData.ajax = function ajax(options) {
         if (fnSuccess) {
           fnSuccess(response.data, response.status, response);
         }
-        return xhr;
+        return Q.resolve(response.data);
       }, function onError (response) {
         // AJAX error function( jqXHR jqXHR, String textStatus, String errorThrown )
         response.responseText = response.statusText;  // jQuery compatibility
@@ -92,7 +92,7 @@ Relution.LiveData.ajax = function ajax(options) {
         if (fnError) {
           fnError(response, response.statusText, response.data);
         }
-        return xhr;
+        return Q.reject(response.data || response);
       });
     } else {
       // jQuery-based XHR

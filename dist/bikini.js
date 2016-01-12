@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2016 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Tue Jan 12 2016 11:01:42
+* Date:      Tue Jan 12 2016 12:00:37
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -224,7 +224,7 @@ Relution.LiveData.ajax = function ajax(options) {
         if (fnSuccess) {
           fnSuccess(response.data, response.status, response);
         }
-        return xhr;
+        return Q.resolve(response.data);
       }, function onError (response) {
         // AJAX error function( jqXHR jqXHR, String textStatus, String errorThrown )
         response.responseText = response.statusText;  // jQuery compatibility
@@ -232,7 +232,7 @@ Relution.LiveData.ajax = function ajax(options) {
         if (fnError) {
           fnError(response, response.statusText, response.data);
         }
-        return xhr;
+        return Q.reject(response.data || response);
       });
     } else {
       // jQuery-based XHR
