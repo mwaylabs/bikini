@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2016 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Tue Jan 12 2016 12:00:37
+* Date:      Thu Jan 14 2016 17:57:53
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -1257,6 +1257,7 @@ var Relution;
                 this.expression = jsonPath.eval(null, expression, {
                     resultType: 'PATH'
                 }) || expression;
+                this.simple = /^\w+$/.test(this.expression);
             }
             /**
              * evaluates the expression on a target object.
@@ -1266,6 +1267,10 @@ var Relution;
              * @return{any} result of evaluating expression on object.
              */
             JsonPath.prototype.evaluate = function (obj, arg) {
+                if (!arg && this.simple) {
+                    // fastpath
+                    return obj && obj[this.expression];
+                }
                 var result = jsonPath.eval(obj, this.expression, arg || {
                     wrap: false
                 });

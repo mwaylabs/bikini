@@ -42,6 +42,7 @@ var Relution;
                 this.expression = jsonPath.eval(null, expression, {
                     resultType: 'PATH'
                 }) || expression;
+                this.simple = /^\w+$/.test(this.expression);
             }
             /**
              * evaluates the expression on a target object.
@@ -51,6 +52,10 @@ var Relution;
              * @return{any} result of evaluating expression on object.
              */
             JsonPath.prototype.evaluate = function (obj, arg) {
+                if (!arg && this.simple) {
+                    // fastpath
+                    return obj && obj[this.expression];
+                }
                 var result = jsonPath.eval(obj, this.expression, arg || {
                     wrap: false
                 });

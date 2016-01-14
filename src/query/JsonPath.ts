@@ -55,6 +55,11 @@ module Relution.LiveData {
     private expression:string;
 
     /**
+     * whether the expression is a simple property access.
+     */
+    private simple:boolean;
+
+    /**
      * constructs a compiled expression.
      *
      * @param expression to compile.
@@ -63,6 +68,7 @@ module Relution.LiveData {
       this.expression = jsonPath.eval(null, expression, {
           resultType: 'PATH'
         }) || expression;
+      this.simple = /^\w+$/.test(this.expression);
     }
 
     /**
@@ -73,6 +79,11 @@ module Relution.LiveData {
      * @return{any} result of evaluating expression on object.
      */
     evaluate(obj:any, arg?:{}):any {
+      if (!arg && this.simple) {
+        // fastpath
+        return obj && obj[this.expression];
+      }
+
       var result = jsonPath.eval(obj, this.expression, arg || {
           wrap: false
         });
