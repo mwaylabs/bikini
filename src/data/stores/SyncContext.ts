@@ -367,7 +367,7 @@ module Relution.LiveData {
         parse: true,
         fromMessage: true
       };
-      var id = collection.modelId(msg.data);
+      var id = msg.id || collection.modelId(msg.data);
       if (id === 'all') {
         collection.reset(msg.data || {}, options);
         return;
@@ -410,7 +410,19 @@ module Relution.LiveData {
             // update model unless it is filtered
             model.set(msg.data, options);
             if (this.filterFn && !this.filterFn(model.attributes)) {
+              // eventually the model is filtered
               collection.remove(model, options);
+            } else if (this.compareFn) {
+              // eventually the model changes position in collection.models
+              var oldIndex = collection.models.indexOf(model);
+              this.lastInsertionPoint = oldIndex >= 0 ? oldIndex : undefined;
+              var newIndex = this.insertionPoint(model.attributes, collection.models);
+              if (oldIndex !== newIndex) {
+                // following acts just like backbone.Collection.sort()
+                collection.models.splice(oldIndex, 1);
+                collection.models.splice(newIndex, 0, model);
+                collection.trigger('sort', collection, options);
+              }
             }
           }
           break;

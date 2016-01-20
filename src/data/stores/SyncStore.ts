@@ -330,31 +330,42 @@ module Relution.LiveData {
         var model = new endpoint.modelType(msg.data, _.extend({
           parse: true
         }, options));
+        Relution.LiveData.Debug.debug('onMessage: ' + endpoint.entity.name + ' ' + model.id + ' performing ' + msg.method);
         q = endpoint.localStore.sync(msg.method, model, _.extend(options, {
-          merge: msg.method === 'patch',
-          success: function (result) {
-            // update all collections listening
-            that.trigger('sync:' + channel, msg); // SyncContext.onMessage
-          },
-          error: function (error) {
-            // report error as event on store
-            that.trigger('error:' + channel, error, model);
+          merge: msg.method === 'patch'
+        })).then(function (result) {
+          if (msg.id === model.id) {
+            return result;
           }
-        }));
+
+          // id value was reassigned, delete record of old id
+          var oldData = {};
+          oldData[model.idAttribute] = msg.id;
+          var oldModel = new endpoint.modelType(oldData, options);
+          Relution.LiveData.Debug.debug('onMessage: ' + endpoint.entity.name + ' ' + model.id + ' reassigned from old record ' + oldModel.id);
+          return endpoint.localStore.sync('delete', oldModel, options);
+        });
       } else {
         // just update all collections listening
-        q = Q.fcall(function () {
-          return that.trigger('sync:' + channel, msg) || msg; // SyncContext.onMessage
-        });
+        q = Q.resolve(msg);
       }
 
       // finally set the message time
-      return q.then(function (result) {
+      return q.then(function () {
         if (msg.time) {
           that.setLastMessageTime(channel, msg.time);
         }
-        return result;
-      }).thenResolve(msg);
+
+        // update all collections listening
+        that.trigger('sync:' + channel, msg); // SyncContext.onMessage
+        return msg;
+      }, function (error) {
+        // not setting message time in error case
+
+        // report error as event on store
+        that.trigger('error:' + channel, error, model);
+        return msg;
+      });
     }
 
     public sync(method, model, options) {
