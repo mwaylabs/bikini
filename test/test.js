@@ -65,6 +65,6 @@ describe('Q', function () {
 
 function backbone_error(done) {
   return function (model, error) {
-    done(error || new Error());
+    done(error instanceof Error ? error : new Error(JSON.stringify(error)));
   }
 }

@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2016 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Thu Jan 14 2016 17:57:53
+* Date:      Wed Jan 20 2016 13:14:33
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -6004,31 +6004,39 @@ var Relution;
                     var model = new endpoint.modelType(msg.data, _.extend({
                         parse: true
                     }, options));
+                    Relution.LiveData.Debug.debug('onMessage: ' + endpoint.entity.name + ' ' + model.id + ' performing ' + msg.method);
                     q = endpoint.localStore.sync(msg.method, model, _.extend(options, {
-                        merge: msg.method === 'patch',
-                        success: function (result) {
-                            // update all collections listening
-                            that.trigger('sync:' + channel, msg); // SyncContext.onMessage
-                        },
-                        error: function (error) {
-                            // report error as event on store
-                            that.trigger('error:' + channel, error, model);
+                        merge: msg.method === 'patch'
+                    })).then(function (result) {
+                        if (msg.id === model.id) {
+                            return result;
                         }
-                    }));
+                        // id value was reassigned, delete record of old id
+                        var oldData = {};
+                        oldData[model.idAttribute] = msg.id;
+                        var oldModel = new endpoint.modelType(oldData, options);
+                        Relution.LiveData.Debug.debug('onMessage: ' + endpoint.entity.name + ' ' + model.id + ' reassigned from old record ' + oldModel.id);
+                        return endpoint.localStore.sync('delete', oldModel, options);
+                    });
                 }
                 else {
                     // just update all collections listening
-                    q = Q.fcall(function () {
-                        return that.trigger('sync:' + channel, msg) || msg; // SyncContext.onMessage
-                    });
+                    q = Q.resolve(msg);
                 }
                 // finally set the message time
-                return q.then(function (result) {
+                return q.then(function () {
                     if (msg.time) {
                         that.setLastMessageTime(channel, msg.time);
                     }
-                    return result;
-                }).thenResolve(msg);
+                    // update all collections listening
+                    that.trigger('sync:' + channel, msg); // SyncContext.onMessage
+                    return msg;
+                }, function (error) {
+                    // not setting message time in error case
+                    // report error as event on store
+                    that.trigger('error:' + channel, error, model);
+                    return msg;
+                });
             };
             SyncStore.prototype.sync = function (method, model, options) {
                 Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore.sync');
@@ -6972,16 +6980,20 @@ var Relution;
                     parse: true,
                     fromMessage: true
                 };
-                var id = collection.modelId(msg.data);
-                if (id === 'all') {
+                var newId = collection.modelId(msg.data);
+                var oldId = msg.id || newId;
+                if (oldId === 'all') {
                     collection.reset(msg.data || {}, options);
                     return;
                 }
                 // update the collection
-                var model = id && collection.get(id);
+                var model = oldId && collection.get(oldId);
                 switch (msg.method) {
                     case 'create':
                     case 'update':
+                        if (newId !== oldId) {
+                            Relution.LiveData.Debug.warn('updating id ' + oldId + ' to ' + newId);
+                        }
                         if (!model) {
                             // create model in case it does not exist
                             model = new options.collection.model(msg.data, options);
@@ -7015,7 +7027,20 @@ var Relution;
                             // update model unless it is filtered
                             model.set(msg.data, options);
                             if (this.filterFn && !this.filterFn(model.attributes)) {
+                                // eventually the model is filtered
                                 collection.remove(model, options);
+                            }
+                            else if (this.compareFn) {
+                                // eventually the model changes position in collection.models
+                                var oldIndex = collection.models.indexOf(model);
+                                this.lastInsertionPoint = oldIndex >= 0 ? oldIndex : undefined;
+                                var newIndex = this.insertionPoint(model.attributes, collection.models);
+                                if (oldIndex !== newIndex) {
+                                    // following acts just like backbone.Collection.sort()
+                                    collection.models.splice(oldIndex, 1);
+                                    collection.models.splice(newIndex, 0, model);
+                                    collection.trigger('sort', collection, options);
+                                }
                             }
                         }
                         break;

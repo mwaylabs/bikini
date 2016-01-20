@@ -1,5 +1,5 @@
 describe('Relution.LiveData.SyncStore', function () {
-  this.timeout(5000);
+  this.timeout(5000 * 1000);
 
   var TEST = {
     data: {
@@ -96,7 +96,7 @@ describe('Relution.LiveData.SyncStore', function () {
     );
   });
 
-  it('read record', function () {
+  it('get record', function () {
     var model = TEST.Tests.get(TEST.id);
 
     assert.ok(model, "record found");
@@ -152,7 +152,7 @@ describe('Relution.LiveData.SyncStore', function () {
   });
 
 
-  it('read record', function () {
+  it('get record', function () {
     var model = TEST.Tests.get(TEST.id);
 
     assert.ok(model, "record found");
@@ -161,6 +161,66 @@ describe('Relution.LiveData.SyncStore', function () {
     assert.equal(model.get('sureName'), TEST.data.sureName, "found record has the correct 'sureName' value");
     assert.equal(model.get('age'), TEST.data.age, "found record has the correct 'age' value");
 
+  });
+
+  // following test checks client-side behavior in case server-side alters object ID on update:
+  //
+  // 1. The test temporarily overwrites the ajax() method to modify response data, substituting new
+  //    by old id.
+  // 2. Then the synced collection is checked to contain correct data and that lookup by ids works
+  //    such that an old id lookup no longer finds data and a new id lookup yields the existing record.
+  // 3. The update operation is repeated substituting old id by new id to revert into correct state again.
+  // 4. Finally the restored state is checked.
+  //
+  // In effect the ID change is done twice. This is to avoid failure in subsequent tests which attempt
+  // to delete records. Since we modified the IDs by tweaking the HTTP response data in the ajax call,
+  // the actual server does not know about the ID changes. Thus, deletions in subsequent tests would
+  // fail, if we did not change the ID back again!
+  it('change record id', function (done) {
+    var model = TEST.Tests.get(TEST.id);
+    assert.ok(model, 'record found');
+    var oldId = model.id;
+    var newId = '4711-' + oldId;
+
+    var TestModel = Relution.LiveData.Model.extend({
+      url: TEST.url,
+      idAttribute: '_id',
+      store: TEST.store,
+      entity: {
+        name: 'test'
+      },
+      ajax: function (options) {
+        // following simulates server reassigning ID value
+        return Relution.LiveData.Model.prototype.ajax.apply(this, arguments).then(function (response) {
+          if (response._id === oldId) {
+            response._id = newId;
+          } else if(response._id === newId) {
+            response._id = oldId;
+          }
+          return response;
+        });
+      }
+    });
+    var testModel = new TestModel(model.attributes);
+
+    var options ={
+      wait: true
+    };
+    var promise = testModel.save(undefined, options);
+    return promise.then(function () {
+        assert.ok(testModel.id, 'record has an id.');
+        assert.equal(testModel.id, newId, 'record has new id.');
+        assert.equal(TEST.Tests.get(testModel.id), model, 'model is found in collection by new id.');
+        assert.isUndefined(TEST.Tests.get(oldId), 'model is missing in collection by old id.');
+    }).then(function () {
+      // reverts local changes
+      return testModel.save(undefined, options).then(function () {
+        assert.ok(testModel.id, 'record has an id.');
+        assert.equal(testModel.id, oldId, 'record has new id.');
+        assert.equal(TEST.Tests.get(testModel.id), model, 'model is found in collection by old id.');
+        assert.isUndefined(TEST.Tests.get(newId), 'model is missing in collection by new id.');
+      });
+    }).then(done, backbone_error(done));
   });
 
   it('delete record', function (done) {

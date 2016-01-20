@@ -329,16 +329,20 @@ var Relution;
                     parse: true,
                     fromMessage: true
                 };
-                var id = msg.id || collection.modelId(msg.data);
-                if (id === 'all') {
+                var newId = collection.modelId(msg.data);
+                var oldId = msg.id || newId;
+                if (oldId === 'all') {
                     collection.reset(msg.data || {}, options);
                     return;
                 }
                 // update the collection
-                var model = id && collection.get(id);
+                var model = oldId && collection.get(oldId);
                 switch (msg.method) {
                     case 'create':
                     case 'update':
+                        if (newId !== oldId) {
+                            Relution.LiveData.Debug.warn('updating id ' + oldId + ' to ' + newId);
+                        }
                         if (!model) {
                             // create model in case it does not exist
                             model = new options.collection.model(msg.data, options);
