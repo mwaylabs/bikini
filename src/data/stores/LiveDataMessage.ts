@@ -41,9 +41,34 @@ module Relution.LiveData {
    */
   export interface LiveDataMessage {
 
+    /**
+     * original key of the target record being altered.
+     *
+     * <p>
+     * For offline messages stored on the client-side this is also the primary key of the message itself.
+     * This works because offline messages are merged resulting in just one change. For changes reported
+     * by the server-side an explicit _id value is used, which is of no concern to the client except for
+     * diagnostics as a debugging aid.
+     * </p>
+     */
     id: string;
+
+    /**
+     * CRUD-method of how the record is altered.
+     *
+     * <p>
+     * This can be one of read, create, update, patch or delete only.
+     * </p>
+     */
     method: string;
+    /**
+     * point in time of alteration.
+     */
     time: number;
+
+    /**
+     * actual attribute data being set (patch => merged) on target model in format suitable for model.set() call.
+     */
     data: any;
 
   }
