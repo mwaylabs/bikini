@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2016 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Wed Jan 20 2016 13:14:33
+* Date:      Mon Jan 25 2016 09:50:38
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -1402,10 +1402,11 @@ var Relution;
          * compiles a JsonFilterFn from a given Filter tree.
          *
          * @param filter tree being compiled.
+         * @param options customizing the matching, entirely optional.
          * @return {function} a JsonFilterFn function.
          */
-        function jsonFilter(filter) {
-            return new JsonFilterVisitor().visit(filter);
+        function jsonFilter(filter, options) {
+            return new JsonFilterVisitor(options).visit(filter);
         }
         LiveData.jsonFilter = jsonFilter;
         /**
@@ -1413,8 +1414,14 @@ var Relution;
          */
         var JsonFilterVisitor = (function (_super) {
             __extends(JsonFilterVisitor, _super);
-            function JsonFilterVisitor() {
-                _super.apply(this, arguments);
+            function JsonFilterVisitor(options) {
+                _super.call(this);
+                this.options = {
+                    casesensitive: false
+                };
+                if (options) {
+                    _.extend(this.options, options);
+                }
             }
             JsonFilterVisitor.prototype.containsString = function (filter) {
                 var expression = new LiveData.JsonPath(filter.fieldName);
@@ -1423,6 +1430,21 @@ var Relution;
                     return function (obj) {
                         var value = expression.evaluate(obj);
                         return value === undefined || value === null;
+                    };
+                }
+                var testFn;
+                if (this.options.casesensitive) {
+                    // case-sensitive
+                    testFn = function (val) {
+                        return val.toString().indexOf(contains) >= 0;
+                    };
+                }
+                else {
+                    // case-insensitive (RegExp-based)
+                    var pattern = contains.replace(/([\.\\\[\]\+\^\$\(\)\*\?\{\}\,\!])/g, '\\$1');
+                    var regexp = new RegExp(pattern, 'i');
+                    testFn = function (val) {
+                        return regexp.test(val.toString());
                     };
                 }
                 return function (obj) {
@@ -1435,7 +1457,7 @@ var Relution;
                         // array case
                         for (var i = 0; i < value.length; ++i) {
                             var val = value[i];
-                            if (val !== undefined && val !== null && val.toString().indexOf(contains) >= 0) {
+                            if (val !== undefined && val !== null && testFn(val)) {
                                 return true;
                             }
                         }
@@ -1443,7 +1465,7 @@ var Relution;
                     }
                     else {
                         // simple case
-                        return value !== undefined && value !== null && value.toString().indexOf(contains) >= 0;
+                        return testFn(value);
                     }
                 };
             };
@@ -1456,6 +1478,21 @@ var Relution;
                         return value === undefined || value === null;
                     };
                 }
+                var testFn;
+                if (this.options.casesensitive) {
+                    // case-sensitive
+                    testFn = function (val) {
+                        return val == expected;
+                    };
+                }
+                else {
+                    // case-insensitive (RegExp-based)
+                    var pattern = expected.replace(/([\.\\\[\]\+\^\$\(\)\*\?\{\}\,\!])/g, '\\$1');
+                    var regexp = new RegExp('^' + pattern + '$', 'i');
+                    testFn = function (val) {
+                        return regexp.test(val.toString());
+                    };
+                }
                 return function (obj) {
                     var value = expression.evaluate(obj);
                     if (value === undefined || value === null) {
@@ -1466,7 +1503,7 @@ var Relution;
                         // array case
                         for (var i = 0; i < value.length; ++i) {
                             var val = value[i];
-                            if (val == filter.value) {
+                            if (val !== undefined && val !== null && testFn(val)) {
                                 return true;
                             }
                         }
@@ -1474,7 +1511,7 @@ var Relution;
                     }
                     else {
                         // simple case
-                        return value == filter.value;
+                        return testFn(value);
                     }
                 };
             };
@@ -1524,6 +1561,7 @@ var Relution;
                 return this.range(filter);
             };
             JsonFilterVisitor.prototype.stringRange = function (filter) {
+                // not case-insensitive in WebSQL and we want same behavior here!
                 return this.range(filter);
             };
             JsonFilterVisitor.prototype.doubleRange = function (filter) {
@@ -1554,6 +1592,7 @@ var Relution;
                 }
             };
             JsonFilterVisitor.prototype.stringEnum = function (filter) {
+                // not case-insensitive in WebSQL and we want same behavior here!
                 return this.enum(filter);
             };
             JsonFilterVisitor.prototype.longEnum = function (filter) {
@@ -1563,7 +1602,24 @@ var Relution;
                 var expression = new LiveData.JsonPath(filter.fieldName);
                 var property = filter.key !== undefined && filter.key !== null && new LiveData.JsonPath(filter.key);
                 var expected = filter.value;
-                if (!property && (expected === undefined || expected === null)) {
+                var testFn;
+                if (expected !== undefined && expected !== null) {
+                    if (this.options.casesensitive) {
+                        // case-sensitive
+                        testFn = function (val) {
+                            return val == expected;
+                        };
+                    }
+                    else {
+                        // case-insensitive (RegExp-based)
+                        var pattern = expected.replace(/([\.\\\[\]\+\^\$\(\)\*\?\{\}\,\!])/g, '\\$1');
+                        var regexp = new RegExp('^' + pattern + '$', 'i');
+                        testFn = function (val) {
+                            return regexp.test(val.toString());
+                        };
+                    }
+                }
+                if (!property && !testFn) {
                     // no key and no value --> at least one entry in dictionary
                     return function (obj) {
                         var value = expression.evaluate(obj);
@@ -1577,7 +1633,7 @@ var Relution;
                         if (value) {
                             for (var key in value) {
                                 var val = value[key];
-                                if (val == expected) {
+                                if (val !== undefined && val !== null && testFn(val)) {
                                     return true;
                                 }
                             }
@@ -1598,7 +1654,7 @@ var Relution;
                     return function (obj) {
                         var value = expression.evaluate(obj);
                         var val = property.evaluate(value);
-                        return val == expected;
+                        return val !== undefined && val !== null && testFn(val);
                     };
                 }
             };
@@ -1611,8 +1667,14 @@ var Relution;
                         return value === undefined || value === null;
                     };
                 }
-                var regexp = like.replace(/%/g, '.*');
-                var pattern = new RegExp(regexp);
+                var pattern = like.replace(/([\.\\\[\]\+\^\$\(\)\*\?\{\}\,\!])/g, '\\$1').replace(/%/g, '.*');
+                var regexp;
+                if (this.options.casesensitive) {
+                    regexp = new RegExp('^' + pattern + '$');
+                }
+                else {
+                    regexp = new RegExp('^' + pattern + '$', 'i');
+                }
                 return function (obj) {
                     var value = expression.evaluate(obj);
                     if (value === undefined || value === null) {
@@ -1623,7 +1685,7 @@ var Relution;
                         // array case
                         for (var i = 0; i < value.length; ++i) {
                             var val = value[i];
-                            if (pattern.test(val)) {
+                            if (regexp.test(val)) {
                                 return true;
                             }
                         }
@@ -1631,7 +1693,7 @@ var Relution;
                     }
                     else {
                         // simple case
-                        return pattern.test(value);
+                        return regexp.test(value);
                     }
                 };
             };
@@ -1888,7 +1950,7 @@ var Relution;
          * @param arg defining the SortOrder being compiled.
          * @return {function} a JsonCompareFn function compatible to Array.sort().
          */
-        function jsonCompare(arg) {
+        function jsonCompare(arg, options) {
             var sortOrder;
             if (typeof arg === 'string') {
                 sortOrder = new LiveData.SortOrder();
@@ -1901,7 +1963,7 @@ var Relution;
             else {
                 sortOrder = arg;
             }
-            var comparator = new SortOrderComparator(sortOrder);
+            var comparator = new SortOrderComparator(sortOrder, options);
             return _.bind(comparator.compare, comparator);
         }
         LiveData.jsonCompare = jsonCompare;
@@ -1916,8 +1978,14 @@ var Relution;
              *
              * @param sortOrder to realize.
              */
-            function SortOrderComparator(sortOrder) {
+            function SortOrderComparator(sortOrder, options) {
                 this.sortOrder = sortOrder;
+                this.options = {
+                    casesensitive: false
+                };
+                if (options) {
+                    _.extend(this.options, options);
+                }
                 this.expressions = new Array(sortOrder.sortFields.length);
                 for (var i = 0; i < this.expressions.length; ++i) {
                     this.expressions[i] = new LiveData.JsonPath(sortOrder.sortFields[i].name);
@@ -1935,7 +2003,7 @@ var Relution;
                     var expression = this.expressions[i];
                     var val1 = expression.evaluate(o1);
                     var val2 = expression.evaluate(o2);
-                    var cmp = SortOrderComparator.compare1(val1, val2);
+                    var cmp = this.compare1(val1, val2);
                     if (cmp !== 0) {
                         return this.sortOrder.sortFields[i].ascending ? +cmp : -cmp;
                     }
@@ -1949,7 +2017,7 @@ var Relution;
              * @param o2 right operand.
              * @return {number} indicating relative ordering of operands.
              */
-            SortOrderComparator.compare1 = function (val1, val2) {
+            SortOrderComparator.prototype.compare1 = function (val1, val2) {
                 if (!val1 || !val2) {
                     // null/undefined case
                     if (val2) {
@@ -1972,6 +2040,15 @@ var Relution;
                     }
                 }
                 else {
+                    // comparision case
+                    if (!this.options.casesensitive) {
+                        if (typeof val1 === 'string') {
+                            val1 = val1.toLowerCase();
+                        }
+                        if (typeof val2 === 'string') {
+                            val2 = val2.toLowerCase();
+                        }
+                    }
                     // value case
                     if (val1 < val2) {
                         return -1;

@@ -34,7 +34,7 @@ var Relution;
          * @param arg defining the SortOrder being compiled.
          * @return {function} a JsonCompareFn function compatible to Array.sort().
          */
-        function jsonCompare(arg) {
+        function jsonCompare(arg, options) {
             var sortOrder;
             if (typeof arg === 'string') {
                 sortOrder = new LiveData.SortOrder();
@@ -47,7 +47,7 @@ var Relution;
             else {
                 sortOrder = arg;
             }
-            var comparator = new SortOrderComparator(sortOrder);
+            var comparator = new SortOrderComparator(sortOrder, options);
             return _.bind(comparator.compare, comparator);
         }
         LiveData.jsonCompare = jsonCompare;
@@ -62,8 +62,14 @@ var Relution;
              *
              * @param sortOrder to realize.
              */
-            function SortOrderComparator(sortOrder) {
+            function SortOrderComparator(sortOrder, options) {
                 this.sortOrder = sortOrder;
+                this.options = {
+                    casesensitive: false
+                };
+                if (options) {
+                    _.extend(this.options, options);
+                }
                 this.expressions = new Array(sortOrder.sortFields.length);
                 for (var i = 0; i < this.expressions.length; ++i) {
                     this.expressions[i] = new LiveData.JsonPath(sortOrder.sortFields[i].name);
@@ -81,7 +87,7 @@ var Relution;
                     var expression = this.expressions[i];
                     var val1 = expression.evaluate(o1);
                     var val2 = expression.evaluate(o2);
-                    var cmp = SortOrderComparator.compare1(val1, val2);
+                    var cmp = this.compare1(val1, val2);
                     if (cmp !== 0) {
                         return this.sortOrder.sortFields[i].ascending ? +cmp : -cmp;
                     }
@@ -95,7 +101,7 @@ var Relution;
              * @param o2 right operand.
              * @return {number} indicating relative ordering of operands.
              */
-            SortOrderComparator.compare1 = function (val1, val2) {
+            SortOrderComparator.prototype.compare1 = function (val1, val2) {
                 if (!val1 || !val2) {
                     // null/undefined case
                     if (val2) {
@@ -118,6 +124,15 @@ var Relution;
                     }
                 }
                 else {
+                    // comparision case
+                    if (!this.options.casesensitive) {
+                        if (typeof val1 === 'string') {
+                            val1 = val1.toLowerCase();
+                        }
+                        if (typeof val2 === 'string') {
+                            val2 = val2.toLowerCase();
+                        }
+                    }
                     // value case
                     if (val1 < val2) {
                         return -1;

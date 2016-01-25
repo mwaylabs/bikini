@@ -35,6 +35,16 @@ declare var _;
 module Relution.LiveData {
 
   /**
+   * options of #jsonFilter function.
+   */
+  export interface JsonFilterOptions {
+    /**
+     * set to explicitly use case-sensitive string matching, evalates to false to use matching semantics of WebSQL.
+     */
+    casesensitive?: boolean
+  }
+
+  /**
    * compiled test function.
    */
   export interface JsonFilterFn<T> {
@@ -51,16 +61,29 @@ module Relution.LiveData {
    * compiles a JsonFilterFn from a given Filter tree.
    *
    * @param filter tree being compiled.
+   * @param options customizing the matching, entirely optional.
    * @return {function} a JsonFilterFn function.
    */
-  export function jsonFilter<T>(filter:Filter):JsonFilterFn<T> {
-    return new JsonFilterVisitor<T>().visit(filter);
+  export function jsonFilter<T>(filter:Filter, options?: JsonFilterOptions):JsonFilterFn<T> {
+    return new JsonFilterVisitor<T>(options).visit(filter);
   }
 
   /**
    * compiles a Filter tree into a JsonFilterFn.
    */
   class JsonFilterVisitor<T> extends FilterVisitorBase<JsonFilterFn<T>> implements FilterVisitorCore<JsonFilterFn<T>> {
+
+    protected options: JsonFilterOptions = {
+      casesensitive: false
+    };
+
+    constructor(options?: JsonFilterOptions) {
+      super();
+
+      if (options) {
+        _.extend(this.options, options);
+      }
+    }
 
     containsString(filter:ContainsStringFilter):JsonFilterFn<T> {
       var expression = new JsonPath(filter.fieldName);
@@ -72,6 +95,21 @@ module Relution.LiveData {
         };
       }
 
+      var testFn;
+      if (this.options.casesensitive) {
+        // case-sensitive
+        testFn = (val) => {
+          return val.toString().indexOf(contains) >= 0;
+        };
+      } else {
+        // case-insensitive (RegExp-based)
+        var pattern = contains.replace(/([\.\\\[\]\+\^\$\(\)\*\?\{\}\,\!])/g, '\\$1');
+        var regexp = new RegExp(pattern, 'i');
+        testFn = (val) => {
+          return regexp.test(val.toString());
+        }
+      }
+
       return (obj:T) => {
         var value = expression.evaluate(obj);
         if (value === undefined || value === null) {
@@ -81,14 +119,14 @@ module Relution.LiveData {
           // array case
           for (var i = 0; i < value.length; ++i) {
             var val = value[i];
-            if (val !== undefined && val !== null && val.toString().indexOf(contains) >= 0) {
+            if (val !== undefined && val !== null && testFn(val)) {
               return true;
             }
           }
           return false;
         } else {
           // simple case
-          return value !== undefined && value !== null && value.toString().indexOf(contains) >= 0;
+          return testFn(value);
         }
       };
     }
@@ -103,6 +141,21 @@ module Relution.LiveData {
         };
       }
 
+      var testFn;
+      if (this.options.casesensitive) {
+        // case-sensitive
+        testFn = (val) => {
+          return val == expected;
+        };
+      } else {
+        // case-insensitive (RegExp-based)
+        var pattern = expected.replace(/([\.\\\[\]\+\^\$\(\)\*\?\{\}\,\!])/g, '\\$1');
+        var regexp = new RegExp('^' + pattern + '$', 'i');
+        testFn = (val) => {
+          return regexp.test(val.toString());
+        }
+      }
+
       return (obj:T) => {
         var value = expression.evaluate(obj);
         if (value === undefined || value === null) {
@@ -112,14 +165,14 @@ module Relution.LiveData {
           // array case
           for (var i = 0; i < value.length; ++i) {
             var val = value[i];
-            if (val == filter.value) {
+            if (val !== undefined && val !== null && testFn(val)) {
               return true;
             }
           }
           return false;
         } else {
           // simple case
-          return value == filter.value;
+          return testFn(value);
         }
       };
     }
@@ -169,6 +222,7 @@ module Relution.LiveData {
     }
 
     stringRange(filter:StringRangeFilter):JsonFilterFn<T> {
+      // not case-insensitive in WebSQL and we want same behavior here!
       return this.range(filter);
     }
 
@@ -202,6 +256,7 @@ module Relution.LiveData {
     }
 
     stringEnum(filter:StringEnumFilter):JsonFilterFn<T> {
+      // not case-insensitive in WebSQL and we want same behavior here!
       return this.enum(filter);
     }
 
@@ -213,7 +268,25 @@ module Relution.LiveData {
       var expression = new JsonPath(filter.fieldName);
       var property = filter.key !== undefined && filter.key !== null && new JsonPath(filter.key);
       var expected = filter.value;
-      if (!property && (expected === undefined || expected === null)) {
+
+      var testFn;
+      if (expected !== undefined && expected !== null) {
+        if (this.options.casesensitive) {
+          // case-sensitive
+          testFn = (val) => {
+            return val == expected;
+          };
+        } else {
+          // case-insensitive (RegExp-based)
+          var pattern = expected.replace(/([\.\\\[\]\+\^\$\(\)\*\?\{\}\,\!])/g, '\\$1');
+          var regexp = new RegExp('^' + pattern + '$', 'i');
+          testFn = (val) => {
+            return regexp.test(val.toString());
+          }
+        }
+      }
+
+      if (!property && !testFn) {
         // no key and no value --> at least one entry in dictionary
         return (obj:T) => {
           var value = expression.evaluate(obj);
@@ -226,7 +299,7 @@ module Relution.LiveData {
           if (value) {
             for (var key in value) {
               var val = value[key];
-              if (val == expected) {
+              if (val !== undefined && val !== null && testFn(val)) {
                 return true;
               }
             }
@@ -245,7 +318,7 @@ module Relution.LiveData {
         return (obj:T) => {
           var value = expression.evaluate(obj);
           var val = property.evaluate(value);
-          return val == expected;
+          return val !== undefined && val !== null && testFn(val);
         }
       }
     }
@@ -260,8 +333,14 @@ module Relution.LiveData {
         };
       }
 
-      var regexp = like.replace(/%/g, '.*');
-      var pattern = new RegExp(regexp);
+      var pattern = like.replace(/([\.\\\[\]\+\^\$\(\)\*\?\{\}\,\!])/g, '\\$1').replace(/%/g, '.*');
+      var regexp;
+      if (this.options.casesensitive) {
+        regexp = new RegExp('^' + pattern + '$');
+      } else {
+        regexp = new RegExp('^' + pattern + '$', 'i');
+      }
+
       return (obj:T) => {
         var value = expression.evaluate(obj);
         if (value === undefined || value === null) {
@@ -271,14 +350,14 @@ module Relution.LiveData {
           // array case
           for (var i = 0; i < value.length; ++i) {
             var val = value[i];
-            if (pattern.test(val)) {
+            if (regexp.test(val)) {
               return true;
             }
           }
           return false;
         } else {
           // simple case
-          return pattern.test(value);
+          return regexp.test(value);
         }
       };
     }
