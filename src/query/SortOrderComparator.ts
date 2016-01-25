@@ -30,6 +30,16 @@ declare var _;
 module Relution.LiveData {
 
   /**
+   * options of #jsonCompare function.
+   */
+  export interface JsonCompareOptions {
+    /**
+     * set to explicitly use case-sensitive string matching, evalates to false to use matching semantics of WebSQL.
+     */
+    casesensitive?: boolean
+  }
+
+  /**
    * compiled compare function.
    */
   export interface JsonCompareFn<T> {
@@ -56,21 +66,21 @@ module Relution.LiveData {
    * @param json of SortOrder being compiled.
    * @return {function} a JsonCompareFn function compatible to Array.sort().
    */
-  export function jsonCompare<T>(json:string[]):JsonCompareFn<T>;
+  export function jsonCompare<T>(json:string[], options?: JsonCompareOptions):JsonCompareFn<T>;
   /**
    * compiles a JsonCompareFn from a given SortOrder.
    *
    * @param sortOrder being compiled.
    * @return {function} a JsonCompareFn function compatible to Array.sort().
    */
-  export function jsonCompare<T>(sortOrder:SortOrder):JsonCompareFn<T>;
+  export function jsonCompare<T>(sortOrder:SortOrder, options?: JsonCompareOptions):JsonCompareFn<T>;
   /**
    * compiles a JsonCompareFn from a given SortOrder.
    *
    * @param arg defining the SortOrder being compiled.
    * @return {function} a JsonCompareFn function compatible to Array.sort().
    */
-  export function jsonCompare<T>(arg):JsonCompareFn<T> {
+  export function jsonCompare<T>(arg, options?: JsonCompareOptions):JsonCompareFn<T> {
     var sortOrder;
     if(typeof arg === 'string') {
       sortOrder = new SortOrder();
@@ -82,7 +92,7 @@ module Relution.LiveData {
       sortOrder = arg;
     }
 
-    var comparator = new SortOrderComparator<T>(sortOrder);
+    var comparator = new SortOrderComparator<T>(sortOrder, options);
     return _.bind(comparator.compare, comparator);
   }
 
@@ -92,6 +102,11 @@ module Relution.LiveData {
    * @see SortOrder
    */
   class SortOrderComparator<T> {
+
+    protected options: JsonCompareOptions = {
+      casesensitive: false
+    };
+
     /**
      * compiled accessor paths of SortField data.
      */
@@ -102,7 +117,11 @@ module Relution.LiveData {
      *
      * @param sortOrder to realize.
      */
-    public constructor(private sortOrder:SortOrder) {
+    public constructor(private sortOrder:SortOrder, options?: JsonCompareOptions) {
+      if (options) {
+        _.extend(this.options, options);
+      }
+
       this.expressions = new Array<JsonPath>(sortOrder.sortFields.length);
       for (var i = 0; i < this.expressions.length; ++i) {
         this.expressions[i] = new JsonPath(sortOrder.sortFields[i].name);
@@ -121,7 +140,7 @@ module Relution.LiveData {
         var expression = this.expressions[i];
         var val1 = expression.evaluate(o1);
         var val2 = expression.evaluate(o2);
-        var cmp = SortOrderComparator.compare1(val1, val2);
+        var cmp = this.compare1(val1, val2);
         if (cmp !== 0) {
           return this.sortOrder.sortFields[i].ascending ? +cmp : -cmp;
         }
@@ -136,7 +155,7 @@ module Relution.LiveData {
      * @param o2 right operand.
      * @return {number} indicating relative ordering of operands.
      */
-    private static compare1(val1:any, val2:any):number {
+    private compare1(val1:any, val2:any):number {
       if (!val1 || !val2) {
         // null/undefined case
         if (val2) {
@@ -157,6 +176,16 @@ module Relution.LiveData {
           }
         }
       } else {
+        // comparision case
+        if (!this.options.casesensitive) {
+          if (typeof val1 === 'string') {
+            val1 = val1.toLowerCase();
+          }
+          if (typeof val2 === 'string') {
+            val2 = val2.toLowerCase();
+          }
+        }
+
         // value case
         if (val1 < val2) {
           return -1;

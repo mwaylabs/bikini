@@ -42,10 +42,11 @@ var Relution;
          * compiles a JsonFilterFn from a given Filter tree.
          *
          * @param filter tree being compiled.
+         * @param options customizing the matching, entirely optional.
          * @return {function} a JsonFilterFn function.
          */
-        function jsonFilter(filter) {
-            return new JsonFilterVisitor().visit(filter);
+        function jsonFilter(filter, options) {
+            return new JsonFilterVisitor(options).visit(filter);
         }
         LiveData.jsonFilter = jsonFilter;
         /**
@@ -53,8 +54,14 @@ var Relution;
          */
         var JsonFilterVisitor = (function (_super) {
             __extends(JsonFilterVisitor, _super);
-            function JsonFilterVisitor() {
-                _super.apply(this, arguments);
+            function JsonFilterVisitor(options) {
+                _super.call(this);
+                this.options = {
+                    casesensitive: false
+                };
+                if (options) {
+                    _.extend(this.options, options);
+                }
             }
             JsonFilterVisitor.prototype.containsString = function (filter) {
                 var expression = new LiveData.JsonPath(filter.fieldName);
@@ -63,6 +70,21 @@ var Relution;
                     return function (obj) {
                         var value = expression.evaluate(obj);
                         return value === undefined || value === null;
+                    };
+                }
+                var testFn;
+                if (this.options.casesensitive) {
+                    // case-sensitive
+                    testFn = function (val) {
+                        return val.toString().indexOf(contains) >= 0;
+                    };
+                }
+                else {
+                    // case-insensitive (RegExp-based)
+                    var pattern = contains.replace(/([\.\\\[\]\+\^\$\(\)\*\?\{\}\,\!])/g, '\\$1');
+                    var regexp = new RegExp(pattern, 'i');
+                    testFn = function (val) {
+                        return regexp.test(val.toString());
                     };
                 }
                 return function (obj) {
@@ -75,7 +97,7 @@ var Relution;
                         // array case
                         for (var i = 0; i < value.length; ++i) {
                             var val = value[i];
-                            if (val !== undefined && val !== null && val.toString().indexOf(contains) >= 0) {
+                            if (val !== undefined && val !== null && testFn(val)) {
                                 return true;
                             }
                         }
@@ -83,7 +105,7 @@ var Relution;
                     }
                     else {
                         // simple case
-                        return value !== undefined && value !== null && value.toString().indexOf(contains) >= 0;
+                        return testFn(value);
                     }
                 };
             };
@@ -96,6 +118,21 @@ var Relution;
                         return value === undefined || value === null;
                     };
                 }
+                var testFn;
+                if (this.options.casesensitive) {
+                    // case-sensitive
+                    testFn = function (val) {
+                        return val == expected;
+                    };
+                }
+                else {
+                    // case-insensitive (RegExp-based)
+                    var pattern = expected.replace(/([\.\\\[\]\+\^\$\(\)\*\?\{\}\,\!])/g, '\\$1');
+                    var regexp = new RegExp('^' + pattern + '$', 'i');
+                    testFn = function (val) {
+                        return regexp.test(val.toString());
+                    };
+                }
                 return function (obj) {
                     var value = expression.evaluate(obj);
                     if (value === undefined || value === null) {
@@ -106,7 +143,7 @@ var Relution;
                         // array case
                         for (var i = 0; i < value.length; ++i) {
                             var val = value[i];
-                            if (val == filter.value) {
+                            if (val !== undefined && val !== null && testFn(val)) {
                                 return true;
                             }
                         }
@@ -114,7 +151,7 @@ var Relution;
                     }
                     else {
                         // simple case
-                        return value == filter.value;
+                        return testFn(value);
                     }
                 };
             };
@@ -164,6 +201,7 @@ var Relution;
                 return this.range(filter);
             };
             JsonFilterVisitor.prototype.stringRange = function (filter) {
+                // not case-insensitive in WebSQL and we want same behavior here!
                 return this.range(filter);
             };
             JsonFilterVisitor.prototype.doubleRange = function (filter) {
@@ -194,6 +232,7 @@ var Relution;
                 }
             };
             JsonFilterVisitor.prototype.stringEnum = function (filter) {
+                // not case-insensitive in WebSQL and we want same behavior here!
                 return this.enum(filter);
             };
             JsonFilterVisitor.prototype.longEnum = function (filter) {
@@ -203,7 +242,24 @@ var Relution;
                 var expression = new LiveData.JsonPath(filter.fieldName);
                 var property = filter.key !== undefined && filter.key !== null && new LiveData.JsonPath(filter.key);
                 var expected = filter.value;
-                if (!property && (expected === undefined || expected === null)) {
+                var testFn;
+                if (expected !== undefined && expected !== null) {
+                    if (this.options.casesensitive) {
+                        // case-sensitive
+                        testFn = function (val) {
+                            return val == expected;
+                        };
+                    }
+                    else {
+                        // case-insensitive (RegExp-based)
+                        var pattern = expected.replace(/([\.\\\[\]\+\^\$\(\)\*\?\{\}\,\!])/g, '\\$1');
+                        var regexp = new RegExp('^' + pattern + '$', 'i');
+                        testFn = function (val) {
+                            return regexp.test(val.toString());
+                        };
+                    }
+                }
+                if (!property && !testFn) {
                     // no key and no value --> at least one entry in dictionary
                     return function (obj) {
                         var value = expression.evaluate(obj);
@@ -217,7 +273,7 @@ var Relution;
                         if (value) {
                             for (var key in value) {
                                 var val = value[key];
-                                if (val == expected) {
+                                if (val !== undefined && val !== null && testFn(val)) {
                                     return true;
                                 }
                             }
@@ -238,7 +294,7 @@ var Relution;
                     return function (obj) {
                         var value = expression.evaluate(obj);
                         var val = property.evaluate(value);
-                        return val == expected;
+                        return val !== undefined && val !== null && testFn(val);
                     };
                 }
             };
@@ -251,8 +307,14 @@ var Relution;
                         return value === undefined || value === null;
                     };
                 }
-                var regexp = like.replace(/%/g, '.*');
-                var pattern = new RegExp(regexp);
+                var pattern = like.replace(/([\.\\\[\]\+\^\$\(\)\*\?\{\}\,\!])/g, '\\$1').replace(/%/g, '.*');
+                var regexp;
+                if (this.options.casesensitive) {
+                    regexp = new RegExp('^' + pattern + '$');
+                }
+                else {
+                    regexp = new RegExp('^' + pattern + '$', 'i');
+                }
                 return function (obj) {
                     var value = expression.evaluate(obj);
                     if (value === undefined || value === null) {
@@ -263,7 +325,7 @@ var Relution;
                         // array case
                         for (var i = 0; i < value.length; ++i) {
                             var val = value[i];
-                            if (pattern.test(val)) {
+                            if (regexp.test(val)) {
                                 return true;
                             }
                         }
@@ -271,7 +333,7 @@ var Relution;
                     }
                     else {
                         // simple case
-                        return pattern.test(value);
+                        return regexp.test(value);
                     }
                 };
             };
