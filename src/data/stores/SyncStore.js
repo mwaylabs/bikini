@@ -703,10 +703,12 @@ var Relution;
                 }
                 var now = Date.now();
                 var promise = endpoint.promiseFetchingChanges;
-                if (promise && now - endpoint.timestampFetchingChanges < 1000) {
-                    // reuse existing eventually completed request for changes
-                    Relution.LiveData.Debug.warning(channel + ' skipping changes request...');
-                    return promise;
+                if (promise) {
+                    if (promise.isPending() || now - endpoint.timestampFetchingChanges < 1000) {
+                        // reuse existing eventually completed request for changes
+                        Relution.LiveData.Debug.warning(channel + ' skipping changes request...');
+                        return promise;
+                    }
                 }
                 var time = that.getLastMessageTime(channel);
                 if (!time) {
@@ -743,10 +745,12 @@ var Relution;
                 if (endpoint && endpoint.urlRoot) {
                     var now = Date.now();
                     var promise = endpoint.promiseFetchingServerInfo;
-                    if (promise && now - endpoint.timestampFetchingServerInfo < 1000) {
-                        // reuse existing eventually completed request for changes
-                        Relution.LiveData.Debug.warning(endpoint.channel + ' skipping info request...');
-                        return promise;
+                    if (promise) {
+                        if (promise.isPending() || now - endpoint.timestampFetchingServerInfo < 1000) {
+                            // reuse existing eventually completed request for changes
+                            Relution.LiveData.Debug.warning(endpoint.channel + ' skipping info request...');
+                            return promise;
+                        }
                     }
                     var info = new LiveData.Model();
                     var time = that.getLastMessageTime(endpoint.channel);
