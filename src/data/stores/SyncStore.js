@@ -375,9 +375,20 @@ var Relution;
                     }
                     else if (LiveData.isModel(model)) {
                         // offline capability requires IDs for data
-                        if (method === 'create' && !model.id) {
-                            model.set(model.idAttribute, new LiveData.ObjectID().toHexString());
+                        if (!model.id) {
+                            if (method === 'create') {
+                                model.set(model.idAttribute, new LiveData.ObjectID().toHexString());
+                            }
+                            else {
+                                var error = new Error('no (valid) id: ' + model.id);
+                                return Q.reject(this.handleError(options, error) || error);
+                            }
                         }
+                    }
+                    else {
+                        // something is really at odds here...
+                        var error = new Error('target of sync is neither a model nor a collection!?!');
+                        return Q.reject(this.handleError(options, error) || error);
                     }
                     var channel = endpoint.channel;
                     var time = this.getLastMessageTime(channel);

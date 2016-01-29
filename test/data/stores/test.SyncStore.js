@@ -138,6 +138,54 @@ describe('Relution.LiveData.SyncStore', function () {
     });
   });
 
+  it('fetching model with no id using callbacks', function (done) {
+    TEST.TestModel2 = Relution.LiveData.Model.extend({
+      url: TEST.url,
+      idAttribute: '_id',
+      store: TEST.store,
+      entity: {
+        name: 'test'
+      }
+    });
+
+    var model = TEST.TestModel2.create({});
+    model.fetch({
+      success: function (model) {
+        backbone_error(done)(model, new Error('this should have failed!'));
+      },
+      error: function () {
+        done();
+      }
+    });
+  });
+
+  it('fetching model with empty-string id using promises', function (done) {
+    TEST.TestModel2 = Relution.LiveData.Model.extend({
+      url: TEST.url,
+      idAttribute: '_id',
+      store: TEST.store,
+      entity: {
+        name: 'test'
+      }
+    });
+
+    var model = TEST.TestModel2.create({
+      _id: ''
+    });
+    model.fetch().then(function () {
+      throw new Error('this should have failed!');
+    },
+    function () {
+      return model;
+    }).then(function (model) {
+      done();
+      return model;
+    }, function (error) {
+      backbone_error(done)(model, error);
+      return model;
+    }).done();
+  });
+
   it('fetching collection', function (done) {
     TEST.Tests.reset();
     assert.equal(TEST.Tests.length, 0, 'reset has cleared the collection.');
@@ -150,7 +198,6 @@ describe('Relution.LiveData.SyncStore', function () {
       error: backbone_error(done)
     });
   });
-
 
   it('get record', function () {
     var model = TEST.Tests.get(TEST.id);
