@@ -1,5 +1,5 @@
 // @echo BANNER
-(function (global, Backbone, _, $, Q, jsonPath) {
+(function (global, Backbone, _, $, Q, jsonPath, lf) {
 // @include ./core/livedata.require.js
 // @include ./utility/debug.js
 // @include ./core/livedata.js
@@ -11,6 +11,9 @@
 // @include ./utility/cypher.js
 // @include ./utility/date.js
 // @include ./utility/url.js
+
+// @include ./model/ModelContainer.js
+// @include ./model/LovefieldModelContainer.js
 
 // @include ./query/JsonPath.js
 // @include ./query/Filter.js
@@ -39,4 +42,4 @@
 
 // @include ./core/bikini.js
 
-})(this, Backbone, _, $, Q, jsonPath);
+})(this, Backbone, _, $, Q, jsonPath, lf);
