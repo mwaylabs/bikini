@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2016 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Thu Jan 28 2016 16:46:03
+* Date:      Fri Jan 29 2016 10:45:14
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -6147,9 +6147,20 @@ var Relution;
                     }
                     else if (LiveData.isModel(model)) {
                         // offline capability requires IDs for data
-                        if (method === 'create' && !model.id) {
-                            model.set(model.idAttribute, new LiveData.ObjectID().toHexString());
+                        if (!model.id) {
+                            if (method === 'create') {
+                                model.set(model.idAttribute, new LiveData.ObjectID().toHexString());
+                            }
+                            else {
+                                var error = new Error('no (valid) id: ' + model.id);
+                                return Q.reject(this.handleError(options, error) || error);
+                            }
                         }
+                    }
+                    else {
+                        // something is really at odds here...
+                        var error = new Error('target of sync is neither a model nor a collection!?!');
+                        return Q.reject(this.handleError(options, error) || error);
                     }
                     var channel = endpoint.channel;
                     var time = this.getLastMessageTime(channel);
@@ -6165,7 +6176,7 @@ var Relution;
                         return endpoint.localStore.sync(method, model, opts).then(function (resp) {
                             // backbone success callback alters the collection now
                             resp = that.handleSuccess(options, resp) || resp;
-                            if (endpoint.socket || options.fetchMode === 'local') {
+                            if (endpoint.socket) {
                                 // no need to fetch changes as we got a websocket, that is either connected or attempts reconnection
                                 return resp;
                             }
@@ -6475,10 +6486,12 @@ var Relution;
                 }
                 var now = Date.now();
                 var promise = endpoint.promiseFetchingChanges;
-                if (promise && now - endpoint.timestampFetchingChanges < 1000) {
-                    // reuse existing eventually completed request for changes
-                    Relution.LiveData.Debug.warning(channel + ' skipping changes request...');
-                    return promise;
+                if (promise) {
+                    if (promise.isPending() || now - endpoint.timestampFetchingChanges < 1000) {
+                        // reuse existing eventually completed request for changes
+                        Relution.LiveData.Debug.warning(channel + ' skipping changes request...');
+                        return promise;
+                    }
                 }
                 var time = that.getLastMessageTime(channel);
                 if (!time) {
@@ -6515,10 +6528,12 @@ var Relution;
                 if (endpoint && endpoint.urlRoot) {
                     var now = Date.now();
                     var promise = endpoint.promiseFetchingServerInfo;
-                    if (promise && now - endpoint.timestampFetchingServerInfo < 1000) {
-                        // reuse existing eventually completed request for changes
-                        Relution.LiveData.Debug.warning(endpoint.channel + ' skipping info request...');
-                        return promise;
+                    if (promise) {
+                        if (promise.isPending() || now - endpoint.timestampFetchingServerInfo < 1000) {
+                            // reuse existing eventually completed request for changes
+                            Relution.LiveData.Debug.warning(endpoint.channel + ' skipping info request...');
+                            return promise;
+                        }
                     }
                     var info = new LiveData.Model();
                     var time = that.getLastMessageTime(endpoint.channel);
