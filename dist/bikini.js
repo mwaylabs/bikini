@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2016 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Fri Jan 29 2016 10:45:14
+* Date:      Fri Jan 29 2016 13:25:20
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -6176,7 +6176,7 @@ var Relution;
                         return endpoint.localStore.sync(method, model, opts).then(function (resp) {
                             // backbone success callback alters the collection now
                             resp = that.handleSuccess(options, resp) || resp;
-                            if (endpoint.socket) {
+                            if (endpoint.socket || options.fetchMode === 'local') {
                                 // no need to fetch changes as we got a websocket, that is either connected or attempts reconnection
                                 return resp;
                             }
