@@ -34,7 +34,8 @@
     "jquery": "~2.1.0",
     "socket.io-client": "~0.9.16",
     "momentjs": "~2.8.0",
-    "JSONPath": "*"
+    "JSONPath": "*",
+    "lovefield": "*"
   },
   "devDependencies": {
     "mocha": "~1.13.0",

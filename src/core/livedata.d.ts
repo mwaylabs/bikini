@@ -22,6 +22,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 /* jshint indent: 4 */
+/// <reference path="../../typings/main.d.ts"/>
 /// <reference path="../utility/Debug.ts" />
 
 declare var global;

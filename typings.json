@@ -1,0 +1,8 @@
+{
+  "dependencies": {},
+  "devDependencies": {},
+  "ambientDependencies": {
+    "es6-promise": "github:DefinitelyTyped/DefinitelyTyped/es6-promise/es6-promise.d.ts#5bff5f871a0ea58be885fb52146cb67b86bcc1ae",
+    "lovefield": "github:DefinitelyTyped/DefinitelyTyped/lovefield/lovefield.d.ts#f856ec9b6a5ef7a7fdb0c91844ac64c10d8afe72"
+  }
+}

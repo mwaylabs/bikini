@@ -46,6 +46,7 @@
     "jquery": "~2.1.0",
     "socket.io-client": "~0.9.16",
     "moment": "~2.8.0",
-    "JSONPath": "*"
+    "JSONPath": "*",
+    "lovefield": "*"
   }
 }

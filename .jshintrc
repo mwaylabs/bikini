@@ -34,6 +34,7 @@
         "describe": false,
         "assert": false,
         "it": false,
-        "jsonPath": false
+        "jsonPath": false,
+        "lf": false
     }
 }
