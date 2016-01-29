@@ -42,16 +42,20 @@ module Relution.LiveData {
     }
 
     public createSchema(schemaBuilder : lf.schema.Builder) {
-      // first pass: tables
+      // first pass: tables and primary keys
+      var tableBuilders = {};
       for (var i = this.models.length; i-- > 0;) {
         var model: LovefieldMetaModel = this.models[i];
-        model.createTables(schemaBuilder );
+        tableBuilders[model.uuid] = model.createTableAndPrimaryKey(schemaBuilder);
       }
 
       // second pass: constraints
       for (var i = this.models.length; i-- > 0;) {
         var model: LovefieldMetaModel = this.models[i];
-        model.createConstraints(schemaBuilder );
+        var tableBuilder = tableBuilders[model.uuid];
+        if (tableBuilder) {
+          model.createColumnsAndJoinTablesAndForeignKeys(tableBuilder, schemaBuilder);
+        }
       }
     }
   }
@@ -62,7 +66,6 @@ module Relution.LiveData {
     modelContainer: LovefieldModelContainer;
 
     tableName: string;
-    tableBuilder: lf.schema.TableBuilder;
     primaryKey: LovefieldFieldDefinition; // unset for auto-incremented integer.
     foreignKeys: LovefieldFieldDefinition[]; // unset when there are no ingoing keys
 
@@ -84,30 +87,22 @@ module Relution.LiveData {
       return this;
     }
 
-    public createTables(schemaBuilder : lf.schema.Builder) {
+    public createTableAndPrimaryKey(schemaBuilder : lf.schema.Builder): lf.schema.TableBuilder {
       if (this.tableName) {
-        this.tableBuilder = schemaBuilder .createTable(this.tableName);
+        var tableBuilder = schemaBuilder.createTable(this.tableName);
 
-        this.tableBuilder.addColumn(this.primaryKeyColumnName, this.primaryKeyColumnType);
-        this.tableBuilder.addPrimaryKey([ this.primaryKeyColumnName ], !this.primaryKey);
+        tableBuilder.addColumn(this.primaryKeyColumnName, this.primaryKeyColumnType);
+        tableBuilder.addPrimaryKey([this.primaryKeyColumnName], !this.primaryKey);
 
-        for (var i = this.fieldDefinitions.length; i-- > 0;) {
-          var fieldDefinition:LovefieldFieldDefinition = this.fieldDefinitions[i];
-          if (fieldDefinition !== this.primaryKey) {
-            fieldDefinition.createTables(schemaBuilder);
-          }
-        }
+        return tableBuilder;
       }
     }
 
-    public createConstraints(schemaBuilder : lf.schema.Builder) {
-      if (this.tableBuilder) {
-
-        for (var i = this.fieldDefinitions.length; i-- > 0;) {
-          var fieldDefinition:LovefieldFieldDefinition = this.fieldDefinitions[i];
-          if (fieldDefinition !== this.primaryKey) {
-            fieldDefinition.createConstraints(schemaBuilder);
-          }
+    public createColumnsAndJoinTablesAndForeignKeys(tableBuilder: lf.schema.TableBuilder, schemaBuilder : lf.schema.Builder) {
+      for (var i = this.fieldDefinitions.length; i-- > 0;) {
+        var fieldDefinition: LovefieldFieldDefinition = this.fieldDefinitions[i];
+        if (fieldDefinition !== this.primaryKey) {
+          fieldDefinition.createColumnOrJoinTableAndForeignKeys(tableBuilder, schemaBuilder);
         }
       }
     }
@@ -132,42 +127,18 @@ module Relution.LiveData {
 
     referencedModel: LovefieldMetaModel;
     joinTableName: string; // set for array data
-    joinTableBuilder: lf.schema.TableBuilder;
     columnName: string;
     columnType: lf.Type;
 
-    public createTables(schemaBuilder : lf.schema.Builder) {
+    public createColumnOrJoinTableAndForeignKeys(tableBuilder: lf.schema.TableBuilder, schemaBuilder : lf.schema.Builder) {
       if (this.joinTableName) {
-        this.joinTableBuilder = schemaBuilder .createTable(this.joinTableName);
+        var joinTableBuilder = schemaBuilder.createTable(this.joinTableName);
 
         // reference to owning model
         var primaryColumnName = this.model.primaryKeyColumnName;
-        this.joinTableBuilder.addColumn(primaryColumnName, this.model.primaryKeyColumnType);
-
-        if (this.dataType === 'java.util.Map') {
-          // Map special case
-          this.joinTableBuilder.addColumn('_key', lf.Type.STRING);
-          this.joinTableBuilder.addPrimaryKey([primaryColumnName, '_key']);
-        } else {
-          // position in array
-          this.joinTableBuilder.addColumn('_idx', lf.Type.INTEGER);
-          this.joinTableBuilder.addPrimaryKey([primaryColumnName, '_idx']);
-        }
-
-        // values of array
-        this.joinTableBuilder.addColumn(this.columnName, this.columnType);
-      } else {
-        // single value
-        this.model.tableBuilder.addColumn(this.columnName, this.columnType);
-      }
-    }
-
-    public createConstraints(schemaBuilder : lf.schema.Builder) {
-      if (this.joinTableBuilder) {
-        // reference to owning model
+        joinTableBuilder.addColumn(primaryColumnName, this.model.primaryKeyColumnType);
         /* "543": "Foreign key {0}. A primary key column can't also be a foreign key child column"
-        var primaryColumnName = this.model.primaryKeyColumnName;
-        this.joinTableBuilder.addForeignKey('fk_' + primaryColumnName, {
+        joinTableBuilder.addForeignKey('fk_' + primaryColumnName, {
           local: primaryColumnName,
           ref: this.model.tableName + '.' + primaryColumnName,
           action: lf.ConstraintAction.CASCADE,
@@ -175,9 +146,20 @@ module Relution.LiveData {
         });
         */
 
+        if (this.dataType === 'java.util.Map') {
+          // Map special case
+          joinTableBuilder.addColumn('_key', lf.Type.STRING);
+          joinTableBuilder.addPrimaryKey([primaryColumnName, '_key']);
+        } else {
+          // position in array
+          joinTableBuilder.addColumn('_idx', lf.Type.INTEGER);
+          joinTableBuilder.addPrimaryKey([primaryColumnName, '_idx']);
+        }
+
         // values of array
+        joinTableBuilder.addColumn(this.columnName, this.columnType);
         if (this.referencedModel) {
-          this.joinTableBuilder.addForeignKey('fk_' + this.columnName, {
+          joinTableBuilder.addForeignKey('fk_' + this.columnName, {
             local: this.columnName,
             ref: this.referencedModel.tableName + '.' + this.referencedModel.primaryKeyColumnName,
             action: lf.ConstraintAction.CASCADE,
@@ -186,15 +168,16 @@ module Relution.LiveData {
         }
       } else {
         // single value
+        tableBuilder.addColumn(this.columnName, this.columnType);
         if (this.referencedModel) {
-          this.model.tableBuilder.addForeignKey('fk_' + this.columnName, {
+          tableBuilder.addForeignKey('fk_' + this.columnName, {
             local: this.columnName,
             ref: this.referencedModel.tableName + '.' + this.referencedModel.primaryKeyColumnName,
             action: lf.ConstraintAction.CASCADE,
             timing: lf.ConstraintTiming.IMMEDIATE
           });
         } else if (!this.mandatory) {
-          this.model.tableBuilder.addNullable([ this.columnName ]);
+          tableBuilder.addNullable([ this.columnName ]);
         }
       }
     }

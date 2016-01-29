@@ -47,15 +47,19 @@ var Relution;
                 return this;
             };
             LovefieldModelContainer.prototype.createSchema = function (schemaBuilder) {
-                // first pass: tables
+                // first pass: tables and primary keys
+                var tableBuilders = {};
                 for (var i = this.models.length; i-- > 0;) {
                     var model = this.models[i];
-                    model.createTables(schemaBuilder);
+                    tableBuilders[model.uuid] = model.createTableAndPrimaryKey(schemaBuilder);
                 }
                 // second pass: constraints
                 for (var i = this.models.length; i-- > 0;) {
                     var model = this.models[i];
-                    model.createConstraints(schemaBuilder);
+                    var tableBuilder = tableBuilders[model.uuid];
+                    if (tableBuilder) {
+                        model.createColumnsAndJoinTablesAndForeignKeys(tableBuilder, schemaBuilder);
+                    }
                 }
             };
             return LovefieldModelContainer;
@@ -88,26 +92,19 @@ var Relution;
                 }
                 return this;
             };
-            LovefieldMetaModel.prototype.createTables = function (schemaBuilder) {
+            LovefieldMetaModel.prototype.createTableAndPrimaryKey = function (schemaBuilder) {
                 if (this.tableName) {
-                    this.tableBuilder = schemaBuilder.createTable(this.tableName);
-                    this.tableBuilder.addColumn(this.primaryKeyColumnName, this.primaryKeyColumnType);
-                    this.tableBuilder.addPrimaryKey([this.primaryKeyColumnName], !this.primaryKey);
-                    for (var i = this.fieldDefinitions.length; i-- > 0;) {
-                        var fieldDefinition = this.fieldDefinitions[i];
-                        if (fieldDefinition !== this.primaryKey) {
-                            fieldDefinition.createTables(schemaBuilder);
-                        }
-                    }
+                    var tableBuilder = schemaBuilder.createTable(this.tableName);
+                    tableBuilder.addColumn(this.primaryKeyColumnName, this.primaryKeyColumnType);
+                    tableBuilder.addPrimaryKey([this.primaryKeyColumnName], !this.primaryKey);
+                    return tableBuilder;
                 }
             };
-            LovefieldMetaModel.prototype.createConstraints = function (schemaBuilder) {
-                if (this.tableBuilder) {
-                    for (var i = this.fieldDefinitions.length; i-- > 0;) {
-                        var fieldDefinition = this.fieldDefinitions[i];
-                        if (fieldDefinition !== this.primaryKey) {
-                            fieldDefinition.createConstraints(schemaBuilder);
-                        }
+            LovefieldMetaModel.prototype.createColumnsAndJoinTablesAndForeignKeys = function (tableBuilder, schemaBuilder) {
+                for (var i = this.fieldDefinitions.length; i-- > 0;) {
+                    var fieldDefinition = this.fieldDefinitions[i];
+                    if (fieldDefinition !== this.primaryKey) {
+                        fieldDefinition.createColumnOrJoinTableAndForeignKeys(tableBuilder, schemaBuilder);
                     }
                 }
             };
@@ -119,45 +116,34 @@ var Relution;
             function LovefieldFieldDefinition() {
                 _super.apply(this, arguments);
             }
-            LovefieldFieldDefinition.prototype.createTables = function (schemaBuilder) {
+            LovefieldFieldDefinition.prototype.createColumnOrJoinTableAndForeignKeys = function (tableBuilder, schemaBuilder) {
                 if (this.joinTableName) {
-                    this.joinTableBuilder = schemaBuilder.createTable(this.joinTableName);
+                    var joinTableBuilder = schemaBuilder.createTable(this.joinTableName);
                     // reference to owning model
                     var primaryColumnName = this.model.primaryKeyColumnName;
-                    this.joinTableBuilder.addColumn(primaryColumnName, this.model.primaryKeyColumnType);
-                    if (this.dataType === 'java.util.Map') {
-                        // Map special case
-                        this.joinTableBuilder.addColumn('_key', lf.Type.STRING);
-                        this.joinTableBuilder.addPrimaryKey([primaryColumnName, '_key']);
-                    }
-                    else {
-                        // position in array
-                        this.joinTableBuilder.addColumn('_idx', lf.Type.INTEGER);
-                        this.joinTableBuilder.addPrimaryKey([primaryColumnName, '_idx']);
-                    }
-                    // values of array
-                    this.joinTableBuilder.addColumn(this.columnName, this.columnType);
-                }
-                else {
-                    // single value
-                    this.model.tableBuilder.addColumn(this.columnName, this.columnType);
-                }
-            };
-            LovefieldFieldDefinition.prototype.createConstraints = function (schemaBuilder) {
-                if (this.joinTableBuilder) {
-                    // reference to owning model
+                    joinTableBuilder.addColumn(primaryColumnName, this.model.primaryKeyColumnType);
                     /* "543": "Foreign key {0}. A primary key column can't also be a foreign key child column"
-                    var primaryColumnName = this.model.primaryKeyColumnName;
-                    this.joinTableBuilder.addForeignKey('fk_' + primaryColumnName, {
+                    joinTableBuilder.addForeignKey('fk_' + primaryColumnName, {
                       local: primaryColumnName,
                       ref: this.model.tableName + '.' + primaryColumnName,
                       action: lf.ConstraintAction.CASCADE,
                       timing: lf.ConstraintTiming.IMMEDIATE
                     });
                     */
+                    if (this.dataType === 'java.util.Map') {
+                        // Map special case
+                        joinTableBuilder.addColumn('_key', lf.Type.STRING);
+                        joinTableBuilder.addPrimaryKey([primaryColumnName, '_key']);
+                    }
+                    else {
+                        // position in array
+                        joinTableBuilder.addColumn('_idx', lf.Type.INTEGER);
+                        joinTableBuilder.addPrimaryKey([primaryColumnName, '_idx']);
+                    }
                     // values of array
+                    joinTableBuilder.addColumn(this.columnName, this.columnType);
                     if (this.referencedModel) {
-                        this.joinTableBuilder.addForeignKey('fk_' + this.columnName, {
+                        joinTableBuilder.addForeignKey('fk_' + this.columnName, {
                             local: this.columnName,
                             ref: this.referencedModel.tableName + '.' + this.referencedModel.primaryKeyColumnName,
                             action: lf.ConstraintAction.CASCADE,
@@ -167,8 +153,9 @@ var Relution;
                 }
                 else {
                     // single value
+                    tableBuilder.addColumn(this.columnName, this.columnType);
                     if (this.referencedModel) {
-                        this.model.tableBuilder.addForeignKey('fk_' + this.columnName, {
+                        tableBuilder.addForeignKey('fk_' + this.columnName, {
                             local: this.columnName,
                             ref: this.referencedModel.tableName + '.' + this.referencedModel.primaryKeyColumnName,
                             action: lf.ConstraintAction.CASCADE,
@@ -176,7 +163,7 @@ var Relution;
                         });
                     }
                     else if (!this.mandatory) {
-                        this.model.tableBuilder.addNullable([this.columnName]);
+                        tableBuilder.addNullable([this.columnName]);
                     }
                 }
             };
