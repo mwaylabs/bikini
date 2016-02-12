@@ -92,7 +92,7 @@ Relution.LiveData.ajax = function ajax(options) {
         if (fnError) {
           fnError(response, response.statusText, response.data);
         }
-        return Q.reject(response.data || response);
+        return Q.reject(response);
       });
     } else {
       // jQuery-based XHR
@@ -110,7 +110,7 @@ Relution.LiveData.ajax = function ajax(options) {
         if (fnError) {
           result = fnError.apply(this, arguments);
         }
-        q.reject(errorThrown || jqXHR);
+        q.reject(jqXHR);
         return result;
       });
       return q.promise;
