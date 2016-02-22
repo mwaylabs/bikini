@@ -379,7 +379,7 @@ module Relution.LiveData {
 
         if (isCollection(model)) {
           // collections can be filtered, etc.
-          if (method === 'read') {
+          if (method === 'read' && !options.barebone) {
             var syncContext: SyncContext = options.syncContext; // sync can be called by SyncContext itself when paging results
             if (!syncContext) {
               // capture GetQuery options

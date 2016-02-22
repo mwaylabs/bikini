@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2016 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Fri Feb 12 2016 09:42:50
+* Date:      Mon Feb 22 2016 16:10:10
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -191,6 +191,30 @@ Relution.LiveData.DATA = {
     NULL: 'null'
   }
 };
+
+/**
+ * options passed to Collection.fetch() preventing backbone.js from consuming the response.
+ *
+ * This can be used when fetching large quantities of data and just the store and attached
+ * collections are to be updated. By merging these options in and the server response is
+ * not used to update the collection fetched itself.
+ */
+Relution.LiveData.bareboneOptions = Object.freeze({
+  // indicates not to rely on Collection contents to aware code, not used by backbone.js
+  barebone: true,
+
+  // prevents any mutation of the Collection contents
+  add: false,
+  remove: false,
+  merge: false,
+
+  // does not resort once the response data arrives
+  sort: false,
+
+  // omits events from being fired
+  silent: true
+});
+
 Relution.LiveData.http = Backbone.ajax;
 
 Backbone.ajax = function ajax(options) {
@@ -6125,7 +6149,7 @@ var Relution;
                     }
                     if (LiveData.isCollection(model)) {
                         // collections can be filtered, etc.
-                        if (method === 'read') {
+                        if (method === 'read' && !options.barebone) {
                             var syncContext = options.syncContext; // sync can be called by SyncContext itself when paging results
                             if (!syncContext) {
                                 // capture GetQuery options

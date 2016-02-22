@@ -51,6 +51,30 @@ Relution.LiveData.DATA = {
     NULL: 'null'
   }
 };
+
+/**
+ * options passed to Collection.fetch() preventing backbone.js from consuming the response.
+ *
+ * This can be used when fetching large quantities of data and just the store and attached
+ * collections are to be updated. By merging these options in and the server response is
+ * not used to update the collection fetched itself.
+ */
+Relution.LiveData.bareboneOptions = Object.freeze({
+  // indicates not to rely on Collection contents to aware code, not used by backbone.js
+  barebone: true,
+
+  // prevents any mutation of the Collection contents
+  add: false,
+  remove: false,
+  merge: false,
+
+  // does not resort once the response data arrives
+  sort: false,
+
+  // omits events from being fired
+  silent: true
+});
+
 Relution.LiveData.http = Backbone.ajax;
 
 Backbone.ajax = function ajax(options) {
