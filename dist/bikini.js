@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2016 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Wed Feb 10 2016 14:08:43
+* Date:      Wed Feb 24 2016 09:24:10
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -6081,11 +6081,17 @@ var Relution;
                     var model = new endpoint.modelType(msg.data, _.extend({
                         parse: true
                     }, options));
-                    Relution.LiveData.Debug.debug('onMessage: ' + endpoint.entity.name + ' ' + model.id + ' performing ' + msg.method);
+                    if (!model.id) {
+                        // code below will persist with auto-assigned id but this nevertheless is a broken record
+                        Relution.LiveData.Debug.error('onMessage: ' + endpoint.entity.name + ' received data with no valid id performing ' + msg.method + '!');
+                    }
+                    else {
+                        Relution.LiveData.Debug.debug('onMessage: ' + endpoint.entity.name + ' ' + model.id + ' performing ' + msg.method);
+                    }
                     q = endpoint.localStore.sync(msg.method, model, _.extend(options, {
                         merge: msg.method === 'patch'
                     })).then(function (result) {
-                        if (msg.id === model.id) {
+                        if (!msg.id || msg.id === model.id) {
                             return result;
                         }
                         // id value was reassigned, delete record of old id
