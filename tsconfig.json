@@ -5,8 +5,14 @@
   },
   "filesGlob": [
     "./src/**/*.ts",
+    "!./bower_components/**/*.ts",
     "!./node_modules/**/*.ts",
-    "!./bower_components/**/*.ts"
+    "!./typings/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "typings/main",
+    "typings/main.d.ts"
   ],
   "formatCodeOptions": {
     "indentSize": 2,

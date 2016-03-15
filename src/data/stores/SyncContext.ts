@@ -31,6 +31,7 @@
 /// <reference path="../../query/JsonFilterVisitor.ts" />
 /// <reference path="../../query/SortOrderComparator.ts" />
 /// <reference path="Store.ts" />
+/// <reference path="LiveDataMessage.ts" />
 
 module Relution.LiveData {
 
@@ -100,7 +101,7 @@ module Relution.LiveData {
      *
      * @see Collection#fetchMore()
      */
-    public fetchMore(collection, options) {
+    public fetchMore(collection: Collection, options?) {
       var getQuery = this.getQuery;
       options = _.defaults(options || {}, {
         limit: options.pageSize || this.pageSize || getQuery.limit,
@@ -202,7 +203,7 @@ module Relution.LiveData {
      * @param {object} options incl. offset and limit of page to retrieve.
      * @return {Promise} promise of the load operation.
      */
-    private fetchRange(collection, options) {
+    private fetchRange(collection: Collection, options?) {
       // this must be set in options to state we handle it
       options = options || {};
       options.syncContext = this;
@@ -299,7 +300,7 @@ module Relution.LiveData {
      *
      * @see Collection#fetchNext()
      */
-    public fetchNext(collection, options) {
+    public fetchNext(collection: Collection, options?) {
       options = options || {};
       options.limit = options.pageSize || this.pageSize || this.getQuery.limit;
       options.offset = (this.getQuery.offset|0) + collection.models.length;
@@ -314,7 +315,7 @@ module Relution.LiveData {
      *
      * @see Collection#fetchPrev()
      */
-    public fetchPrev(collection, options) {
+    public fetchPrev(collection: Collection, options?) {
       options = options || {};
       options.limit = options.pageSize || this.pageSize || this.getQuery.limit;
       options.offset = (this.getQuery.offset|0) - options.limit;
@@ -359,7 +360,7 @@ module Relution.LiveData {
      * @param collection
      * @param msg
      */
-    public onMessage(store:Store, collection, msg) {
+    public onMessage(store:Store, collection: Collection, msg: LiveDataMessage) {
       var options:any = {
         collection: collection,
         entity: collection.entity,
@@ -367,7 +368,7 @@ module Relution.LiveData {
         parse: true,
         fromMessage: true
       };
-      var newId = collection.modelId(msg.data);
+      var newId = (<any>collection).modelId(msg.data); // modelId(attrs) missing in DefinitelyTyped definitions
       var oldId = msg.id || newId;
       if (oldId === 'all') {
         collection.reset(msg.data || {}, options);
@@ -448,7 +449,7 @@ module Relution.LiveData {
      * @param models sorted by compareFn.
      * @return {number} insertion point.
      */
-    private insertionPoint(attributes, models):number {
+    private insertionPoint(attributes, models: Model[]):number {
       if (this.lastInsertionPoint !== undefined) {
         // following performs two comparisons at the last insertion point to take advantage of locality,
         // this means we don't subdivide evenly but check tiny interval at insertion position firstly...
@@ -488,7 +489,7 @@ module Relution.LiveData {
      * @param end exclusive index of search interval.
      * @return {number} insertion point.
      */
-    private insertionPointBinarySearch(attributes, models, start, end):number {
+    private insertionPointBinarySearch(attributes, models, start: number, end: number):number {
       var pivot = (start + end) >> 1;
       var delta = this.compareFn(attributes, models[pivot].attributes);
       if (end - start <= 1) {

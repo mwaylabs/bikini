@@ -24,6 +24,8 @@
 /* jshint indent: 4 */
 /// <reference path="../../core/livedata.d.ts" />
 /// <reference path="../../utility/Debug.ts" />
+/// <reference path="../Model.ts" />
+/// <reference path="../Collection.ts" />
 
 module Relution.LiveData {
 
@@ -35,9 +37,10 @@ module Relution.LiveData {
    * @module Relution.LiveData.Store
    */
   export class Store {
-    protected options: any;
 
+    protected options: any;
     protected entities: any;
+    public endpoints: any;
 
     constructor(options?: any) {
       this.options = _.extend({
@@ -150,11 +153,11 @@ module Relution.LiveData {
       return _.isObject(model) ? model : null;
     }
 
-    initModel(model) {
+    initModel(model, options?:any) {
       // may be overwritten
     }
 
-    initCollection(collection) {
+    initCollection(collection, options?:any) {
       // may be overwritten
     }
 
@@ -162,7 +165,7 @@ module Relution.LiveData {
       // may be overwritten
     }
 
-    sync(method, model, options) {
+    sync(method: string, model: Model | Collection, options?: any) {
       // must be overwritten
       return Q.reject(new Error('not implemented!')); // purely abstract
     }

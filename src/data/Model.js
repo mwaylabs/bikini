@@ -1,0 +1,106 @@
+// Copyright (c) 2013 M-Way Solutions GmbH
+// http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
+/* jshint indent: 4 */
+/* jshint curly: false */
+/* jshint newcap: false */
+/* jshint -W004: '%' is already defined. */
+/// <reference path="../core/livedata.d.ts" />
+/// <reference path="../utility/Debug.ts" />
+/// <reference path="stores/Store.ts" />
+/// <reference path="Collection.ts" />
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var Relution;
+(function (Relution) {
+    var LiveData;
+    (function (LiveData) {
+        /**
+         * @module Relution.LiveData.Model
+         *
+         * @type {*}
+         * @extends Backbone.Model
+         */
+        var Model = (function (_super) {
+            __extends(Model, _super);
+            function Model(attributes, options) {
+                _super.call(this, attributes, options);
+                this._type = 'Relution.LiveData.Model';
+                this.isModel = true;
+                this.defaults = {};
+                this.changedSinceSync = {};
+                if (this.urlRoot && typeof this.urlRoot === 'string') {
+                    if (this.urlRoot.charAt(this.urlRoot.length - 1) !== '/') {
+                        this.urlRoot += '/';
+                    }
+                }
+                this.init(attributes, options);
+            }
+            Model.prototype.init = function (attributes, options) {
+                options = options || {};
+                this.collection = options.collection || this.collection;
+                this.idAttribute = options.idAttribute || this.idAttribute;
+                this.store = this.store || (this.collection ? this.collection.store : null) || options.store;
+                if (this.store && _.isFunction(this.store.initModel)) {
+                    this.store.initModel(this, options);
+                }
+                this.entity = this.entity || (this.collection ? this.collection.entity : null) || options.entity;
+                if (this.entity) {
+                    this.entity = Relution.LiveData.Entity.from(this.entity, {
+                        model: this.constructor,
+                        typeMapping: options.typeMapping
+                    });
+                    this.idAttribute = this.entity.idAttribute || this.idAttribute;
+                }
+                this.credentials = this.credentials || (this.collection ? this.collection.credentials : null) || options.credentials;
+                this.on('change', this.onChange, this);
+                this.on('sync', this.onSync, this);
+            };
+            Model.prototype.ajax = function (options) {
+                return Relution.LiveData.ajax.apply(this, arguments);
+            };
+            Model.prototype.sync = function (method, model, options) {
+                return Relution.LiveData.sync.apply(this, arguments);
+            };
+            Model.prototype.onChange = function (model, options) {
+                // For each `set` attribute, update or delete the current value.
+                var attrs = model.changedAttributes();
+                if (_.isObject(attrs)) {
+                    for (var key in attrs) {
+                        this.changedSinceSync[key] = attrs[key];
+                    }
+                }
+            };
+            Model.prototype.onSync = function (model, options) {
+                this.changedSinceSync = {};
+            };
+            Model.prototype.getUrlRoot = function () {
+                if (this.urlRoot) {
+                    return _.isFunction(this.urlRoot) ? this.urlRoot() : this.urlRoot;
+                }
+                else if (this.collection) {
+                    return this.collection.getUrlRoot();
+                }
+                else if (this.url) {
+                    var url = _.isFunction(this.url) ? this.url() : this.url;
+                    if (url && this.id && url.indexOf(this.id) > 0) {
+                        return url.substr(0, url.indexOf(this.id));
+                    }
+                    return url;
+                }
+            };
+            Model.extend = Backbone.Model.extend;
+            Model.create = Relution.LiveData.create;
+            Model.design = Relution.LiveData.design;
+            return Model;
+        })(Backbone.Model);
+        LiveData.Model = Model;
+        _.extend(Model.prototype, LiveData._Object, {
+            _type: 'Relution.LiveData.Model',
+            isModel: true
+        });
+    })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
+})(Relution || (Relution = {}));
+//# sourceMappingURL=Model.js.map

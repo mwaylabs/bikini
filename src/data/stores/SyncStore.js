@@ -33,6 +33,8 @@
 /// <reference path="SyncEndpoint.ts" />
 /// <reference path="LiveDataMessage.ts" />
 /// <reference path="../../utility/Debug.ts" />
+/// <reference path="../Model.ts" />
+/// <reference path="../Collection.ts" />
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -775,7 +777,7 @@ var Relution;
                     if (url.charAt((url.length - 1)) !== '/') {
                         url += '/';
                     }
-                    promise = info.fetch({
+                    promise = info.fetch(({
                         url: url + 'info',
                         success: function (model, response, options) {
                             //@todo why we set a server time here ?
@@ -792,7 +794,7 @@ var Relution;
                             return response || options.xhr;
                         },
                         credentials: endpoint.credentials
-                    });
+                    }));
                     endpoint.promiseFetchingServerInfo = promise;
                     endpoint.timestampFetchingServerInfo = now;
                     return promise;

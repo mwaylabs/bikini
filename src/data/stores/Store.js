@@ -24,6 +24,8 @@
 /* jshint indent: 4 */
 /// <reference path="../../core/livedata.d.ts" />
 /// <reference path="../../utility/Debug.ts" />
+/// <reference path="../Model.ts" />
+/// <reference path="../Collection.ts" />
 var Relution;
 (function (Relution) {
     var LiveData;
@@ -135,10 +137,10 @@ var Relution;
                 }
                 return _.isObject(model) ? model : null;
             };
-            Store.prototype.initModel = function (model) {
+            Store.prototype.initModel = function (model, options) {
                 // may be overwritten
             };
-            Store.prototype.initCollection = function (collection) {
+            Store.prototype.initCollection = function (collection, options) {
                 // may be overwritten
             };
             Store.prototype.initEntity = function (entity) {

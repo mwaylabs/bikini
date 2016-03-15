@@ -33,6 +33,8 @@
 /// <reference path="SyncEndpoint.ts" />
 /// <reference path="LiveDataMessage.ts" />
 /// <reference path="../../utility/Debug.ts" />
+/// <reference path="../Model.ts" />
+/// <reference path="../Collection.ts" />
 
 module Relution.LiveData {
 
@@ -65,7 +67,7 @@ module Relution.LiveData {
    */
   export class SyncStore extends Store {
 
-    private endpoints: {
+    public endpoints: {
       // map of hashed urlRoot to SyncEndpoint
       [hash: string]: SyncEndpoint;
     } = {};
@@ -94,7 +96,7 @@ module Relution.LiveData {
       }
     }
 
-    initEndpoint(modelOrCollection, modelType): SyncEndpoint {
+    initEndpoint(modelOrCollection: Model | Collection, modelType): SyncEndpoint {
       var urlRoot = modelOrCollection.getUrlRoot();
       var entity = this.getEntity(modelOrCollection.entity);
       if (urlRoot && entity) {
@@ -125,15 +127,15 @@ module Relution.LiveData {
       }
     }
 
-    initModel(model) {
+    initModel(model: Model) {
       model.endpoint = this.initEndpoint(model, model.constructor);
     }
 
-    initCollection(collection) {
+    initCollection(collection: Collection) {
       collection.endpoint = this.initEndpoint(collection, collection.model);
     }
 
-    getEndpoint(url): SyncEndpoint {
+    getEndpoint(url: string): SyncEndpoint {
       if (url) {
         var hash = URLUtil.hashLocation(url);
         return this.endpoints[hash];
@@ -190,7 +192,7 @@ module Relution.LiveData {
       return endpoint.messages;
     }
 
-    createSocket(endpoint: SyncEndpoint, name) {
+    createSocket(endpoint: SyncEndpoint, name: string) {
       if (this.options.useSocketNotify && endpoint && endpoint.socketPath) {
         Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore.createSocket: ' + name);
 
@@ -249,7 +251,7 @@ module Relution.LiveData {
       }
     }
 
-    getLastMessageTime(channel) {
+    getLastMessageTime(channel: string) {
       if (!this.lastMesgTime) {
         this.lastMesgTime = {};
       } else if (this.lastMesgTime[channel] !== undefined) {
@@ -261,7 +263,7 @@ module Relution.LiveData {
       return time;
     }
 
-    setLastMessageTime(channel, time) {
+    setLastMessageTime(channel: string, time) {
       if (!time || time > this.getLastMessageTime(channel)) {
         localStorage.setItem('__' + channel + 'lastMesgTime', time);
         this.lastMesgTime[channel] = time;
@@ -373,7 +375,7 @@ module Relution.LiveData {
       });
     }
 
-    public sync(method, model, options) {
+    public sync(method: string, model: Model | Collection, options?) {
       Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore.sync');
       options = options || {};
       try {
@@ -487,7 +489,7 @@ module Relution.LiveData {
       }
     }
 
-    private _addMessage(method, model, options, endpoint: SyncEndpoint) {
+    private _addMessage(method: string, model, options, endpoint: SyncEndpoint) {
       var that = this;
       if (method && model) {
         var changes = model.changedSinceSync;
@@ -538,7 +540,7 @@ module Relution.LiveData {
       }
     }
 
-    private _emitMessage(endpoint: SyncEndpoint, msg: LiveDataMessage, options, model, qMessage) {
+    private _emitMessage(endpoint: SyncEndpoint, msg: LiveDataMessage, options, model: Model | Collection, qMessage) {
       var that = this;
       var channel = endpoint.channel;
       var qAjax = this._ajaxMessage(endpoint, msg, options, model);
@@ -585,7 +587,7 @@ module Relution.LiveData {
       });
     }
 
-    private _ajaxMessage(endpoint: SyncEndpoint, msg: LiveDataMessage, options, model) {
+    private _ajaxMessage(endpoint: SyncEndpoint, msg: LiveDataMessage, options, model: Model | Collection) {
       options = options || {};
 
       var url = options.url;
@@ -820,7 +822,7 @@ module Relution.LiveData {
         if (url.charAt((url.length - 1)) !== '/') {
           url += '/';
         }
-        promise = info.fetch({
+        promise = info.fetch(<Backbone.ModelFetchOptions>({
           url: url + 'info',
           success: function (model, response, options) {
             //@todo why we set a server time here ?
@@ -837,7 +839,7 @@ module Relution.LiveData {
             return response || options.xhr;
           },
           credentials: endpoint.credentials
-        });
+        }));
         endpoint.promiseFetchingServerInfo = promise;
         endpoint.timestampFetchingServerInfo = now;
         return promise;
@@ -1003,7 +1005,7 @@ module Relution.LiveData {
       });
     }
 
-    public clear(collection) {
+    public clear(collection: Collection) {
       if (collection) {
         var endpoint: SyncEndpoint = this.getEndpoint(collection.getUrlRoot());
         if (endpoint) {

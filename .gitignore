@@ -8,3 +8,4 @@ npm-debug.log
 doc-template
 .grunt/
 doc/
+typings/

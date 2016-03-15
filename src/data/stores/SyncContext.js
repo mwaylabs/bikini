@@ -31,6 +31,7 @@
 /// <reference path="../../query/JsonFilterVisitor.ts" />
 /// <reference path="../../query/SortOrderComparator.ts" />
 /// <reference path="Store.ts" />
+/// <reference path="LiveDataMessage.ts" />
 var Relution;
 (function (Relution) {
     var LiveData;
@@ -329,7 +330,7 @@ var Relution;
                     parse: true,
                     fromMessage: true
                 };
-                var newId = collection.modelId(msg.data);
+                var newId = collection.modelId(msg.data); // modelId(attrs) missing in DefinitelyTyped definitions
                 var oldId = msg.id || newId;
                 if (oldId === 'all') {
                     collection.reset(msg.data || {}, options);

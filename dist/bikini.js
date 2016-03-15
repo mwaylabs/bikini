@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2016 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Wed Feb 24 2016 09:27:00
+* Date:      Tue Mar 15 2016 14:00:11
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -2989,388 +2989,368 @@ Relution.LiveData.Security = Relution.LiveData._Object.design({
 
 // Copyright (c) 2013 M-Way Solutions GmbH
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
-
-/**
- *
- * @module Relution.LiveData.Model
- *
- * @type {*}
- * @extends Backbone.Model
- */
-Relution.LiveData.Model = Backbone.Model.extend({
-  constructor: function (attributes, options) {
-    if (this.urlRoot && typeof this.urlRoot === 'string') {
-      if (this.urlRoot.charAt(this.urlRoot.length - 1) !== '/') {
-        this.urlRoot += '/';
-      }
-    }
-    this.init(attributes, options);
-    Backbone.Model.apply(this, arguments);
-  }
-});
-
-Relution.LiveData.Model.create = Relution.LiveData.create;
-Relution.LiveData.Model.design = Relution.LiveData.design;
-
-_.extend(Relution.LiveData.Model.prototype, Relution.LiveData._Object, {
-
-  _type: 'Relution.LiveData.Model',
-
-  isModel: true,
-
-  entity: null,
-
-  defaults: {},
-
-  changedSinceSync: {},
-
-  init: function (attributes, options) {
-    options = options || {};
-
-    this.collection = options.collection || this.collection;
-    this.idAttribute = options.idAttribute || this.idAttribute;
-    this.store = this.store || (this.collection ? this.collection.store : null) || options.store;
-    if (this.store && _.isFunction(this.store.initModel)) {
-      this.store.initModel(this, options);
-    }
-    this.entity = this.entity || (this.collection ? this.collection.entity : null) || options.entity;
-    if (this.entity) {
-      this.entity = Relution.LiveData.Entity.from(this.entity, {model: this.constructor, typeMapping: options.typeMapping});
-      this.idAttribute = this.entity.idAttribute || this.idAttribute;
-    }
-    this.credentials = this.credentials || (this.collection ? this.collection.credentials : null) || options.credentials;
-    this.on('change', this.onChange, this);
-    this.on('sync', this.onSync, this);
-  },
-
-  ajax: function () {
-    return Relution.LiveData.ajax.apply(this, arguments);
-  },
-  sync: function () {
-    return Relution.LiveData.sync.apply(this, arguments);
-  },
-
-  onChange: function (model, options) {
-    // For each `set` attribute, update or delete the current value.
-    var attrs = model.changedAttributes();
-    if (_.isObject(attrs)) {
-      for (var key in attrs) {
-        this.changedSinceSync[key] = attrs[key];
-      }
-    }
-  },
-
-  onSync: function (model, options) {
-    this.changedSinceSync = {};
-  },
-
-  getUrlRoot: function () {
-    if (this.urlRoot) {
-      return _.isFunction(this.urlRoot) ? this.urlRoot() : this.urlRoot;
-    } else if (this.collection) {
-      return this.collection.getUrlRoot();
-    } else if (this.url) {
-      var url = _.isFunction(this.url) ? this.url() : this.url;
-      if (url && this.id && url.indexOf(this.id) > 0) {
-        return url.substr(0, url.indexOf(this.id));
-      }
-      return url;
-    }
-  },
-
-  /*
-  toJSON: function (options) {
-    options = options || {};
-    var entity = options.entity || this.entity;
-    if (Relution.LiveData.isEntity(entity)) {
-      return entity.fromAttributes(options.attrs || this.attributes);
-    }
-    return options.attrs || _.clone(this.attributes);
-  },
-
-  parse: function (resp, options) {
-    options = options || {};
-    var entity = options.entity || this.entity;
-    if (Relution.LiveData.isEntity(entity)) {
-      return entity.toAttributes(resp);
-    }
-    return resp;
-  }
-  */
-
-});
-
+/* jshint indent: 4 */
+/* jshint curly: false */
+/* jshint newcap: false */
+/* jshint -W004: '%' is already defined. */
+/// <reference path="../core/livedata.d.ts" />
+/// <reference path="../utility/Debug.ts" />
+/// <reference path="stores/Store.ts" />
+/// <reference path="Collection.ts" />
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var Relution;
+(function (Relution) {
+    var LiveData;
+    (function (LiveData) {
+        /**
+         * @module Relution.LiveData.Model
+         *
+         * @type {*}
+         * @extends Backbone.Model
+         */
+        var Model = (function (_super) {
+            __extends(Model, _super);
+            function Model(attributes, options) {
+                _super.call(this, attributes, options);
+                this._type = 'Relution.LiveData.Model';
+                this.isModel = true;
+                this.defaults = {};
+                this.changedSinceSync = {};
+                if (this.urlRoot && typeof this.urlRoot === 'string') {
+                    if (this.urlRoot.charAt(this.urlRoot.length - 1) !== '/') {
+                        this.urlRoot += '/';
+                    }
+                }
+                this.init(attributes, options);
+            }
+            Model.prototype.init = function (attributes, options) {
+                options = options || {};
+                this.collection = options.collection || this.collection;
+                this.idAttribute = options.idAttribute || this.idAttribute;
+                this.store = this.store || (this.collection ? this.collection.store : null) || options.store;
+                if (this.store && _.isFunction(this.store.initModel)) {
+                    this.store.initModel(this, options);
+                }
+                this.entity = this.entity || (this.collection ? this.collection.entity : null) || options.entity;
+                if (this.entity) {
+                    this.entity = Relution.LiveData.Entity.from(this.entity, {
+                        model: this.constructor,
+                        typeMapping: options.typeMapping
+                    });
+                    this.idAttribute = this.entity.idAttribute || this.idAttribute;
+                }
+                this.credentials = this.credentials || (this.collection ? this.collection.credentials : null) || options.credentials;
+                this.on('change', this.onChange, this);
+                this.on('sync', this.onSync, this);
+            };
+            Model.prototype.ajax = function (options) {
+                return Relution.LiveData.ajax.apply(this, arguments);
+            };
+            Model.prototype.sync = function (method, model, options) {
+                return Relution.LiveData.sync.apply(this, arguments);
+            };
+            Model.prototype.onChange = function (model, options) {
+                // For each `set` attribute, update or delete the current value.
+                var attrs = model.changedAttributes();
+                if (_.isObject(attrs)) {
+                    for (var key in attrs) {
+                        this.changedSinceSync[key] = attrs[key];
+                    }
+                }
+            };
+            Model.prototype.onSync = function (model, options) {
+                this.changedSinceSync = {};
+            };
+            Model.prototype.getUrlRoot = function () {
+                if (this.urlRoot) {
+                    return _.isFunction(this.urlRoot) ? this.urlRoot() : this.urlRoot;
+                }
+                else if (this.collection) {
+                    return this.collection.getUrlRoot();
+                }
+                else if (this.url) {
+                    var url = _.isFunction(this.url) ? this.url() : this.url;
+                    if (url && this.id && url.indexOf(this.id) > 0) {
+                        return url.substr(0, url.indexOf(this.id));
+                    }
+                    return url;
+                }
+            };
+            Model.extend = Backbone.Model.extend;
+            Model.create = Relution.LiveData.create;
+            Model.design = Relution.LiveData.design;
+            return Model;
+        })(Backbone.Model);
+        LiveData.Model = Model;
+        _.extend(Model.prototype, LiveData._Object, {
+            _type: 'Relution.LiveData.Model',
+            isModel: true
+        });
+    })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
+})(Relution || (Relution = {}));
+//# sourceMappingURL=Model.js.map
 // Copyright (c) 2013 M-Way Solutions GmbH
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
-
-/**
- * The Relution.LiveData.Collection can be used like a Backbone Collection,
- *
- * but there are some enhancements to fetch, save and delete the
- * contained models from or to other "data stores".
- *
- * see LocalStorageStore, WebSqlStore or SyncStore for examples
- *
- * @module Relution.LiveData.Collection
- *
- * @type {*}
- * @extends Backbone.Collection
- *
- */
-Relution.LiveData.Collection = Backbone.Collection.extend({
-
-  constructor: function (options) {
-    Relution.LiveData.Debug.trace('Collection', options);
-    if (this.url && this.url.charAt(this.url.length - 1) !== '/') {
-      this.url += '/';
-    }
-    this.init(options);
-    Backbone.Collection.apply(this, arguments);
-  }
-});
-
-Relution.LiveData.Collection.create = Relution.LiveData.create;
-Relution.LiveData.Collection.design = Relution.LiveData.design;
-
-_.extend(Relution.LiveData.Collection.prototype, Relution.LiveData._Object, {
-
-  _type: 'Relution.LiveData.Collection',
-
-  isCollection: true,
-
-  model: Relution.LiveData.Model,
-
-  entity: null,
-
-  options: null,
-
-  init: function (options) {
-
-    options = options || {};
-    this.store = options.store || this.store || (this.model ? this.model.prototype.store : null);
-    this.entity = options.entity || this.entity || (this.model ? this.model.prototype.entity : null);
-    this.options = options.options || this.options;
-
-    var entity = this.entity || this.entityFromUrl(this.url);
-    if (entity) {
-      this.entity = Relution.LiveData.Entity.from(entity, {model: this.model, typeMapping: options.typeMapping});
-    }
-    this._updateUrl();
-
-    if (this.store && _.isFunction(this.store.initCollection)) {
-      this.store.initCollection(this, options);
-    }
-  },
-
-  ajax: function () {
-    return Relution.LiveData.ajax.apply(this, arguments);
-  },
-  sync: function () {
-    return Relution.LiveData.sync.apply(this, arguments);
-  },
-
-  entityFromUrl: function (url) {
-    if (url) {
-      var location = document.createElement('a');
-      location.href = url || this.url;
-      // IE doesn't populate all link properties when setting .href with a relative URL,
-      // however .href will return an absolute URL which then can be used on itself
-      // to populate these additional fields.
-      if (location.host === '') {
-        location.href = location.href;
-      }
-
-      // extract last path part as entity name
-      var parts = location.pathname.match(/([^\/]+)\/?$/);
-      if (parts && parts.length > 1) {
-        return parts[-1];
-      }
-    }
-  },
-
-  sort: function (options) {
-    if (_.isObject(options && options.sort)) {
-      this.comparator = Relution.LiveData.DataSelector.compileSort(options.sort);
-    }
-    Backbone.Collection.prototype.sort.apply(this, arguments);
-  },
-
-  select: function (options) {
-    var selector = options && options.query ? Relution.LiveData.DataSelector.create(options.query) : null;
-    var collection = Relution.LiveData.Collection.create(null, {model: this.model});
-
-    if (options && options.sort) {
-      collection.comparator = Relution.LiveData.DataSelector.compileSort(options.sort);
-    }
-
-    this.each(function (model) {
-      if (!selector || selector.matches(model.attributes)) {
-        collection.add(model);
-      }
-    });
-    return collection;
-  },
-
-  destroy: function (options) {
-    options = options || {};
-    var success = options.success;
-    if (this.length > 0) {
-      options.success = function () {
-        if (this.length === 0 && success) {
-          success();
-        }
-      };
-      var model;
-      while ((model = this.first())) {
-        this.sync('delete', model, options);
-        this.remove(model);
-      }
-    } else if (success) {
-      success();
-    }
-  },
-
-  destroyLocal: function () {
-    var store = this.endpoint.localStore;
-    var that = this;
-    // DROP TABLE
-    if (this.entity.name) {
-      store.drop(this.entity.name);
-    }
-    // RESET localStorage-entry
-    localStorage.setItem('__' + this.channel + 'last_msg_time', '');
-    this.store.endpoints = {};
-    return this.reset();
-  },
-
-  /**
-   * save all containing models
-   */
-  save: function () {
-    this.each(function (model) {
-      model.save();
-    });
-  },
-
-  getUrlParams: function (url) {
-    url = url || this.getUrl();
-    var m = url.match(/\?([^#]*)/);
-    var params = {};
-    if (m && m.length > 1) {
-      _.each(m[1].split('&'), function (p) {
-        var a = p.split('=');
-        params[a[0]] = a[1];
-      });
-    }
-    return params;
-  },
-
-  getUrl: function (collection) {
-    return (_.isFunction(this.url) ? this.url() : this.url) || '';
-  },
-
-  getUrlRoot: function () {
-    var url = this.getUrl();
-    return url ? ( url.indexOf('?') >= 0 ? url.substr(0, url.indexOf('?')) : url) : '';
-  },
-
-  applyFilter: function (callback) {
-    this.trigger('filter', this.filter(callback));
-  },
-
-  _updateUrl: function () {
-    var params = this.getUrlParams();
-    if (this.options) {
-      this.url = this.getUrlRoot();
-      if (this.options.query) {
-        params.query = encodeURIComponent(JSON.stringify(this.options.query));
-      }
-      if (this.options.fields) {
-        params.fields = encodeURIComponent(JSON.stringify(this.options.fields));
-      }
-      if (this.options.sort) {
-        params.sort = encodeURIComponent(JSON.stringify(this.options.sort));
-      }
-      if (!_.isEmpty(params)) {
-        this.url += '?';
-        var a = [];
-        for (var k in params) {
-          a.push(k + (params[k] ? '=' + params[k] : ''));
-        }
-        this.url += a.join('&');
-      }
-    }
-  },
-
-  /**
-   * reads an additional page of data into this collection.
-   *
-   * A fetch() must have been performed loading the initial set of data. This method is intended for infinite scrolling
-   * implementation.
-   *
-   * When async processing is done, a more attribute is set on the options object in case additional data might be
-   * available which can be loaded by calling this method again. Likewise an end attribute is set if the data is
-   * fully loaded.
-   *
-   * @param {object} options such as pageSize to retrieve.
-   * @return {Promise} promise of the load operation.
-   *
-   * @see SyncContext#fetchMore()
-   */
-  fetchMore: function (options) {
-    if (!this.syncContext) {
-      return Q.reject(new Error('no context'));
-    }
-
-    return this.syncContext.fetchMore(this, options);
-  },
-
-  /**
-   * reads the next page of data into this collection.
-   *
-   * A fetch() must have been performed loading the initial set of data. This method is intended for paging
-   * implementation.
-   *
-   * When async processing is done, a next/prev attribute is set on the options object in case additional pages might be
-   * available which can be loaded by calling the corresponding method.
-   *
-   * @param {object} options such as pageSize to retrieve.
-   * @return {Promise} promise of the load operation.
-   *
-   * @see SyncContext#fetchNext()
-   */
-  fetchNext: function (options) {
-    if (!this.syncContext) {
-      return Q.reject(new Error('no context'));
-    }
-
-    return this.syncContext.fetchNext(this, options);
-  },
-
-  /**
-   * reads the previous page of data into this collection.
-   *
-   * A fetch() must have been performed loading the initial set of data. This method is intended for paging
-   * implementation.
-   *
-   * When async processing is done, a next/prev attribute is set on the options object in case additional pages might be
-   * available which can be loaded by calling the corresponding method.
-   *
-   * @param {object} options such as pageSize to retrieve.
-   * @return {Promise} promise of the load operation.
-   *
-   * @see SyncContext#fetchPrev()
-   */
-  fetchPrev: function (options) {
-    if (!this.syncContext) {
-      return Q.reject(new Error('no context'));
-    }
-
-    return this.syncContext.fetchPrev(this, options);
-  }
-
-});
-
+/* jshint indent: 4 */
+/* jshint curly: false */
+/* jshint newcap: false */
+/* jshint -W004: '%' is already defined. */
+/// <reference path="../core/livedata.d.ts" />
+/// <reference path="../utility/Debug.ts" />
+/// <reference path="stores/Store.ts" />
+/// <reference path="Model.ts" />
+/// <reference path="stores/SyncContext.ts" />
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var Relution;
+(function (Relution) {
+    var LiveData;
+    (function (LiveData) {
+        /**
+         * The Relution.LiveData.Collection can be used like a Backbone Collection,
+         *
+         * but there are some enhancements to fetch, save and delete the
+         * contained models from or to other "data stores".
+         *
+         * see LocalStorageStore, WebSqlStore or SyncStore for examples
+         *
+         * @module Relution.LiveData.Collection
+         *
+         * @type {*}
+         * @extends Backbone.Collection
+         *
+         */
+        var Collection = (function (_super) {
+            __extends(Collection, _super);
+            function Collection(models, options) {
+                _super.call(this, models, options);
+                if (this.url && this.url.charAt(this.url.length - 1) !== '/') {
+                    this.url += '/';
+                }
+                this.init(options);
+            }
+            Collection.prototype.init = function (models, options) {
+                options = options || {};
+                this.store = options.store || this.store || (this.model ? this.model.prototype.store : null);
+                this.entity = options.entity || this.entity || (this.model ? this.model.prototype.entity : null);
+                this.options = options.options || this.options;
+                var entity = this.entity || this.entityFromUrl(this.url);
+                if (entity) {
+                    this.entity = Relution.LiveData.Entity.from(entity, { model: this.model, typeMapping: options.typeMapping });
+                }
+                this._updateUrl();
+                if (this.store && _.isFunction(this.store.initCollection)) {
+                    this.store.initCollection(this, options);
+                }
+            };
+            Collection.prototype.ajax = function (options) {
+                return Relution.LiveData.ajax.apply(this, arguments);
+            };
+            Collection.prototype.sync = function (method, model, options) {
+                return Relution.LiveData.sync.apply(this, arguments);
+            };
+            Collection.prototype.entityFromUrl = function (url) {
+                if (url) {
+                    var location = document.createElement('a');
+                    location.href = url || this.url;
+                    // IE doesn't populate all link properties when setting .href with a relative URL,
+                    // however .href will return an absolute URL which then can be used on itself
+                    // to populate these additional fields.
+                    if (location.host === '') {
+                        location.href = location.href;
+                    }
+                    // extract last path part as entity name
+                    var parts = location.pathname.match(/([^\/]+)\/?$/);
+                    if (parts && parts.length > 1) {
+                        return parts[-1];
+                    }
+                }
+            };
+            Collection.prototype.sort = function (options) {
+                if (_.isObject(options && options.sort)) {
+                    this.comparator = Relution.LiveData.DataSelector.compileSort(options.sort);
+                }
+                return _super.prototype.sort.apply(this, arguments);
+            };
+            Collection.prototype.select = function (options) {
+                var selector = options && options.query ? Relution.LiveData.DataSelector.create(options.query) : null;
+                var collection = Collection.create(null, { model: this.model });
+                if (options && options.sort) {
+                    collection.comparator = Relution.LiveData.DataSelector.compileSort(options.sort);
+                }
+                this.each(function (model) {
+                    if (!selector || selector.matches(model.attributes)) {
+                        collection.add(model);
+                    }
+                });
+                return collection;
+            };
+            Collection.prototype.destroy = function (options) {
+                options = options || {};
+                var success = options.success;
+                if (this.length > 0) {
+                    options.success = function () {
+                        if (this.length === 0 && success) {
+                            success();
+                        }
+                    };
+                    var model;
+                    while ((model = this.first())) {
+                        this.sync('delete', model, options);
+                        this.remove(model);
+                    }
+                }
+                else if (success) {
+                    success();
+                }
+            };
+            Collection.prototype.destroyLocal = function () {
+                var store = this.endpoint.localStore;
+                var that = this;
+                // DROP TABLE
+                if (this.entity.name) {
+                    store.drop(this.entity.name);
+                }
+                // RESET localStorage-entry
+                localStorage.setItem('__' + this.channel + 'last_msg_time', '');
+                this.store.endpoints = {};
+                return this.reset();
+            };
+            /**
+             * save all containing models
+             */
+            Collection.prototype.save = function () {
+                this.each(function (model) {
+                    model.save();
+                });
+            };
+            Collection.prototype.applyFilter = function (callback) {
+                this.trigger('filter', this.filter(callback));
+            };
+            Collection.prototype.getUrlParams = function (url) {
+                url = url || this.getUrl();
+                var m = url.match(/\?([^#]*)/);
+                var params = {};
+                if (m && m.length > 1) {
+                    _.each(m[1].split('&'), function (p) {
+                        var a = p.split('=');
+                        params[a[0]] = a[1];
+                    });
+                }
+                return params;
+            };
+            Collection.prototype.getUrl = function () {
+                return (_.isFunction(this.url) ? this.url() : this.url) || '';
+            };
+            Collection.prototype.getUrlRoot = function () {
+                var url = this.getUrl();
+                return url.indexOf('?') >= 0 ? url.substr(0, url.indexOf('?')) : url;
+            };
+            Collection.prototype._updateUrl = function () {
+                if (this.options) {
+                    var params = this.getUrlParams();
+                    this.url = this.getUrlRoot();
+                    if (this.options.query) {
+                        params.query = encodeURIComponent(JSON.stringify(this.options.query));
+                    }
+                    if (this.options.fields) {
+                        params.fields = encodeURIComponent(JSON.stringify(this.options.fields));
+                    }
+                    if (this.options.sort) {
+                        params.sort = encodeURIComponent(JSON.stringify(this.options.sort));
+                    }
+                    if (!_.isEmpty(params)) {
+                        this.url += '?';
+                        var a = [];
+                        for (var k in params) {
+                            a.push(k + (params[k] ? '=' + params[k] : ''));
+                        }
+                        this.url += a.join('&');
+                    }
+                }
+            };
+            /**
+             * reads an additional page of data into this collection.
+             *
+             * A fetch() must have been performed loading the initial set of data. This method is intended for infinite scrolling
+             * implementation.
+             *
+             * When async processing is done, a more attribute is set on the options object in case additional data might be
+             * available which can be loaded by calling this method again. Likewise an end attribute is set if the data is
+             * fully loaded.
+             *
+             * @param {object} options such as pageSize to retrieve.
+             * @return {Promise} promise of the load operation.
+             *
+             * @see SyncContext#fetchMore()
+             */
+            Collection.prototype.fetchMore = function (options) {
+                if (!this.syncContext) {
+                    return Q.reject(new Error('no context'));
+                }
+                return this.syncContext.fetchMore(this, options);
+            };
+            /**
+             * reads the next page of data into this collection.
+             *
+             * A fetch() must have been performed loading the initial set of data. This method is intended for paging
+             * implementation.
+             *
+             * When async processing is done, a next/prev attribute is set on the options object in case additional pages might be
+             * available which can be loaded by calling the corresponding method.
+             *
+             * @param {object} options such as pageSize to retrieve.
+             * @return {Promise} promise of the load operation.
+             *
+             * @see SyncContext#fetchNext()
+             */
+            Collection.prototype.fetchNext = function (options) {
+                if (!this.syncContext) {
+                    return Q.reject(new Error('no context'));
+                }
+                return this.syncContext.fetchNext(this, options);
+            };
+            /**
+             * reads the previous page of data into this collection.
+             *
+             * A fetch() must have been performed loading the initial set of data. This method is intended for paging
+             * implementation.
+             *
+             * When async processing is done, a next/prev attribute is set on the options object in case additional pages might be
+             * available which can be loaded by calling the corresponding method.
+             *
+             * @param {object} options such as pageSize to retrieve.
+             * @return {Promise} promise of the load operation.
+             *
+             * @see SyncContext#fetchPrev()
+             */
+            Collection.prototype.fetchPrev = function (options) {
+                if (!this.syncContext) {
+                    return Q.reject(new Error('no context'));
+                }
+                return this.syncContext.fetchPrev(this, options);
+            };
+            Collection.extend = Backbone.Collection.extend;
+            Collection.create = Relution.LiveData.create;
+            Collection.design = Relution.LiveData.design;
+            return Collection;
+        })(Backbone.Collection);
+        LiveData.Collection = Collection;
+        _.extend(Collection.prototype, LiveData._Object, {
+            _type: 'Relution.LiveData.Collection',
+            isCollection: true,
+            model: LiveData.Model
+        });
+    })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
+})(Relution || (Relution = {}));
+//# sourceMappingURL=Collection.js.map
 // Copyright (c) 2013 M-Way Solutions GmbH
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
 
@@ -4299,6 +4279,8 @@ Relution.LiveData.SqlSelector = Relution.LiveData.DataSelector.design({
 /* jshint indent: 4 */
 /// <reference path="../../core/livedata.d.ts" />
 /// <reference path="../../utility/Debug.ts" />
+/// <reference path="../Model.ts" />
+/// <reference path="../Collection.ts" />
 var Relution;
 (function (Relution) {
     var LiveData;
@@ -4410,10 +4392,10 @@ var Relution;
                 }
                 return _.isObject(model) ? model : null;
             };
-            Store.prototype.initModel = function (model) {
+            Store.prototype.initModel = function (model, options) {
                 // may be overwritten
             };
-            Store.prototype.initCollection = function (collection) {
+            Store.prototype.initCollection = function (collection, options) {
                 // may be overwritten
             };
             Store.prototype.initEntity = function (entity) {
@@ -5829,6 +5811,8 @@ var Relution;
 /// <reference path="SyncEndpoint.ts" />
 /// <reference path="LiveDataMessage.ts" />
 /// <reference path="../../utility/Debug.ts" />
+/// <reference path="../Model.ts" />
+/// <reference path="../Collection.ts" />
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -6571,7 +6555,7 @@ var Relution;
                     if (url.charAt((url.length - 1)) !== '/') {
                         url += '/';
                     }
-                    promise = info.fetch({
+                    promise = info.fetch(({
                         url: url + 'info',
                         success: function (model, response, options) {
                             //@todo why we set a server time here ?
@@ -6588,7 +6572,7 @@ var Relution;
                             return response || options.xhr;
                         },
                         credentials: endpoint.credentials
-                    });
+                    }));
                     endpoint.promiseFetchingServerInfo = promise;
                     endpoint.timestampFetchingServerInfo = now;
                     return promise;
@@ -6804,6 +6788,7 @@ var Relution;
 /// <reference path="../../query/JsonFilterVisitor.ts" />
 /// <reference path="../../query/SortOrderComparator.ts" />
 /// <reference path="Store.ts" />
+/// <reference path="LiveDataMessage.ts" />
 var Relution;
 (function (Relution) {
     var LiveData;
@@ -7102,7 +7087,7 @@ var Relution;
                     parse: true,
                     fromMessage: true
                 };
-                var newId = collection.modelId(msg.data);
+                var newId = collection.modelId(msg.data); // modelId(attrs) missing in DefinitelyTyped definitions
                 var oldId = msg.id || newId;
                 if (oldId === 'all') {
                     collection.reset(msg.data || {}, options);
