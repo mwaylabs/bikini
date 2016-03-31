@@ -226,16 +226,7 @@ var Relution;
                 return sql;
             };
             AbstractSqlStore.prototype._sqlWhere = function (options, entity) {
-                this._selector = null;
-                var sql = '';
-                if (_.isString(options.where)) {
-                    sql = options.where;
-                }
-                else if (_.isObject(options.where)) {
-                    this._selector = LiveData.SqlSelector.create(options.where, entity);
-                    sql = this._selector.buildStatement();
-                }
-                return sql;
+                return options.where;
             };
             AbstractSqlStore.prototype._sqlWhereFromData = function (options, entity) {
                 var that = this;
@@ -432,14 +423,12 @@ var Relution;
                                         continue;
                                     }
                                 }
-                                if (!that._selector || that._selector.matches(attrs)) {
-                                    if (isCollection) {
-                                        result.push(attrs);
-                                    }
-                                    else {
-                                        result = attrs;
-                                        break;
-                                    }
+                                if (isCollection) {
+                                    result.push(attrs);
+                                }
+                                else {
+                                    result = attrs;
+                                    break;
                                 }
                             }
                         }, function (t, e) {

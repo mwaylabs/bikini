@@ -78,25 +78,6 @@ var Relution;
                     }
                 }
             };
-            Collection.prototype.sort = function (options) {
-                if (_.isObject(options && options.sort)) {
-                    this.comparator = Relution.LiveData.DataSelector.compileSort(options.sort);
-                }
-                return _super.prototype.sort.apply(this, arguments);
-            };
-            Collection.prototype.select = function (options) {
-                var selector = options && options.query ? Relution.LiveData.DataSelector.create(options.query) : null;
-                var collection = Collection.create(null, { model: this.model });
-                if (options && options.sort) {
-                    collection.comparator = Relution.LiveData.DataSelector.compileSort(options.sort);
-                }
-                this.each(function (model) {
-                    if (!selector || selector.matches(model.attributes)) {
-                        collection.add(model);
-                    }
-                });
-                return collection;
-            };
             Collection.prototype.destroy = function (options) {
                 options = options || {};
                 var success = options.success;

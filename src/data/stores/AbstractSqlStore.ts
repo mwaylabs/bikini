@@ -40,7 +40,6 @@ module Relution.LiveData {
    *
    */
   export class AbstractSqlStore extends Store {
-    _selector;
 
     protected db:any = null;
     protected options:any;
@@ -241,15 +240,7 @@ module Relution.LiveData {
     }
 
     protected _sqlWhere(options, entity) {
-      this._selector = null;
-      var sql = '';
-      if (_.isString(options.where)) {
-        sql = options.where;
-      } else if (_.isObject(options.where)) {
-        this._selector = SqlSelector.create(options.where, entity);
-        sql = this._selector.buildStatement();
-      }
-      return sql;
+      return options.where;
     }
 
     protected _sqlWhereFromData(options, entity) {
@@ -458,13 +449,11 @@ module Relution.LiveData {
                   continue;
                 }
               }
-              if (!that._selector || that._selector.matches(attrs)) {
-                if (isCollection) {
-                  result.push(attrs);
-                } else {
-                  result = attrs;
-                  break;
-                }
+              if (isCollection) {
+                result.push(attrs);
+              } else {
+                result = attrs;
+                break;
               }
             }
           }, function (t, e) {

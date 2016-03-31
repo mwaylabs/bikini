@@ -38,10 +38,8 @@ declare module Relution.LiveData {
 
   var _Object;
   var Entity;
-  var DataSelector;
 
   var Field;
-  var SqlSelector;
   var DATA;
 
   function extend(...arguments:any[]);

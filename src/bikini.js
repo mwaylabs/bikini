@@ -25,8 +25,6 @@
 // @include ./data/security.js
 // @include ./data/model.js
 // @include ./data/collection.js
-// @include ./data/data_selector.js
-// @include ./data/sql_selector.js
 // @include ./data/stores/Store.js
 // @include ./data/stores/AbstractSqlStore.js
 // @include ./data/stores/WebSqlStore.js

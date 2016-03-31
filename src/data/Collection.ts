@@ -12,10 +12,6 @@
 
 module Relution.LiveData {
 
-  interface CollectionSortOptions extends Backbone.Silenceable {
-    sort?: any
-  }
-
   /**
    * The Relution.LiveData.Collection can be used like a Backbone Collection,
    *
@@ -100,29 +96,6 @@ module Relution.LiveData {
           return parts[-1];
         }
       }
-    }
-
-    public sort(options?: CollectionSortOptions) {
-      if (_.isObject(options && options.sort)) {
-        this.comparator = Relution.LiveData.DataSelector.compileSort(options.sort);
-      }
-      return super.sort.apply(this, arguments);
-    }
-
-    public select(options) {
-      var selector = options && options.query ? Relution.LiveData.DataSelector.create(options.query) : null;
-      var collection = Collection.create(null, {model: this.model});
-
-      if (options && options.sort) {
-        collection.comparator = Relution.LiveData.DataSelector.compileSort(options.sort);
-      }
-
-      this.each(function (model) {
-        if (!selector || selector.matches(model.attributes)) {
-          collection.add(model);
-        }
-      });
-      return collection;
     }
 
     public destroy(options) {
