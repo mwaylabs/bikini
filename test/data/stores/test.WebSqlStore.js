@@ -12,7 +12,7 @@ describe('Relution.LiveData.WebSqlStore', function () {
 
     assert.typeOf(window.openDatabase, 'function', 'Browser supports WebSql');
 
-    assert.typeOf(Relution.LiveData.WebSqlStore, 'function', 'Relution.LiveData.LocalStorageStore is defined');
+    assert.typeOf(Relution.LiveData.WebSqlStore, 'function', 'Relution.LiveData.WebSqlStore is defined');
 
     TEST.store = Relution.LiveData.WebSqlStore.design();
 
