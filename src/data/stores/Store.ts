@@ -32,7 +32,7 @@ module Relution.LiveData {
   /**
    * Base class to build a custom data store.
    *
-   * See: Relution.LiveData.LocalStorageStore, Relution.LiveData.WebSqlStore and Relution.LiveData.SyncStore
+   * See: Relution.LiveData.WebSqlStore and Relution.LiveData.SyncStore
    *
    * @module Relution.LiveData.Store
    */

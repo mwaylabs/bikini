@@ -22,7 +22,7 @@ module Relution.LiveData {
    * but there are some enhancements to fetch, save and delete the
    * contained models from or to other "data stores".
    *
-   * see LocalStorageStore, WebSqlStore or SyncStore for examples
+   * see WebSqlStore or SyncStore for examples
    *
    * @module Relution.LiveData.Collection
    *
