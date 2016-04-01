@@ -1,57 +1,46 @@
 {
-  "compilerOptions": {
-    "target": "ES5",
-    "module": "commonjs",
-    "declaration": false,
-    "sourceMap": true
-  },
-  "filesGlob": [
-    "src/**/*.ts",
-    "!src/**/*.d.ts",
-    "typings/browser.d.ts",
-    "typings/browser/**/*.ts"
-  ],
-  "files": [
-    "typings/browser.d.ts",
-    "typings/browser/ambient/backbone/backbone.d.ts",
-    "typings/browser/ambient/jquery/jquery.d.ts",
-    "src/data/Collection.ts",
-    "src/data/Model.ts",
-    "src/data/stores/AbstractSqlStore.ts",
-    "src/data/stores/CipherSqlStore.ts",
-    "src/data/stores/LiveDataMessage.ts",
-    "src/data/stores/LocalStorageStore.ts",
-    "src/data/stores/Store.ts",
-    "src/data/stores/SyncContext.ts",
-    "src/data/stores/SyncEndpoint.ts",
-    "src/data/stores/SyncStore.ts",
-    "src/data/stores/WebSqlStore.ts",
-    "src/query/Filter.ts",
-    "src/query/FilterVisitor.ts",
-    "src/query/GetQuery.ts",
-    "src/query/JsonFilterVisitor.ts",
-    "src/query/JsonPath.ts",
-    "src/query/SortOrder.ts",
-    "src/query/SortOrderComparator.ts",
-    "src/utility/Debug.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "bower_components",
-    "typings/main",
-    "typings/main.d.ts"
-  ],
-  "formatCodeOptions": {
-    "indentSize": 2,
-    "tabSize": 2,
-    "convertTabsToSpaces": true,
-    "insertSpaceAfterCommaDelimiter": true,
-    "insertSpaceAfterSemicolonInForStatements": true,
-    "insertSpaceBeforeAndAfterBinaryOperators": true,
-    "insertSpaceAfterKeywordsInControlFlowStatements": true,
-    "insertSpaceAfterFunctionKeywordForAnonymousFunctions": false,
-    "insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis": false,
-    "placeOpenBraceOnNewLineForFunctions": false,
-    "placeOpenBraceOnNewLineForControlBlocks": false
-  }
+    "compilerOptions": {
+        "target": "ES5",
+        "module": "commonjs",
+        "declaration": false,
+        "sourceMap": true
+    },
+    "filesGlob": [
+        "src/**/*.ts",
+        "!src/**/*.d.ts"
+    ],
+    "files": [
+        "src/data/Collection.ts",
+        "src/data/Model.ts",
+        "src/data/stores/AbstractSqlStore.ts",
+        "src/data/stores/CipherSqlStore.ts",
+        "src/data/stores/LiveDataMessage.ts",
+        "src/data/stores/LocalStorageStore.ts",
+        "src/data/stores/Store.ts",
+        "src/data/stores/SyncContext.ts",
+        "src/data/stores/SyncEndpoint.ts",
+        "src/data/stores/SyncStore.ts",
+        "src/data/stores/WebSqlStore.ts",
+        "src/query/Filter.ts",
+        "src/query/FilterVisitor.ts",
+        "src/query/GetQuery.ts",
+        "src/query/JsonFilterVisitor.ts",
+        "src/query/JsonPath.ts",
+        "src/query/SortOrder.ts",
+        "src/query/SortOrderComparator.ts",
+        "src/utility/Debug.ts"
+    ],
+    "formatCodeOptions": {
+        "indentSize": 2,
+        "tabSize": 2,
+        "convertTabsToSpaces": true,
+        "insertSpaceAfterCommaDelimiter": true,
+        "insertSpaceAfterSemicolonInForStatements": true,
+        "insertSpaceBeforeAndAfterBinaryOperators": true,
+        "insertSpaceAfterKeywordsInControlFlowStatements": true,
+        "insertSpaceAfterFunctionKeywordForAnonymousFunctions": false,
+        "insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis": false,
+        "placeOpenBraceOnNewLineForFunctions": false,
+        "placeOpenBraceOnNewLineForControlBlocks": false
+    }
 }
