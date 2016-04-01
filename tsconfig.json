@@ -28,6 +28,7 @@
         "src/query/JsonPath.ts",
         "src/query/SortOrder.ts",
         "src/query/SortOrderComparator.ts",
+        "src/utility/Assert.ts",
         "src/utility/Debug.ts"
     ],
     "formatCodeOptions": {

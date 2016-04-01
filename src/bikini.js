@@ -1,7 +1,8 @@
 // @echo BANNER
 (function (global, Backbone, _, $, Q, jsonPath) {
 // @include ./core/livedata.require.js
-// @include ./utility/debug.js
+// @include ./utility/Debug.js
+// @include ./utility/Assert.js
 // @include ./core/livedata.js
 
 // @include ./utility/objectid.js
