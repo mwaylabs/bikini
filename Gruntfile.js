@@ -107,6 +107,17 @@ module.exports = function (grunt) {
                 }
             }
         },
+        typedoc: {
+            build: {
+                options: {
+                    module: 'commonjs',
+                    target: 'ES5',
+                    out: 'docs/',
+                    name: 'Relution LiveData'
+                },
+                src: 'src/**/*.ts'
+            }
+        },
         'curl-dir': {
             customFilepaths: {
                 src: (function () {

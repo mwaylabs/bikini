@@ -93,7 +93,7 @@ module Relution {
    *
    * @param error to check.
    * @param message of disaster.
-   * @return {any} value evaluating to to true stating error is an instance of Error.
+   * @return {any} value evaluating to true stating error is an instance of Error.
      */
   export function assertIsError(error: any, message?: string): error is Error {
     assert(() => _.isError(error), message);

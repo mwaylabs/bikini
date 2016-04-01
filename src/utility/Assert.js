@@ -81,7 +81,7 @@ var Relution;
      *
      * @param error to check.
      * @param message of disaster.
-     * @return {any} value evaluating to to true stating error is an instance of Error.
+     * @return {any} value evaluating to true stating error is an instance of Error.
        */
     function assertIsError(error, message) {
         assert(function () { return _.isError(error); }, message);
