@@ -41,7 +41,7 @@ module Relution.LiveData {
    */
   export class SyncEndpoint {
 
-    public entity: any;
+    public entity: string;
     public modelType: any;
     public urlRoot: string;
     public socketPath: string;
@@ -70,7 +70,7 @@ module Relution.LiveData {
     public timestampFetchingServerInfo: number;
 
     constructor(options:{
-      entity: any,
+      entity: string,
       modelType: string,
       urlRoot: string,
       socketPath: string,
@@ -86,7 +86,7 @@ module Relution.LiveData {
       this.host = href.protocol + '//' + href.host;
       this.path = href.pathname;
 
-      var name = options.entity.name;
+      var name = options.entity;
       var user = options.credentials && options.credentials.username ? options.credentials.username : '';
       var hash = URLUtil.hashLocation(options.urlRoot);
       this.channel = name + user + hash;

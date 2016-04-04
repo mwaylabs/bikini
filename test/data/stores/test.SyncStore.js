@@ -29,15 +29,7 @@ describe('Relution.LiveData.SyncStore', function () {
 
     TEST.TestModel = Relution.LiveData.Model.extend({
       idAttribute: '_id',
-      entity: {
-        name: 'test',
-        fields: {
-          _id: {type: Relution.LiveData.DATA.TYPE.STRING, required: true, index: true},
-          sureName: {name: 'USERNAME', type: Relution.LiveData.DATA.TYPE.STRING, required: true, index: true},
-          firstName: {type: Relution.LiveData.DATA.TYPE.STRING, length: 200},
-          age: {type: Relution.LiveData.DATA.TYPE.INTEGER}
-        }
-      }
+      entity: 'test'
     });
 
     assert.isFunction(TEST.TestModel, 'TestModel model successfully extended.');
@@ -113,9 +105,7 @@ describe('Relution.LiveData.SyncStore', function () {
       url: TEST.url,
       idAttribute: '_id',
       store: TEST.store,
-      entity: {
-        name: 'test'
-      }
+      entity: 'test'
     });
 
     var data = {_id: TEST.id};
@@ -143,9 +133,7 @@ describe('Relution.LiveData.SyncStore', function () {
       url: TEST.url,
       idAttribute: '_id',
       store: TEST.store,
-      entity: {
-        name: 'test'
-      }
+      entity: 'test'
     });
 
     var model = TEST.TestModel2.create({});
@@ -164,9 +152,7 @@ describe('Relution.LiveData.SyncStore', function () {
       url: TEST.url,
       idAttribute: '_id',
       store: TEST.store,
-      entity: {
-        name: 'test'
-      }
+      entity: 'test'
     });
 
     var model = TEST.TestModel2.create({
@@ -233,9 +219,8 @@ describe('Relution.LiveData.SyncStore', function () {
       url: TEST.url,
       idAttribute: '_id',
       store: TEST.store,
-      entity: {
-        name: 'test'
-      },
+      entity: 'test',
+
       ajax: function (options) {
         // following simulates server reassigning ID value
         return Relution.LiveData.Model.prototype.ajax.apply(this, arguments).then(function (response) {

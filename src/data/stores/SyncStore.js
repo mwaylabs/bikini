@@ -79,13 +79,7 @@ var Relution;
                     useLocalStore: true,
                     useSocketNotify: true,
                     useOfflineChanges: true,
-                    socketPath: '',
-                    typeMapping: (function () {
-                        var map = {};
-                        map[LiveData.DATA.BINARY] = 'text';
-                        map[LiveData.DATA.TEXT] = 'string';
-                        return map;
-                    })()
+                    socketPath: ''
                 }, options));
                 this.endpoints = {};
                 Relution.LiveData.Debug.trace('SyncStore', options);
@@ -96,10 +90,10 @@ var Relution;
             }
             SyncStore.prototype.initEndpoint = function (modelOrCollection, modelType) {
                 var urlRoot = modelOrCollection.getUrlRoot();
-                var entity = this.getEntity(modelOrCollection.entity);
+                var entity = modelOrCollection.entity;
                 if (urlRoot && entity) {
-                    var name = entity.name;
-                    var credentials = entity.credentials || modelOrCollection.credentials || this.options.credentials;
+                    var name = entity;
+                    var credentials = modelOrCollection.credentials || this.options.credentials;
                     var hash = LiveData.URLUtil.hashLocation(urlRoot);
                     // get or create endpoint for this url
                     var endpoint = this.endpoints[hash];
@@ -137,10 +131,7 @@ var Relution;
             SyncStore.prototype.createLocalStore = function (endpoint) {
                 if (this.options.useLocalStore) {
                     var entities = {};
-                    entities[endpoint.entity.name] = _.extend(new LiveData.Entity(endpoint.entity), {
-                        name: endpoint.channel,
-                        idAttribute: endpoint.modelType.prototype.idAttribute // see Collection.modelId() of backbone.js
-                    });
+                    entities[endpoint.entity] = endpoint.modelType;
                     var storeOption = {
                         entities: entities
                     };
@@ -160,10 +151,7 @@ var Relution;
                 if (this.options.useOfflineChanges && !endpoint.messages) {
                     var entity = 'msg-' + endpoint.channel;
                     var entities = {};
-                    entities[entity] = new LiveData.Entity({
-                        name: entity,
-                        idAttribute: 'id'
-                    });
+                    entities[entity] = null;
                     var storeOption = {
                         entities: entities
                     };
@@ -171,7 +159,7 @@ var Relution;
                         storeOption = _.clone(this.options.localStoreOptions);
                         storeOption.entities = entities;
                     }
-                    endpoint.messagesPriority = this.options.orderOfflineChanges && (_.lastIndexOf(this.options.orderOfflineChanges, endpoint.entity.name) + 1);
+                    endpoint.messagesPriority = this.options.orderOfflineChanges && (_.lastIndexOf(this.options.orderOfflineChanges, endpoint.entity) + 1);
                     endpoint.messages = LiveData.Collection.design({
                         entity: entity,
                         store: this.options.localStore.create(storeOption)
@@ -228,7 +216,7 @@ var Relution;
                     var channel = endpoint.channel;
                     var socket = endpoint.socket;
                     var time = this.getLastMessageTime(channel);
-                    name = name || endpoint.entity.name;
+                    name = name || endpoint.entity;
                     socket.emit('bind', {
                         entity: name,
                         channel: channel,
@@ -291,12 +279,14 @@ var Relution;
                 });
             };
             SyncStore.prototype._fixMessage = function (endpoint, msg) {
-                if (msg.data && !msg.data[endpoint.entity.idAttribute] && msg.data._id) {
-                    msg.data[endpoint.entity.idAttribute] = msg.data._id; // server bug!
+                var idAttribute = endpoint.modelType.prototype.idAttribute;
+                Relution.assert(function () { return !!idAttribute; }, 'no idAttribute!');
+                if (msg.data && !msg.data[idAttribute] && msg.data._id) {
+                    msg.data[idAttribute] = msg.data._id; // server bug!
                 }
-                else if (!msg.data && msg.method === 'delete' && msg[endpoint.entity.idAttribute]) {
+                else if (!msg.data && msg.method === 'delete' && msg[idAttribute]) {
                     msg.data = {};
-                    msg.data[endpoint.entity.idAttribute] = msg[endpoint.entity.idAttribute]; // server bug!
+                    msg.data[idAttribute] = msg[idAttribute]; // server bug!
                 }
                 return msg;
             };
@@ -311,18 +301,17 @@ var Relution;
                 if (endpoint.localStore) {
                     // first update the local store by forming a model and invoking sync
                     var options = _.defaults({
-                        store: endpoint.localStore,
-                        entity: endpoint.entity
+                        store: endpoint.localStore
                     }, that.options);
                     var model = new endpoint.modelType(msg.data, _.extend({
                         parse: true
                     }, options));
                     if (!model.id) {
                         // code below will persist with auto-assigned id but this nevertheless is a broken record
-                        Relution.LiveData.Debug.error('onMessage: ' + endpoint.entity.name + ' received data with no valid id performing ' + msg.method + '!');
+                        Relution.LiveData.Debug.error('onMessage: ' + endpoint.entity + ' received data with no valid id performing ' + msg.method + '!');
                     }
                     else {
-                        Relution.LiveData.Debug.debug('onMessage: ' + endpoint.entity.name + ' ' + model.id + ' performing ' + msg.method);
+                        Relution.LiveData.Debug.debug('onMessage: ' + endpoint.entity + ' ' + model.id + ' performing ' + msg.method);
                     }
                     q = endpoint.localStore.sync(msg.method, model, _.extend(options, {
                         merge: msg.method === 'patch'
@@ -334,7 +323,7 @@ var Relution;
                         var oldData = {};
                         oldData[model.idAttribute] = msg.id;
                         var oldModel = new endpoint.modelType(oldData, options);
-                        Relution.LiveData.Debug.debug('onMessage: ' + endpoint.entity.name + ' ' + model.id + ' reassigned from old record ' + oldModel.id);
+                        Relution.LiveData.Debug.debug('onMessage: ' + endpoint.entity + ' ' + model.id + ' reassigned from old record ' + oldModel.id);
                         return endpoint.localStore.sync('delete', oldModel, options);
                     });
                 }
@@ -642,7 +631,7 @@ var Relution;
                             dataIds = {};
                             data.forEach(function (d) {
                                 if (d) {
-                                    var id = d[endpoint.entity.idAttribute] || d._id;
+                                    var id = d[endpoint.modelType.idAttribute] || d._id;
                                     dataIds[id] = d;
                                     var m = syncIds[id];
                                     if (m) {
@@ -687,7 +676,7 @@ var Relution;
                                 data = array[i];
                                 if (data) {
                                     promises.push(that.onMessage(endpoint, that._fixMessage(endpoint, {
-                                        id: data[endpoint.entity.idAttribute] || data._id,
+                                        id: data[endpoint.modelType.idAttribute] || data._id,
                                         method: 'update',
                                         time: msg.time,
                                         data: data
@@ -800,7 +789,7 @@ var Relution;
                             }
                             if (!endpoint.socketPath && info.get('socketPath')) {
                                 endpoint.socketPath = info.get('socketPath');
-                                var name = info.get('entity') || endpoint.entity.name;
+                                var name = info.get('entity') || endpoint.entity;
                                 if (that.options.useSocketNotify) {
                                     endpoint.socket = that.createSocket(endpoint, name);
                                 }
@@ -850,6 +839,7 @@ var Relution;
                     entity: options.entity
                 });
                 model.id = message.get('method') !== 'create' && message.get('id');
+                var that = this;
                 function triggerError() {
                     // inform client application of the offline changes error
                     var channel = message.get('channel');
@@ -873,7 +863,6 @@ var Relution;
                     Relution.assert(function () { return message.get('method') === 'create'; });
                     return model.destroy(localOptions).finally(triggerError);
                 }
-                var that = this;
                 return model.fetch(remoteOptions).then(function (data) {
                     // original request failed and the code above reloaded the data to revert the local modifications, which succeeded...
                     return model.save(data, localOptions).finally(triggerError);
@@ -924,7 +913,7 @@ var Relution;
                     // serialized for each endpoint, one at a time
                     var deferred = Q.defer();
                     function qEndpoint() {
-                        Relution.LiveData.Debug.info('Relution.LiveData.SyncStore._sendMessages: ' + endpoint.entity.name);
+                        Relution.LiveData.Debug.info('Relution.LiveData.SyncStore._sendMessages: ' + endpoint.entity);
                         var q = endpoint.messages.fetch().then(function nextMessage(result) {
                             if (endpoint.messages.models.length <= 0) {
                                 return result;
@@ -938,8 +927,7 @@ var Relution;
                             that._fixMessage(endpoint, msg);
                             var modelType = endpoint.modelType || LiveData.Model;
                             var model = new modelType(msg.data, {
-                                idAttribute: endpoint.entity.idAttribute,
-                                entity: endpoint.entity,
+                                entity: endpoint.entity
                             });
                             model.id = message.get('method') !== 'create' && message.get('id');
                             var remoteOptions = {

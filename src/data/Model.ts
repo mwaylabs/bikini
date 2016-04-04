@@ -21,7 +21,7 @@ module Relution.LiveData {
 
     public _type = 'Relution.LiveData.Model';
     public isModel = true;
-    public entity;
+    public entity: string;
     public defaults = {};
     public changedSinceSync = {};
 
@@ -57,13 +57,6 @@ module Relution.LiveData {
         this.store.initModel(this, options);
       }
       this.entity = this.entity || (this.collection ? this.collection.entity : null) || options.entity;
-      if (this.entity) {
-        this.entity = Relution.LiveData.Entity.from(this.entity, {
-          model: this.constructor,
-          typeMapping: options.typeMapping
-        });
-        this.idAttribute = this.entity.idAttribute || this.idAttribute;
-      }
       this.credentials = this.credentials || (this.collection ? this.collection.credentials : null) || options.credentials;
       this.on('change', this.onChange, this);
       this.on('sync', this.onSync, this);

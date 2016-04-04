@@ -54,20 +54,10 @@ module Relution.LiveData {
    * // in the entity of your model like this:
    *
    * var MyModel = Relution.LiveData.Model.extend({
-   *      idAttribute: 'id',
-   *      fields: {
-   *          id:          { type: Relution.LiveData.DATA.TYPE.STRING,  required: true, index: true },
-   *          sureName:    { name: 'USERNAME', type: Relution.LiveData.DATA.TYPE.STRING },
-   *          firstName:   { type: Relution.LiveData.DATA.TYPE.STRING,  length: 200 },
-   *          age:         { type: Relution.LiveData.DATA.TYPE.INTEGER }
-   *      }
+   *      idAttribute: 'id'
    * });
-   *
-   *
    */
-
   export class WebSqlStore extends AbstractSqlStore {
-    protected options:any;
     constructor(options?:any) {
       super(_.extend({
         name: 'relution-livedata',
@@ -98,8 +88,8 @@ module Relution.LiveData {
           } else {
             this.db = global.openDatabase(this.options.name, '', '', this.options.size);
             if (this.entities) {
-              for (var key in this.entities) {
-                this._createTable({entity: this.entities[key]});
+              for (var entity in this.entities) {
+                this._createTable({ entity: entity });
               }
             }
           }
@@ -161,6 +151,7 @@ module Relution.LiveData {
         this.handleError(options, error);
       }
     }
+
     public close() {
       Relution.LiveData.Debug.info('WebSQL Store close');
       if (this.db) {

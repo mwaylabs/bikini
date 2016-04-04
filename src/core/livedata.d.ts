@@ -34,19 +34,12 @@ declare var Q;
 declare var io;
 
 declare module Relution.LiveData {
-  var Debug: Relution.DebugConsole;
-
   var _Object;
-  var Entity;
-
-  var Field;
-  var DATA;
 
   function extend(...arguments:any[]);
   function create(...arguments:any[]);
   function design(...arguments:any[]);
 
-  function isEntity(object);
   function isModel(object): object is Model;
   function isCollection(object): object is Collection;
 
@@ -55,5 +48,4 @@ declare module Relution.LiveData {
 
   var URLUtil;
   var ObjectID;
-
 }

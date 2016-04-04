@@ -51,7 +51,7 @@ var Relution;
                 var href = LiveData.URLUtil.getLocation(options.urlRoot);
                 this.host = href.protocol + '//' + href.host;
                 this.path = href.pathname;
-                var name = options.entity.name;
+                var name = options.entity;
                 var user = options.credentials && options.credentials.username ? options.credentials.username : '';
                 var hash = LiveData.URLUtil.hashLocation(options.urlRoot);
                 this.channel = name + user + hash;

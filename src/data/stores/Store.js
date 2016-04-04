@@ -40,70 +40,10 @@ var Relution;
         var Store = (function () {
             function Store(options) {
                 this.options = _.extend({
-                    name: '',
-                    entities: {},
-                    typeMapping: (function () {
-                        var map = {};
-                        map[LiveData.DATA.TYPE.OBJECTID] = LiveData.DATA.TYPE.STRING;
-                        map[LiveData.DATA.TYPE.DATE] = LiveData.DATA.TYPE.STRING;
-                        map[LiveData.DATA.TYPE.BINARY] = LiveData.DATA.TYPE.TEXT;
-                        return map;
-                    })()
+                    name: ''
                 }, options);
                 Relution.LiveData.Debug.trace('Store', options);
-                this.setEntities(this.options.entities);
             }
-            Store.prototype.setEntities = function (entities) {
-                this.entities = {};
-                for (var name in entities) {
-                    var entity = LiveData.Entity.from(entities[name], {
-                        store: this,
-                        typeMapping: this.options.typeMapping
-                    });
-                    entity.name = entity.name || name;
-                    // connect collection and model to this store
-                    var collection = entity.collection || LiveData.Collection.extend({ model: LiveData.Model.extend({}) });
-                    var model = collection.prototype.model;
-                    // set new entity and name
-                    collection.prototype.entity = model.prototype.entity = name;
-                    collection.prototype.store = model.prototype.store = this;
-                    entity.idAttribute = entity.idAttribute || model.prototype.idAttribute;
-                    this.entities[name] = entity;
-                }
-            };
-            Store.prototype.getEntity = function (obj) {
-                if (obj) {
-                    var entity = obj.entity || obj;
-                    var name = _.isString(entity) ? entity : entity.name;
-                    if (name) {
-                        return this.entities[name] || (entity && entity.name ? entity : { name: name });
-                    }
-                }
-            };
-            Store.prototype.getCollection = function (entity) {
-                if (_.isString(entity)) {
-                    entity = this.entities[entity];
-                }
-                if (entity && entity.collection) {
-                    if (LiveData.Collection.prototype.isPrototypeOf(entity.collection)) {
-                        return entity.collection;
-                    }
-                    else {
-                        return new entity.collection();
-                    }
-                }
-            };
-            Store.prototype.createModel = function (entity, attrs) {
-                if (_.isString(entity)) {
-                    entity = this.entities[entity];
-                }
-                if (entity && entity.collection) {
-                    var Model = entity.collection.model || entity.collection.prototype.model;
-                    if (Model) {
-                        return new Model(attrs);
-                    }
-                }
-            };
             Store.prototype.getArray = function (data) {
                 if (_.isArray(data)) {
                     return data;
@@ -156,57 +96,22 @@ var Relution;
              * @param options
              */
             Store.prototype.fetch = function (collection, options) {
-                if (collection && !collection.models && !collection.attributes && !options) {
-                    options = collection;
-                }
-                if ((!collection || (!collection.models && !collection.attributes)) && options && options.entity) {
-                    collection = this.getCollection(options.entity);
-                }
-                if (collection && collection.fetch) {
-                    var opts = _.extend({}, options || {}, { store: this });
-                    return collection.fetch(opts);
-                }
+                var opts = _.extend({}, options || {}, { store: this });
+                return collection.fetch(opts);
             };
             Store.prototype.create = function (collection, model, options) {
-                if (collection && !collection.models && !options) {
-                    model = collection;
-                    options = model;
-                }
-                if ((!collection || !collection.models) && options && options.entity) {
-                    collection = this.getCollection(options.entity);
-                }
-                if (collection && collection.create) {
-                    var opts = _.extend({}, options || {}, { store: this });
-                    collection.create(model, opts);
-                }
+                var opts = _.extend({}, options || {}, { store: this });
+                return collection.create(model, opts);
             };
             Store.prototype.save = function (model, attr, options) {
-                if (model && !model.attributes && !options) {
-                    attr = model;
-                    options = attr;
-                }
-                if ((!model || !model.attributes) && options && options.entity) {
-                    model = this.createModel(options.entity);
-                }
-                if (model && model.save) {
-                    var opts = _.extend({}, options || {}, { store: this });
-                    model.save(attr, opts);
-                }
+                var opts = _.extend({}, options || {}, { store: this });
+                return model.save(attr, opts);
             };
             Store.prototype.destroy = function (model, options) {
                 if (model && model.destroy) {
                     var opts = _.extend({}, options || {}, { store: this });
                     model.destroy(opts);
                 }
-            };
-            Store.prototype._checkEntity = function (obj, entity) {
-                if (!LiveData.isEntity(entity)) {
-                    var error = Store.CONST.ERROR_NO_ENTITY;
-                    Relution.LiveData.Debug.error(error);
-                    this.handleError(obj, error);
-                    return false;
-                }
-                return true;
             };
             Store.prototype._checkData = function (obj, data) {
                 if ((!_.isArray(data) || data.length === 0) && !_.isObject(data)) {
@@ -242,12 +147,12 @@ var Relution;
                 }
             };
             Store.prototype.close = function () {
+                // nothing to do
             };
             Store.extend = LiveData.extend;
             Store.create = LiveData.create;
             Store.design = LiveData.design;
             Store.CONST = {
-                ERROR_NO_ENTITY: 'No valid entity specified. ',
                 ERROR_NO_DATA: 'No data passed. ',
                 ERROR_LOAD_DATA: 'Error while loading data from store. ',
                 ERROR_SAVE_DATA: 'Error while saving data to the store. ',

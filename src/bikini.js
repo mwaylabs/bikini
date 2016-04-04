@@ -21,8 +21,6 @@
 // @include ./query/SortOrderComparator.js
 // @include ./query/GetQuery.js
 
-// @include ./data/field.js
-// @include ./data/entity.js
 // @include ./data/security.js
 // @include ./data/model.js
 // @include ./data/collection.js

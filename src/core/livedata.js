@@ -29,29 +29,6 @@ Relution.LiveData.isModel = function (model) {
   return Backbone.Model.prototype.isPrototypeOf(model);
 };
 
-Relution.LiveData.isEntity = function (entity) {
-  return Relution.LiveData.Entity.prototype.isPrototypeOf(entity);
-};
-
-/***
- * Data type Constants.
- */
-Relution.LiveData.DATA = {
-  TYPE: {
-    INTEGER: 'integer',
-    STRING: 'string',
-    TEXT: 'text',
-    DATE: 'date',
-    BOOLEAN: 'boolean',
-    FLOAT: 'float',
-    OBJECT: 'object',
-    ARRAY: 'array',
-    BINARY: 'binary',
-    OBJECTID: 'objectid',
-    NULL: 'null'
-  }
-};
-
 /**
  * options passed to Collection.fetch() preventing backbone.js from consuming the response.
  *

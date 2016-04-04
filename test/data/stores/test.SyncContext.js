@@ -33,9 +33,7 @@ describe('Relution.LiveData.SyncContext', function () {
   });
   var Model = Relution.LiveData.Model.extend({
     idAttribute: 'id',
-    entity: {
-      name: 'approval'
-    }
+    entity: 'approval'
   });
   var Collection = Relution.LiveData.Collection.extend({
     model: Model,

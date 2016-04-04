@@ -46,10 +46,7 @@ var Relution;
                 this.store = options.store || this.store || (this.model ? this.model.prototype.store : null);
                 this.entity = options.entity || this.entity || (this.model ? this.model.prototype.entity : null);
                 this.options = options.options || this.options;
-                var entity = this.entity || this.entityFromUrl(this.url);
-                if (entity) {
-                    this.entity = Relution.LiveData.Entity.from(entity, { model: this.model, typeMapping: options.typeMapping });
-                }
+                this.entity = this.entity || this.entityFromUrl(this.url);
                 this._updateUrl();
                 if (this.store && _.isFunction(this.store.initCollection)) {
                     this.store.initCollection(this, options);
@@ -101,8 +98,8 @@ var Relution;
                 var store = this.endpoint.localStore;
                 var that = this;
                 // DROP TABLE
-                if (this.entity.name) {
-                    store.drop(this.entity.name);
+                if (this.entity) {
+                    store.drop(this.entity);
                 }
                 // RESET localStorage-entry
                 localStorage.setItem('__' + this.channel + 'last_msg_time', '');

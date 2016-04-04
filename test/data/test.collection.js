@@ -56,15 +56,7 @@ describe('Relution.LiveData.Collection', function () {
 
     TEST.Developer = Relution.LiveData.Model.extend({
       idAttribute: '_id',
-      entity: {
-        name: 'Developer',
-        fields: {
-          _id: {type: Relution.LiveData.DATA.TYPE.STRING},
-          sureName: {name: 'lastName', type: Relution.LiveData.DATA.TYPE.STRING, required: true, index: true},
-          firstName: {type: Relution.LiveData.DATA.TYPE.STRING, length: 200},
-          age: {type: Relution.LiveData.DATA.TYPE.INTEGER}
-        }
-      }
+      entity: 'Developer'
     });
 
     assert.ok(typeof TEST.Developer === 'function', 'Developer model successfully extended.');

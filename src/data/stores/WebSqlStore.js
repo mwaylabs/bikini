@@ -61,16 +61,8 @@ var Relution;
          * // in the entity of your model like this:
          *
          * var MyModel = Relution.LiveData.Model.extend({
-         *      idAttribute: 'id',
-         *      fields: {
-         *          id:          { type: Relution.LiveData.DATA.TYPE.STRING,  required: true, index: true },
-         *          sureName:    { name: 'USERNAME', type: Relution.LiveData.DATA.TYPE.STRING },
-         *          firstName:   { type: Relution.LiveData.DATA.TYPE.STRING,  length: 200 },
-         *          age:         { type: Relution.LiveData.DATA.TYPE.INTEGER }
-         *      }
+         *      idAttribute: 'id'
          * });
-         *
-         *
          */
         var WebSqlStore = (function (_super) {
             __extends(WebSqlStore, _super);
@@ -103,8 +95,8 @@ var Relution;
                         else {
                             this.db = global.openDatabase(this.options.name, '', '', this.options.size);
                             if (this.entities) {
-                                for (var key in this.entities) {
-                                    this._createTable({ entity: this.entities[key] });
+                                for (var entity in this.entities) {
+                                    this._createTable({ entity: entity });
                                 }
                             }
                         }
