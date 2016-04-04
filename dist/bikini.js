@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2016 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Thu Mar 31 2016 13:29:52
+* Date:      Fri Apr 01 2016 16:01:32
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -138,6 +138,98 @@ var Relution;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=Debug.js.map
+/**
+ * Created by Thomas Beckmann
+ * Copyright (c)
+ * 2016
+ * M-Way Solutions GmbH. All rights reserved.
+ * http://www.mwaysolutions.com
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are not permitted.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+/* jshint indent: 4 */
+/* jshint curly: false */
+/* jshint newcap: false */
+/* jshint -W004: '%' is already defined. */
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var Relution;
+(function (Relution) {
+    /**
+     * subtype of Error thrown by assert() in case AssertionCheck fails.
+     */
+    var AssertionError = (function (_super) {
+        __extends(AssertionError, _super);
+        function AssertionError(message) {
+            _super.call(this, message);
+        }
+        return AssertionError;
+    })(Error);
+    Relution.AssertionError = AssertionError;
+    /**
+     * evaluates given check expression as a strong invariant never ever violated.
+     *
+     * <p>
+     * Use assert to ensure an assumption at runtime. When running with assertions enabled, the check expression is
+     * evaluated immediately. A check expression evaluating to false signals a violation of invariant that should never
+     * happen. If it does, a hard error is output unconditionally to the console and an AssertionError is thrown.
+     * </p>
+     * <p>
+     * Do not use assertions as a means of ordinary error checking. Here are some valid examples of assertions:
+     * <pre>
+     *     assert(() => Date.now() > 0, 'current time millis can not be before 1970 start of time!');
+     *     assert(() => total_price >= item_price, 'total is sum of individal prices and thus can not be less than each one!');
+     *     assert(() => num*num >= 0, 'squared num is less than zero!');
+     * </pre>
+     * </p>
+     *
+     * @param check expression validating an assumption of the calling code, typically an arrow-function expression.
+     * @param message optional explanation of disaster.
+       */
+    function assert(check, message) {
+        if (Relution.assertions === undefined ? Relution.isDebugMode() : Relution.assertions) {
+            if (!check()) {
+                var error = new AssertionError(message || (check.toSource()));
+                if (Relution.isDebugMode()) {
+                    Relution.Debug.error('Assertion failed: ' + error.message, error);
+                }
+                else {
+                    console.error('Assertion failed: ' + error.message, error);
+                }
+                throw error;
+            }
+        }
+    }
+    Relution.assert = assert;
+    /**
+     * used in catch-blocks or Promise rejection callbacks to ensure the caught value is an Error.
+     *
+     * @param error to check.
+     * @param message of disaster.
+     * @return {any} value evaluating to to true stating error is an instance of Error.
+       */
+    function assertIsError(error, message) {
+        assert(function () { return _.isError(error); }, message);
+        return error;
+    }
+    Relution.assertIsError = assertIsError;
+})(Relution || (Relution = {}));
+//# sourceMappingURL=Assert.js.map
 // Copyright (c) 2013 M-Way Solutions GmbH
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
 
@@ -3119,7 +3211,7 @@ var Relution;
          * but there are some enhancements to fetch, save and delete the
          * contained models from or to other "data stores".
          *
-         * see WebSqlStore or SyncStore for examples
+         * see LocalStorageStore, WebSqlStore or SyncStore for examples
          *
          * @module Relution.LiveData.Collection
          *
@@ -3172,6 +3264,25 @@ var Relution;
                         return parts[-1];
                     }
                 }
+            };
+            Collection.prototype.sort = function (options) {
+                if (_.isObject(options && options.sort)) {
+                    this.comparator = Relution.LiveData.DataSelector.compileSort(options.sort);
+                }
+                return _super.prototype.sort.apply(this, arguments);
+            };
+            Collection.prototype.select = function (options) {
+                var selector = options && options.query ? Relution.LiveData.DataSelector.create(options.query) : null;
+                var collection = Collection.create(null, { model: this.model });
+                if (options && options.sort) {
+                    collection.comparator = Relution.LiveData.DataSelector.compileSort(options.sort);
+                }
+                this.each(function (model) {
+                    if (!selector || selector.matches(model.attributes)) {
+                        collection.add(model);
+                    }
+                });
+                return collection;
             };
             Collection.prototype.destroy = function (options) {
                 options = options || {};
@@ -3332,6 +3443,908 @@ var Relution;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=Collection.js.map
+// Copyright (c) 2013 M-Way Solutions GmbH
+// http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
+
+// Relution.LiveData.DataSelector uses code from meteor.js
+// https://github.com/meteor/meteor/tree/master/packages/minimongo
+//
+// Thanks for sharing!
+
+/**
+ *
+ * @module Relution.LiveData.DataSelector
+ *
+ * @type {*}
+ * @extends Relution.LiveData._Object
+ */
+Relution.LiveData.DataSelector = Relution.LiveData._Object.design({
+
+  _type: 'Relution.LiveData.DataSelector',
+
+  _selector: null,
+
+  create: function (docSelector) {
+    var selector = this.design({
+      _selector: null
+    });
+    selector.init(docSelector);
+    return selector;
+  },
+
+  init: function (docSelector) {
+    this._selector = this.compileSelector(docSelector);
+  },
+
+  matches: function (value) {
+    if (_.isFunction(this._selector)) {
+      return this._selector(value);
+    }
+    return false;
+  },
+
+  hasOperators: function (valueSelector) {
+    var theseAreOperators;
+    for (var selKey in valueSelector) {
+      var thisIsOperator = selKey.substr(0, 1) === '$';
+      if (theseAreOperators === undefined) {
+        theseAreOperators = thisIsOperator;
+      } else if (theseAreOperators !== thisIsOperator) {
+        throw new Error('Inconsistent selector: ' + valueSelector);
+      }
+    }
+    return !!theseAreOperators;  // {} has no operators
+  },
+
+  // Given a selector, return a function that takes one argument, a
+  // document, and returns true if the document matches the selector,
+  // else false.
+  compileSelector: function (selector) {
+    // you can pass a literal function instead of a selector
+    if (_.isFunction(selector)) {
+      return function (doc) {
+        return selector.call(doc);
+      };
+    }
+
+    // shorthand -- scalars match _id
+    if (this._selectorIsId(selector)) {
+      return function (record) {
+        var id = _.isFunction(record.getId) ? record.getId() : (record._id || record.id);
+        return Relution.LiveData.Field.prototype.equals(id, selector);
+      };
+    }
+
+    // protect against dangerous selectors.  falsey and {_id: falsey} are both
+    // likely programmer error, and not what you want, particularly for
+    // destructive operations.
+    if (!selector || (('_id' in selector) && !selector._id)) {
+      return function (doc) {
+        return false;
+      };
+    }
+
+    // Top level can't be an array or true or binary.
+    if (_.isBoolean(selector) || _.isArray(selector) || Relution.LiveData.Field.prototype.isBinary(selector)) {
+      throw new Error('Invalid selector: ' + selector);
+    }
+
+    return this.compileDocSelector(selector);
+  },
+
+  // The main compilation function for a given selector.
+  compileDocSelector: function (docSelector) {
+    var that = Relution.LiveData.DataSelector;
+    var perKeySelectors = [];
+    _.each(docSelector, function (subSelector, key) {
+      if (key.substr(0, 1) === '$') {
+        // Outer operators are either logical operators (they recurse back into
+        // this function), or $where.
+        if (!_.has(that.LOGICAL_OPERATORS, key)) {
+          throw new Error('Unrecognized logical operator: ' + key);
+        }
+        perKeySelectors.push(that.LOGICAL_OPERATORS[key](subSelector));
+      } else {
+        var lookUpByIndex = that._makeLookupFunction(key);
+        var valueSelectorFunc = that.compileValueSelector(subSelector);
+        perKeySelectors.push(function (doc) {
+          var branchValues = lookUpByIndex(doc);
+          // We apply the selector to each 'branched' value and return true if any
+          // match. This isn't 100% consistent with MongoDB; eg, see:
+          // https://jira.mongodb.org/browse/SERVER-8585
+          return _.any(branchValues, valueSelectorFunc);
+        });
+      }
+    });
+
+    return function (record) {
+      var doc = _.isFunction(record.getData) ? record.getData() : record;
+      return _.all(perKeySelectors, function (f) {
+        return f(doc);
+      });
+    };
+  },
+
+  compileValueSelector: function (valueSelector) {
+    var that = Relution.LiveData.DataSelector;
+    if (valueSelector === null) {  // undefined or null
+      return function (value) {
+        return that._anyIfArray(value, function (x) {
+          return x === null;  // undefined or null
+        });
+      };
+    }
+
+    // Selector is a non-null primitive (and not an array or RegExp either).
+    if (!_.isObject(valueSelector)) {
+      return function (value) {
+        return that._anyIfArray(value, function (x) {
+          return x === valueSelector;
+        });
+      };
+    }
+
+    if (_.isRegExp(valueSelector)) {
+      return function (value) {
+        if (_.isUndefined(value)) {
+          return false;
+        }
+        return that._anyIfArray(value, function (x) {
+          return valueSelector.test(x);
+        });
+      };
+    }
+
+    // Arrays match either identical arrays or arrays that contain it as a value.
+    if (_.isArray(valueSelector)) {
+      return function (value) {
+        if (!_.isArray(value)) {
+          return false;
+        }
+        return that._anyIfArrayPlus(value, function (x) {
+          return that._equal(valueSelector, x);
+        });
+      };
+    }
+
+    // It's an object, but not an array or regexp.
+    if (this.hasOperators(valueSelector)) {
+      var operatorFunctions = [];
+      _.each(valueSelector, function (operand, operator) {
+        if (!_.has(that.VALUE_OPERATORS, operator)) {
+          throw new Error('Unrecognized operator: ' + operator);
+        }
+        operatorFunctions.push(that.VALUE_OPERATORS[operator](operand, valueSelector.$options));
+      });
+      return function (value) {
+        return _.all(operatorFunctions, function (f) {
+          return f(value);
+        });
+      };
+    }
+
+    // It's a literal; compare value (or element of value array) directly to the
+    // selector.
+    return function (value) {
+      return that._anyIfArray(value, function (x) {
+        return that._equal(valueSelector, x);
+      });
+    };
+  },
+
+  // _makeLookupFunction(key) returns a lookup function.
+  //
+  // A lookup function takes in a document and returns an array of matching
+  // values.  This array has more than one element if any segment of the key other
+  // than the last one is an array.  ie, any arrays found when doing non-final
+  // lookups result in this function 'branching'; each element in the returned
+  // array represents the value found at this branch. If any branch doesn't have a
+  // final value for the full key, its element in the returned list will be
+  // undefined. It always returns a non-empty array.
+  //
+  // _makeLookupFunction('a.x')({a: {x: 1}}) returns [1]
+  // _makeLookupFunction('a.x')({a: {x: [1]}}) returns [[1]]
+  // _makeLookupFunction('a.x')({a: 5})  returns [undefined]
+  // _makeLookupFunction('a.x')({a: [{x: 1},
+  //                                 {x: [2]},
+  //                                 {y: 3}]})
+  //   returns [1, [2], undefined]
+  _makeLookupFunction: function (key) {
+    var dotLocation = key.indexOf('.');
+    var first, lookupRest, nextIsNumeric;
+    if (dotLocation === -1) {
+      first = key;
+    } else {
+      first = key.substr(0, dotLocation);
+      var rest = key.substr(dotLocation + 1);
+      lookupRest = this._makeLookupFunction(rest);
+      // Is the next (perhaps final) piece numeric (ie, an array lookup?)
+      nextIsNumeric = /^\d+(\.|$)/.test(rest);
+    }
+
+    return function (doc) {
+      if (doc === null) { // null or undefined
+        return [undefined];
+      }
+      var firstLevel = doc[first];
+
+      // We don't 'branch' at the final level.
+      if (!lookupRest) {
+        return [firstLevel];
+      }
+
+      // It's an empty array, and we're not done: we won't find anything.
+      if (_.isArray(firstLevel) && firstLevel.length === 0) {
+        return [undefined];
+      }
+
+      // For each result at this level, finish the lookup on the rest of the key,
+      // and return everything we find. Also, if the next result is a number,
+      // don't branch here.
+      //
+      // Technically, in MongoDB, we should be able to handle the case where
+      // objects have numeric keys, but Mongo doesn't actually handle this
+      // consistently yet itself, see eg
+      // https://jira.mongodb.org/browse/SERVER-2898
+      // https://github.com/mongodb/mongo/blob/master/jstests/array_match2.js
+      if (!_.isArray(firstLevel) || nextIsNumeric) {
+        firstLevel = [firstLevel];
+      }
+      return Array.prototype.concat.apply([], _.map(firstLevel, lookupRest));
+    };
+  },
+
+  _anyIfArray: function (x, f) {
+    if (_.isArray(x)) {
+      return _.any(x, f);
+    }
+    return f(x);
+  },
+
+  _anyIfArrayPlus: function (x, f) {
+    if (f(x)) {
+      return true;
+    }
+    return _.isArray(x) && _.any(x, f);
+  },
+
+  // Is this selector just shorthand for lookup by _id?
+  _selectorIsId: function (selector) {
+    return _.isString(selector) || _.isNumber(selector);
+  },
+
+  // deep equality test: use for literal document and array matches
+  _equal: function (a, b) {
+    return Relution.LiveData.Field.prototype._equals(a, b, true);
+  },
+
+  _cmp: function (a, b) {
+    return Relution.LiveData.Field.prototype._cmp(a, b);
+  },
+
+  LOGICAL_OPERATORS: {
+    '$and': function (subSelector) {
+      if (!_.isArray(subSelector) || _.isEmpty(subSelector)) {
+        throw new Error('$and/$or/$nor must be nonempty array');
+      }
+      var subSelectorFunctions = _.map(subSelector, Relution.LiveData.DataSelector.compileDocSelector);
+      return function (doc) {
+        return _.all(subSelectorFunctions, function (f) {
+          return f(doc);
+        });
+      };
+    },
+
+    '$or': function (subSelector) {
+      if (!_.isArray(subSelector) || _.isEmpty(subSelector)) {
+        throw new Error('$and/$or/$nor must be nonempty array');
+      }
+      var subSelectorFunctions = _.map(subSelector, Relution.LiveData.DataSelector.compileDocSelector);
+      return function (doc) {
+        return _.any(subSelectorFunctions, function (f) {
+          return f(doc);
+        });
+      };
+    },
+
+    '$nor': function (subSelector) {
+      if (!_.isArray(subSelector) || _.isEmpty(subSelector)) {
+        throw new Error('$and/$or/$nor must be nonempty array');
+      }
+      var subSelectorFunctions = _.map(subSelector, Relution.LiveData.DataSelector.compileDocSelector);
+      return function (doc) {
+        return _.all(subSelectorFunctions, function (f) {
+          return !f(doc);
+        });
+      };
+    },
+
+    '$where': function (selectorValue) {
+      if (!_.isFunction(selectorValue)) {
+        var value = selectorValue;
+        selectorValue = function () {
+          return value;
+        };
+      }
+      return function (doc) {
+        return selectorValue.call(doc);
+      };
+    }
+  },
+
+  VALUE_OPERATORS: {
+    '$in': function (operand) {
+      if (!_.isArray(operand)) {
+        throw new Error('Argument to $in must be array');
+      }
+      return function (value) {
+        return Relution.LiveData.DataSelector._anyIfArrayPlus(value, function (x) {
+          return _.any(operand, function (operandElt) {
+            return Relution.LiveData.DataSelector._equal(operandElt, x);
+          });
+        });
+      };
+    },
+
+    '$all': function (operand) {
+      if (!_.isArray(operand)) {
+        throw new Error('Argument to $all must be array');
+      }
+      return function (value) {
+        if (!_.isArray(value)) {
+          return false;
+        }
+        return _.all(operand, function (operandElt) {
+          return _.any(value, function (valueElt) {
+            return Relution.LiveData.DataSelector._equal(operandElt, valueElt);
+          });
+        });
+      };
+    },
+
+    '$lt': function (operand) {
+      return function (value) {
+        return Relution.LiveData.DataSelector._anyIfArray(value, function (x) {
+          return Relution.LiveData.DataSelector._cmp(x, operand) < 0;
+        });
+      };
+    },
+
+    '$lte': function (operand) {
+      return function (value) {
+        return Relution.LiveData.DataSelector._anyIfArray(value, function (x) {
+          return Relution.LiveData.DataSelector._cmp(x, operand) <= 0;
+        });
+      };
+    },
+
+    '$gt': function (operand) {
+      return function (value) {
+        return Relution.LiveData.DataSelector._anyIfArray(value, function (x) {
+          return Relution.LiveData.DataSelector._cmp(x, operand) > 0;
+        });
+      };
+    },
+
+    '$gte': function (operand) {
+      return function (value) {
+        return Relution.LiveData.DataSelector._anyIfArray(value, function (x) {
+          return Relution.LiveData.DataSelector._cmp(x, operand) >= 0;
+        });
+      };
+    },
+
+    '$ne': function (operand) {
+      return function (value) {
+        return !Relution.LiveData.DataSelector._anyIfArrayPlus(value, function (x) {
+          return Relution.LiveData.DataSelector._equal(x, operand);
+        });
+      };
+    },
+
+    '$nin': function (operand) {
+      if (!_.isArray(operand)) {
+        throw new Error('Argument to $nin must be array');
+      }
+      var inFunction = this.VALUE_OPERATORS.$in(operand);
+      return function (value) {
+        // Field doesn't exist, so it's not-in operand
+        if (value === undefined) {
+          return true;
+        }
+        return !inFunction(value);
+      };
+    },
+
+    '$exists': function (operand) {
+      return function (value) {
+        return operand === (value !== undefined);
+      };
+    },
+    '$mod': function (operand) {
+      var divisor = operand[0], remainder = operand[1];
+      return function (value) {
+        return Relution.LiveData.DataSelector._anyIfArray(value, function (x) {
+          return x % divisor === remainder;
+        });
+      };
+    },
+
+    '$size': function (operand) {
+      return function (value) {
+        return _.isArray(value) && operand === value.length;
+      };
+    },
+
+    '$type': function (operand) {
+      return function (value) {
+        // A nonexistent field is of no type.
+        if (_.isUndefined(value)) {
+          return false;
+        }
+        return Relution.LiveData.DataSelector._anyIfArray(value, function (x) {
+          return Relution.LiveData.Field.prototype.detectType(x) === operand;
+        });
+      };
+    },
+
+    '$regex': function (operand, options) {
+
+      if (_.isUndefined(options)) {
+        // Options passed in $options (even the empty string) always overrides
+        // options in the RegExp object itself.
+
+        // Be clear that we only support the JS-supported options, not extended
+        // ones (eg, Mongo supports x and s). Ideally we would implement x and s
+        // by transforming the regexp, but not today...
+        if (/[^gim]/.test(options)) {
+          throw new Error('Only the i, m, and g regexp options are supported');
+        }
+
+        var regexSource = _.isRegExp(operand) ? operand.source : operand;
+        operand = new RegExp(regexSource, options);
+      } else if (!_.isRegExp(operand)) {
+        operand = new RegExp(operand);
+      }
+
+      return function (value) {
+        if (_.isUndefined(value)) {
+          return false;
+        }
+        return Relution.LiveData.DataSelector._anyIfArray(value, function (x) {
+          return operand.test(x);
+        });
+      };
+    },
+
+    '$options': function (operand) {
+      // evaluation happens at the $regex function above
+      return function (value) {
+        return true;
+      };
+    },
+
+    '$elemMatch': function (operand) {
+      var matcher = Relution.LiveData.DataSelector.compileDocSelector(operand);
+      return function (value) {
+        if (!_.isArray(value)) {
+          return false;
+        }
+        return _.any(value, function (x) {
+          return matcher(x);
+        });
+      };
+    },
+
+    '$not': function (operand) {
+      var matcher = Relution.LiveData.DataSelector.compileDocSelector(operand);
+      return function (value) {
+        return !matcher(value);
+      };
+    }
+  },
+
+  // Give a sort spec, which can be in any of these forms:
+  //   {'key1': 1, 'key2': -1}
+  //   [['key1', 'asc'], ['key2', 'desc']]
+  //   ['key1', ['key2', 'desc']]
+  //
+  // (.. with the first form being dependent on the key enumeration
+  // behavior of your javascript VM, which usually does what you mean in
+  // this case if the key names don't look like integers ..)
+  //
+  // return a function that takes two objects, and returns -1 if the
+  // first object comes first in order, 1 if the second object comes
+  // first, or 0 if neither object comes before the other.
+
+  compileSort: function (spec) {
+    var sortSpecParts = [];
+
+    if (_.isArray(spec)) {
+      for (var i = 0; i < spec.length; i++) {
+        if (typeof spec[i] === 'string') {
+          sortSpecParts.push({
+            lookup: this._makeLookupFunction(spec[i]),
+            ascending: true
+          });
+        } else {
+          sortSpecParts.push({
+            lookup: this._makeLookupFunction(spec[i][0]),
+            ascending: spec[i][1] !== 'desc'
+          });
+        }
+      }
+    } else if (typeof spec === 'object') {
+      for (var key in spec) {
+        sortSpecParts.push({
+          lookup: this._makeLookupFunction(key),
+          ascending: spec[key] >= 0
+        });
+      }
+    } else {
+      throw new Error('Bad sort specification: ', JSON.stringify(spec));
+    }
+
+    if (sortSpecParts.length === 0) {
+      return function () {
+        return 0;
+      };
+    }
+
+    // reduceValue takes in all the possible values for the sort key along various
+    // branches, and returns the min or max value (according to the bool
+    // findMin). Each value can itself be an array, and we look at its values
+    // too. (ie, we do a single level of flattening on branchValues, then find the
+    // min/max.)
+    var reduceValue = function (branchValues, findMin) {
+      var reduced;
+      var first = true;
+      // Iterate over all the values found in all the branches, and if a value is
+      // an array itself, iterate over the values in the array separately.
+      _.each(branchValues, function (branchValue) {
+        // Value not an array? Pretend it is.
+        if (!_.isArray(branchValue)) {
+          branchValue = [branchValue];
+        }
+        // Value is an empty array? Pretend it was missing, since that's where it
+        // should be sorted.
+        if (_.isArray(branchValue) && branchValue.length === 0) {
+          branchValue = [undefined];
+        }
+        _.each(branchValue, function (value) {
+          // We should get here at least once: lookup functions return non-empty
+          // arrays, so the outer loop runs at least once, and we prevented
+          // branchValue from being an empty array.
+          if (first) {
+            reduced = value;
+            first = false;
+          } else {
+            // Compare the value we found to the value we found so far, saving it
+            // if it's less (for an ascending sort) or more (for a descending
+            // sort).
+            var cmp = Relution.LiveData.DataSelector._cmp(reduced, value);
+            if ((findMin && cmp > 0) || (!findMin && cmp < 0)) {
+              reduced = value;
+            }
+          }
+        });
+      });
+      return reduced;
+    };
+
+    return function (a, b) {
+      a = a.attributes ? a.attributes : a;
+      b = b.attributes ? b.attributes : b;
+      for (var i = 0; i < sortSpecParts.length; ++i) {
+        var specPart = sortSpecParts[i];
+        var aValue = reduceValue(specPart.lookup(a), specPart.ascending);
+        var bValue = reduceValue(specPart.lookup(b), specPart.ascending);
+        var compare = Relution.LiveData.DataSelector._cmp(aValue, bValue);
+        if (compare !== 0) {
+          return specPart.ascending ? compare : -compare;
+        }
+      }
+      return 0;
+    };
+  }
+
+});
+
+// Copyright (c) 2013 M-Way Solutions GmbH
+// http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
+
+/**
+ *
+ * @module Relution.LiveData.SqlSelector
+ *
+ * @type {*}
+ * @extends Relution.LiveData.DataSelector
+ */
+Relution.LiveData.SqlSelector = Relution.LiveData.DataSelector.design({
+
+  _type: 'Relution.LiveData.SqlSelector',
+
+  _selector: null,
+  _query: null,
+  _entity: null,
+
+  create: function (docSelector, entity) {
+    var selector = this.extend({
+      _entity: entity,
+      _selector: null,
+      _query: null
+    });
+    selector.init(docSelector);
+
+    return selector;
+  },
+
+  init: function (docSelector) {
+    this._selector = this.compileSelector(docSelector);
+    this._query = this.buildSqlQuery(docSelector);
+  },
+
+  buildStatement: function (obj) {
+    return this._query;
+  },
+
+  buildSqlQuery: function (selector, connector) {
+    // you can pass a literal function instead of a selector
+    if (selector instanceof Function) {
+      return '';
+    }
+
+    // shorthand -- sql
+    if (_.isString(selector)) {
+      return selector;
+    }
+
+    // protect against dangerous selectors.  falsey and {_id: falsey} are both
+    // likely programmer error, and not what you want, particularly for
+    // destructive operations.
+    if (!selector || (('_id' in selector) && !selector._id)) {
+      return '1=2';
+    }
+
+    // Top level can't be an array or true or binary.
+    if (_.isBoolean(selector) || _.isArray(selector) || Relution.LiveData.DataField.isBinary(selector)) {
+      throw new Error('Invalid selector: ' + selector);
+    }
+
+    return this.buildSqlWhere(selector)();
+  },
+
+  // The main compilation function for a given selector.
+  buildSqlWhere: function (docSelector) {
+    var where = '';
+    var that = this;
+    var perKeySelectors = [];
+    _.each(docSelector, function (subSelector, key) {
+      if (key.substr(0, 1) === '$') {
+        // Outer operators are either logical operators (they recurse back into
+        // this function), or $where.
+        perKeySelectors.push(that.buildLogicalOperator(key, subSelector));
+      } else {
+        var valueLookup = that.buildLookup(key);
+        var valueSelector = that.buildValueSelector(subSelector);
+        if (_.isFunction(valueSelector)) {
+          perKeySelectors.push(function () {
+            return valueSelector(valueLookup);
+          });
+        }
+      }
+    });
+
+    return function () {
+      var sql = '';
+      _.each(perKeySelectors, function (f) {
+        if (_.isFunction(f)) {
+          sql += f.call(that);
+        }
+      });
+      return sql;
+    };
+  },
+
+  buildValueSelector: function (valueSelector) {
+    var that = this;
+    if (valueSelector === null) {  // undefined or null
+      return function (key) {
+        return key + ' IS NULL';
+      };
+    }
+
+    // Selector is a non-null primitive (and not an array or RegExp either).
+    if (!_.isObject(valueSelector)) {
+      return function (key) {
+        return key + ' = ' + that.buildValue(valueSelector);
+      };
+    }
+
+    if (_.isRegExp(valueSelector)) {
+      var regEx = valueSelector.toString();
+      var match = regEx.match(/\/[\^]?([^^.*$'+()]*)[\$]?\//);
+      if (match && match.length > 1) {
+        var prefix = regEx.indexOf('/^') < 0 ? '%' : '';
+        var suffix = regEx.indexOf('$/') < 0 ? '%' : '';
+        return function (key) {
+          return key + ' LIKE "' + prefix + match[1] + suffix + '"';
+        };
+      }
+      return null;
+    }
+
+    // Arrays match either identical arrays or arrays that contain it as a value.
+    if (_.isArray(valueSelector)) {
+      return null;
+    }
+
+    // It's an object, but not an array or regexp.
+    if (this.hasOperators(valueSelector)) {
+      var operatorFunctions = [];
+      _.each(valueSelector, function (operand, operator) {
+        if (!_.has(that.VALUE_OPERATORS, operator)) {
+          throw new Error('Unrecognized operator: ' + operator);
+        }
+        operatorFunctions.push(that.VALUE_OPERATORS[operator](operand, that));
+      });
+      return function (key) {
+        return that.LOGICAL_OPERATORS.$and(operatorFunctions, key);
+      };
+    }
+
+    // It's a literal; compare value (or element of value array) directly to the
+    // selector.
+    return function (key) {
+      return key + ' = ' + that.buildValue(valueSelector);
+    };
+  },
+
+  buildLookup: function (key) {
+    var field = this._entity ? this._entity.getField(key) : null;
+    key = field && field.name ? field.name : key;
+    return '"' + key + '"';
+  },
+
+  buildValue: function (value) {
+    if (_.isString(value)) {
+      return '"' + value.replace(/"/g, '""') + '"';
+    }
+    return value;
+  },
+
+  buildLogicalOperator: function (operator, subSelector) {
+    if (!_.has(this.LOGICAL_OPERATORS, operator)) {
+      throw new Error('Unrecognized logical operator: ' + operator);
+    } else {
+      if (!_.isArray(subSelector) || _.isEmpty(subSelector)) {
+        throw new Error('$and/$or/$nor must be nonempty array');
+      }
+      var subSelectorFunction = _.map(subSelector, this.buildSqlWhere, this);
+      var that = this;
+      return function (key) {
+        return that.LOGICAL_OPERATORS[operator](subSelectorFunction, key);
+      };
+    }
+  },
+
+  LOGICAL_OPERATORS: {
+    '$and': function (subSelectorFunction, key) {
+      var sql = '';
+      var count = 0;
+      _.each(subSelectorFunction, function (f) {
+        var s = f !== null ? f(key) : '';
+        if (s) {
+          count++;
+          sql += sql ? ' AND ' + s : s;
+        }
+      });
+      return count > 1 ? '( ' + sql + ' )' : sql;
+    },
+    '$or': function (subSelectorFunction, key) {
+      var sql = '';
+      var miss = false;
+      _.each(subSelectorFunction, function (f) {
+        var s = f !== null ? f(key) : '';
+        miss |= !s;
+        sql += sql && s ? ' OR ' + s : s;
+      });
+      return miss ? '' : '( ' + sql + ' )';
+    },
+    '$nor': function (subSelectorFunction, key) {
+      var sql = '';
+      var miss = false;
+      _.each(subSelectorFunction, function (f) {
+        var s = f !== null ? f(key) : '';
+        miss |= !s;
+        sql += sql && s ? ' OR ' + s : s;
+      });
+      return miss ? '' : 'NOT ( ' + sql + ' )';
+    }
+  },
+
+  VALUE_OPERATORS: {
+
+    '$in': function (operand) {
+      return null;
+    },
+
+    '$all': function (operand) {
+      return null;
+    },
+
+    '$lt': function (operand, that) {
+      return function (key) {
+        return key + ' < ' + that.buildValue(operand);
+      };
+    },
+
+    '$lte': function (operand, that) {
+      return function (key) {
+        return key + ' <= ' + that.buildValue(operand);
+      };
+    },
+
+    '$gt': function (operand, that) {
+      return function (key) {
+        return key + ' > ' + that.buildValue(operand);
+      };
+    },
+
+    '$gte': function (operand, that) {
+      return function (key) {
+        return key + '' > '' + that.buildValue(operand);
+      };
+    },
+
+    '$ne': function (operand, that) {
+      return function (key) {
+        return key + ' <> ' + that.buildValue(operand);
+      };
+    },
+
+    '$nin': function (operand) {
+      return null;
+    },
+
+    '$exists': function (operand, that) {
+      return function (key) {
+        return key + ' IS NOT NULL';
+      };
+    },
+
+    '$mod': function (operand) {
+      return null;
+    },
+
+    '$size': function (operand) {
+      return null;
+    },
+
+    '$type': function (operand) {
+      return null;
+    },
+
+    '$regex': function (operand, options) {
+      return null;
+    },
+    '$options': function (operand) {
+      return null;
+    },
+
+    '$elemMatch': function (operand) {
+      return null;
+    },
+
+    '$not': function (operand, that) {
+      var matcher = that.buildSqlWhere(operand);
+      return function (key) {
+        return 'NOT (' + matcher(key) + ')';
+      };
+    }
+  }
+});
+
 /**
  * Store.ts
  *
@@ -3367,7 +4380,7 @@ var Relution;
         /**
          * Base class to build a custom data store.
          *
-         * See: Relution.LiveData.WebSqlStore and Relution.LiveData.SyncStore
+         * See: Relution.LiveData.LocalStorageStore, Relution.LiveData.WebSqlStore and Relution.LiveData.SyncStore
          *
          * @module Relution.LiveData.Store
          */
@@ -3596,6 +4609,232 @@ var Relution;
 })(Relution || (Relution = {}));
 //# sourceMappingURL=Store.js.map
 /**
+ * LocalStorageStore.ts
+ *
+ * Created by Thomas Beckmann on 24.06.2015
+ * Copyright (c)
+ * 2015
+ * M-Way Solutions GmbH. All rights reserved.
+ * http://www.mwaysolutions.com
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are not permitted.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+/* jshint indent: 4 */
+/* jshint curly: false */
+/* jshint newcap: false */
+/* jshint -W004: '%' is already defined. */
+/// <reference path="../../core/livedata.d.ts" />
+/// <reference path="Store.ts" />
+/// <reference path="../../utility/Debug.ts" />
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var Relution;
+(function (Relution) {
+    var LiveData;
+    (function (LiveData) {
+        /**
+         * The Relution.LiveData.LocalStorageStore can be used to store model collection into
+         * the localStorage
+         *
+         * @module Relution.LiveData.LocalStorageStore
+         *
+         * @type {*}
+         * @extends Relution.LiveData.Store
+         *
+         * @example
+         *
+         * // The LocalStorageStore will save each model data as a json under his id,
+         * // and keeps all id's under an extra key for faster access
+         *
+         * var MyCollection = Relution.LiveData.Collection.extend({
+         *      store: Relution.LiveData.LocalStorageStore.create(),
+         *      entity: 'myEntityName'
+         * });
+         *
+         */
+        var LocalStorageStore = (function (_super) {
+            __extends(LocalStorageStore, _super);
+            function LocalStorageStore() {
+                _super.apply(this, arguments);
+                this.ids = {};
+            }
+            LocalStorageStore.prototype.sync = function (method, model, options) {
+                options = _.defaults({ entity: model.entity }, options);
+                var that = this;
+                var entity = that.getEntity(options);
+                var attrs;
+                if (entity && model) {
+                    var id = model.id || (method === 'create' ? new LiveData.ObjectID().toHexString() : null);
+                    attrs = entity.fromAttributes(options.attrs || model.attributes);
+                    switch (method) {
+                        case 'patch':
+                        case 'update':
+                        case 'create':
+                            if (method !== 'create') {
+                                attrs = _.extend(that._getItem(entity, id) || {}, attrs);
+                            }
+                            if (model.id !== id && model.idAttribute) {
+                                attrs[model.idAttribute] = id;
+                            }
+                            that._setItem(entity, id, attrs);
+                            break;
+                        case 'delete':
+                            that._removeItem(entity, id);
+                            break;
+                        case 'read':
+                            if (id) {
+                                attrs = that._getItem(entity, id);
+                            }
+                            else {
+                                attrs = [];
+                                var ids = that._getItemIds(entity);
+                                for (id in ids) {
+                                    var itemData = that._getItem(entity, id);
+                                    if (itemData) {
+                                        attrs.push(itemData);
+                                    }
+                                }
+                                if (options.syncContext) {
+                                    attrs = options.syncContext.processAttributes(attrs, options);
+                                }
+                            }
+                            break;
+                        default:
+                            return;
+                    }
+                }
+                return Q.resolve(entity.toAttributes(attrs)).then(function (attrs) {
+                    if (attrs) {
+                        return that.handleSuccess(options, attrs) || attrs;
+                    }
+                    else {
+                        return that.handleError(options, LiveData.Store.CONST.ERROR_NO_ENTITY) || Q.reject(LiveData.Store.CONST.ERROR_NO_ENTITY);
+                    }
+                });
+            };
+            LocalStorageStore.prototype.drop = function (options) {
+                var entity = this.getEntity(options);
+                if (entity && entity.name) {
+                    var keys = this._findAllKeys(entity);
+                    for (var i = 0; i < keys.length; i++) {
+                        localStorage.removeItem(keys[i]);
+                    }
+                    localStorage.removeItem('__ids__' + entity.name);
+                    this.handleSuccess(options);
+                }
+                else {
+                    this.handleError(options, LiveData.Store.CONST.ERROR_NO_ENTITY);
+                }
+            };
+            LocalStorageStore.prototype._getKey = function (entity, id) {
+                return '_' + entity.name + '_' + id;
+            };
+            LocalStorageStore.prototype._getItem = function (entity, id) {
+                var attrs;
+                if (entity && id) {
+                    try {
+                        attrs = JSON.parse(localStorage.getItem(this._getKey(entity, id)));
+                        if (attrs) {
+                            entity.setId(attrs, id); // fix id
+                        }
+                        else {
+                            this._delItemId(entity, id);
+                        }
+                    }
+                    catch (e) {
+                        Relution.LiveData.Debug.error(LiveData.Store.CONST.ERROR_LOAD_DATA + e.message);
+                    }
+                }
+                return attrs;
+            };
+            LocalStorageStore.prototype._setItem = function (entity, id, attrs) {
+                if (entity && id && attrs) {
+                    try {
+                        localStorage.setItem(this._getKey(entity, id), JSON.stringify(attrs));
+                        this._addItemId(entity, id);
+                    }
+                    catch (e) {
+                        Relution.LiveData.Debug.error(LiveData.Store.CONST.ERROR_SAVE_DATA + e.message);
+                    }
+                }
+            };
+            LocalStorageStore.prototype._removeItem = function (entity, id) {
+                if (entity && id) {
+                    localStorage.removeItem(this._getKey(entity, id));
+                    this._delItemId(entity, id);
+                }
+            };
+            LocalStorageStore.prototype._addItemId = function (entity, id) {
+                var ids = this._getItemIds(entity);
+                if (!(id in ids)) {
+                    ids[id] = '';
+                    this._saveItemIds(entity, ids);
+                }
+            };
+            LocalStorageStore.prototype._delItemId = function (entity, id) {
+                var ids = this._getItemIds(entity);
+                if (id in ids) {
+                    delete ids[id];
+                    this._saveItemIds(entity, ids);
+                }
+            };
+            LocalStorageStore.prototype._findAllKeys = function (entity) {
+                var keys = [];
+                var prefixItem = this._getKey(entity, '');
+                if (prefixItem) {
+                    var key, len = localStorage.length;
+                    for (var i = 0; i < len; i++) {
+                        key = localStorage.key(i);
+                        if (key && key === prefixItem) {
+                            keys.push(key);
+                        }
+                    }
+                }
+                return keys;
+            };
+            LocalStorageStore.prototype._getItemIds = function (entity) {
+                try {
+                    var key = '__ids__' + entity.name;
+                    if (!this.ids[entity.name]) {
+                        this.ids[entity.name] = JSON.parse(localStorage.getItem(key)) || {};
+                    }
+                    return this.ids[entity.name];
+                }
+                catch (e) {
+                    Relution.LiveData.Debug.error(LiveData.Store.CONST.ERROR_LOAD_IDS + e.message);
+                }
+            };
+            LocalStorageStore.prototype._saveItemIds = function (entity, ids) {
+                try {
+                    var key = '__ids__' + entity.name;
+                    localStorage.setItem(key, JSON.stringify(ids));
+                }
+                catch (e) {
+                    Relution.LiveData.Debug.error(LiveData.Store.CONST.ERROR_SAVE_IDS + e.message);
+                }
+            };
+            return LocalStorageStore;
+        })(LiveData.Store);
+        LiveData.LocalStorageStore = LocalStorageStore;
+    })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
+})(Relution || (Relution = {}));
+//# sourceMappingURL=LocalStorageStore.js.map
+/**
  * AbstractSqlStore.ts
  *
  * Created by Pascal Brewing on 04.11.2015
@@ -3823,7 +5062,16 @@ var Relution;
                 return sql;
             };
             AbstractSqlStore.prototype._sqlWhere = function (options, entity) {
-                return options.where;
+                this._selector = null;
+                var sql = '';
+                if (_.isString(options.where)) {
+                    sql = options.where;
+                }
+                else if (_.isObject(options.where)) {
+                    this._selector = LiveData.SqlSelector.create(options.where, entity);
+                    sql = this._selector.buildStatement();
+                }
+                return sql;
             };
             AbstractSqlStore.prototype._sqlWhereFromData = function (options, entity) {
                 var that = this;
@@ -4020,12 +5268,14 @@ var Relution;
                                         continue;
                                     }
                                 }
-                                if (isCollection) {
-                                    result.push(attrs);
-                                }
-                                else {
-                                    result = attrs;
-                                    break;
+                                if (!that._selector || that._selector.matches(attrs)) {
+                                    if (isCollection) {
+                                        result.push(attrs);
+                                    }
+                                    else {
+                                        result = attrs;
+                                        break;
+                                    }
                                 }
                             }
                         }, function (t, e) {

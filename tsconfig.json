@@ -7,14 +7,9 @@
   },
   "filesGlob": [
     "src/**/*.ts",
-    "!src/**/*.d.ts",
-    "typings/browser.d.ts",
-    "typings/browser/**/*.ts"
+        "!src/**/*.d.ts"
   ],
   "files": [
-    "typings/browser.d.ts",
-    "typings/browser/ambient/backbone/backbone.d.ts",
-    "typings/browser/ambient/jquery/jquery.d.ts",
     "src/data/Collection.ts",
     "src/data/Model.ts",
     "src/data/stores/AbstractSqlStore.ts",
@@ -32,13 +27,8 @@
     "src/query/JsonPath.ts",
     "src/query/SortOrder.ts",
     "src/query/SortOrderComparator.ts",
+        "src/utility/Assert.ts",
     "src/utility/Debug.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "bower_components",
-    "typings/main",
-    "typings/main.d.ts"
   ],
   "formatCodeOptions": {
     "indentSize": 2,

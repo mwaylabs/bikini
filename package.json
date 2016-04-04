@@ -31,6 +31,7 @@
     "grunt-jsonlint": "~1.0.4",
     "grunt-mocha": "~0.4.6",
     "grunt-preprocess": "~3.0.1",
+    "grunt-typedoc": "^0.2.3",
     "load-grunt-tasks": "~0.2.0",
     "lodash": "~2.4.1",
     "time-grunt": "~0.2.3"
