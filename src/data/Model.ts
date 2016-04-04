@@ -17,7 +17,7 @@ module Relution.LiveData {
    * @type {*}
    * @extends Backbone.Model
    */
-  export class Model extends Backbone.Model {
+  export class Model/*<AttributesType extends Object>*/ extends Backbone.Model {
 
     public _type = 'Relution.LiveData.Model';
     public isModel = true;

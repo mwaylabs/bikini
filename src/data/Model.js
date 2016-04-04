@@ -23,9 +23,9 @@ var Relution;
          * @type {*}
          * @extends Backbone.Model
          */
-        var Model = (function (_super) {
-            __extends(Model, _super);
-            function Model(attributes, options) {
+        var Model /*<AttributesType extends Object>*/ = (function (_super) {
+            __extends(Model /*<AttributesType extends Object>*/, _super);
+            function Model /*<AttributesType extends Object>*/(attributes, options) {
                 _super.call(this, attributes, options);
                 this._type = 'Relution.LiveData.Model';
                 this.isModel = true;
@@ -38,7 +38,7 @@ var Relution;
                 }
                 this.init(attributes, options);
             }
-            Model.prototype.init = function (attributes, options) {
+            Model /*<AttributesType extends Object>*/.prototype.init = function (attributes, options) {
                 options = options || {};
                 this.collection = options.collection || this.collection;
                 this.idAttribute = options.idAttribute || this.idAttribute;
@@ -58,13 +58,13 @@ var Relution;
                 this.on('change', this.onChange, this);
                 this.on('sync', this.onSync, this);
             };
-            Model.prototype.ajax = function (options) {
+            Model /*<AttributesType extends Object>*/.prototype.ajax = function (options) {
                 return Relution.LiveData.ajax.apply(this, arguments);
             };
-            Model.prototype.sync = function (method, model, options) {
+            Model /*<AttributesType extends Object>*/.prototype.sync = function (method, model, options) {
                 return Relution.LiveData.sync.apply(this, arguments);
             };
-            Model.prototype.onChange = function (model, options) {
+            Model /*<AttributesType extends Object>*/.prototype.onChange = function (model, options) {
                 // For each `set` attribute, update or delete the current value.
                 var attrs = model.changedAttributes();
                 if (_.isObject(attrs)) {
@@ -73,10 +73,10 @@ var Relution;
                     }
                 }
             };
-            Model.prototype.onSync = function (model, options) {
+            Model /*<AttributesType extends Object>*/.prototype.onSync = function (model, options) {
                 this.changedSinceSync = {};
             };
-            Model.prototype.getUrlRoot = function () {
+            Model /*<AttributesType extends Object>*/.prototype.getUrlRoot = function () {
                 if (this.urlRoot) {
                     return _.isFunction(this.urlRoot) ? this.urlRoot() : this.urlRoot;
                 }
@@ -91,12 +91,12 @@ var Relution;
                     return url;
                 }
             };
-            Model.extend = Backbone.Model.extend;
-            Model.create = Relution.LiveData.create;
-            Model.design = Relution.LiveData.design;
-            return Model;
+            Model /*<AttributesType extends Object>*/.extend = Backbone.Model.extend;
+            Model /*<AttributesType extends Object>*/.create = Relution.LiveData.create;
+            Model /*<AttributesType extends Object>*/.design = Relution.LiveData.design;
+            return Model /*<AttributesType extends Object>*/;
         })(Backbone.Model);
-        LiveData.Model = Model;
+        LiveData.Model /*<AttributesType extends Object>*/ = Model /*<AttributesType extends Object>*/;
         _.extend(Model.prototype, LiveData._Object, {
             _type: 'Relution.LiveData.Model',
             isModel: true

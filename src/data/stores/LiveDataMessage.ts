@@ -70,6 +70,6 @@ module Relution.LiveData {
      * actual attribute data being set (patch => merged) on target model in format suitable for model.set() call.
      */
     data: any;
-
   }
+
 }

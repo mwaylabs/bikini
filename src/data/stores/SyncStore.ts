@@ -278,7 +278,13 @@ module Relution.LiveData {
       endpoint.isConnected = true;
       var that = this;
       return this.fetchChanges(endpoint).then(function () {
-        return that._sendMessages(endpoint);
+        return that._sendMessages(endpoint).catch(function (error) {
+          if (!error) {
+            // disconnected while sending offline changes
+            return that.onDisconnect(endpoint);
+          }
+          return Q.reject(error);
+        });
       }).finally(function () {
         if (endpoint.isConnected) {
           that.trigger('connect:' + endpoint.channel);
@@ -556,7 +562,7 @@ module Relution.LiveData {
           }).thenResolve(data); // resolve again yielding data
         }, function (xhr) {
           // failure eventually caught by offline changes
-          if (!xhr.responseText && that.options.useOfflineChanges) {
+          if (!xhr) {
             // this seams to be only a connection problem, so we keep the message and call success
             return Q.resolve(msg.data);
           } else {
@@ -580,7 +586,7 @@ module Relution.LiveData {
           }
         }, function (xhr) {
           // trigger disconnection when disconnected
-          if (!xhr.responseText && endpoint.isConnected) {
+          if (!xhr && endpoint.isConnected) {
             return that.onDisconnect(endpoint);
           }
         });
@@ -632,9 +638,17 @@ module Relution.LiveData {
         error: options.error
       };
       delete options.xhr; // make sure not to use old value
+      let that = this;
       return model.sync(msg.method, model, opts).then(function (data) {
         options.xhr = opts.xhr.xhr || opts.xhr;
         return data;
+      }, function (xhr) {
+        options.xhr = opts.xhr.xhr || opts.xhr;
+        if (!xhr.responseText && that.options.useOfflineChanges) {
+          // this seams to be a connection problem
+          return Q.reject();
+        }
+        return Q.isPromise(xhr) ? xhr : Q.reject(xhr);
       });
     }
 
@@ -846,6 +860,90 @@ module Relution.LiveData {
       }
     }
 
+    /**
+     * called when an offline change was sent to the remote server.
+     *
+     * <p>
+     * May be overwritten to alter change message error handling behavior. The default implementation will attempt
+     * reloading the server data for restoring the client state such that it reflects the server state. When this
+     * succeeded, the offline change is effectively reverted and the change message is dropped.
+     * </p>
+     * <p>
+     * An overwritten implementation may decided whether to revert failed changes based on the error reported.
+     * </p>
+     * <p>
+     * Notice, the method is not called when the offline change failed due to a connectivity issue.
+     * </p>
+     *
+     * @param error reported by remote server.
+     * @param message change reported, attributes of type LiveDataMessage.
+     * @param options context information required to access the data locally as well as remotely.
+     * @return {any} Promise indicating success to drop the change message and preceed with the next change, or
+     *    rejection indicating the change message is kept and retried later on.
+     */
+    protected processOfflineMessageResult(error: Error, message: Model/*<LiveDataMessage>*/, options: {
+      entity: any,
+      modelType: any,
+      urlRoot: string,
+      localStore: Store
+    }) {
+      if (!error) {
+        // message was processed successfully
+        return Q.resolve(message);
+      }
+
+      // failed, eventually undo the modifications stored
+      if (!options.localStore) {
+        return Q.reject(error);
+      }
+
+      // revert modification by reloading data
+      let modelType = options.modelType || Model;
+      let model = new modelType(message.get('data'), {
+        entity: options.entity
+      });
+      model.id = message.get('method') !== 'create' && message.get('id');
+      function triggerError() {
+        // inform client application of the offline changes error
+        let channel = message.get('channel');
+        Relution.LiveData.Debug.error('Relution.LiveData.SyncStore.processOfflineMessageResult: triggering error for channel ' + channel + ' on store', error);
+        that.trigger('error:' + channel, error, model);
+      }
+      let localOptions = {
+        // just affect local store
+        store: options.localStore
+      };
+      let remoteOptions:any = {
+        urlRoot: options.urlRoot,
+        store: {} // really go to remote server
+      };
+      if (model.id) {
+        remoteOptions.url = remoteOptions.urlRoot + (remoteOptions.urlRoot.charAt(remoteOptions.urlRoot.length - 1) === '/' ? '' : '/' ) + model.id;
+        Relution.assert(() => model.url() === remoteOptions.url);
+      } else {
+        // creation failed, just delete locally
+        Relution.assert(() => message.get('method') === 'create');
+        return model.destroy(localOptions).finally(triggerError);
+      }
+      let that = this;
+      return model.fetch(remoteOptions).then(function (data) {
+        // original request failed and the code above reloaded the data to revert the local modifications, which succeeded...
+        return model.save(data, localOptions).finally(triggerError);
+      }, function (fetchResp) {
+        // original request failed and the code above tried to revert the local modifications by reloading the data, which failed as well...
+        var status = fetchResp && fetchResp.status;
+        switch (status) {
+          case 404: // NOT FOUND
+          case 401: // UNAUTHORIZED
+          case 410: // GONE*
+            // ...because the item is gone by now, maybe someone else changed it to be deleted
+            return model.destroy(localOptions); // silent regarding triggerError
+          default:
+            return Q.reject(fetchResp).finally(triggerError);
+        }
+      });
+    }
+
     private _sendMessages(endpoint: SyncEndpoint) {
       // not ready yet
       if (!endpoint || !endpoint.messages) {
@@ -871,83 +969,66 @@ module Relution.LiveData {
       }
 
       // walk stack of endpoints
-      var that = this;
+      let that = this;
       return (function nextEndpoint() {
-        var endpoint = endpoints.pop();
+        let endpoint = endpoints.pop();
         if (!endpoint) {
           return Q.resolve();
         }
 
         // serialized for each endpoint, one at a time
-        var deferred = Q.defer();
+        let deferred = Q.defer();
         function qEndpoint() {
           Relution.LiveData.Debug.info('Relution.LiveData.SyncStore._sendMessages: ' + endpoint.entity.name);
-          var q = endpoint.messages.fetch().then(function nextMessage(result) {
+          let q = endpoint.messages.fetch().then(function nextMessage(result) {
             if (endpoint.messages.models.length <= 0) {
               return result;
             }
 
-            var message = endpoint.messages.models[0];
-            var msg:LiveDataMessage = message.attributes;
-            var channel = message.get('channel');
+            let message = endpoint.messages.models[0];
+            let msg:LiveDataMessage = message.attributes;
+            let channel = message.get('channel');
             if (!msg || !channel) {
-              return message.destroy();
+              return message.destroy().then(nextMessage);
             }
             that._fixMessage(endpoint, msg);
 
-            var remoteOptions:any = {
-              urlRoot: endpoint.urlRoot,
-              store: {} // really go to remote server
-            };
-            var localOptions = {
-              // just affect local store
-              store: endpoint.localStore
-            };
-            var model = new Model(msg.data, {
+            let modelType = endpoint.modelType || Model;
+            let model = new modelType(msg.data, {
               idAttribute: endpoint.entity.idAttribute,
               entity: endpoint.entity,
             });
+            model.id = message.get('method') !== 'create' && message.get('id');
+            let remoteOptions:any = {
+              urlRoot: endpoint.urlRoot,
+              store: {} // really go to remote server
+            };
+            if (model.id) {
+              remoteOptions.url = remoteOptions.urlRoot + (remoteOptions.urlRoot.charAt(remoteOptions.urlRoot.length - 1) === '/' ? '' : '/' ) + model.id;
+              Relution.assert(() => model.url() === remoteOptions.url);
+            }
             Relution.LiveData.Debug.info('sendMessage ' + model.id);
-            return that._applyResponse(that._ajaxMessage(endpoint, msg, remoteOptions, model), endpoint, msg, remoteOptions, model).catch(function (error) {
-              // failed, eventually undo the modifications stored
-              if (!endpoint.localStore) {
-                return Q.reject(error);
+            return that._applyResponse(that._ajaxMessage(endpoint, msg, remoteOptions, model), endpoint, msg, remoteOptions, model).then(function succeededMessage() {
+              // succeeded
+              return Q.when(that.processOfflineMessageResult(null, message, endpoint));
+            }, function failedMessage(error) {
+              if (error) {
+                // remote failed
+                return Q.when(that.processOfflineMessageResult(error, message, endpoint));
+              } else {
+                // connectivity issue, keep rejection
+                return Q.reject();
               }
-
-              // revert modification by reloading data
-              if (msg.id) {
-                remoteOptions.url = remoteOptions.urlRoot + (remoteOptions.urlRoot.charAt(remoteOptions.urlRoot.length - 1) === '/' ? '' : '/' ) + msg.id;
-              }
-              return model.fetch(remoteOptions).then(function (data) {
-                // original request failed and the code above reloaded the data to revert the local modifications, which succeeded...
-                return model.save(data, localOptions).tap(function () {
-                  that.trigger('error:' + channel, error, model);
-                });
-              }, function (fetchResp) {
-                // original request failed and the code above tried to revert the local modifications by reloading the data, which failed as well...
-                var status = fetchResp && fetchResp.status;
-                switch (status) {
-                  case 404: // NOT FOUND
-                  case 401: // UNAUTHORIZED
-                  case 410: // GONE*
-                    // ...because the item is gone by now, maybe someone else changed it to be deleted
-                    return model.destroy(localOptions);
-                  default:
-                    return Q.reject(fetchResp);
-                }
-              });
-            }).then(function () {
-              // succeeded or reverted
+            }).then(function destroyMessage() {
+              // applying change succeeded or successfully recovered change
               return message.destroy();
-            }).then(function (result) {
-              return nextMessage(result);
-            });
+            }).then(nextMessage);
           }).then(nextEndpoint);
           deferred.resolve(q);
           return q;
         }
 
-        // link to promise of endpoint to force seqential processing
+        // link to promise of endpoint to force sequential processing
         if (endpoint.messagesPromise) {
           endpoint.messagesPromise.finally(qEndpoint);
         } else {
