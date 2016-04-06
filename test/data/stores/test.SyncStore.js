@@ -296,8 +296,9 @@ describe('Relution.LiveData.SyncStore', function() {
       });
     }
   });
+});
 
-  describe('Offline Model Save Test', function() {
+describe('Relution.LiveData.SyncStore Offline Model Save Test', function() {
     var model = null;
     var Store = null
     var modelType = null;
@@ -342,14 +343,14 @@ describe('Relution.LiveData.SyncStore', function() {
     it('not saved on Server but must be websql', function(done) {
       var username = 'offline';
 
-      return model.save({ username: username }).then(function() {
+    model.save({ username: username }).then(function() {
         var db = openDatabase('relution-livedata', '', '', 1024 * 1024);
         var channel = model.store.endpoints[Object.keys(model.store.endpoints)[0]].channel;
         var query = 'SELECT * FROM \'' + channel + '\' WHERE id =?';
 
         Relution.LiveData.Debug.trace(query);
 
-        return db.transaction(
+      db.transaction(
           function(tx) {
             tx.executeSql(query, [model.get('id')], function(tx, table) {
               Relution.LiveData.Debug.trace('execute', table.rows[0].data);
@@ -374,13 +375,13 @@ describe('Relution.LiveData.SyncStore', function() {
     it('not saved on Server but must be in websql msg-table', function(done) {
       var username = 'message-offline-test';
 
-      return model.save({ username: username }).then(function() {
+    model.save({ username: username }).then(function() {
 
         var db = openDatabase('relution-livedata', '', '', 1024 * 1024);
         var channel = model.store.endpoints[Object.keys(model.store.endpoints)[0]].channel;
         var query = 'SELECT * FROM \'msg-' + channel + '\' WHERE id =?';
 
-        return db.transaction(
+      db.transaction(
           function(tx) {
             tx.executeSql(query, [model.get('id')], function(tx, table) {
               assert.equal(table.rows.length, 1)
@@ -397,9 +398,6 @@ describe('Relution.LiveData.SyncStore', function() {
             done(error);
           }
         );
-
       });
     });
   });
-
-});

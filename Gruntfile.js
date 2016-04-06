@@ -85,7 +85,7 @@ module.exports = function (grunt) {
             },
             test: {
                 files: ['test/**/*'],
-                tasks: ['test'],
+                tasks: ['build', 'mocha'],
                 options: {
                     spawn: false
                 }
