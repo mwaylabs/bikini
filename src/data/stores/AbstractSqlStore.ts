@@ -41,7 +41,10 @@ module Relution.LiveData {
   export class AbstractSqlStore extends Store {
     protected db: any = null;
     protected options: any;
-    protected entities: { [entity: string]: boolean } = {};
+    protected entities: { [entity: string]: {
+      table: string,    // by default, entity itself but is given explicitly by SyncStore!
+      created?: boolean // tri-state as initial state is not known and thus undefined
+    } } = {};
 
     constructor(options?:any) {
       super(_.extend({
@@ -53,7 +56,9 @@ module Relution.LiveData {
       }, options));
 
       for (var entity in this.options.entities) {
-        this.entities[entity] = false;
+        this.entities[entity] = {
+          table: this.options.entities[entity] || entity
+        };
       }
     }
 
@@ -139,15 +144,15 @@ module Relution.LiveData {
     }
 
     protected _sqlDropTable(entity) {
-      return `DROP TABLE IF EXISTS '${entity}';`;
+      return `DROP TABLE IF EXISTS '${this.entities[entity].table}';`;
     }
 
     protected _sqlCreateTable(entity) {
-      return `CREATE TABLE IF NOT EXISTS '${entity}' (id VARCHAR(255) NOT NULL PRIMARY KEY ASC UNIQUE, data  TEXT NOT NULL);`;
+      return `CREATE TABLE IF NOT EXISTS '${this.entities[entity].table}' (id VARCHAR(255) NOT NULL PRIMARY KEY ASC UNIQUE, data  TEXT NOT NULL);`;
     }
 
     protected _sqlDelete(options, entity) {
-      var sql = 'DELETE FROM \'' + entity + '\'';
+      var sql = 'DELETE FROM \'' + this.entities[entity].table + '\'';
       var where = this._sqlWhereFromData(options, entity);
       if (where) {
         sql += ' WHERE ' + where;
@@ -179,13 +184,13 @@ module Relution.LiveData {
         // new code
         var sql = 'SELECT ';
         sql += '*';
-        sql += ' FROM \'' + entity + '\'';
+        sql += ' FROM \'' + this.entities[entity].table + '\'';
         return sql;
       }
 
       var sql = 'SELECT ';
       sql += '*';
-      sql += ' FROM \'' + entity + '\'';
+      sql += ' FROM \'' + this.entities[entity].table + '\'';
 
       var where = this._sqlWhereFromData(options, entity);
       if (where) {
@@ -215,18 +220,25 @@ module Relution.LiveData {
 
     protected _dropTable(options) {
       var entity = options.entity;
-      this.entities[entity] = false;
-
-      if (this._checkDb(options) && entity) {
-        var sql = this._sqlDropTable(entity);
-        // reset flag
-        this._executeTransaction(options, [sql]);
+      if (entity in this.entities && this.entities[entity].created !== false) {
+        if (this._checkDb(options)) {
+          var sql = this._sqlDropTable(entity);
+          // reset flag
+          this._executeTransaction(options, [sql]);
+        }
+      } else {
+        // no need dropping as table was not created
+        this.handleSuccess(options);
       }
     }
 
     protected _createTable(options) {
       var entity = options.entity;
-      this.entities[entity] = true;
+      if (!(entity in this.entities)) {
+        this.entities[entity] = {
+          table: entity
+        }
+      }
 
       if (this._checkDb(options)) {
         var sql = this._sqlCreateTable(entity);
@@ -236,19 +248,21 @@ module Relution.LiveData {
     }
 
     protected _checkTable(options, callback) {
-      var entity = options.entity;
       var that = this;
-      if (entity && !this.entities[entity]) {
+      var entity = options.entity;
+      if (entity && (!this.entities[entity] || this.entities[entity].created === false)) {
         this._createTable({
           success: function () {
+            that.entities[entity].created = true;
             callback();
           },
           error: function (error) {
-            this.handleError(options, error);
+            that.handleError(options, error);
           },
           entity: entity
         });
       } else {
+        // we know it's created already
         callback();
       }
     }
@@ -258,7 +272,7 @@ module Relution.LiveData {
       var models = isCollection(model) ? model.models : [model];
       if (this._checkDb(options) && this._checkData(options, models)) {
         var statements = [];
-        var sqlTemplate = 'INSERT OR REPLACE INTO \'' + entity + '\' (';
+        var sqlTemplate = 'INSERT OR REPLACE INTO \'' + this.entities[entity].table + '\' (';
         for (var i = 0; i < models.length; i++) {
           var amodel = models[i];
           var statement = ''; // the actual sql insert string with values

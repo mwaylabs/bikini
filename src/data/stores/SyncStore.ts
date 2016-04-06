@@ -89,7 +89,7 @@ module Relution.LiveData {
       }
     }
 
-    initEndpoint(modelOrCollection: Model | Collection, modelType): SyncEndpoint {
+    initEndpoint(modelOrCollection: Model | Collection, modelType: ModelCtor): SyncEndpoint {
       var urlRoot = modelOrCollection.getUrlRoot();
       var entity = modelOrCollection.entity;
       if (urlRoot && entity) {
@@ -121,7 +121,7 @@ module Relution.LiveData {
     }
 
     initModel(model: Model) {
-      model.endpoint = this.initEndpoint(model, model.constructor);
+      model.endpoint = this.initEndpoint(model, <ModelCtor>model.constructor);
     }
 
     initCollection(collection: Collection) {
@@ -138,7 +138,7 @@ module Relution.LiveData {
     createLocalStore(endpoint: SyncEndpoint) {
       if (this.options.useLocalStore) {
         var entities = {};
-        entities[endpoint.entity] = endpoint.modelType;
+        entities[endpoint.entity] = endpoint.channel;
         var storeOption = {
           entities: entities
         };
@@ -159,7 +159,7 @@ module Relution.LiveData {
       if (this.options.useOfflineChanges && !endpoint.messages) {
         var entity = 'msg-' + endpoint.channel;
         var entities = {};
-        entities[entity] = null;
+        entities[entity] = entity;
         var storeOption = {
           entities: entities
         };

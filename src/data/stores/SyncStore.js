@@ -131,7 +131,7 @@ var Relution;
             SyncStore.prototype.createLocalStore = function (endpoint) {
                 if (this.options.useLocalStore) {
                     var entities = {};
-                    entities[endpoint.entity] = endpoint.modelType;
+                    entities[endpoint.entity] = endpoint.channel;
                     var storeOption = {
                         entities: entities
                     };
@@ -151,7 +151,7 @@ var Relution;
                 if (this.options.useOfflineChanges && !endpoint.messages) {
                     var entity = 'msg-' + endpoint.channel;
                     var entities = {};
-                    entities[entity] = null;
+                    entities[entity] = entity;
                     var storeOption = {
                         entities: entities
                     };

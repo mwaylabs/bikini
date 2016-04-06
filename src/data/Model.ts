@@ -39,7 +39,7 @@ module Relution.LiveData {
     public store: Store;
     public credentials: any;
 
-    public endpoint: any;
+    public endpoint: SyncEndpoint;
 
     public static extend = Backbone.Model.extend;
     public static create = Relution.LiveData.create;

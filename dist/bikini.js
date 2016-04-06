@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2016 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Wed Apr 06 2016 11:51:07
+* Date:      Wed Apr 06 2016 17:45:01
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -2898,7 +2898,9 @@ var Relution;
                 this.db = null;
                 this.entities = {};
                 for (var entity in this.options.entities) {
-                    this.entities[entity] = false;
+                    this.entities[entity] = {
+                        table: this.options.entities[entity] || entity
+                    };
                 }
             }
             AbstractSqlStore.prototype.sync = function (method, model, options) {
@@ -2973,13 +2975,13 @@ var Relution;
                 return sql;
             };
             AbstractSqlStore.prototype._sqlDropTable = function (entity) {
-                return "DROP TABLE IF EXISTS '" + entity + "';";
+                return "DROP TABLE IF EXISTS '" + this.entities[entity].table + "';";
             };
             AbstractSqlStore.prototype._sqlCreateTable = function (entity) {
-                return "CREATE TABLE IF NOT EXISTS '" + entity + "' (id VARCHAR(255) NOT NULL PRIMARY KEY ASC UNIQUE, data  TEXT NOT NULL);";
+                return "CREATE TABLE IF NOT EXISTS '" + this.entities[entity].table + "' (id VARCHAR(255) NOT NULL PRIMARY KEY ASC UNIQUE, data  TEXT NOT NULL);";
             };
             AbstractSqlStore.prototype._sqlDelete = function (options, entity) {
-                var sql = 'DELETE FROM \'' + entity + '\'';
+                var sql = 'DELETE FROM \'' + this.entities[entity].table + '\'';
                 var where = this._sqlWhereFromData(options, entity);
                 if (where) {
                     sql += ' WHERE ' + where;
@@ -3010,12 +3012,12 @@ var Relution;
                     // new code
                     var sql = 'SELECT ';
                     sql += '*';
-                    sql += ' FROM \'' + entity + '\'';
+                    sql += ' FROM \'' + this.entities[entity].table + '\'';
                     return sql;
                 }
                 var sql = 'SELECT ';
                 sql += '*';
-                sql += ' FROM \'' + entity + '\'';
+                sql += ' FROM \'' + this.entities[entity].table + '\'';
                 var where = this._sqlWhereFromData(options, entity);
                 if (where) {
                     sql += ' WHERE ' + where;
@@ -3038,16 +3040,25 @@ var Relution;
             };
             AbstractSqlStore.prototype._dropTable = function (options) {
                 var entity = options.entity;
-                this.entities[entity] = false;
-                if (this._checkDb(options) && entity) {
-                    var sql = this._sqlDropTable(entity);
-                    // reset flag
-                    this._executeTransaction(options, [sql]);
+                if (entity in this.entities && this.entities[entity].created !== false) {
+                    if (this._checkDb(options)) {
+                        var sql = this._sqlDropTable(entity);
+                        // reset flag
+                        this._executeTransaction(options, [sql]);
+                    }
+                }
+                else {
+                    // no need dropping as table was not created
+                    this.handleSuccess(options);
                 }
             };
             AbstractSqlStore.prototype._createTable = function (options) {
                 var entity = options.entity;
-                this.entities[entity] = true;
+                if (!(entity in this.entities)) {
+                    this.entities[entity] = {
+                        table: entity
+                    };
+                }
                 if (this._checkDb(options)) {
                     var sql = this._sqlCreateTable(entity);
                     // reset flag
@@ -3055,20 +3066,22 @@ var Relution;
                 }
             };
             AbstractSqlStore.prototype._checkTable = function (options, callback) {
-                var entity = options.entity;
                 var that = this;
-                if (entity && !this.entities[entity]) {
+                var entity = options.entity;
+                if (entity && (!this.entities[entity] || this.entities[entity].created === false)) {
                     this._createTable({
                         success: function () {
+                            that.entities[entity].created = true;
                             callback();
                         },
                         error: function (error) {
-                            this.handleError(options, error);
+                            that.handleError(options, error);
                         },
                         entity: entity
                     });
                 }
                 else {
+                    // we know it's created already
                     callback();
                 }
             };
@@ -3077,7 +3090,7 @@ var Relution;
                 var models = LiveData.isCollection(model) ? model.models : [model];
                 if (this._checkDb(options) && this._checkData(options, models)) {
                     var statements = [];
-                    var sqlTemplate = 'INSERT OR REPLACE INTO \'' + entity + '\' (';
+                    var sqlTemplate = 'INSERT OR REPLACE INTO \'' + this.entities[entity].table + '\' (';
                     for (var i = 0; i < models.length; i++) {
                         var amodel = models[i];
                         var statement = ''; // the actual sql insert string with values
@@ -3832,7 +3845,7 @@ var Relution;
             SyncStore.prototype.createLocalStore = function (endpoint) {
                 if (this.options.useLocalStore) {
                     var entities = {};
-                    entities[endpoint.entity] = endpoint.modelType;
+                    entities[endpoint.entity] = endpoint.channel;
                     var storeOption = {
                         entities: entities
                     };
@@ -3852,7 +3865,7 @@ var Relution;
                 if (this.options.useOfflineChanges && !endpoint.messages) {
                     var entity = 'msg-' + endpoint.channel;
                     var entities = {};
-                    entities[entity] = null;
+                    entities[entity] = entity;
                     var storeOption = {
                         entities: entities
                     };
