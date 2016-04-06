@@ -28,6 +28,8 @@
 /// <reference path="../../core/livedata.d.ts" />
 /// <reference path="Store.ts" />
 /// <reference path="SyncContext.ts" />
+/// <reference path="../Model.ts" />
+/// <reference path="../Collection.ts" />
 /// <reference path="../../utility/Debug.ts" />
 
 module Relution.LiveData {
@@ -42,7 +44,7 @@ module Relution.LiveData {
   export class SyncEndpoint {
 
     public entity: string;
-    public modelType: any;
+    public modelType: ModelCtor;
     public urlRoot: string;
     public socketPath: string;
     public credentials: any;
@@ -54,7 +56,7 @@ module Relution.LiveData {
 
     public localStore: Store;
     public info: any;
-    public messages: any;
+    public messages: Collection;
     public messagesPromise: any;
     public messagesPriority: number;
     public socket: any;
@@ -71,7 +73,7 @@ module Relution.LiveData {
 
     constructor(options:{
       entity: string,
-      modelType: string,
+      modelType: ModelCtor,
       urlRoot: string,
       socketPath: string,
       credentials: any

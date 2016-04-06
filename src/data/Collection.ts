@@ -9,8 +9,19 @@
 /// <reference path="stores/Store.ts" />
 /// <reference path="Model.ts" />
 /// <reference path="stores/SyncContext.ts" />
+/// <reference path="stores/SyncEndpoint.ts" />
 
 module Relution.LiveData {
+
+  /**
+   * constructor function of Collection.
+   */
+  export interface CollectionCtor {
+    /**
+     * @see Collection#constructor
+     */
+    new(models?: any, options?: any): Collection;
+  }
 
   /**
    * The Relution.LiveData.Collection can be used like a Backbone Collection,
@@ -30,7 +41,7 @@ module Relution.LiveData {
 
     public _type;
     public isCollection;
-    public model;
+    public model: ModelCtor;
     public entity: string;
     public options;
 
@@ -38,7 +49,7 @@ module Relution.LiveData {
     public syncContext: SyncContext;
     public credentials: any;
 
-    public endpoint: any;
+    public endpoint: SyncEndpoint;
     public channel: string;
 
     public static extend = Backbone.Collection.extend;
@@ -54,6 +65,9 @@ module Relution.LiveData {
 
       this.init(options);
     }
+
+    // following fixes DefinitelyTyped definitions of backbone.js not declaring modelId() method
+    public modelId: (attrs: any) => any;
 
     protected init(models?: any, options?: any) {
       options = options || {};
@@ -95,7 +109,7 @@ module Relution.LiveData {
       }
     }
 
-    public destroy(options) {
+    public destroy(options?) {
       options = options || {};
       var success = options.success;
       if (this.length > 0) {
@@ -112,19 +126,6 @@ module Relution.LiveData {
       } else if (success) {
         success();
       }
-    }
-
-    public destroyLocal() {
-      var store = this.endpoint.localStore;
-      var that = this;
-      // DROP TABLE
-      if (this.entity) {
-        store.drop(this.entity);
-      }
-      // RESET localStorage-entry
-      localStorage.setItem('__' + this.channel + 'last_msg_time', '');
-      this.store.endpoints = {};
-      return this.reset();
     }
 
     /**

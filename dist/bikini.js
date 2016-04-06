@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2016 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Mon Apr 04 2016 17:25:07
+* Date:      Wed Apr 06 2016 11:51:07
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -1223,29 +1223,6 @@ Relution.LiveData.Cypher = Relution.LiveData._Object.design(/** @scope Relution.
   }
 
 });
-
-// Copyright (c) 2013 M-Way Solutions GmbH
-// http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
-
-/**
- *
- * @module Relution.LiveData.Date
- *
- * @extends Relution.LiveData._Object
- */
-Relution.LiveData.Date = {
-
-  /**
-   * This method is used to create a new instance of Relution.LiveData.Date based on the data
-   * library moment.js.
-   *
-   * @returns {Object}
-   */
-  create: function () {
-    var m = moment.apply(this, arguments);
-    return _.extend(m, this);
-  }
-};
 
 // Copyright (c) 2013 M-Way Solutions GmbH
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
@@ -2480,6 +2457,7 @@ var Relution;
 /// <reference path="stores/Store.ts" />
 /// <reference path="Model.ts" />
 /// <reference path="stores/SyncContext.ts" />
+/// <reference path="stores/SyncEndpoint.ts" />
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -2564,18 +2542,6 @@ var Relution;
                 else if (success) {
                     success();
                 }
-            };
-            Collection.prototype.destroyLocal = function () {
-                var store = this.endpoint.localStore;
-                var that = this;
-                // DROP TABLE
-                if (this.entity) {
-                    store.drop(this.entity);
-                }
-                // RESET localStorage-entry
-                localStorage.setItem('__' + this.channel + 'last_msg_time', '');
-                this.store.endpoints = {};
-                return this.reset();
             };
             /**
              * save all containing models
@@ -3680,6 +3646,8 @@ var Relution;
 /// <reference path="../../core/livedata.d.ts" />
 /// <reference path="Store.ts" />
 /// <reference path="SyncContext.ts" />
+/// <reference path="../Model.ts" />
+/// <reference path="../Collection.ts" />
 /// <reference path="../../utility/Debug.ts" />
 var Relution;
 (function (Relution) {
@@ -4364,7 +4332,7 @@ var Relution;
                             dataIds = {};
                             data.forEach(function (d) {
                                 if (d) {
-                                    var id = d[endpoint.modelType.idAttribute] || d._id;
+                                    var id = d[endpoint.modelType.prototype.idAttribute] || d._id;
                                     dataIds[id] = d;
                                     var m = syncIds[id];
                                     if (m) {
@@ -4409,7 +4377,7 @@ var Relution;
                                 data = array[i];
                                 if (data) {
                                     promises.push(that.onMessage(endpoint, that._fixMessage(endpoint, {
-                                        id: data[endpoint.modelType.idAttribute] || data._id,
+                                        id: data[endpoint.modelType.prototype.idAttribute] || data._id,
                                         method: 'update',
                                         time: msg.time,
                                         data: data

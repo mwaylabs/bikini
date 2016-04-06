@@ -28,6 +28,8 @@
 /// <reference path="../../core/livedata.d.ts" />
 /// <reference path="Store.ts" />
 /// <reference path="SyncContext.ts" />
+/// <reference path="../Model.ts" />
+/// <reference path="../Collection.ts" />
 /// <reference path="../../utility/Debug.ts" />
 var Relution;
 (function (Relution) {

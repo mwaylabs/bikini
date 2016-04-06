@@ -9,6 +9,7 @@
 /// <reference path="stores/Store.ts" />
 /// <reference path="Model.ts" />
 /// <reference path="stores/SyncContext.ts" />
+/// <reference path="stores/SyncEndpoint.ts" />
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -93,18 +94,6 @@ var Relution;
                 else if (success) {
                     success();
                 }
-            };
-            Collection.prototype.destroyLocal = function () {
-                var store = this.endpoint.localStore;
-                var that = this;
-                // DROP TABLE
-                if (this.entity) {
-                    store.drop(this.entity);
-                }
-                // RESET localStorage-entry
-                localStorage.setItem('__' + this.channel + 'last_msg_time', '');
-                this.store.endpoints = {};
-                return this.reset();
             };
             /**
              * save all containing models

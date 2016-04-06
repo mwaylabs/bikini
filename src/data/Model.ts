@@ -12,6 +12,16 @@
 module Relution.LiveData {
 
   /**
+   * constructor function of Model.
+   */
+  export interface ModelCtor {
+    /**
+     * @see Model#constructor
+     */
+    new(attributes?: any, options?: any): Model;
+  }
+
+  /**
    * @module Relution.LiveData.Model
    *
    * @type {*}

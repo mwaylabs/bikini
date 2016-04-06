@@ -631,7 +631,7 @@ var Relution;
                             dataIds = {};
                             data.forEach(function (d) {
                                 if (d) {
-                                    var id = d[endpoint.modelType.idAttribute] || d._id;
+                                    var id = d[endpoint.modelType.prototype.idAttribute] || d._id;
                                     dataIds[id] = d;
                                     var m = syncIds[id];
                                     if (m) {
@@ -676,7 +676,7 @@ var Relution;
                                 data = array[i];
                                 if (data) {
                                     promises.push(that.onMessage(endpoint, that._fixMessage(endpoint, {
-                                        id: data[endpoint.modelType.idAttribute] || data._id,
+                                        id: data[endpoint.modelType.prototype.idAttribute] || data._id,
                                         method: 'update',
                                         time: msg.time,
                                         data: data
