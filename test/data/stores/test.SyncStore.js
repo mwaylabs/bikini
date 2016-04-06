@@ -228,9 +228,7 @@ describe('Relution.LiveData.SyncStore', function() {
           } else if (response._id === newId) {
             response._id = oldId;
           }
-          return reject({
-            status: -1
-          });
+          return response;
         });
       }
     });
