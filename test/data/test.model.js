@@ -39,7 +39,6 @@ describe('Relution.LiveData.Model', function () {
     var p = Person.create({
       firstName: 'Max',
       sureName: 'Mustermann',
-      birthDate: Relution.LiveData.Date.create('01.02.2003'),
       notes: 'Notes to this person',
       address: {street: 'Leitzstraße', house_nr: 45, zip: '70469', city: 'Stuttgart'}
     });
