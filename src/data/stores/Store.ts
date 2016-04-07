@@ -30,6 +30,16 @@
 module Relution.LiveData {
 
   /**
+   * constructor function of Store.
+   */
+  export interface StoreCtor {
+    /**
+     * @see Store#constructor
+     */
+    new(options?: any): Store;
+  }
+
+  /**
    * Base class to build a custom data store.
    *
    * See: Relution.LiveData.WebSqlStore and Relution.LiveData.SyncStore
@@ -37,6 +47,10 @@ module Relution.LiveData {
    * @module Relution.LiveData.Store
    */
   export class Store {
+
+    public _type: string;         // constant 'Relution.LiveData.Store' on prototype
+    public isModel: boolean;      // constant false on prototype
+    public isCollection: boolean; // constant false on prototype
 
     protected options: any;
     protected entities: any;
@@ -176,5 +190,12 @@ module Relution.LiveData {
     }
   }
 
-  _.extend(Store.prototype, Backbone.Events, _Object);
+  // mixins
+  let store = _.extend(Store.prototype, Backbone.Events, _Object, {
+    _type: 'Relution.LiveData.Store',
+    isModel: false,
+    isCollection: false
+  });
+  Relution.assert(() => Store.prototype.isPrototypeOf(store));
+
 }

@@ -20,6 +20,25 @@ var Relution;
     var LiveData;
     (function (LiveData) {
         /**
+         * tests whether a given object is a Collection.
+         *
+         * @param {object} object to check.
+         * @return {boolean} whether object is a Collection.
+         */
+        function isCollection(object) {
+            if (typeof object !== 'object') {
+                return false;
+            }
+            else if ('isCollection' in object) {
+                Relution.assert(function () { return object.isCollection === Collection.prototype.isPrototypeOf(object); });
+                return object.isCollection;
+            }
+            else {
+                return Collection.prototype.isPrototypeOf(object);
+            }
+        }
+        LiveData.isCollection = isCollection;
+        /**
          * The Relution.LiveData.Collection can be used like a Backbone Collection,
          *
          * but there are some enhancements to fetch, save and delete the
@@ -215,11 +234,15 @@ var Relution;
             return Collection;
         })(Backbone.Collection);
         LiveData.Collection = Collection;
-        _.extend(Collection.prototype, LiveData._Object, {
+        // mixins
+        var collection = _.extend(Collection.prototype, LiveData._Object, {
             _type: 'Relution.LiveData.Collection',
+            isModel: false,
             isCollection: true,
+            // default model type unless overwritten
             model: LiveData.Model
         });
+        Relution.assert(function () { return isCollection(collection); });
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=Collection.js.map

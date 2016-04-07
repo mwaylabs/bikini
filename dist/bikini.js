@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2016 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Wed Apr 06 2016 17:45:01
+* Date:      Thu Apr 07 2016 10:32:49
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -252,14 +252,6 @@ Relution.LiveData.design = function (obj) {
 };
 
 Relution.LiveData.extend = Backbone.Model.extend;
-
-Relution.LiveData.isCollection = function (collection) {
-  return Backbone.Collection.prototype.isPrototypeOf(collection);
-};
-
-Relution.LiveData.isModel = function (model) {
-  return Backbone.Model.prototype.isPrototypeOf(model);
-};
 
 /**
  * options passed to Collection.fetch() preventing backbone.js from consuming the response.
@@ -2367,6 +2359,25 @@ var Relution;
     var LiveData;
     (function (LiveData) {
         /**
+         * tests whether a given object is a Model.
+         *
+         * @param {object} object to check.
+         * @return {boolean} whether object is a Model.
+         */
+        function isModel(object) {
+            if (typeof object !== 'object') {
+                return false;
+            }
+            else if ('isModel' in object) {
+                Relution.assert(function () { return object.isModel === Model.prototype.isPrototypeOf(object); });
+                return object.isModel;
+            }
+            else {
+                return Model.prototype.isPrototypeOf(object);
+            }
+        }
+        LiveData.isModel = isModel;
+        /**
          * @module Relution.LiveData.Model
          *
          * @type {*}
@@ -2376,8 +2387,6 @@ var Relution;
             __extends(Model /*<AttributesType extends Object>*/, _super);
             function Model /*<AttributesType extends Object>*/(attributes, options) {
                 _super.call(this, attributes, options);
-                this._type = 'Relution.LiveData.Model';
-                this.isModel = true;
                 this.defaults = {};
                 this.changedSinceSync = {};
                 if (this.urlRoot && typeof this.urlRoot === 'string') {
@@ -2439,10 +2448,13 @@ var Relution;
             return Model /*<AttributesType extends Object>*/;
         })(Backbone.Model);
         LiveData.Model /*<AttributesType extends Object>*/ = Model /*<AttributesType extends Object>*/;
-        _.extend(Model.prototype, LiveData._Object, {
+        // mixins
+        var model = _.extend(Model.prototype, LiveData._Object, {
             _type: 'Relution.LiveData.Model',
-            isModel: true
+            isModel: true,
+            isCollection: false
         });
+        Relution.assert(function () { return isModel(model); });
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=Model.js.map
@@ -2467,6 +2479,25 @@ var Relution;
 (function (Relution) {
     var LiveData;
     (function (LiveData) {
+        /**
+         * tests whether a given object is a Collection.
+         *
+         * @param {object} object to check.
+         * @return {boolean} whether object is a Collection.
+         */
+        function isCollection(object) {
+            if (typeof object !== 'object') {
+                return false;
+            }
+            else if ('isCollection' in object) {
+                Relution.assert(function () { return object.isCollection === Collection.prototype.isPrototypeOf(object); });
+                return object.isCollection;
+            }
+            else {
+                return Collection.prototype.isPrototypeOf(object);
+            }
+        }
+        LiveData.isCollection = isCollection;
         /**
          * The Relution.LiveData.Collection can be used like a Backbone Collection,
          *
@@ -2663,11 +2694,15 @@ var Relution;
             return Collection;
         })(Backbone.Collection);
         LiveData.Collection = Collection;
-        _.extend(Collection.prototype, LiveData._Object, {
+        // mixins
+        var collection = _.extend(Collection.prototype, LiveData._Object, {
             _type: 'Relution.LiveData.Collection',
+            isModel: false,
             isCollection: true,
+            // default model type unless overwritten
             model: LiveData.Model
         });
+        Relution.assert(function () { return isCollection(collection); });
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=Collection.js.map
@@ -2835,7 +2870,13 @@ var Relution;
             return Store;
         })();
         LiveData.Store = Store;
-        _.extend(Store.prototype, Backbone.Events, LiveData._Object);
+        // mixins
+        var store = _.extend(Store.prototype, Backbone.Events, LiveData._Object, {
+            _type: 'Relution.LiveData.Store',
+            isModel: false,
+            isCollection: false
+        });
+        Relution.assert(function () { return Store.prototype.isPrototypeOf(store); });
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=Store.js.map

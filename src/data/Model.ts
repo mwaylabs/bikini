@@ -22,6 +22,23 @@ module Relution.LiveData {
   }
 
   /**
+   * tests whether a given object is a Model.
+   *
+   * @param {object} object to check.
+   * @return {boolean} whether object is a Model.
+   */
+  export function isModel(object): object is Model {
+    if (typeof object !== 'object') {
+      return false;
+    } else if ('isModel' in object) {
+      Relution.assert(() => object.isModel === Model.prototype.isPrototypeOf(object));
+      return object.isModel;
+    } else {
+      return Model.prototype.isPrototypeOf(object);
+    }
+  }
+
+  /**
    * @module Relution.LiveData.Model
    *
    * @type {*}
@@ -29,8 +46,10 @@ module Relution.LiveData {
    */
   export class Model/*<AttributesType extends Object>*/ extends Backbone.Model {
 
-    public _type = 'Relution.LiveData.Model';
-    public isModel = true;
+    public _type: string;         // constant 'Relution.LiveData.Model' on prototype
+    public isModel: boolean;      // constant true on prototype
+    public isCollection: boolean; // constant false on prototype
+
     public entity: string;
     public defaults = {};
     public changedSinceSync = {};
@@ -109,9 +128,12 @@ module Relution.LiveData {
 
   }
 
-  _.extend(Model.prototype, _Object, {
+  // mixins
+  let model = _.extend(Model.prototype, _Object, {
     _type: 'Relution.LiveData.Model',
-    isModel: true
+    isModel: true,
+    isCollection: false
   });
+  Relution.assert(() => isModel(model));
 
 }

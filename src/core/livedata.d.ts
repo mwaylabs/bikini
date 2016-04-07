@@ -40,9 +40,6 @@ declare module Relution.LiveData {
   function create(...arguments:any[]);
   function design(...arguments:any[]);
 
-  function isModel(object): object is Model;
-  function isCollection(object): object is Collection;
-
   function ajax(options: any);
   function sync(method: string, model: Backbone.ModelBase, options?: any);
 

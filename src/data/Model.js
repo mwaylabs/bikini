@@ -18,6 +18,25 @@ var Relution;
     var LiveData;
     (function (LiveData) {
         /**
+         * tests whether a given object is a Model.
+         *
+         * @param {object} object to check.
+         * @return {boolean} whether object is a Model.
+         */
+        function isModel(object) {
+            if (typeof object !== 'object') {
+                return false;
+            }
+            else if ('isModel' in object) {
+                Relution.assert(function () { return object.isModel === Model.prototype.isPrototypeOf(object); });
+                return object.isModel;
+            }
+            else {
+                return Model.prototype.isPrototypeOf(object);
+            }
+        }
+        LiveData.isModel = isModel;
+        /**
          * @module Relution.LiveData.Model
          *
          * @type {*}
@@ -27,8 +46,6 @@ var Relution;
             __extends(Model /*<AttributesType extends Object>*/, _super);
             function Model /*<AttributesType extends Object>*/(attributes, options) {
                 _super.call(this, attributes, options);
-                this._type = 'Relution.LiveData.Model';
-                this.isModel = true;
                 this.defaults = {};
                 this.changedSinceSync = {};
                 if (this.urlRoot && typeof this.urlRoot === 'string') {
@@ -90,10 +107,13 @@ var Relution;
             return Model /*<AttributesType extends Object>*/;
         })(Backbone.Model);
         LiveData.Model /*<AttributesType extends Object>*/ = Model /*<AttributesType extends Object>*/;
-        _.extend(Model.prototype, LiveData._Object, {
+        // mixins
+        var model = _.extend(Model.prototype, LiveData._Object, {
             _type: 'Relution.LiveData.Model',
-            isModel: true
+            isModel: true,
+            isCollection: false
         });
+        Relution.assert(function () { return isModel(model); });
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=Model.js.map

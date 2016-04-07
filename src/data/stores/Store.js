@@ -162,7 +162,13 @@ var Relution;
             return Store;
         })();
         LiveData.Store = Store;
-        _.extend(Store.prototype, Backbone.Events, LiveData._Object);
+        // mixins
+        var store = _.extend(Store.prototype, Backbone.Events, LiveData._Object, {
+            _type: 'Relution.LiveData.Store',
+            isModel: false,
+            isCollection: false
+        });
+        Relution.assert(function () { return Store.prototype.isPrototypeOf(store); });
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=Store.js.map

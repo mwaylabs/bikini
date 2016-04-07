@@ -24,6 +24,23 @@ module Relution.LiveData {
   }
 
   /**
+   * tests whether a given object is a Collection.
+   *
+   * @param {object} object to check.
+   * @return {boolean} whether object is a Collection.
+   */
+  export function isCollection(object): object is Collection {
+    if (typeof object !== 'object') {
+      return false;
+    } else if ('isCollection' in object) {
+      Relution.assert(() => object.isCollection === Collection.prototype.isPrototypeOf(object));
+      return object.isCollection;
+    } else {
+      return Collection.prototype.isPrototypeOf(object);
+    }
+  }
+
+  /**
    * The Relution.LiveData.Collection can be used like a Backbone Collection,
    *
    * but there are some enhancements to fetch, save and delete the
@@ -39,8 +56,10 @@ module Relution.LiveData {
    */
   export class Collection extends Backbone.Collection {
 
-    public _type;
-    public isCollection;
+    public _type: string;         // constant 'Relution.LiveData.Collection' on prototype
+    public isModel: boolean;      // constant false on prototype
+    public isCollection: boolean; // constant true on prototype
+
     public model: ModelCtor;
     public entity: string;
     public options;
@@ -66,9 +85,6 @@ module Relution.LiveData {
       this.init(options);
     }
 
-    // following fixes DefinitelyTyped definitions of backbone.js not declaring modelId() method
-    public modelId: (attrs: any) => any;
-
     protected init(models?: any, options?: any) {
       options = options || {};
       this.store = options.store || this.store || (this.model ? this.model.prototype.store : null);
@@ -82,6 +98,9 @@ module Relution.LiveData {
         this.store.initCollection(this, options);
       }
     }
+
+    // following fixes DefinitelyTyped definitions of backbone.js not declaring modelId() method
+    public modelId: (attrs: any) => any;
 
     public ajax(options: any) {
       return Relution.LiveData.ajax.apply(this, arguments);
@@ -258,10 +277,15 @@ module Relution.LiveData {
 
   }
 
-  _.extend(Collection.prototype, _Object, {
+  // mixins
+  let collection = _.extend(Collection.prototype, _Object, {
     _type: 'Relution.LiveData.Collection',
+    isModel: false,
     isCollection: true,
+
+    // default model type unless overwritten
     model: Model
   });
+  Relution.assert(() => isCollection(collection));
 
 }

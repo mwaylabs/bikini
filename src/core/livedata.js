@@ -21,14 +21,6 @@ Relution.LiveData.design = function (obj) {
 
 Relution.LiveData.extend = Backbone.Model.extend;
 
-Relution.LiveData.isCollection = function (collection) {
-  return Backbone.Collection.prototype.isPrototypeOf(collection);
-};
-
-Relution.LiveData.isModel = function (model) {
-  return Backbone.Model.prototype.isPrototypeOf(model);
-};
-
 /**
  * options passed to Collection.fetch() preventing backbone.js from consuming the response.
  *
