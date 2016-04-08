@@ -66,10 +66,6 @@ var Relution;
                     this.socket.socket.close();
                     this.socket = null;
                 }
-                if (this.messages.store) {
-                    this.messages.store.close();
-                    this.messages = null;
-                }
                 if (this.localStore) {
                     this.localStore.close();
                     this.localStore = null;

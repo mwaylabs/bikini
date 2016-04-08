@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2016 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Fri Apr 08 2016 13:49:26
+* Date:      Fri Apr 08 2016 16:10:48
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -3771,10 +3771,6 @@ var Relution;
                     this.socket.socket.close();
                     this.socket = null;
                 }
-                if (this.messages.store) {
-                    this.messages.store.close();
-                    this.messages = null;
-                }
                 if (this.localStore) {
                     this.localStore.close();
                     this.localStore = null;
@@ -3870,6 +3866,7 @@ var Relution;
                     socketPath: ''
                 }, options));
                 this.endpoints = {};
+                this.messagesPromise = Q.resolve();
                 Relution.LiveData.Debug.trace('SyncStore', options);
                 if (this.options.useSocketNotify && typeof io !== 'object') {
                     Relution.LiveData.Debug.warning('Socket.IO not present !!');
@@ -3897,7 +3894,8 @@ var Relution;
                         });
                         this.endpoints[hash] = endpoint;
                         endpoint.localStore = this.createLocalStore(endpoint);
-                        endpoint.messages = this.createMsgCollection(endpoint);
+                        endpoint.priority = this.options.orderOfflineChanges && (_.lastIndexOf(this.options.orderOfflineChanges, endpoint.entity) + 1);
+                        this.createMsgCollection();
                         endpoint.socket = this.createSocket(endpoint, name);
                         endpoint.info = this.fetchServerInfo(endpoint);
                     }
@@ -3932,31 +3930,16 @@ var Relution;
             };
             /**
              * @description Here we save the changes in a Message local websql
-             * @param endpoint {string}
              * @returns {*}
              */
-            SyncStore.prototype.createMsgCollection = function (endpoint) {
-                if (this.options.useOfflineChanges && !endpoint.messages) {
-                    var entity = LiveData.LiveDataMessageModel.prototype.entity;
-                    var entities = {};
-                    entities[entity] = 'msg-' + endpoint.channel; // maps to table name
-                    var storeOption = {
-                        entities: entities
-                    };
-                    if (this.options.localStoreOptions && typeof this.options.localStoreOptions === 'object') {
-                        storeOption = _.clone(this.options.localStoreOptions);
-                        storeOption.entities = entities;
-                    }
-                    endpoint.messagesPriority = this.options.orderOfflineChanges && (_.lastIndexOf(this.options.orderOfflineChanges, endpoint.entity) + 1);
-                    endpoint.messages = LiveData.Collection.design({
+            SyncStore.prototype.createMsgCollection = function () {
+                if (this.options.useOfflineChanges && !this.messages) {
+                    this.messages = LiveData.Collection.design({
                         model: LiveData.LiveDataMessageModel,
-                        store: this.options.localStore.create(storeOption)
+                        store: this.options.localStore.create(this.options.localStoreOptions)
                     });
-                    if (endpoint.isConnected) {
-                        this._sendMessages(endpoint);
-                    }
                 }
-                return endpoint.messages;
+                return this.messages;
             };
             SyncStore.prototype.createSocket = function (endpoint, name) {
                 if (this.options.useSocketNotify && endpoint && endpoint.socketPath) {
@@ -4276,7 +4259,7 @@ var Relution;
                         method: method,
                         data: data,
                         channel: endpoint.channel,
-                        priority: endpoint.messagesPriority
+                        priority: endpoint.priority
                     };
                     var q = Q.resolve(msg);
                     var qMessage;
@@ -4532,7 +4515,7 @@ var Relution;
                 }
                 // initiate a new request for changes
                 Relution.LiveData.Debug.info(channel + ' initiating changes request...');
-                var changes = new endpoint.messages.constructor();
+                var changes = new this.messages.constructor();
                 promise = changes.fetch({
                     url: endpoint.urlRoot + 'changes/' + time,
                     credentials: endpoint.credentials,
@@ -4673,102 +4656,87 @@ var Relution;
                     }
                 });
             };
-            SyncStore.prototype._sendMessages = function (endpoint) {
+            SyncStore.prototype._sendMessages = function (_endpoint) {
+                var _this = this;
                 // not ready yet
-                if (!endpoint || !endpoint.messages) {
+                if (!this.messages) {
                     return Q.resolve();
                 }
-                // stacked endpoints relevant by priority of messages playback
-                var endpoints;
-                if (endpoint.messagesPriority) {
-                    // process dependent endpoints as well
-                    endpoints = _.values(this.endpoints).filter(function (otherEndpoint) {
-                        return otherEndpoint.messages && otherEndpoint.messagesPriority && otherEndpoint.messagesPriority <= endpoint.messagesPriority;
-                    }).sort(function (a, b) {
-                        return b.messagesPriority - a.messagesPriority;
-                    });
-                    if (endpoints.length !== endpoint.messagesPriority || endpoints[0] !== endpoint) {
-                        return Q.resolve(); // some endpoints are not yet initialized
+                Relution.LiveData.Debug.info('Relution.LiveData.SyncStore._sendMessages');
+                var endpoints = _.reduce(_.values(this.endpoints), function (endpoints, endpoint) {
+                    endpoints[endpoint.entity] = endpoint;
+                    return endpoints;
+                }, {});
+                var nextMessage = function (result) {
+                    if (_this.messages.models.length <= 0) {
+                        return result;
                     }
-                }
-                else {
-                    endpoints = [
-                        endpoint
-                    ];
-                }
-                // walk stack of endpoints
-                var that = this;
-                return (function nextEndpoint() {
-                    var endpoint = endpoints.pop();
+                    var message = _this.messages.models[0];
+                    var entity = message.id.substr(0, message.id.indexOf('~'));
+                    if (!entity) {
+                        Relution.LiveData.Debug.error('sendMessage ' + message.id + ' with no entity!');
+                        return message.destroy().then(nextMessage);
+                    }
+                    var endpoint = endpoints[entity];
                     if (!endpoint) {
-                        return Q.resolve();
+                        return result;
                     }
-                    // serialized for each endpoint, one at a time
-                    var deferred = Q.defer();
-                    function qEndpoint() {
-                        Relution.LiveData.Debug.info('Relution.LiveData.SyncStore._sendMessages: ' + endpoint.entity);
-                        var q = endpoint.messages.fetch().then(function nextMessage(result) {
-                            if (endpoint.messages.models.length <= 0) {
-                                return result;
-                            }
-                            var message = endpoint.messages.models[0];
-                            var msg = message.attributes;
-                            var channel = message.get('channel');
-                            if (!msg || !channel) {
-                                return message.destroy().then(nextMessage);
-                            }
-                            that._fixMessage(endpoint, msg);
-                            var modelType = endpoint.modelType || LiveData.Model;
-                            var model = new modelType(msg.data, {
-                                entity: endpoint.entity
-                            });
-                            model.id = message.get('method') !== 'create' && message.get('id');
-                            var remoteOptions = {
-                                urlRoot: endpoint.urlRoot,
-                                store: {} // really go to remote server
-                            };
-                            if (model.id) {
-                                remoteOptions.url = remoteOptions.urlRoot + (remoteOptions.urlRoot.charAt(remoteOptions.urlRoot.length - 1) === '/' ? '' : '/') + model.id;
-                                Relution.assert(function () { return model.url() === remoteOptions.url; });
-                            }
-                            Relution.LiveData.Debug.info('sendMessage ' + model.id);
-                            return that._applyResponse(that._ajaxMessage(endpoint, msg, remoteOptions, model), endpoint, msg, remoteOptions, model).then(function succeededMessage() {
-                                // succeeded
-                                return Q.when(that.processOfflineMessageResult(null, message, endpoint));
-                            }, function failedMessage(error) {
-                                if (error) {
-                                    // remote failed
-                                    return Q.when(that.processOfflineMessageResult(error, message, endpoint));
-                                }
-                                else {
-                                    // connectivity issue, keep rejection
-                                    return Q.reject();
-                                }
-                            }).then(function destroyMessage() {
-                                // applying change succeeded or successfully recovered change
-                                return message.destroy();
-                            }).then(nextMessage);
-                        }).then(nextEndpoint);
-                        deferred.resolve(q);
-                        return q;
+                    Relution.assert(function () { return endpoint.channel === message.get('channel'); }, 'channel of endpoint ' + endpoint.channel + ' does not match channel of message ' + message.get('channel'));
+                    var msg = _this._fixMessage(endpoint, message.attributes);
+                    var modelType = endpoint.modelType || LiveData.Model;
+                    var model = new modelType(msg.data, {
+                        entity: endpoint.entity
+                    });
+                    model.id = message.get('method') !== 'create' && message.get('id');
+                    var remoteOptions = {
+                        urlRoot: endpoint.urlRoot,
+                        store: {} // really go to remote server
+                    };
+                    if (model.id) {
+                        remoteOptions.url = remoteOptions.urlRoot + (remoteOptions.urlRoot.charAt(remoteOptions.urlRoot.length - 1) === '/' ? '' : '/') + model.id;
+                        Relution.assert(function () { return model.url() === remoteOptions.url; });
                     }
-                    // link to promise of endpoint to force sequential processing
-                    if (endpoint.messagesPromise) {
-                        endpoint.messagesPromise.finally(qEndpoint);
-                    }
-                    else {
-                        qEndpoint();
-                    }
-                    endpoint.messagesPromise = deferred.promise;
-                    return endpoint.messagesPromise;
-                })();
+                    Relution.LiveData.Debug.info('sendMessage ' + model.id);
+                    return _this._applyResponse(_this._ajaxMessage(endpoint, msg, remoteOptions, model), endpoint, msg, remoteOptions, model).then(function () {
+                        // succeeded
+                        return Q.when(_this.processOfflineMessageResult(null, message, endpoint));
+                    }, function (error) {
+                        if (error) {
+                            // remote failed
+                            return Q.when(_this.processOfflineMessageResult(error, message, endpoint));
+                        }
+                        else {
+                            // connectivity issue, keep rejection
+                            return Q.reject();
+                        }
+                    }).then(function () {
+                        // applying change succeeded or successfully recovered change
+                        return message.destroy();
+                    }).then(nextMessage);
+                };
+                // link to messagesPromise to force sequential processing
+                var deferred = Q.defer();
+                this.messagesPromise.finally(function () {
+                    var q = _this.messages.fetch({
+                        sortOrder: [
+                            '-priority',
+                            '+time',
+                            '+id'
+                        ]
+                    }).then(nextMessage);
+                    deferred.resolve(q);
+                    return q;
+                });
+                this.messagesPromise = deferred.promise;
+                return this.messagesPromise;
             };
             SyncStore.prototype.storeMessage = function (endpoint, qMsg) {
+                var _this = this;
                 return qMsg.then(function (msg) {
                     var options;
-                    var id = endpoint.messages.modelId(msg);
+                    var id = _this.messages.modelId(msg);
                     Relution.LiveData.Debug.info('storeMessage ' + id);
-                    var message = id && endpoint.messages.get(id);
+                    var message = id && _this.messages.get(id);
                     if (message) {
                         // use existing instance, should not be the case usually
                         options = {
@@ -4777,29 +4745,30 @@ var Relution;
                     }
                     else {
                         // instantiate new model, intentionally not added to collection
-                        message = new endpoint.messages.model(msg, {
-                            collection: endpoint.messages,
-                            store: endpoint.messages.store
+                        message = new _this.messages.model(msg, {
+                            collection: _this.messages,
+                            store: _this.messages.store
                         });
                     }
                     return message.save(msg, options).thenResolve(message);
                 });
             };
             SyncStore.prototype.removeMessage = function (endpoint, msg, qMessage) {
+                var _this = this;
                 return qMessage.then(function (message) {
                     if (!message) {
-                        var id = endpoint.messages.modelId(msg);
+                        var id = _this.messages.modelId(msg);
                         if (!id) {
                             // msg is not persistent
                             return Q.resolve();
                         }
-                        message = endpoint.messages.get(id);
+                        message = _this.messages.get(id);
                         if (!message) {
-                            message = new endpoint.messages.model({
-                                id: msg.id
+                            message = new _this.messages.model({
+                                _id: msg._id
                             }, {
-                                collection: endpoint.messages,
-                                store: endpoint.messages.store
+                                collection: _this.messages,
+                                store: _this.messages.store
                             });
                         }
                     }
@@ -4811,8 +4780,8 @@ var Relution;
                 if (collection) {
                     var endpoint = this.getEndpoint(collection.getUrlRoot());
                     if (endpoint) {
-                        if (endpoint.messages) {
-                            endpoint.messages.destroy();
+                        if (this.messages) {
+                            this.messages.destroy();
                         }
                         collection.reset();
                         this.setLastMessageTime(endpoint.channel, '');
@@ -4823,6 +4792,10 @@ var Relution;
              * close the socket explicit
              */
             SyncStore.prototype.close = function () {
+                if (this.messages.store) {
+                    this.messages.store.close();
+                    this.messages = null;
+                }
                 var keys = Object.keys(this.endpoints);
                 for (var i = 0, l = keys.length; i < l; i++) {
                     this.endpoints[keys[i]].close();

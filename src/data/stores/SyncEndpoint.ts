@@ -56,9 +56,7 @@ module Relution.LiveData {
 
     public localStore: Store;
     public info: any;
-    public messages: Collection;
-    public messagesPromise: any;
-    public messagesPriority: number;
+    public priority: number;
     public socket: any;
 
     // promise of last SyncStore.fetchChanges
@@ -101,10 +99,6 @@ module Relution.LiveData {
       if (this.socket) {
         this.socket.socket.close();
         this.socket = null;
-      }
-      if (this.messages.store) {
-        this.messages.store.close();
-        this.messages = null;
       }
       if (this.localStore) {
         this.localStore.close();
