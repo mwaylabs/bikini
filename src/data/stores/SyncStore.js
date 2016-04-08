@@ -149,9 +149,9 @@ var Relution;
              */
             SyncStore.prototype.createMsgCollection = function (endpoint) {
                 if (this.options.useOfflineChanges && !endpoint.messages) {
-                    var entity = 'msg-' + endpoint.channel;
+                    var entity = LiveData.LiveDataMessageModel.prototype.entity;
                     var entities = {};
-                    entities[entity] = entity;
+                    entities[entity] = 'msg-' + endpoint.channel; // maps to table name
                     var storeOption = {
                         entities: entities
                     };
@@ -161,7 +161,7 @@ var Relution;
                     }
                     endpoint.messagesPriority = this.options.orderOfflineChanges && (_.lastIndexOf(this.options.orderOfflineChanges, endpoint.entity) + 1);
                     endpoint.messages = LiveData.Collection.design({
-                        entity: entity,
+                        model: LiveData.LiveDataMessageModel,
                         store: this.options.localStore.create(storeOption)
                     });
                     if (endpoint.isConnected) {
@@ -475,15 +475,20 @@ var Relution;
                         case 'delete':
                             break;
                         default:
+                            Relution.assert(function () { return method === 'read'; }, 'unknown method: ' + method);
                             storeMsg = false;
                             break;
                     }
+                    var entity = model.entity || endpoint.entity;
+                    Relution.assert(function () { return model.entity === endpoint.entity; });
+                    Relution.assert(function () { return entity.indexOf('~') < 0; }, 'entity name must not contain a ~ character!');
                     var msg = {
-                        _id: model.id,
+                        _id: entity + '~' + model.id,
                         id: model.id,
                         method: method,
                         data: data,
-                        channel: endpoint.channel
+                        channel: endpoint.channel,
+                        priority: endpoint.messagesPriority
                     };
                     var q = Q.resolve(msg);
                     var qMessage;
@@ -824,7 +829,7 @@ var Relution;
              * @return {any} Promise indicating success to drop the change message and preceed with the next change, or
              *    rejection indicating the change message is kept and retried later on.
              */
-            SyncStore.prototype.processOfflineMessageResult = function (error, message /*<LiveDataMessage>*/, options) {
+            SyncStore.prototype.processOfflineMessageResult = function (error, message, options) {
                 if (!error) {
                     // message was processed successfully
                     return Q.resolve(message);

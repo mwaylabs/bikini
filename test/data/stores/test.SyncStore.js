@@ -380,10 +380,9 @@ describe('Relution.LiveData.SyncStore Offline Model Save Test', function() {
         var db = openDatabase('relution-livedata', '', '', 1024 * 1024);
         var channel = model.store.endpoints[Object.keys(model.store.endpoints)[0]].channel;
         var query = 'SELECT * FROM \'msg-' + channel + '\' WHERE id =?';
-
       db.transaction(
           function(tx) {
-            tx.executeSql(query, [model.get('id')], function(tx, table) {
+            tx.executeSql(query, [model.entity + '~' + model.get('id')], function(tx, table) {
               assert.equal(table.rows.length, 1)
               var tempModel = JSON.parse(table.rows[0].data);
               assert.equal(tempModel.data.username, username);

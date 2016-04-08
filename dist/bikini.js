@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2016 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Thu Apr 07 2016 10:32:49
+* Date:      Fri Apr 08 2016 13:49:26
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -3669,6 +3669,39 @@ var Relution;
 /// <reference path="Store.ts" />
 /// <reference path="SyncContext.ts" />
 /// <reference path="../../utility/Debug.ts" />
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var Relution;
+(function (Relution) {
+    var LiveData;
+    (function (LiveData) {
+        /**
+         * message packed into a Model.
+         *
+         * @module Relution.LiveData.LiveDataMessage
+         *
+         * @type {*}
+         */
+        var LiveDataMessageModel = (function (_super) {
+            __extends(LiveDataMessageModel, _super);
+            function LiveDataMessageModel() {
+                _super.apply(this, arguments);
+            }
+            return LiveDataMessageModel;
+        })(LiveData.Model);
+        LiveData.LiveDataMessageModel = LiveDataMessageModel;
+        // mixins
+        var msgmodel = _.extend(LiveDataMessageModel.prototype, {
+            _type: 'Relution.LiveData.LiveDataMessageModel',
+            entity: '__msg__',
+            idAttribute: '_id'
+        });
+        Relution.assert(function () { return new msgmodel({ _id: 'check' }).id === 'check'; });
+    })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
+})(Relution || (Relution = {}));
 //# sourceMappingURL=LiveDataMessage.js.map
 /**
  * SyncEndpoint.ts
@@ -3904,9 +3937,9 @@ var Relution;
              */
             SyncStore.prototype.createMsgCollection = function (endpoint) {
                 if (this.options.useOfflineChanges && !endpoint.messages) {
-                    var entity = 'msg-' + endpoint.channel;
+                    var entity = LiveData.LiveDataMessageModel.prototype.entity;
                     var entities = {};
-                    entities[entity] = entity;
+                    entities[entity] = 'msg-' + endpoint.channel; // maps to table name
                     var storeOption = {
                         entities: entities
                     };
@@ -3916,7 +3949,7 @@ var Relution;
                     }
                     endpoint.messagesPriority = this.options.orderOfflineChanges && (_.lastIndexOf(this.options.orderOfflineChanges, endpoint.entity) + 1);
                     endpoint.messages = LiveData.Collection.design({
-                        entity: entity,
+                        model: LiveData.LiveDataMessageModel,
                         store: this.options.localStore.create(storeOption)
                     });
                     if (endpoint.isConnected) {
@@ -4230,15 +4263,20 @@ var Relution;
                         case 'delete':
                             break;
                         default:
+                            Relution.assert(function () { return method === 'read'; }, 'unknown method: ' + method);
                             storeMsg = false;
                             break;
                     }
+                    var entity = model.entity || endpoint.entity;
+                    Relution.assert(function () { return model.entity === endpoint.entity; });
+                    Relution.assert(function () { return entity.indexOf('~') < 0; }, 'entity name must not contain a ~ character!');
                     var msg = {
-                        _id: model.id,
+                        _id: entity + '~' + model.id,
                         id: model.id,
                         method: method,
                         data: data,
-                        channel: endpoint.channel
+                        channel: endpoint.channel,
+                        priority: endpoint.messagesPriority
                     };
                     var q = Q.resolve(msg);
                     var qMessage;
@@ -4579,7 +4617,7 @@ var Relution;
              * @return {any} Promise indicating success to drop the change message and preceed with the next change, or
              *    rejection indicating the change message is kept and retried later on.
              */
-            SyncStore.prototype.processOfflineMessageResult = function (error, message /*<LiveDataMessage>*/, options) {
+            SyncStore.prototype.processOfflineMessageResult = function (error, message, options) {
                 if (!error) {
                     // message was processed successfully
                     return Q.resolve(message);

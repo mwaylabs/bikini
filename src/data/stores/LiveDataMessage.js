@@ -29,4 +29,37 @@
 /// <reference path="Store.ts" />
 /// <reference path="SyncContext.ts" />
 /// <reference path="../../utility/Debug.ts" />
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var Relution;
+(function (Relution) {
+    var LiveData;
+    (function (LiveData) {
+        /**
+         * message packed into a Model.
+         *
+         * @module Relution.LiveData.LiveDataMessage
+         *
+         * @type {*}
+         */
+        var LiveDataMessageModel = (function (_super) {
+            __extends(LiveDataMessageModel, _super);
+            function LiveDataMessageModel() {
+                _super.apply(this, arguments);
+            }
+            return LiveDataMessageModel;
+        })(LiveData.Model);
+        LiveData.LiveDataMessageModel = LiveDataMessageModel;
+        // mixins
+        var msgmodel = _.extend(LiveDataMessageModel.prototype, {
+            _type: 'Relution.LiveData.LiveDataMessageModel',
+            entity: '__msg__',
+            idAttribute: '_id'
+        });
+        Relution.assert(function () { return new msgmodel({ _id: 'check' }).id === 'check'; });
+    })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
+})(Relution || (Relution = {}));
 //# sourceMappingURL=LiveDataMessage.js.map

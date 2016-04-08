@@ -157,9 +157,9 @@ module Relution.LiveData {
      */
     createMsgCollection(endpoint: SyncEndpoint) {
       if (this.options.useOfflineChanges && !endpoint.messages) {
-        var entity = 'msg-' + endpoint.channel;
+        var entity = LiveDataMessageModel.prototype.entity;
         var entities = {};
-        entities[entity] = entity;
+        entities[entity] = 'msg-' + endpoint.channel; // maps to table name
         var storeOption = {
           entities: entities
         };
@@ -169,7 +169,7 @@ module Relution.LiveData {
         }
         endpoint.messagesPriority = this.options.orderOfflineChanges && (_.lastIndexOf(this.options.orderOfflineChanges, endpoint.entity) + 1);
         endpoint.messages = Collection.design({
-          entity: entity,
+          model: LiveDataMessageModel,
           store: this.options.localStore.create(storeOption)
         });
         if (endpoint.isConnected) {
@@ -507,15 +507,20 @@ module Relution.LiveData {
             break;
 
           default:
+            Relution.assert (() => method === 'read', 'unknown method: ' + method);
             storeMsg = false;
             break;
         }
+        let entity = model.entity || endpoint.entity;
+        Relution.assert(() => model.entity === endpoint.entity);
+        Relution.assert(() => entity.indexOf('~') < 0, 'entity name must not contain a ~ character!');
         var msg = {
-          _id: model.id,
+          _id: entity + '~' + model.id,
           id: model.id,
           method: method,
           data: data,
-          channel: endpoint.channel
+          channel: endpoint.channel,
+          priority: endpoint.messagesPriority
         };
 
         var q = Q.resolve(msg);
@@ -870,9 +875,9 @@ module Relution.LiveData {
      * @return {any} Promise indicating success to drop the change message and preceed with the next change, or
      *    rejection indicating the change message is kept and retried later on.
      */
-    protected processOfflineMessageResult(error: Error, message: Model/*<LiveDataMessage>*/, options: {
+    protected processOfflineMessageResult(error: Error, message: LiveDataMessageModel, options: {
       entity: string,
-      modelType: any,
+      modelType: ModelCtor,
       urlRoot: string,
       localStore: Store
     }) {
