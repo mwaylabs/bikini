@@ -73,7 +73,17 @@ module Relution.LiveData {
     } = {};
 
     private lastMesgTime: any;
-    private isConnected: boolean = false;
+
+    /**
+     * when set, indicates which entity caused a disconnection.
+     *
+     * <p>
+     * This is set to an entity name to limit which entity may cause a change to online state again.
+     * </p>
+     *
+     * @type {string}
+     */
+    private disconnectedEntity: string = 'all';
 
     public messages: Collection;
     public messagesPromise: Q.Promise<Collection>;
@@ -263,10 +273,10 @@ module Relution.LiveData {
           // next we'll fetch server-side changes
           return this.fetchChanges(endpoint).then(() => {
             // then send client-side changes
-            if (!this.isConnected) {
+            if (this.disconnectedEntity === 'all' || this.disconnectedEntity === endpoint.entity) {
               // restart replaying of offline messages
               this.messagesPromise = null;
-              this.isConnected = true;
+              this.disconnectedEntity = null;
             }
             return this._sendMessages();
           }).catch((error) => {
@@ -292,7 +302,9 @@ module Relution.LiveData {
         return Q.resolve<void>(undefined);
       }
       endpoint.isConnected = null;
-      this.isConnected = false;
+      if (!this.disconnectedEntity) {
+        this.disconnectedEntity = 'all';
+      }
 
       return Q.fcall(() => {
         if (endpoint.socket && endpoint.socket.socket) {
@@ -735,27 +747,23 @@ module Relution.LiveData {
             if (!dataIds) {
               return data;
             }
+            Relution.assert(() => isCollection(model));
 
             // when collection was updated only pass data of models that were synced on to the success callback,
             // as the callback will set the models again causing our sorting and filtering to be without effect.
-            if (isCollection(model)) {
-              var response = [];
-              for (var i = model.models.length; i-- > 0;) {
-                var m = model.models[i];
-                if (dataIds[m.id]) {
-                  response.push(m.attributes);
-                  delete dataIds[m.id];
-                  if (dataIds.length <= 0) {
-                    break;
-                  }
+            var response = [];
+            let models = isCollection(model) ? model.models : [model];
+            for (var i = models.length; i-- > 0;) {
+              var m = models[i];
+              if (dataIds[m.id]) {
+                response.push(m.attributes);
+                delete dataIds[m.id];
+                if (dataIds.length <= 0) {
+                  break;
                 }
               }
-              return response.reverse();
-            } else if(isModel(model)) {
-              return model.attributes;
-            } else {
-              return data;
             }
+            return response.reverse();
           });
         }
       }).then((response) => {
@@ -1008,7 +1016,11 @@ module Relution.LiveData {
         }, (error) => {
           if (error) {
             // remote failed
-            return this.processOfflineMessageResult(error, message, endpoint);
+            return Q(this.processOfflineMessageResult(error, message, endpoint)).catch((error) => {
+              // explicitly disconnect due to error in endpoint
+              this.disconnectedEntity = endpoint.entity;
+              return this.onDisconnect(endpoint).thenReject(error);
+            });
           } else {
             // connectivity issue, keep rejection
             return Q.reject();

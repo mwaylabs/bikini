@@ -148,7 +148,7 @@ module Relution.LiveData {
     }
 
     protected _sqlCreateTable(entity) {
-      return `CREATE TABLE IF NOT EXISTS '${this.entities[entity].table}' (id VARCHAR(255) NOT NULL PRIMARY KEY ASC UNIQUE, data  TEXT NOT NULL);`;
+      return `CREATE TABLE IF NOT EXISTS '${this.entities[entity].table}' (id VARCHAR(255) NOT NULL PRIMARY KEY ASC UNIQUE, data TEXT NOT NULL);`;
     }
 
     protected _sqlDelete(options, entity) {

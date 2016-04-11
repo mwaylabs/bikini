@@ -82,7 +82,16 @@ var Relution;
                     socketPath: ''
                 }, options));
                 this.endpoints = {};
-                this.isConnected = false;
+                /**
+                 * when set, indicates which entity caused a disconnection.
+                 *
+                 * <p>
+                 * This is set to an entity name to limit which entity may cause a change to online state again.
+                 * </p>
+                 *
+                 * @type {string}
+                 */
+                this.disconnectedEntity = 'all';
                 Relution.LiveData.Debug.trace('SyncStore', options);
                 if (this.options.useSocketNotify && typeof io !== 'object') {
                     Relution.LiveData.Debug.warning('Socket.IO not present !!');
@@ -248,10 +257,10 @@ var Relution;
                         // next we'll fetch server-side changes
                         return _this.fetchChanges(endpoint).then(function () {
                             // then send client-side changes
-                            if (!_this.isConnected) {
+                            if (_this.disconnectedEntity === 'all' || _this.disconnectedEntity === endpoint.entity) {
                                 // restart replaying of offline messages
                                 _this.messagesPromise = null;
-                                _this.isConnected = true;
+                                _this.disconnectedEntity = null;
                             }
                             return _this._sendMessages();
                         }).catch(function (error) {
@@ -277,7 +286,9 @@ var Relution;
                     return Q.resolve(undefined);
                 }
                 endpoint.isConnected = null;
-                this.isConnected = false;
+                if (!this.disconnectedEntity) {
+                    this.disconnectedEntity = 'all';
+                }
                 return Q.fcall(function () {
                     if (endpoint.socket && endpoint.socket.socket) {
                         endpoint.socket.socket.onDisconnect();
@@ -706,28 +717,22 @@ var Relution;
                             if (!dataIds) {
                                 return data;
                             }
+                            Relution.assert(function () { return LiveData.isCollection(model); });
                             // when collection was updated only pass data of models that were synced on to the success callback,
                             // as the callback will set the models again causing our sorting and filtering to be without effect.
-                            if (LiveData.isCollection(model)) {
-                                var response = [];
-                                for (var i = model.models.length; i-- > 0;) {
-                                    var m = model.models[i];
-                                    if (dataIds[m.id]) {
-                                        response.push(m.attributes);
-                                        delete dataIds[m.id];
-                                        if (dataIds.length <= 0) {
-                                            break;
-                                        }
+                            var response = [];
+                            var models = LiveData.isCollection(model) ? model.models : [model];
+                            for (var i = models.length; i-- > 0;) {
+                                var m = models[i];
+                                if (dataIds[m.id]) {
+                                    response.push(m.attributes);
+                                    delete dataIds[m.id];
+                                    if (dataIds.length <= 0) {
+                                        break;
                                     }
                                 }
-                                return response.reverse();
                             }
-                            else if (LiveData.isModel(model)) {
-                                return model.attributes;
-                            }
-                            else {
-                                return data;
-                            }
+                            return response.reverse();
                         });
                     }
                 }).then(function (response) {
@@ -966,7 +971,11 @@ var Relution;
                     }, function (error) {
                         if (error) {
                             // remote failed
-                            return _this.processOfflineMessageResult(error, message, endpoint);
+                            return Q(_this.processOfflineMessageResult(error, message, endpoint)).catch(function (error) {
+                                // explicitly disconnect due to error in endpoint
+                                _this.disconnectedEntity = endpoint.entity;
+                                return _this.onDisconnect(endpoint).thenReject(error);
+                            });
                         }
                         else {
                             // connectivity issue, keep rejection
