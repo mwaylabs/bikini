@@ -2,13 +2,13 @@
 <head>
     <meta charset="utf-8">
     <title>Mocha Tests</title>
-    <link rel="stylesheet" href="css/mocha.css"/>
+    <link rel="stylesheet" href="../bower_components/mocha/mocha.css"/>
 </head>
 <body>
 <div id="mocha"></div>
 
-<script src="js/chai.js"></script>
-<script src="js/mocha.js"></script>
+<script src="../bower_components/chai/chai.js"></script>
+<script src="../bower_components/mocha/mocha.js"></script>
 <script src="js/bridge.js"></script>
 
 <script src="../bower_components/jquery/dist/jquery.js"></script>
@@ -26,6 +26,8 @@
 </script>
 
 <script src="test.js"></script>
+<script src="data/stores/syncstore-offline.spec.js"></script>
+<script src="data/stores/syncstore-sync-model-to-server.spec.js"></script>
 
 <script src="core/test.livedata.js"></script>
 <script src="core/test.object.js"></script>
