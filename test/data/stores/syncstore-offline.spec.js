@@ -5,6 +5,7 @@ describe('Relution.LiveData.SyncStore Offline Model Save Test', function() {
   var db = null;
   var serverUrl = "http://localhost:8200";
   this.timeout(8000);
+
   before(function() {
     Store = Relution.LiveData.SyncStore.design({
       useLocalStore: true,
@@ -59,8 +60,6 @@ describe('Relution.LiveData.SyncStore Offline Model Save Test', function() {
             var tempModel = JSON.parse(table.rows[0].data);
             assert.equal(tempModel.username, username);
             assert.equal(tempModel.username, model.get('username'));
-
-            Relution.LiveData.Debug.trace('execute done');
             done();
           }, function(foo, error) {
             done(error);
