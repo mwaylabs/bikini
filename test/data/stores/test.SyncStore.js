@@ -379,7 +379,7 @@ describe('Relution.LiveData.SyncStore Offline Model Save Test', function() {
 
         var db = openDatabase('relution-livedata', '', '', 1024 * 1024);
         var channel = model.store.endpoints[Object.keys(model.store.endpoints)[0]].channel;
-        var query = 'SELECT * FROM \'msg-' + channel + '\' WHERE id =?';
+        var query = 'SELECT * FROM \'__msg__\' WHERE id =?';
       db.transaction(
           function(tx) {
             tx.executeSql(query, [model.entity + '~' + model.get('id')], function(tx, table) {
