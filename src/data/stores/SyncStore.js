@@ -82,7 +82,7 @@ var Relution;
                     socketPath: ''
                 }, options));
                 this.endpoints = {};
-                this.messagesPromise = Q.resolve();
+                this.isConnected = false;
                 Relution.LiveData.Debug.trace('SyncStore', options);
                 if (this.options.useSocketNotify && typeof io !== 'object') {
                     Relution.LiveData.Debug.warning('Socket.IO not present !!');
@@ -230,38 +230,55 @@ var Relution;
                 }
             };
             SyncStore.prototype.onConnect = function (endpoint) {
-                if (endpoint.isConnected) {
-                    return Q.resolve();
-                }
-                endpoint.isConnected = true;
-                var that = this;
-                return this.fetchChanges(endpoint).then(function () {
-                    return that._sendMessages(endpoint).catch(function (error) {
-                        if (!error) {
-                            // disconnected while sending offline changes
-                            return that.onDisconnect(endpoint);
-                        }
-                        return Q.reject(error);
-                    });
-                }).finally(function () {
-                    if (endpoint.isConnected) {
-                        that.trigger('connect:' + endpoint.channel);
+                var _this = this;
+                if (!endpoint.isConnected) {
+                    // when offline transmission is pending, need to wait for it to complete
+                    var q = Q.resolve();
+                    if (this.messagesPromise && this.messagesPromise.isPending()) {
+                        q = this.messagesPromise.catch(function (error) { return Q.resolve(); });
                     }
-                });
+                    // sync server/client changes
+                    endpoint.isConnected = q.then(function () {
+                        // next we'll fetch server-side changes
+                        return _this.fetchChanges(endpoint).then(function () {
+                            // then send client-side changes
+                            if (!_this.isConnected) {
+                                // restart replaying of offline messages
+                                _this.messagesPromise = null;
+                                _this.isConnected = true;
+                            }
+                            return _this._sendMessages();
+                        }).catch(function (error) {
+                            // catch without error indicates disconnection while going online
+                            if (!error) {
+                                // disconnected while sending offline changes
+                                return _this.onDisconnect(endpoint);
+                            }
+                            return Q.reject(error);
+                        });
+                    }).finally(function () {
+                        // in the end, when connected still, fire an event informing client code
+                        if (endpoint.isConnected) {
+                            _this.trigger('connect:' + endpoint.channel);
+                        }
+                    });
+                }
+                return endpoint.isConnected;
             };
             SyncStore.prototype.onDisconnect = function (endpoint) {
+                var _this = this;
                 if (!endpoint.isConnected) {
                     return Q.resolve();
                 }
-                endpoint.isConnected = false;
-                var that = this;
+                endpoint.isConnected = null;
+                this.isConnected = false;
                 return Q.fcall(function () {
                     if (endpoint.socket && endpoint.socket.socket) {
                         endpoint.socket.socket.onDisconnect();
                     }
                 }).finally(function () {
                     if (!endpoint.isConnected) {
-                        that.trigger('disconnect:' + endpoint.channel);
+                        _this.trigger('disconnect:' + endpoint.channel);
                     }
                 });
             };
@@ -872,20 +889,36 @@ var Relution;
                     }
                 });
             };
-            SyncStore.prototype._sendMessages = function (_endpoint) {
+            /**
+             * feeds pending offline #messages to the remote server.
+             *
+             * <p>
+             * Due to client code setting up models one at a time, this method is called multiple times during initial setup of
+             * #endpoints. The first call fetches pending offline #messages, ordered by priority and time. Then the #messages
+             * are send to the remote server until depleted, an error occurs, or some missing endpoint is encounted.
+             * </p>
+             * <p>
+             * The method is triggered each time an endpoint is registered, or state changes to online for any endpoint. When
+             * state changes from offline to online (disregarding endpoint) message submission is restarted by resetting the
+             * #messagesPromise. Otherwise, subsequent calls chain to the end of #messagesPromise.
+             * </p>
+             *
+             * @return {Promise} of #messages Collection, or last recent offline rejection
+             * @private
+             */
+            SyncStore.prototype._sendMessages = function () {
                 var _this = this;
                 // not ready yet
                 if (!this.messages) {
                     return Q.resolve();
                 }
-                Relution.LiveData.Debug.info('Relution.LiveData.SyncStore._sendMessages');
-                var endpoints = _.reduce(_.values(this.endpoints), function (endpoints, endpoint) {
-                    endpoints[endpoint.entity] = endpoint;
-                    return endpoints;
-                }, {});
-                var nextMessage = function (result) {
-                    if (_this.messages.models.length <= 0) {
-                        return result;
+                // endpoints indexed by entity
+                var endpoints;
+                // processes messages until none left, hitting a message of a not yet registered endpoint, or entering
+                // a non-recoverable error. The promise returned resolves to this.messages when done.
+                var nextMessage = function () {
+                    if (!_this.messages.length) {
+                        return _this.messages;
                     }
                     var message = _this.messages.models[0];
                     var entity = message.id.substr(0, message.id.indexOf('~'));
@@ -895,7 +928,7 @@ var Relution;
                     }
                     var endpoint = endpoints[entity];
                     if (!endpoint) {
-                        return result;
+                        return _this.messages;
                     }
                     Relution.assert(function () { return endpoint.channel === message.get('channel'); }, 'channel of endpoint ' + endpoint.channel + ' does not match channel of message ' + message.get('channel'));
                     var msg = _this._fixMessage(endpoint, message.attributes);
@@ -930,20 +963,32 @@ var Relution;
                         return message.destroy();
                     }).then(nextMessage);
                 };
-                // link to messagesPromise to force sequential processing
-                var deferred = Q.defer();
-                this.messagesPromise.finally(function () {
-                    var q = _this.messages.fetch({
+                Relution.LiveData.Debug.info('Relution.LiveData.SyncStore._sendMessages');
+                if (!this.messagesPromise) {
+                    // initially fetch all messages
+                    this.messagesPromise = this.messages.fetch({
                         sortOrder: [
                             '-priority',
                             '+time',
                             '+id'
                         ]
-                    }).then(nextMessage);
-                    deferred.resolve(q);
-                    return q;
-                });
-                this.messagesPromise = deferred.promise;
+                    });
+                }
+                else if (this.messagesPromise.isRejected()) {
+                    // early rejection
+                    return this.messagesPromise;
+                }
+                else if (!this.messages.length) {
+                    // no more messages
+                    return this.messagesPromise;
+                }
+                // need to index endpoints by entity
+                endpoints = _.reduce(_.values(this.endpoints), function (endpoints, endpoint) {
+                    endpoints[endpoint.entity] = endpoint;
+                    return endpoints;
+                }, {});
+                // kick to process pending messages
+                this.messagesPromise = this.messagesPromise.then(nextMessage);
                 return this.messagesPromise;
             };
             SyncStore.prototype.storeMessage = function (endpoint, qMsg) {

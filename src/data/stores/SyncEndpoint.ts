@@ -52,7 +52,7 @@ module Relution.LiveData {
     public host: string;
     public path: string;
     public channel: string;
-    public isConnected: boolean = false;
+    public isConnected: any/*Promise<any>*/ = null;
 
     public localStore: Store;
     public info: any;

@@ -44,7 +44,7 @@ var Relution;
          */
         var SyncEndpoint = (function () {
             function SyncEndpoint(options) {
-                this.isConnected = false;
+                this.isConnected = null;
                 this.entity = options.entity;
                 this.modelType = options.modelType;
                 this.urlRoot = options.urlRoot;

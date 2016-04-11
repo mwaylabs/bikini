@@ -72,10 +72,11 @@ module Relution.LiveData {
       [hash: string]: SyncEndpoint;
     } = {};
 
-    private lastMesgTime:any;
+    private lastMesgTime: any;
+    private isConnected: boolean = false;
 
     public messages: Collection;
-    public messagesPromise = Q.resolve();
+    public messagesPromise: any/*Promise<Collection>*/;
 
     constructor(options?:any) {
       super(_.extend({
@@ -247,41 +248,56 @@ module Relution.LiveData {
     }
 
     onConnect(endpoint: SyncEndpoint) {
-      if (endpoint.isConnected) {
-        return Q.resolve();
-      }
-
-      endpoint.isConnected = true;
-      var that = this;
-      return this.fetchChanges(endpoint).then(function () {
-        return that._sendMessages(endpoint).catch(function (error) {
-          if (!error) {
-            // disconnected while sending offline changes
-            return that.onDisconnect(endpoint);
-          }
-          return Q.reject(error);
-        });
-      }).finally(function () {
-        if (endpoint.isConnected) {
-          that.trigger('connect:' + endpoint.channel);
+      if (!endpoint.isConnected) {
+        // when offline transmission is pending, need to wait for it to complete
+        let q = Q.resolve();
+        if (this.messagesPromise && this.messagesPromise.isPending()) {
+          q = this.messagesPromise.catch((error) => Q.resolve());
         }
-      });
+
+        // sync server/client changes
+        endpoint.isConnected = q.then(() => {
+          // next we'll fetch server-side changes
+          return this.fetchChanges(endpoint).then(() => {
+            // then send client-side changes
+            if (!this.isConnected) {
+              // restart replaying of offline messages
+              this.messagesPromise = null;
+              this.isConnected = true;
+            }
+            return this._sendMessages();
+          }).catch((error) => {
+            // catch without error indicates disconnection while going online
+            if (!error) {
+              // disconnected while sending offline changes
+              return this.onDisconnect(endpoint);
+            }
+            return Q.reject(error);
+          });
+        }).finally(() => {
+          // in the end, when connected still, fire an event informing client code
+          if (endpoint.isConnected) {
+            this.trigger('connect:' + endpoint.channel);
+          }
+        });
+      }
+      return endpoint.isConnected;
     }
 
     onDisconnect(endpoint: SyncEndpoint) {
       if (!endpoint.isConnected) {
         return Q.resolve();
       }
+      endpoint.isConnected = null;
+      this.isConnected = false;
 
-      endpoint.isConnected = false;
-      var that = this;
-      return Q.fcall(function () {
+      return Q.fcall(() => {
         if (endpoint.socket && endpoint.socket.socket) {
           endpoint.socket.socket.onDisconnect();
         }
-      }).finally(function () {
+      }).finally(() => {
         if (!endpoint.isConnected) {
-          that.trigger('disconnect:' + endpoint.channel);
+          this.trigger('disconnect:' + endpoint.channel);
         }
       });
     }
@@ -927,22 +943,39 @@ module Relution.LiveData {
       });
     }
 
-    private _sendMessages(_endpoint: SyncEndpoint) {
+    /**
+     * feeds pending offline #messages to the remote server.
+     *
+     * <p>
+     * Due to client code setting up models one at a time, this method is called multiple times during initial setup of
+     * #endpoints. The first call fetches pending offline #messages, ordered by priority and time. Then the #messages
+     * are send to the remote server until depleted, an error occurs, or some missing endpoint is encounted.
+     * </p>
+     * <p>
+     * The method is triggered each time an endpoint is registered, or state changes to online for any endpoint. When
+     * state changes from offline to online (disregarding endpoint) message submission is restarted by resetting the
+     * #messagesPromise. Otherwise, subsequent calls chain to the end of #messagesPromise.
+     * </p>
+     *
+     * @return {Promise} of #messages Collection, or last recent offline rejection
+     * @private
+     */
+    private _sendMessages() {
       // not ready yet
       if (!this.messages) {
         return Q.resolve();
       }
 
-      Relution.LiveData.Debug.info('Relution.LiveData.SyncStore._sendMessages');
+      // endpoints indexed by entity
       let endpoints: {
-        [hash: string]: SyncEndpoint;
-      } = _.reduce(_.values(this.endpoints), (endpoints, endpoint) => {
-        endpoints[endpoint.entity] = endpoint;
-        return endpoints;
-      }, {});
-      let nextMessage = (result) => {
-        if (this.messages.models.length <= 0) {
-          return result;
+        [entity: string]: SyncEndpoint;
+      };
+
+      // processes messages until none left, hitting a message of a not yet registered endpoint, or entering
+      // a non-recoverable error. The promise returned resolves to this.messages when done.
+      let nextMessage = () => {
+        if (!this.messages.length) {
+          return this.messages;
         }
 
         let message: LiveDataMessageModel = this.messages.models[0];
@@ -953,7 +986,7 @@ module Relution.LiveData {
         }
         let endpoint = endpoints[entity];
         if (!endpoint) {
-          return result;
+          return this.messages;
         }
         Relution.assert(() => endpoint.channel === message.get('channel'), 'channel of endpoint ' + endpoint.channel + ' does not match channel of message ' + message.get('channel'));
         let msg = this._fixMessage(endpoint, message.attributes);
@@ -989,20 +1022,32 @@ module Relution.LiveData {
         }).then(nextMessage);
       };
 
-      // link to messagesPromise to force sequential processing
-      let deferred = Q.defer();
-      this.messagesPromise.finally(() => {
-        let q = this.messages.fetch(<Backbone.CollectionFetchOptions>{
+      Relution.LiveData.Debug.info('Relution.LiveData.SyncStore._sendMessages');
+      if (!this.messagesPromise) {
+        // initially fetch all messages
+        this.messagesPromise = this.messages.fetch(<Backbone.CollectionFetchOptions>{
           sortOrder: [
             '-priority',
             '+time',
             '+id'
           ]
-        }).then(nextMessage);
-        deferred.resolve(q);
-        return q;
-      });
-      this.messagesPromise = deferred.promise;
+        });
+      } else if (this.messagesPromise.isRejected()) {
+        // early rejection
+        return this.messagesPromise;
+      } else if (!this.messages.length) {
+        // no more messages
+        return this.messagesPromise;
+      }
+
+      // need to index endpoints by entity
+      endpoints = _.reduce(_.values(this.endpoints), (endpoints, endpoint) => {
+        endpoints[endpoint.entity] = endpoint;
+        return endpoints;
+      }, {});
+
+      // kick to process pending messages
+      this.messagesPromise = this.messagesPromise.then(nextMessage);
       return this.messagesPromise;
     }
 
