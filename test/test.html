@@ -9,7 +9,6 @@
 
 <script src="../bower_components/chai/chai.js"></script>
 <script src="../bower_components/mocha/mocha.js"></script>
-<script src="js/bridge.js"></script>
 
 <script src="../bower_components/jquery/dist/jquery.js"></script>
 <script src="../bower_components/underscore/underscore.js"></script>
@@ -26,26 +25,23 @@
 </script>
 
 <script src="test.js"></script>
-<script src="data/stores/syncstore-offline.spec.js"></script>
-<script src="data/stores/syncstore-sync-model-to-server.spec.js"></script>
-
-<script src="core/test.livedata.js"></script>
-<script src="core/test.object.js"></script>
-
-<script src="query/data.movies.js"></script>
-<script src="data/stores/data.approvals.js"></script>
-<script src="query/test.JsonFilterVisitor.js"></script>
-<script src="query/test.SortOrderComparator.js"></script>
-
-<script src="data/test.model.js"></script>
-<script src="data/test.collection.js"></script>
-
-<script src="data/stores/test.WebSqlStore.js"></script>
-<script src="data/stores/test.SyncStore.js"></script>
-<script src="data/stores/test.SyncContext.js"></script>
-
+<!-- inject:js -->
+<script src="./core/test.livedata.js"></script>
+<script src="./core/test.object.js"></script>
+<script src="./data/test.collection.js"></script>
+<script src="./data/test.model.js"></script>
+<script src="./query/data.movies.js"></script>
+<script src="./query/test.JsonFilterVisitor.js"></script>
+<script src="./query/test.SortOrderComparator.js"></script>
+<script src="./data/stores/data.approvals.js"></script>
+<script src="./data/stores/syncstore-offline.spec.js"></script>
+<script src="./data/stores/syncstore-sync-model-to-server.spec.js"></script>
+<script src="./data/stores/test.SyncContext.js"></script>
+<script src="./data/stores/test.SyncStore.js"></script>
+<script src="./data/stores/test.WebSqlStore.js"></script>
+<!-- endinject -->
 <script>
-    Relution.setDebug(true);
+    Relution.setDebug(false);
     mocha.checkLeaks();
     mocha.globals(['jQuery']);
     mocha.run().on('test', function (test) {
