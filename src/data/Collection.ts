@@ -223,7 +223,7 @@ module Relution.LiveData {
      *
      * @see SyncContext#fetchMore()
      */
-    public fetchMore(options) {
+    public fetchMore(options): PromiseLike<any> {
       if (!this.syncContext) {
         return Q.reject(new Error('no context'));
       }
@@ -245,7 +245,7 @@ module Relution.LiveData {
      *
      * @see SyncContext#fetchNext()
      */
-    public fetchNext(options) {
+    public fetchNext(options): PromiseLike<any> {
       if (!this.syncContext) {
         return Q.reject(new Error('no context'));
       }
@@ -267,7 +267,7 @@ module Relution.LiveData {
      *
      * @see SyncContext#fetchPrev()
      */
-    public fetchPrev(options) {
+    public fetchPrev(options): PromiseLike<any> {
       if (!this.syncContext) {
         return Q.reject(new Error('no context'));
       }
