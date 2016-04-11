@@ -159,7 +159,7 @@ module Relution.LiveData {
 
     private handleCallback; // mixed in via _Object
 
-    protected handleSuccess(obj, ...args) {
+    protected handleSuccess(obj, ...args): any {
       if (obj.success) {
         this.handleCallback.apply(this, [obj.success].concat(args));
       }
@@ -168,7 +168,7 @@ module Relution.LiveData {
       }
     }
 
-    protected handleError(obj, ...args) {
+    protected handleError(obj, ...args): any {
       if (obj.error) {
         this.handleCallback.apply(this, [obj.error].concat(args));
       }

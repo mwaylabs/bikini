@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2016 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Mon Apr 11 2016 09:43:19
+* Date:      Mon Apr 11 2016 10:15:53
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -4017,9 +4017,9 @@ var Relution;
                 var _this = this;
                 if (!endpoint.isConnected) {
                     // when offline transmission is pending, need to wait for it to complete
-                    var q = Q.resolve();
+                    var q = Q.resolve(undefined);
                     if (this.messagesPromise && this.messagesPromise.isPending()) {
-                        q = this.messagesPromise.catch(function (error) { return Q.resolve(); });
+                        q = this.messagesPromise.catch(function (error) { return Q.resolve(undefined); });
                     }
                     // sync server/client changes
                     endpoint.isConnected = q.then(function () {
@@ -4052,7 +4052,7 @@ var Relution;
             SyncStore.prototype.onDisconnect = function (endpoint) {
                 var _this = this;
                 if (!endpoint.isConnected) {
-                    return Q.resolve();
+                    return Q.resolve(undefined);
                 }
                 endpoint.isConnected = null;
                 this.isConnected = false;
@@ -4060,6 +4060,7 @@ var Relution;
                     if (endpoint.socket && endpoint.socket.socket) {
                         endpoint.socket.socket.onDisconnect();
                     }
+                    return undefined;
                 }).finally(function () {
                     if (!endpoint.isConnected) {
                         _this.trigger('disconnect:' + endpoint.channel);
@@ -4276,7 +4277,8 @@ var Relution;
                         method: method,
                         data: data,
                         channel: endpoint.channel,
-                        priority: endpoint.priority
+                        priority: endpoint.priority,
+                        time: Date.now()
                     };
                     var q = Q.resolve(msg);
                     var qMessage;
@@ -4514,7 +4516,7 @@ var Relution;
                 var that = this;
                 var channel = endpoint.channel;
                 if (!endpoint.urlRoot || !channel) {
-                    return Q.resolve();
+                    return Q.resolve(undefined);
                 }
                 var now = Date.now();
                 var promise = endpoint.promiseFetchingChanges;
@@ -4528,7 +4530,7 @@ var Relution;
                 var time = that.getLastMessageTime(channel);
                 if (!time) {
                     Relution.LiveData.Debug.error(channel + ' can not fetch changes at this time!');
-                    return promise || Q.resolve();
+                    return promise || Q.resolve(undefined);
                 }
                 // initiate a new request for changes
                 Relution.LiveData.Debug.info(channel + ' initiating changes request...');
@@ -4694,7 +4696,7 @@ var Relution;
                 var _this = this;
                 // not ready yet
                 if (!this.messages) {
-                    return Q.resolve();
+                    return Q.resolve(undefined);
                 }
                 // endpoints indexed by entity
                 var endpoints;
@@ -4805,7 +4807,7 @@ var Relution;
                         var id = _this.messages.modelId(msg);
                         if (!id) {
                             // msg is not persistent
-                            return Q.resolve();
+                            return Q.resolve(undefined);
                         }
                         message = _this.messages.get(id);
                         if (!message) {

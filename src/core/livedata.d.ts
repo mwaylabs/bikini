@@ -30,7 +30,6 @@
 declare var global;
 
 declare var _;
-declare var Q;
 declare var io;
 
 declare module Relution.LiveData {

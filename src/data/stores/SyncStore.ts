@@ -250,9 +250,9 @@ module Relution.LiveData {
     onConnect(endpoint: SyncEndpoint) {
       if (!endpoint.isConnected) {
         // when offline transmission is pending, need to wait for it to complete
-        let q = Q.resolve();
+        let q = Q.resolve(undefined);
         if (this.messagesPromise && this.messagesPromise.isPending()) {
-          q = this.messagesPromise.catch((error) => Q.resolve());
+          q = this.messagesPromise.catch((error) => Q.resolve(undefined));
         }
 
         // sync server/client changes
@@ -286,7 +286,7 @@ module Relution.LiveData {
 
     onDisconnect(endpoint: SyncEndpoint) {
       if (!endpoint.isConnected) {
-        return Q.resolve();
+        return Q.resolve(undefined);
       }
       endpoint.isConnected = null;
       this.isConnected = false;
@@ -295,6 +295,7 @@ module Relution.LiveData {
         if (endpoint.socket && endpoint.socket.socket) {
           endpoint.socket.socket.onDisconnect();
         }
+        return undefined;
       }).finally(() => {
         if (!endpoint.isConnected) {
           this.trigger('disconnect:' + endpoint.channel);
@@ -525,7 +526,8 @@ module Relution.LiveData {
           method: method,
           data: data,
           channel: endpoint.channel,
-          priority: endpoint.priority
+          priority: endpoint.priority,
+          time: Date.now()
         };
 
         var q = Q.resolve(msg);
@@ -770,7 +772,7 @@ module Relution.LiveData {
       var that = this;
       var channel = endpoint.channel;
       if (!endpoint.urlRoot || !channel) {
-        return Q.resolve();
+        return Q.resolve(undefined);
       }
 
       var now = Date.now();
@@ -786,7 +788,7 @@ module Relution.LiveData {
       var time = that.getLastMessageTime(channel);
       if (!time) {
         Relution.LiveData.Debug.error(channel + ' can not fetch changes at this time!');
-        return promise || Q.resolve();
+        return promise || Q.resolve(undefined);
       }
 
       // initiate a new request for changes
@@ -963,7 +965,7 @@ module Relution.LiveData {
     private _sendMessages() {
       // not ready yet
       if (!this.messages) {
-        return Q.resolve();
+        return Q.resolve(undefined);
       }
 
       // endpoints indexed by entity
@@ -1079,7 +1081,7 @@ module Relution.LiveData {
           var id = this.messages.modelId(msg);
           if (!id) {
             // msg is not persistent
-            return Q.resolve();
+            return Q.resolve(undefined);
           }
 
           message = this.messages.get(id);
