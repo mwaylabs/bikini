@@ -43,14 +43,13 @@ describe('Relution.LiveData.SyncStore Offline Online sync', function() {
       var query = 'SELECT * FROM \'__msg__\' WHERE id = ?';
       return db.transaction(
         function(tx) {
-          tx.executeSql(query, [model.entity + '~' + model.get('id')], function(tx, table) {
+          return tx.executeSql(query, [model.entity + '~' + model.get('id')], function(tx, table) {
             assert.equal(table.rows.length, 0);
             return done();
           });
         },
-        function(foo, error) {
-          console.error(error);
-          return done();
+        function(error) {
+          return done(error);
         }
       );
     });
@@ -64,14 +63,13 @@ describe('Relution.LiveData.SyncStore Offline Online sync', function() {
 
       return db.transaction(
         function(tx) {
-          tx.executeSql(query, [model.get('id')], function(tx, table) {
+          return tx.executeSql(query, [model.get('id')], function(tx, table) {
             assert.equal(table.rows.length, 0);
             return done();
           });
         },
-        function(foo, error) {
-          console.error(error);
-          return done();
+        function(error) {
+          return done(error);
         }
       );
     });
