@@ -22,10 +22,16 @@ describe('Relution.LiveData.SyncStore Offline Model Save To online Server sync',
   });
 
   it('fetch model and onSync msg table have to be no entry with this model', function(done) {
+    var haveTobe = {
+      username: 'message-offline-test',
+      password: 'admin',
+      id: '12312'
+    };
+
     model.fetch().then(function(resp) {
-      assert.equal(model.get('username'), 'message-offline-test');
-      assert.equal(model.get('password'), 'admin');
-      assert.equal(model.get('id'), '12312');
+      Object.keys(model.attributes).forEach(function (attr) {
+        assert.ok(assert.equal(model.get(attr), haveTobe[attr]), 'model has same ' + attr);
+      });
     });
 
     model.on('sync', function () {

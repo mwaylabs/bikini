@@ -36,8 +36,8 @@
     "JSONPath": "*"
   },
   "devDependencies": {
-    "mocha": "~1.13.0",
-    "chai": "~1.8.1",
-    "qunit": "1.12.0"
+    "mocha": "~2.4.5",
+    "chai": "~3.5.0",
+    "qunit": "~1.23.0"
   }
 }
