@@ -20,7 +20,7 @@ module.exports = function (grunt) {
         pkg: grunt.file.readJSON('package.json'),
         meta: {
             banner: '/*!\n' +
-                '* Project:   Bikini - Everything a model needs\n' +
+                '* Project:   Relution LiveData\n' +
                 '* Copyright: (c) <%= grunt.template.today("yyyy") %> M-Way Solutions GmbH.\n' +
                 '* Version:   <%= pkg.version %>\n' +
                 '* Date:      <%= grunt.template.today() %>\n' +
@@ -35,7 +35,7 @@ module.exports = function (grunt) {
         jshint: {
             options: {
                 jshintrc: '.jshintrc',
-                ignores: ['src/_*.js', 'src/bikini*.js' ]
+                ignores: ['src/_*.js', 'src/livedata*.js' ]
             },
             src: [ 'src/**/*.js' ]
         },
@@ -48,12 +48,12 @@ module.exports = function (grunt) {
             },
             dev: {
                 files: {
-                    'test/.tmp/bikini.js': 'src/bikini.js'
+                    'test/.tmp/livedata.js': 'src/livedata.js'
                 }
             },
             dist: {
                 files: {
-                    'dist/bikini.js': 'src/bikini.js'
+                    'dist/livedata.js': 'src/livedata.js'
                 }
             }
         },
@@ -65,11 +65,11 @@ module.exports = function (grunt) {
                 compress: {
                   drop_console: true
                 },
-                src: 'dist/bikini.js',
-                dest: 'dist/bikini.min.js',
+                src: 'dist/livedata.js',
+                dest: 'dist/livedata.min.js',
                 options: {
-                    sourceMap: 'dist/bikini.map',
-                    sourceMappingURL: 'bikini.map',
+                    sourceMap: 'dist/livedata.map',
+                    sourceMappingURL: 'livedata.map',
                     sourceMapPrefix: 1
                 }
             }
@@ -99,7 +99,7 @@ module.exports = function (grunt) {
         },
         jsdoc: {
             dist: {
-                src: ['dist/bikini.js'],
+                src: ['dist/livedata.js'],
                 options: {
                     destination: 'doc',
                     private: false

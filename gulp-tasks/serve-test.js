@@ -8,7 +8,7 @@ var preprocess = require('gulp-preprocess');
 
 
 gulp.task('scripts', function() {
-  gulp.src(['./src/bikini.js'])
+  gulp.src(['./src/livedata.js'])
     .pipe(preprocess())
     .pipe(gulp.dest('./test/.tmp'))
 });

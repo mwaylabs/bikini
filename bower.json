@@ -2,7 +2,7 @@
   "name": "bikini",
   "version": "0.8.4",
   "main": [
-    "./dist/bikini.js"
+    "./dist/livedata.js"
   ],
   "ignore": [
     "**/.*",
