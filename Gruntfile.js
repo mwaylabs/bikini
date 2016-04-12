@@ -111,7 +111,7 @@ module.exports = function (grunt) {
                 options: {
                     module: 'commonjs',
                     target: 'ES5',
-                    out: 'docs/',
+                    out: 'doc/',
                     name: 'Relution LiveData'
                 },
                 src: 'src/**/*.ts'
@@ -167,6 +167,6 @@ module.exports = function (grunt) {
     grunt.registerTask('travis', ['jsonlint', 'default', 'test']);
     grunt.registerTask('default', ['build']);
 
-    grunt.registerTask('build-doc', ['clean:md', 'curl-dir', 'rewriteMarkdownFiles', 'jsdoc', 'clean:md', 'gh-pages']);
+    grunt.registerTask('build-doc', ['clean:md', 'curl-dir', 'rewriteMarkdownFiles', 'typedoc', 'clean:md', 'gh-pages']);
 
 };
