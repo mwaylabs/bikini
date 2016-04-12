@@ -2,8 +2,7 @@
   "name": "bikini",
   "version": "0.8.4",
   "main": [
-    "./dist/bikini.js",
-    "./dist/bikangular.js"
+    "./dist/bikini.js"
   ],
   "ignore": [
     "**/.*",
@@ -11,7 +10,6 @@
     "bower_components",
     "src",
     "test",
-    "bikangular",
     "doc",
     "scripts",
     "resources",

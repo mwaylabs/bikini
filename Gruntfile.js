@@ -53,8 +53,7 @@ module.exports = function (grunt) {
             },
             dist: {
                 files: {
-                    'dist/bikini.js': 'src/bikini.js',
-                    'dist/bikangular.js': 'bikangular/bikangular.js'
+                    'dist/bikini.js': 'src/bikini.js'
                 }
             }
         },

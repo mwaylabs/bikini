@@ -78,8 +78,8 @@ myCollection.on('sync', function() {
 See [backbonejs-events](http://backbonejs.org/#Events) for detailed information.
 
 ## Using Bikini with AngularJS
-You are building your application with [AngularJS](https://angularjs.org/)? No problem. We provide a thin wrapper between Bikini and AngularJS.
-All you need to do is to insert "[bikangular.js](mwaylabs/bikini/blob/master/bikangular/bikangular.js)".
+You are building your application with [AngularJS](https://angularjs.org/)? No problem.
+Just assign `Relution.LiveData.http = $http`.
 
 ```html
 <script src="bower_components/jquery/dist/jquery.js"></script>
@@ -88,7 +88,6 @@ All you need to do is to insert "[bikangular.js](mwaylabs/bikini/blob/master/bik
 <script src="bower_components/socket.io-client/socket.io.js"></script>
 <script src="bower_components/backbone/backbone.js"></script>
 <script src="bower_components/bikini/dist/bikini.js"></script>
-<script src="bower_components/bikini/dist/bikangular.js"></script>
 ```
 
 The reason for this wrapper is that if you are using AngularJS you are usally familiar with [Kris Kowal's Q-Promises](https://github.com/kriskowal/q). But since Bikini relies on Backbone, and Backbone uses jQuery to make requests, we get [jQuery-Promises](http://api.jquery.com/category/deferred-object/) if we make any requests. Also, AngularJS will not notice if any changes happend (2-way-binding).
