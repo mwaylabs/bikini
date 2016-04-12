@@ -1,4 +1,3 @@
-// @echo BANNER
 (function (global, Backbone, _, $, Q, jsonPath) {
 // @include ./core/livedata.require.js
 // @include ./utility/Debug.js
