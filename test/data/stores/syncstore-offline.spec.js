@@ -7,7 +7,7 @@ describe('Relution.LiveData.SyncStore Offline Model Save Test', function() {
   this.timeout(8000);
 
   before(function() {
-    Store = Relution.LiveData.SyncStore.design({
+    Store = new Relution.LiveData.SyncStore({
       useLocalStore: true,
       useSocketNotify: false
     });
@@ -47,7 +47,7 @@ describe('Relution.LiveData.SyncStore Offline Model Save Test', function() {
 
     model.save({ username: username }).then(function() {
       var db = openDatabase('relution-livedata', '', '', 1024 * 1024);
-      var channel = model.store.endpoints[Object.keys(model.store.endpoints)[0]].channel;
+      var channel = model.store.getEndpoint(model).channel;
       var query = 'SELECT * FROM \'' + channel + '\' WHERE id =?';
 
       Relution.LiveData.Debug.trace(query);
@@ -78,7 +78,6 @@ describe('Relution.LiveData.SyncStore Offline Model Save Test', function() {
     model.save({ username: username }).then(function() {
 
       var db = openDatabase('relution-livedata', '', '', 1024 * 1024);
-      var channel = model.store.endpoints[Object.keys(model.store.endpoints)[0]].channel;
       var query = 'SELECT * FROM \'__msg__\' WHERE id =?';
       db.transaction(
         function(tx) {

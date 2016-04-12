@@ -8,7 +8,7 @@ describe('Relution.LiveData.SyncStore Offline Online sync', function() {
   var promise = null;
 
   beforeEach(function() {
-    Store = Relution.LiveData.SyncStore.design({
+    Store = new Relution.LiveData.SyncStore({
       useLocalStore: true,
       useSocketNotify: false
     });
@@ -37,31 +37,30 @@ describe('Relution.LiveData.SyncStore Offline Online sync', function() {
   });
 
   it('on sync check __msg__ table', function(done) {
-    model.on('sync', function() {
-      var db = openDatabase('relution-livedata', '', '', 1024 * 1024);
-      var channel = model.store.endpoints[Object.keys(model.store.endpoints)[0]].channel;
-      var query = 'SELECT * FROM \'__msg__\' WHERE id = ?';
-      debugger;
-      db.transaction(
-        function(tx) {
-          tx.executeSql(query, [model.entity + '~' + model.get('id')], function(tx, table) {
-            //assert.equal(table.rows.length, 0);
-            done();
-          });
-        },
-        function(error) {
+    promise.then(function () {
+      //model.once('sync', function() {
+        var db = openDatabase('relution-livedata', '', '', 1024 * 1024);
+        var query = 'SELECT * FROM \'__msg__\' WHERE id = ?';
+        db.transaction(
+          function(tx) {
+            tx.executeSql(query, [model.entity + '~' + model.get('id')], function(tx, table) {
+              assert.equal(table.rows.length, 0);
+              done();
+            });
+          },
+          function(error) {
+            done(new Error(error.message));
+          }
+        );
+      //});
+    })
 
-          debugger;
-          done(new Error(error.message));
-        }
-      );
-    });
   })
 
   it('delete model from db', function(done) {
     model.destroy().then(function() {
       var db = openDatabase('relution-livedata', '', '', 1024 * 1024);
-      var channel = model.store.endpoints[Object.keys(model.store.endpoints)[0]].channel;
+      var channel = model.store.getEndpoint(model).channel;
       var query = 'SELECT * FROM \'' + channel + '\' WHERE id =?';
 
       db.transaction(
@@ -72,7 +71,7 @@ describe('Relution.LiveData.SyncStore Offline Online sync', function() {
           });
         },
         function(error) {
-          done(error);
+          done(new Error(error.message));
         }
       );
     });
