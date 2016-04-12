@@ -424,8 +424,7 @@ module Relution.LiveData {
     _type: 'Relution.LiveData.AbstractSqlStore',
 
     size: 1024 * 1024, // 1 MB
-    version: '1.0',
-    security: ''
+    version: '1.0'
   });
   Relution.assert(() => AbstractSqlStore.prototype.isPrototypeOf(abstractSqlStore));
 

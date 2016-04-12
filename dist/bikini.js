@@ -1,10 +1,3 @@
-/*!
-* Project:   Bikini - Everything a model needs
-* Copyright: (c) 2016 M-Way Solutions GmbH.
-* Version:   0.8.4
-* Date:      Tue Apr 12 2016 12:27:18
-* License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
-*/
 (function (global, Backbone, _, $, Q, jsonPath) {
 // Copyright (c) 2013 M-Way Solutions GmbH
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
@@ -3277,8 +3270,7 @@ var Relution;
         var abstractSqlStore = _.extend(AbstractSqlStore.prototype, {
             _type: 'Relution.LiveData.AbstractSqlStore',
             size: 1024 * 1024,
-            version: '1.0',
-            security: ''
+            version: '1.0'
         });
         Relution.assert(function () { return AbstractSqlStore.prototype.isPrototypeOf(abstractSqlStore); });
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));

@@ -396,8 +396,7 @@ var Relution;
         var abstractSqlStore = _.extend(AbstractSqlStore.prototype, {
             _type: 'Relution.LiveData.AbstractSqlStore',
             size: 1024 * 1024,
-            version: '1.0',
-            security: ''
+            version: '1.0'
         });
         Relution.assert(function () { return AbstractSqlStore.prototype.isPrototypeOf(abstractSqlStore); });
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
