@@ -779,7 +779,7 @@ module Relution.LiveData {
       });
     }
 
-    private fetchChanges(endpoint: SyncEndpoint): Q.Promise<Collection> {
+    private fetchChanges(endpoint: SyncEndpoint, force?: boolean): Q.Promise<Collection> {
       let channel = endpoint.channel;
       if (!endpoint.urlRoot || !channel) {
         return Q.resolve<Collection>(undefined);
@@ -787,7 +787,7 @@ module Relution.LiveData {
 
       let now = Date.now();
       let promise = endpoint.promiseFetchingChanges;
-      if (promise) {
+      if (promise && !force) {
         if (promise.isPending() || now - endpoint.timestampFetchingChanges < 1000) {
           // reuse existing eventually completed request for changes
           Relution.LiveData.Debug.warning(channel + ' skipping changes request...');
@@ -900,6 +900,16 @@ module Relution.LiveData {
     }): PromiseLike<void | any> {
       if (!error) {
         // message was processed successfully
+        if (!this.options.useSocketNotify) {
+          // when not using sockets, fetch changes now
+          let endpoint = this.endpoints[options.entity];
+          if (endpoint) {
+            // will pull the change caused by the offline message and update the message time,
+            // so that we avoid the situation where the change caused by replaying the offline
+            // change results in a conflict later on...
+            return this.fetchChanges(endpoint, true);
+          }
+        }
         return Q.resolve(message);
       }
 

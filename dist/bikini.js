@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2016 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Tue Apr 12 2016 09:09:14
+* Date:      Tue Apr 12 2016 09:36:09
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -4528,7 +4528,7 @@ var Relution;
                     return _this.handleError(options, error) || Q.reject(error);
                 });
             };
-            SyncStore.prototype.fetchChanges = function (endpoint) {
+            SyncStore.prototype.fetchChanges = function (endpoint, force) {
                 var _this = this;
                 var channel = endpoint.channel;
                 if (!endpoint.urlRoot || !channel) {
@@ -4536,7 +4536,7 @@ var Relution;
                 }
                 var now = Date.now();
                 var promise = endpoint.promiseFetchingChanges;
-                if (promise) {
+                if (promise && !force) {
                     if (promise.isPending() || now - endpoint.timestampFetchingChanges < 1000) {
                         // reuse existing eventually completed request for changes
                         Relution.LiveData.Debug.warning(channel + ' skipping changes request...');
@@ -4639,6 +4639,16 @@ var Relution;
                 var _this = this;
                 if (!error) {
                     // message was processed successfully
+                    if (!this.options.useSocketNotify) {
+                        // when not using sockets, fetch changes now
+                        var endpoint = this.endpoints[options.entity];
+                        if (endpoint) {
+                            // will pull the change caused by the offline message and update the message time,
+                            // so that we avoid the situation where the change caused by replaying the offline
+                            // change results in a conflict later on...
+                            return this.fetchChanges(endpoint, true);
+                        }
+                    }
                     return Q.resolve(message);
                 }
                 // failed, eventually undo the modifications stored
