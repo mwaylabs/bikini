@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2016 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Mon Apr 11 2016 17:19:23
+* Date:      Tue Apr 12 2016 09:09:14
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -4655,7 +4655,9 @@ var Relution;
                     // inform client application of the offline changes error
                     var channel = message.get('channel');
                     Relution.LiveData.Debug.error('Relution.LiveData.SyncStore.processOfflineMessageResult: triggering error for channel ' + channel + ' on store', error);
-                    _this.trigger('error:' + channel, error, model);
+                    if (!options.silent) {
+                        _this.trigger('error:' + channel, error, model);
+                    }
                 };
                 var localOptions = {
                     // just affect local store
@@ -4746,13 +4748,19 @@ var Relution;
                         Relution.assert(function () { return model.url() === remoteOptions.url; });
                     }
                     Relution.LiveData.Debug.info('sendMessage ' + model.id);
+                    var offlineOptions = {
+                        entity: endpoint.entity,
+                        modelType: endpoint.modelType,
+                        urlRoot: endpoint.urlRoot,
+                        localStore: endpoint.localStore
+                    };
                     return _this._applyResponse(_this._ajaxMessage(endpoint, msg, remoteOptions, model), endpoint, msg, remoteOptions, model).then(function () {
                         // succeeded
-                        return _this.processOfflineMessageResult(null, message, endpoint);
+                        return _this.processOfflineMessageResult(null, message, offlineOptions);
                     }, function (error) {
                         if (error) {
                             // remote failed
-                            return Q(_this.processOfflineMessageResult(error, message, endpoint)).catch(function (error) {
+                            return Q(_this.processOfflineMessageResult(error, message, offlineOptions)).catch(function (error) {
                                 // explicitly disconnect due to error in endpoint
                                 _this.disconnectedEntity = endpoint.entity;
                                 return _this.onDisconnect(endpoint).thenReject(error);

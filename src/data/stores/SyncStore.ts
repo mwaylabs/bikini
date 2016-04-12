@@ -895,7 +895,8 @@ module Relution.LiveData {
       entity: string,
       modelType: ModelCtor,
       urlRoot: string,
-      localStore: Store
+      localStore: Store,
+      silent?: boolean
     }): PromiseLike<void | any> {
       if (!error) {
         // message was processed successfully
@@ -917,7 +918,9 @@ module Relution.LiveData {
         // inform client application of the offline changes error
         let channel = message.get('channel');
         Relution.LiveData.Debug.error('Relution.LiveData.SyncStore.processOfflineMessageResult: triggering error for channel ' + channel + ' on store', error);
-        this.trigger('error:' + channel, error, model);
+        if (!options.silent) {
+          this.trigger('error:' + channel, error, model);
+        }
       }
       let localOptions = {
         // just affect local store
@@ -1010,13 +1013,19 @@ module Relution.LiveData {
           Relution.assert(() => model.url() === remoteOptions.url);
         }
         Relution.LiveData.Debug.info('sendMessage ' + model.id);
+        let offlineOptions = {
+          entity: endpoint.entity,
+          modelType: endpoint.modelType,
+          urlRoot: endpoint.urlRoot,
+          localStore: endpoint.localStore
+        };
         return this._applyResponse(this._ajaxMessage(endpoint, msg, remoteOptions, model), endpoint, msg, remoteOptions, model).then(() => {
           // succeeded
-          return this.processOfflineMessageResult(null, message, endpoint);
+          return this.processOfflineMessageResult(null, message, offlineOptions);
         }, (error) => {
           if (error) {
             // remote failed
-            return Q(this.processOfflineMessageResult(error, message, endpoint)).catch((error) => {
+            return Q(this.processOfflineMessageResult(error, message, offlineOptions)).catch((error) => {
               // explicitly disconnect due to error in endpoint
               this.disconnectedEntity = endpoint.entity;
               return this.onDisconnect(endpoint).thenReject(error);
