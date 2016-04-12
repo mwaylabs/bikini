@@ -294,6 +294,7 @@ var Relution;
                 }
                 return Q.fcall(function () {
                     if (endpoint.socket && endpoint.socket.socket) {
+                        // consider calling endpoint.socket.disconnect() instead
                         endpoint.socket.socket.onDisconnect();
                     }
                     return undefined;

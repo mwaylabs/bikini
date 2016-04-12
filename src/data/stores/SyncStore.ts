@@ -322,8 +322,9 @@ module Relution.LiveData {
       }
 
       return Q.fcall(() => {
-        if (endpoint.socket && endpoint.socket.socket) {
-          endpoint.socket.socket.onDisconnect();
+        if (endpoint.socket && (<any>endpoint.socket).socket) {
+          // consider calling endpoint.socket.disconnect() instead
+          (<any>endpoint.socket).socket.onDisconnect();
         }
         return undefined;
       }).finally(() => {

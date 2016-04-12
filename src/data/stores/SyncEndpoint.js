@@ -63,6 +63,7 @@ var Relution;
              */
             SyncEndpoint.prototype.close = function () {
                 if (this.socket) {
+                    // consider calling this.socket.close() instead
                     this.socket.socket.close();
                     this.socket = null;
                 }

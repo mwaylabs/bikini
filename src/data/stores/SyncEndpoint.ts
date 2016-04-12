@@ -55,9 +55,9 @@ module Relution.LiveData {
     public isConnected: Q.Promise<void> = null;
 
     public localStore: Store;
-    public info: any;
+    public info: Q.Promise<Model>;
     public priority: number;
-    public socket: any;
+    public socket: SocketIOClient.Socket;
 
     // promise of last SyncStore.fetchChanges
     public promiseFetchingChanges: Q.Promise<Collection>;
@@ -97,7 +97,8 @@ module Relution.LiveData {
      */
     public close() {
       if (this.socket) {
-        this.socket.socket.close();
+        // consider calling this.socket.close() instead
+        (<any>this.socket).socket.close();
         this.socket = null;
       }
       if (this.localStore) {
