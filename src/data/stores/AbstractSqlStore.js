@@ -137,7 +137,7 @@ var Relution;
                 return "DROP TABLE IF EXISTS '" + this.entities[entity].table + "';";
             };
             AbstractSqlStore.prototype._sqlCreateTable = function (entity) {
-                return "CREATE TABLE IF NOT EXISTS '" + this.entities[entity].table + "' (id VARCHAR(255) NOT NULL PRIMARY KEY ASC UNIQUE, data  TEXT NOT NULL);";
+                return "CREATE TABLE IF NOT EXISTS '" + this.entities[entity].table + "' (id VARCHAR(255) NOT NULL PRIMARY KEY ASC UNIQUE, data TEXT NOT NULL);";
             };
             AbstractSqlStore.prototype._sqlDelete = function (options, entity) {
                 var sql = 'DELETE FROM \'' + this.entities[entity].table + '\'';

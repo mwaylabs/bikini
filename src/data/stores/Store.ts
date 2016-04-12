@@ -103,19 +103,15 @@ module Relution.LiveData {
       return _.isObject(model) ? model : null;
     }
 
-    initModel(model, options?:any) {
+    initModel(model, options?:any): void {
       // may be overwritten
     }
 
-    initCollection(collection, options?:any) {
+    initCollection(collection, options?:any): void {
       // may be overwritten
     }
 
-    initEntity(entity) {
-      // may be overwritten
-    }
-
-    sync(method: string, model: Model | Collection, options?: any) {
+    sync(method: string, model: Model | Collection, options?: any): PromiseLike<any> {
       // must be overwritten
       return Q.reject(new Error('not implemented!')); // purely abstract
     }

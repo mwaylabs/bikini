@@ -52,7 +52,7 @@ module Relution.LiveData {
     public host: string;
     public path: string;
     public channel: string;
-    public isConnected: any/*Promise<any>*/ = null;
+    public isConnected: Q.Promise<void> = null;
 
     public localStore: Store;
     public info: any;
@@ -60,12 +60,12 @@ module Relution.LiveData {
     public socket: any;
 
     // promise of last SyncStore.fetchChanges
-    public promiseFetchingChanges: any;
+    public promiseFetchingChanges: Q.Promise<Collection>;
     // timestamp of last SyncStore.fetchChanges, 0 while request is outstanding
     public timestampFetchingChanges: number;
 
     // promise of last SyncStore.fetchServerInfo
-    public promiseFetchingServerInfo: any;
+    public promiseFetchingServerInfo: Q.Promise<Model>;
     // timestamp of last SyncStore.fetchServerInfo, 0 while request is outstanding
     public timestampFetchingServerInfo: number;
 

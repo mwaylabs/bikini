@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2016 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Mon Apr 11 2016 10:15:53
+* Date:      Tue Apr 12 2016 09:36:09
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -2791,9 +2791,6 @@ var Relution;
             Store.prototype.initCollection = function (collection, options) {
                 // may be overwritten
             };
-            Store.prototype.initEntity = function (entity) {
-                // may be overwritten
-            };
             Store.prototype.sync = function (method, model, options) {
                 // must be overwritten
                 return Q.reject(new Error('not implemented!')); // purely abstract
@@ -3019,7 +3016,7 @@ var Relution;
                 return "DROP TABLE IF EXISTS '" + this.entities[entity].table + "';";
             };
             AbstractSqlStore.prototype._sqlCreateTable = function (entity) {
-                return "CREATE TABLE IF NOT EXISTS '" + this.entities[entity].table + "' (id VARCHAR(255) NOT NULL PRIMARY KEY ASC UNIQUE, data  TEXT NOT NULL);";
+                return "CREATE TABLE IF NOT EXISTS '" + this.entities[entity].table + "' (id VARCHAR(255) NOT NULL PRIMARY KEY ASC UNIQUE, data TEXT NOT NULL);";
             };
             AbstractSqlStore.prototype._sqlDelete = function (options, entity) {
                 var sql = 'DELETE FROM \'' + this.entities[entity].table + '\'';
@@ -3866,7 +3863,16 @@ var Relution;
                     socketPath: ''
                 }, options));
                 this.endpoints = {};
-                this.isConnected = false;
+                /**
+                 * when set, indicates which entity caused a disconnection.
+                 *
+                 * <p>
+                 * This is set to an entity name to limit which entity may cause a change to online state again.
+                 * </p>
+                 *
+                 * @type {string}
+                 */
+                this.disconnectedEntity = 'all';
                 Relution.LiveData.Debug.trace('SyncStore', options);
                 if (this.options.useSocketNotify && typeof io !== 'object') {
                     Relution.LiveData.Debug.warning('Socket.IO not present !!');
@@ -3877,14 +3883,11 @@ var Relution;
                 var urlRoot = modelOrCollection.getUrlRoot();
                 var entity = modelOrCollection.entity;
                 if (urlRoot && entity) {
-                    var name = entity;
-                    var credentials = modelOrCollection.credentials || this.options.credentials;
-                    var hash = LiveData.URLUtil.hashLocation(urlRoot);
                     // get or create endpoint for this url
-                    var endpoint = this.endpoints[hash];
+                    var credentials = modelOrCollection.credentials || this.options.credentials;
+                    var endpoint = this.endpoints[entity];
                     if (!endpoint) {
                         Relution.LiveData.Debug.info('Relution.LiveData.SyncStore.initEndpoint: ' + name);
-                        var href = LiveData.URLUtil.getLocation(urlRoot);
                         endpoint = new LiveData.SyncEndpoint({
                             entity: entity,
                             modelType: modelType,
@@ -3892,12 +3895,17 @@ var Relution;
                             socketPath: this.options.socketPath,
                             credentials: credentials
                         });
-                        this.endpoints[hash] = endpoint;
+                        this.endpoints[entity] = endpoint;
                         endpoint.localStore = this.createLocalStore(endpoint);
                         endpoint.priority = this.options.orderOfflineChanges && (_.lastIndexOf(this.options.orderOfflineChanges, endpoint.entity) + 1);
                         this.createMsgCollection();
-                        endpoint.socket = this.createSocket(endpoint, name);
+                        endpoint.socket = this.createSocket(endpoint, entity);
                         endpoint.info = this.fetchServerInfo(endpoint);
+                    }
+                    else {
+                        // configuration can not change, must recreate store instead...
+                        Relution.assert(function () { return endpoint.urlRoot === urlRoot; }, 'can not change urlRoot, must recreate store instead!');
+                        Relution.assert(function () { return JSON.stringify(endpoint.credentials) === JSON.stringify(credentials); }, 'can not change credentials, must recreate store instead!');
                     }
                     return endpoint;
                 }
@@ -3908,10 +3916,15 @@ var Relution;
             SyncStore.prototype.initCollection = function (collection) {
                 collection.endpoint = this.initEndpoint(collection, collection.model);
             };
-            SyncStore.prototype.getEndpoint = function (url) {
-                if (url) {
-                    var hash = LiveData.URLUtil.hashLocation(url);
-                    return this.endpoints[hash];
+            SyncStore.prototype.getEndpoint = function (modelOrCollection) {
+                var endpoint = this.endpoints[modelOrCollection.entity];
+                if (endpoint) {
+                    Relution.assert(function () {
+                        // checks that modelOrCollection uses a model inheriting from the one of the endpoint
+                        var modelType = LiveData.isCollection(modelOrCollection) ? modelOrCollection.model : modelOrCollection.constructor;
+                        return modelType === endpoint.modelType || modelType.prototype instanceof endpoint.modelType;
+                    }, 'wrong type of model!');
+                    return endpoint;
                 }
             };
             SyncStore.prototype.createLocalStore = function (endpoint) {
@@ -3942,9 +3955,9 @@ var Relution;
                 return this.messages;
             };
             SyncStore.prototype.createSocket = function (endpoint, name) {
+                var _this = this;
                 if (this.options.useSocketNotify && endpoint && endpoint.socketPath) {
                     Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore.createSocket: ' + name);
-                    var that = this;
                     var url = endpoint.host;
                     var path = endpoint.path;
                     var href = LiveData.URLUtil.getLocation(url);
@@ -3967,21 +3980,20 @@ var Relution;
                     }
                     endpoint.socket = io.connect(url, connectVo);
                     endpoint.socket.on('connect', function () {
-                        that._bindChannel(endpoint, name);
-                        return that.onConnect(endpoint).done();
+                        _this._bindChannel(endpoint, name);
+                        return _this.onConnect(endpoint).done();
                     });
                     endpoint.socket.on('disconnect', function () {
                         Relution.LiveData.Debug.info('socket.io: disconnect');
-                        return that.onDisconnect(endpoint).done();
+                        return _this.onDisconnect(endpoint).done();
                     });
                     endpoint.socket.on(endpoint.channel, function (msg) {
-                        return that.onMessage(endpoint, that._fixMessage(endpoint, msg));
+                        return _this.onMessage(endpoint, _this._fixMessage(endpoint, msg));
                     });
                     return endpoint.socket;
                 }
             };
             SyncStore.prototype._bindChannel = function (endpoint, name) {
-                var that = this;
                 if (endpoint && endpoint.socket) {
                     Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore._bindChannel: ' + name);
                     var channel = endpoint.channel;
@@ -4026,10 +4038,10 @@ var Relution;
                         // next we'll fetch server-side changes
                         return _this.fetchChanges(endpoint).then(function () {
                             // then send client-side changes
-                            if (!_this.isConnected) {
+                            if (_this.disconnectedEntity === 'all' || _this.disconnectedEntity === endpoint.entity) {
                                 // restart replaying of offline messages
                                 _this.messagesPromise = null;
-                                _this.isConnected = true;
+                                _this.disconnectedEntity = null;
                             }
                             return _this._sendMessages();
                         }).catch(function (error) {
@@ -4055,7 +4067,9 @@ var Relution;
                     return Q.resolve(undefined);
                 }
                 endpoint.isConnected = null;
-                this.isConnected = false;
+                if (!this.disconnectedEntity) {
+                    this.disconnectedEntity = 'all';
+                }
                 return Q.fcall(function () {
                     if (endpoint.socket && endpoint.socket.socket) {
                         endpoint.socket.socket.onDisconnect();
@@ -4080,10 +4094,10 @@ var Relution;
                 return msg;
             };
             SyncStore.prototype.onMessage = function (endpoint, msg) {
+                var _this = this;
                 // this is called by the store itself for a particular endpoint!
-                var that = this;
                 if (!msg || !msg.method) {
-                    return Q.reject('no message or method given');
+                    return Q.reject(new Error('no message or method given'));
                 }
                 var q;
                 var channel = endpoint.channel;
@@ -4091,7 +4105,7 @@ var Relution;
                     // first update the local store by forming a model and invoking sync
                     var options = _.defaults({
                         store: endpoint.localStore
-                    }, that.options);
+                    }, this.options);
                     var model = new endpoint.modelType(msg.data, _.extend({
                         parse: true
                     }, options));
@@ -4123,23 +4137,24 @@ var Relution;
                 // finally set the message time
                 return q.then(function () {
                     if (msg.time) {
-                        that.setLastMessageTime(channel, msg.time);
+                        _this.setLastMessageTime(channel, msg.time);
                     }
                     // update all collections listening
-                    that.trigger('sync:' + channel, msg); // SyncContext.onMessage
+                    _this.trigger('sync:' + channel, msg); // SyncContext.onMessage
                     return msg;
                 }, function (error) {
                     // not setting message time in error case
                     // report error as event on store
-                    that.trigger('error:' + channel, error, model);
+                    _this.trigger('error:' + channel, error, model);
                     return msg;
                 });
             };
             SyncStore.prototype.sync = function (method, model, options) {
+                var _this = this;
                 Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore.sync');
                 options = options || {};
                 try {
-                    var endpoint = model.endpoint || this.getEndpoint(model.getUrlRoot() /*throws urlError*/);
+                    var endpoint = model.endpoint || this.getEndpoint(model);
                     if (!endpoint) {
                         throw new Error('no endpoint');
                     }
@@ -4192,17 +4207,16 @@ var Relution;
                         opts.entity = endpoint.entity;
                         delete opts.success;
                         delete opts.error;
-                        var that = this;
                         return endpoint.localStore.sync(method, model, opts).then(function (resp) {
                             // backbone success callback alters the collection now
-                            resp = that.handleSuccess(options, resp) || resp;
+                            resp = _this.handleSuccess(options, resp) || resp;
                             if (endpoint.socket || options.fetchMode === 'local') {
                                 // no need to fetch changes as we got a websocket, that is either connected or attempts reconnection
                                 return resp;
                             }
                             // when we are disconnected, try to connect now
                             if (!endpoint.isConnected) {
-                                var qInfo = that.fetchServerInfo(endpoint);
+                                var qInfo = _this.fetchServerInfo(endpoint);
                                 if (!qInfo) {
                                     return resp;
                                 }
@@ -4210,31 +4224,31 @@ var Relution;
                                     // trigger reconnection when disconnected
                                     var result;
                                     if (!endpoint.isConnected) {
-                                        result = that.onConnect(endpoint);
+                                        result = _this.onConnect(endpoint);
                                     }
                                     return result || info;
                                 }, function (xhr) {
                                     // trigger disconnection when disconnected
                                     var result;
                                     if (!xhr.responseText && endpoint.isConnected) {
-                                        result = that.onDisconnect(endpoint);
+                                        result = _this.onDisconnect(endpoint);
                                     }
                                     return result || resp;
                                 }).thenResolve(resp);
                             }
                             // load changes only (will happen AFTER success callback is invoked,
                             // but returned promise will resolve only after changes were processed.
-                            return that.fetchChanges(endpoint).catch(function (xhr) {
+                            return _this.fetchChanges(endpoint).catch(function (xhr) {
                                 if (!xhr.responseText && endpoint.isConnected) {
-                                    return that.onDisconnect(endpoint) || resp;
+                                    return _this.onDisconnect(endpoint) || resp;
                                 }
                                 // can not do much about it...
-                                that.trigger('error:' + channel, xhr.responseJSON || xhr.responseText, model);
+                                _this.trigger('error:' + channel, xhr.responseJSON || xhr.responseText, model);
                                 return resp;
                             }).thenResolve(resp); // caller expects original XHR response as changes body data is NOT compatible
                         }, function () {
                             // fall-back to loading full data set
-                            return that._addMessage(method, model, options, endpoint);
+                            return _this._addMessage(method, model, options, endpoint);
                         });
                     }
                     // do backbone rest
@@ -4245,7 +4259,7 @@ var Relution;
                 }
             };
             SyncStore.prototype._addMessage = function (method, model, options, endpoint) {
-                var that = this;
+                var _this = this;
                 if (method && model) {
                     var changes = model.changedSinceSync;
                     var data = null;
@@ -4276,7 +4290,7 @@ var Relution;
                         id: model.id,
                         method: method,
                         data: data,
-                        channel: endpoint.channel,
+                        //channel: endpoint.channel, // channel is hacked in by storeMessage(), we don't want to use this anymore
                         priority: endpoint.priority,
                         time: Date.now()
                     };
@@ -4292,12 +4306,12 @@ var Relution;
                     }
                     return q.then(function (msg) {
                         // pass in qMessage so that deletion of stored message can be scheduled
-                        return that._emitMessage(endpoint, msg, options, model, qMessage);
+                        return _this._emitMessage(endpoint, msg, options, model, qMessage);
                     });
                 }
             };
             SyncStore.prototype._emitMessage = function (endpoint, msg, options, model, qMessage) {
-                var that = this;
+                var _this = this;
                 var channel = endpoint.channel;
                 var qAjax = this._ajaxMessage(endpoint, msg, options, model);
                 var q = qAjax;
@@ -4305,8 +4319,8 @@ var Relution;
                     // following takes care of offline change store
                     q = q.then(function (data) {
                         // success, remove message stored, if any
-                        return that.removeMessage(endpoint, msg, qMessage).then(data, function (error) {
-                            that.trigger('error:' + channel, error, model); // can not do much about it...
+                        return _this.removeMessage(endpoint, msg, qMessage).then(data, function (error) {
+                            _this.trigger('error:' + channel, error, model); // can not do much about it...
                             return data;
                         }).thenResolve(data); // resolve again yielding data
                     }, function (xhr) {
@@ -4317,10 +4331,10 @@ var Relution;
                         }
                         else {
                             // remove message stored and keep rejection as is
-                            return that.removeMessage(endpoint, msg, qMessage).then(xhr, function (error) {
-                                that.trigger('error:' + channel, error, model); // can not do much about it...
+                            return _this.removeMessage(endpoint, msg, qMessage).then(xhr, function (error) {
+                                _this.trigger('error:' + channel, error, model); // can not do much about it...
                                 return xhr;
-                            }).thenResolve(Q.reject.apply(Q, arguments));
+                            }).thenReject(xhr);
                         }
                     });
                 }
@@ -4330,17 +4344,18 @@ var Relution;
                     return qAjax.then(function () {
                         // trigger reconnection when disconnected
                         if (!endpoint.isConnected) {
-                            return that.onConnect(endpoint);
+                            return _this.onConnect(endpoint);
                         }
                     }, function (xhr) {
                         // trigger disconnection when disconnected
                         if (!xhr && endpoint.isConnected) {
-                            return that.onDisconnect(endpoint);
+                            return _this.onDisconnect(endpoint);
                         }
                     });
                 });
             };
             SyncStore.prototype._ajaxMessage = function (endpoint, msg, options, model) {
+                var _this = this;
                 options = options || {};
                 var url = options.url;
                 if (!url) {
@@ -4384,13 +4399,12 @@ var Relution;
                     error: options.error
                 };
                 delete options.xhr; // make sure not to use old value
-                var that = this;
                 return model.sync(msg.method, model, opts).then(function (data) {
                     options.xhr = opts.xhr.xhr || opts.xhr;
                     return data;
                 }, function (xhr) {
                     options.xhr = opts.xhr.xhr || opts.xhr;
-                    if (!xhr.responseText && that.options.useOfflineChanges) {
+                    if (!xhr.responseText && _this.options.useOfflineChanges) {
                         // this seams to be a connection problem
                         return Q.reject();
                     }
@@ -4398,8 +4412,8 @@ var Relution;
                 });
             };
             SyncStore.prototype._applyResponse = function (qXHR, endpoint, msg, options, model) {
+                var _this = this;
                 var channel = endpoint.channel;
-                var that = this;
                 var clientTime = new Date().getTime();
                 return qXHR.then(function (data) {
                     // delete on server does not respond a body
@@ -4409,15 +4423,15 @@ var Relution;
                     // update local store state
                     if (data) {
                         // no data if server asks not to alter state
-                        // that.setLastMessageTime(channel, msg.time);
+                        // this.setLastMessageTime(channel, msg.time);
                         var promises = [];
                         var dataIds;
                         if (msg.method !== 'read') {
-                            promises.push(that.onMessage(endpoint, that._fixMessage(endpoint, data === msg.data ? msg : _.defaults({
+                            promises.push(_this.onMessage(endpoint, _this._fixMessage(endpoint, data === msg.data ? msg : _.defaults({
                                 data: data // just accepts new data
                             }, msg))));
                         }
-                        else if (LiveData.isCollection(model) && _.isArray(data)) {
+                        else if (LiveData.isCollection(model) && Array.isArray(data)) {
                             // synchronize the collection contents with the data read
                             var syncIds = {};
                             model.models.forEach(function (m) {
@@ -4434,7 +4448,7 @@ var Relution;
                                         delete syncIds[id]; // so that it is deleted below
                                         if (!_.isEqual(_.pick.call(m, m.attributes, Object.keys(d)), d)) {
                                             // above checked that all attributes in d are in m with equal values and found some mismatch
-                                            promises.push(that.onMessage(endpoint, that._fixMessage(endpoint, {
+                                            promises.push(_this.onMessage(endpoint, _this._fixMessage(endpoint, {
                                                 id: id,
                                                 method: 'update',
                                                 time: msg.time,
@@ -4444,7 +4458,7 @@ var Relution;
                                     }
                                     else {
                                         // create the item
-                                        promises.push(that.onMessage(endpoint, that._fixMessage(endpoint, {
+                                        promises.push(_this.onMessage(endpoint, _this._fixMessage(endpoint, {
                                             id: id,
                                             method: 'create',
                                             time: msg.time,
@@ -4456,7 +4470,7 @@ var Relution;
                             Object.keys(syncIds).forEach(function (id) {
                                 // delete the item
                                 var m = syncIds[id];
-                                promises.push(that.onMessage(endpoint, that._fixMessage(endpoint, {
+                                promises.push(_this.onMessage(endpoint, _this._fixMessage(endpoint, {
                                     id: id,
                                     method: 'delete',
                                     time: msg.time,
@@ -4466,11 +4480,11 @@ var Relution;
                         }
                         else {
                             // trigger an update to load the data read
-                            var array = _.isArray(data) ? data : [data];
+                            var array = Array.isArray(data) ? data : [data];
                             for (var i = 0; i < array.length; i++) {
                                 data = array[i];
                                 if (data) {
-                                    promises.push(that.onMessage(endpoint, that._fixMessage(endpoint, {
+                                    promises.push(_this.onMessage(endpoint, _this._fixMessage(endpoint, {
                                         id: data[endpoint.modelType.prototype.idAttribute] || data._id,
                                         method: 'update',
                                         time: msg.time,
@@ -4484,11 +4498,13 @@ var Relution;
                             if (!dataIds) {
                                 return data;
                             }
+                            Relution.assert(function () { return LiveData.isCollection(model); });
                             // when collection was updated only pass data of models that were synced on to the success callback,
                             // as the callback will set the models again causing our sorting and filtering to be without effect.
                             var response = [];
-                            for (var i = model.models.length; i-- > 0;) {
-                                var m = model.models[i];
+                            var models = LiveData.isCollection(model) ? model.models : [model];
+                            for (var i = models.length; i-- > 0;) {
+                                var m = models[i];
                                 if (dataIds[m.id]) {
                                     response.push(m.attributes);
                                     delete dataIds[m.id];
@@ -4503,31 +4519,31 @@ var Relution;
                 }).then(function (response) {
                     if (msg.method === 'read' && LiveData.isCollection(model)) {
                         // TODO: extract Date header from options.xhr instead of using clientTime
-                        that.setLastMessageTime(endpoint.channel, clientTime);
+                        _this.setLastMessageTime(endpoint.channel, clientTime);
                     }
                     // invoke success callback, if any
-                    return that.handleSuccess(options, response) || response;
+                    return _this.handleSuccess(options, response) || response;
                 }, function (error) {
                     // invoke error callback, if any
-                    return that.handleError(options, error) || Q.reject(error);
+                    return _this.handleError(options, error) || Q.reject(error);
                 });
             };
-            SyncStore.prototype.fetchChanges = function (endpoint) {
-                var that = this;
+            SyncStore.prototype.fetchChanges = function (endpoint, force) {
+                var _this = this;
                 var channel = endpoint.channel;
                 if (!endpoint.urlRoot || !channel) {
                     return Q.resolve(undefined);
                 }
                 var now = Date.now();
                 var promise = endpoint.promiseFetchingChanges;
-                if (promise) {
+                if (promise && !force) {
                     if (promise.isPending() || now - endpoint.timestampFetchingChanges < 1000) {
                         // reuse existing eventually completed request for changes
                         Relution.LiveData.Debug.warning(channel + ' skipping changes request...');
                         return promise;
                     }
                 }
-                var time = that.getLastMessageTime(channel);
+                var time = this.getLastMessageTime(channel);
                 if (!time) {
                     Relution.LiveData.Debug.error(channel + ' can not fetch changes at this time!');
                     return promise || Q.resolve(undefined);
@@ -4535,30 +4551,30 @@ var Relution;
                 // initiate a new request for changes
                 Relution.LiveData.Debug.info(channel + ' initiating changes request...');
                 var changes = new this.messages.constructor();
-                promise = changes.fetch({
+                promise = Q(changes.fetch({
                     url: endpoint.urlRoot + 'changes/' + time,
                     credentials: endpoint.credentials,
                     store: {},
-                    success: function fetchChangesSuccess(model, response, options) {
+                    success: function (model, response, options) {
                         if (changes.models.length > 0) {
                             changes.each(function (change) {
                                 var msg = change.attributes;
-                                that.onMessage(endpoint, that._fixMessage(endpoint, msg));
+                                _this.onMessage(endpoint, _this._fixMessage(endpoint, msg));
                             });
                         }
                         else {
                             // following should use server time!
-                            that.setLastMessageTime(channel, now);
+                            _this.setLastMessageTime(channel, now);
                         }
                         return response || options.xhr;
                     }
-                });
+                })).thenResolve(changes);
                 endpoint.promiseFetchingChanges = promise;
                 endpoint.timestampFetchingChanges = now;
                 return promise;
             };
             SyncStore.prototype.fetchServerInfo = function (endpoint) {
-                var that = this;
+                var _this = this;
                 if (endpoint && endpoint.urlRoot) {
                     var now = Date.now();
                     var promise = endpoint.promiseFetchingServerInfo;
@@ -4570,29 +4586,29 @@ var Relution;
                         }
                     }
                     var info = new LiveData.Model();
-                    var time = that.getLastMessageTime(endpoint.channel);
+                    var time = this.getLastMessageTime(endpoint.channel);
                     var url = endpoint.urlRoot;
                     if (url.charAt((url.length - 1)) !== '/') {
                         url += '/';
                     }
-                    promise = info.fetch(({
+                    promise = Q(info.fetch(({
                         url: url + 'info',
                         success: function (model, response, options) {
                             //@todo why we set a server time here ?
                             if (!time && info.get('time')) {
-                                that.setLastMessageTime(endpoint.channel, info.get('time'));
+                                _this.setLastMessageTime(endpoint.channel, info.get('time'));
                             }
                             if (!endpoint.socketPath && info.get('socketPath')) {
                                 endpoint.socketPath = info.get('socketPath');
                                 var name = info.get('entity') || endpoint.entity;
-                                if (that.options.useSocketNotify) {
-                                    endpoint.socket = that.createSocket(endpoint, name);
+                                if (_this.options.useSocketNotify) {
+                                    endpoint.socket = _this.createSocket(endpoint, name);
                                 }
                             }
                             return response || options.xhr;
                         },
                         credentials: endpoint.credentials
-                    }));
+                    }))).thenResolve(info);
                     endpoint.promiseFetchingServerInfo = promise;
                     endpoint.timestampFetchingServerInfo = now;
                     return promise;
@@ -4616,12 +4632,23 @@ var Relution;
              * @param error reported by remote server.
              * @param message change reported, attributes of type LiveDataMessage.
              * @param options context information required to access the data locally as well as remotely.
-             * @return {any} Promise indicating success to drop the change message and preceed with the next change, or
+             * @return {any} Promise indicating success to drop the change message and proceed with the next change, or
              *    rejection indicating the change message is kept and retried later on.
              */
             SyncStore.prototype.processOfflineMessageResult = function (error, message, options) {
+                var _this = this;
                 if (!error) {
                     // message was processed successfully
+                    if (!this.options.useSocketNotify) {
+                        // when not using sockets, fetch changes now
+                        var endpoint = this.endpoints[options.entity];
+                        if (endpoint) {
+                            // will pull the change caused by the offline message and update the message time,
+                            // so that we avoid the situation where the change caused by replaying the offline
+                            // change results in a conflict later on...
+                            return this.fetchChanges(endpoint, true);
+                        }
+                    }
                     return Q.resolve(message);
                 }
                 // failed, eventually undo the modifications stored
@@ -4634,13 +4661,14 @@ var Relution;
                     entity: options.entity
                 });
                 model.id = message.get('method') !== 'create' && message.get('id');
-                var that = this;
-                function triggerError() {
+                var triggerError = function () {
                     // inform client application of the offline changes error
                     var channel = message.get('channel');
                     Relution.LiveData.Debug.error('Relution.LiveData.SyncStore.processOfflineMessageResult: triggering error for channel ' + channel + ' on store', error);
-                    that.trigger('error:' + channel, error, model);
-                }
+                    if (!options.silent) {
+                        _this.trigger('error:' + channel, error, model);
+                    }
+                };
                 var localOptions = {
                     // just affect local store
                     store: options.localStore
@@ -4698,8 +4726,6 @@ var Relution;
                 if (!this.messages) {
                     return Q.resolve(undefined);
                 }
-                // endpoints indexed by entity
-                var endpoints;
                 // processes messages until none left, hitting a message of a not yet registered endpoint, or entering
                 // a non-recoverable error. The promise returned resolves to this.messages when done.
                 var nextMessage = function () {
@@ -4712,7 +4738,7 @@ var Relution;
                         Relution.LiveData.Debug.error('sendMessage ' + message.id + ' with no entity!');
                         return message.destroy().then(nextMessage);
                     }
-                    var endpoint = endpoints[entity];
+                    var endpoint = _this.endpoints[entity];
                     if (!endpoint) {
                         return _this.messages;
                     }
@@ -4732,13 +4758,23 @@ var Relution;
                         Relution.assert(function () { return model.url() === remoteOptions.url; });
                     }
                     Relution.LiveData.Debug.info('sendMessage ' + model.id);
+                    var offlineOptions = {
+                        entity: endpoint.entity,
+                        modelType: endpoint.modelType,
+                        urlRoot: endpoint.urlRoot,
+                        localStore: endpoint.localStore
+                    };
                     return _this._applyResponse(_this._ajaxMessage(endpoint, msg, remoteOptions, model), endpoint, msg, remoteOptions, model).then(function () {
                         // succeeded
-                        return Q.when(_this.processOfflineMessageResult(null, message, endpoint));
+                        return _this.processOfflineMessageResult(null, message, offlineOptions);
                     }, function (error) {
                         if (error) {
                             // remote failed
-                            return Q.when(_this.processOfflineMessageResult(error, message, endpoint));
+                            return Q(_this.processOfflineMessageResult(error, message, offlineOptions)).catch(function (error) {
+                                // explicitly disconnect due to error in endpoint
+                                _this.disconnectedEntity = endpoint.entity;
+                                return _this.onDisconnect(endpoint).thenReject(error);
+                            });
                         }
                         else {
                             // connectivity issue, keep rejection
@@ -4750,15 +4786,16 @@ var Relution;
                     }).then(nextMessage);
                 };
                 Relution.LiveData.Debug.info('Relution.LiveData.SyncStore._sendMessages');
-                if (!this.messagesPromise) {
+                var q = this.messagesPromise;
+                if (!q) {
                     // initially fetch all messages
-                    this.messagesPromise = this.messages.fetch({
+                    q = Q(this.messages.fetch({
                         sortOrder: [
                             '-priority',
                             '+time',
                             '+id'
                         ]
-                    });
+                    }));
                 }
                 else if (this.messagesPromise.isRejected()) {
                     // early rejection
@@ -4768,13 +4805,8 @@ var Relution;
                     // no more messages
                     return this.messagesPromise;
                 }
-                // need to index endpoints by entity
-                endpoints = _.reduce(_.values(this.endpoints), function (endpoints, endpoint) {
-                    endpoints[endpoint.entity] = endpoint;
-                    return endpoints;
-                }, {});
                 // kick to process pending messages
-                this.messagesPromise = this.messagesPromise.then(nextMessage);
+                this.messagesPromise = q.then(nextMessage);
                 return this.messagesPromise;
             };
             SyncStore.prototype.storeMessage = function (endpoint, qMsg) {
@@ -4796,8 +4828,9 @@ var Relution;
                             collection: _this.messages,
                             store: _this.messages.store
                         });
+                        message.set('channel', endpoint.channel);
                     }
-                    return message.save(msg, options).thenResolve(message);
+                    return Q(message.save(msg, options)).thenResolve(message);
                 });
             };
             SyncStore.prototype.removeMessage = function (endpoint, msg, qMessage) {
@@ -4825,7 +4858,7 @@ var Relution;
             };
             SyncStore.prototype.clear = function (collection) {
                 if (collection) {
-                    var endpoint = this.getEndpoint(collection.getUrlRoot());
+                    var endpoint = this.getEndpoint(collection);
                     if (endpoint) {
                         if (this.messages) {
                             this.messages.destroy();

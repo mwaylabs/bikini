@@ -83,9 +83,6 @@ var Relution;
             Store.prototype.initCollection = function (collection, options) {
                 // may be overwritten
             };
-            Store.prototype.initEntity = function (entity) {
-                // may be overwritten
-            };
             Store.prototype.sync = function (method, model, options) {
                 // must be overwritten
                 return Q.reject(new Error('not implemented!')); // purely abstract
