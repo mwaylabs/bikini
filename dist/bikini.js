@@ -2,7 +2,7 @@
 * Project:   Bikini - Everything a model needs
 * Copyright: (c) 2016 M-Way Solutions GmbH.
 * Version:   0.8.4
-* Date:      Tue Apr 12 2016 09:36:09
+* Date:      Tue Apr 12 2016 12:27:18
 * License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
 */
 (function (global, Backbone, _, $, Q, jsonPath) {
@@ -2747,10 +2747,11 @@ var Relution;
          */
         var Store = (function () {
             function Store(options) {
-                this.options = _.extend({
-                    name: ''
-                }, options);
                 Relution.LiveData.Debug.trace('Store', options);
+                if (options) {
+                    // copy options values into the object
+                    _.extend(this, options);
+                }
             }
             Store.prototype.getArray = function (data) {
                 if (_.isArray(data)) {
@@ -2871,7 +2872,8 @@ var Relution;
         var store = _.extend(Store.prototype, Backbone.Events, LiveData._Object, {
             _type: 'Relution.LiveData.Store',
             isModel: false,
-            isCollection: false
+            isCollection: false,
+            name: 'relution-livedata'
         });
         Relution.assert(function () { return Store.prototype.isPrototypeOf(store); });
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
@@ -2926,19 +2928,15 @@ var Relution;
         var AbstractSqlStore = (function (_super) {
             __extends(AbstractSqlStore, _super);
             function AbstractSqlStore(options) {
-                _super.call(this, _.extend({
-                    name: 'relution-livedata',
-                    size: 1024 * 1024,
-                    version: '1.0',
-                    security: '',
-                    entities: {}
-                }, options));
+                _super.call(this, options);
                 this.db = null;
                 this.entities = {};
-                for (var entity in this.options.entities) {
-                    this.entities[entity] = {
-                        table: this.options.entities[entity] || entity
-                    };
+                if (options && options.entities) {
+                    for (var entity in options.entities) {
+                        this.entities[entity] = {
+                            table: options.entities[entity] || entity
+                        };
+                    }
                 }
             }
             AbstractSqlStore.prototype.sync = function (method, model, options) {
@@ -3275,6 +3273,14 @@ var Relution;
             return AbstractSqlStore;
         })(LiveData.Store);
         LiveData.AbstractSqlStore = AbstractSqlStore;
+        // mixins
+        var abstractSqlStore = _.extend(AbstractSqlStore.prototype, {
+            _type: 'Relution.LiveData.AbstractSqlStore',
+            size: 1024 * 1024,
+            version: '1.0',
+            security: ''
+        });
+        Relution.assert(function () { return AbstractSqlStore.prototype.isPrototypeOf(abstractSqlStore); });
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=AbstractSqlStore.js.map
@@ -3347,12 +3353,7 @@ var Relution;
         var WebSqlStore = (function (_super) {
             __extends(WebSqlStore, _super);
             function WebSqlStore(options) {
-                _super.call(this, _.extend({
-                    name: 'relution-livedata',
-                    size: 1024 * 1024,
-                    version: '1.0',
-                    security: ''
-                }, options));
+                _super.call(this, options);
                 var that = this;
                 this._openDb({
                     error: function (error) {
@@ -3373,7 +3374,7 @@ var Relution;
                             error = 'Your browser does not support WebSQL databases.';
                         }
                         else {
-                            this.db = global.openDatabase(this.options.name, '', '', this.options.size);
+                            this.db = global.openDatabase(this.name, '', '', this.size);
                             if (this.entities) {
                                 for (var entity in this.entities) {
                                     this._createTable({ entity: entity });
@@ -3386,7 +3387,7 @@ var Relution;
                     }
                 }
                 if (this.db) {
-                    if (this.options.version && this.db.version !== this.options.version) {
+                    if (this.version && this.db.version !== this.version) {
                         this._updateDb(options);
                     }
                     else {
@@ -3410,11 +3411,11 @@ var Relution;
                 var that = this;
                 try {
                     if (!this.db) {
-                        this.db = global.openDatabase(this.options.name, '', '', this.options.size);
+                        this.db = global.openDatabase(this.name, '', '', this.size);
                     }
                     try {
-                        var arSql = this._sqlUpdateDatabase(this.db.version, this.options.version);
-                        this.db.changeVersion(this.db.version, this.options.version, function (tx) {
+                        var arSql = this._sqlUpdateDatabase(this.db.version, this.version);
+                        this.db.changeVersion(this.db.version, this.version, function (tx) {
                             _.each(arSql, function (sql) {
                                 Relution.LiveData.Debug.info('sql statement: ' + sql);
                                 lastSql = sql;
@@ -3453,6 +3454,11 @@ var Relution;
             return WebSqlStore;
         })(LiveData.AbstractSqlStore);
         LiveData.WebSqlStore = WebSqlStore;
+        // mixins
+        var webSqlStore = _.extend(WebSqlStore.prototype, {
+            _type: 'Relution.LiveData.WebSqlStore'
+        });
+        Relution.assert(function () { return WebSqlStore.prototype.isPrototypeOf(webSqlStore); });
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=WebSqlStore.js.map
@@ -3528,11 +3534,7 @@ var Relution;
         var CipherSqlStore = (function (_super) {
             __extends(CipherSqlStore, _super);
             function CipherSqlStore(options) {
-                _super.call(this, _.extend({
-                    name: 'relution-livedata',
-                    size: 1024 * 1024,
-                    security: null
-                }, options));
+                _super.call(this, options);
                 if (options && !options.security) {
                     throw new Error('security Key is required on a CipherSqlStore');
                 }
@@ -3556,8 +3558,8 @@ var Relution;
              */
             CipherSqlStore.prototype._openDb = function (errorCallback) {
                 var error, dbError;
-                if (this.options && !this.options.security) {
-                    return Relution.LiveData.Debug.error('A CipherSqlStore need a Security Token!', this.options);
+                if (!this.security) {
+                    return Relution.LiveData.Debug.error('A CipherSqlStore need a Security Token!', this);
                 }
                 /* openDatabase(db_name, version, description, estimated_size, callback) */
                 if (!this.db) {
@@ -3566,7 +3568,7 @@ var Relution;
                             error = 'Your browser does not support SQLite plugin.';
                         }
                         else {
-                            this.db = global.sqlitePlugin.openDatabase({ name: this.options.name, key: this.options.security, location: 2 });
+                            this.db = global.sqlitePlugin.openDatabase({ name: this.name, key: this.security, location: 2 });
                             if (this.entities) {
                                 for (var entity in this.entities) {
                                     this._createTable({ entity: entity });
@@ -3579,7 +3581,7 @@ var Relution;
                     }
                 }
                 if (this.db) {
-                    if (this.options.version && this.db.version !== this.options.version) {
+                    if (this.version && this.db.version !== this.version) {
                         this._updateDb(errorCallback);
                     }
                     else {
@@ -3603,10 +3605,10 @@ var Relution;
                 var that = this;
                 try {
                     if (!this.db) {
-                        this.db = global.sqlitePlugin.openDatabase({ name: this.options.name, key: this.options.security, location: 2 });
+                        this.db = global.sqlitePlugin.openDatabase({ name: this.name, key: this.security, location: 2 });
                     }
                     try {
-                        var arSql = this._sqlUpdateDatabase(this.db.version, this.options.version);
+                        var arSql = this._sqlUpdateDatabase(this.db.version, this.version);
                         Relution.LiveData.Debug.warning('sqlcipher cant change the version its still not supported check out https://github.com/litehelpers/Cordova-sqlcipher-adapter#other-limitations');
                     }
                     catch (e) {
@@ -3632,6 +3634,12 @@ var Relution;
             return CipherSqlStore;
         })(LiveData.AbstractSqlStore);
         LiveData.CipherSqlStore = CipherSqlStore;
+        // mixins
+        var cipherSqlStore = _.extend(CipherSqlStore.prototype, {
+            _type: 'Relution.LiveData.CipherSqlStore',
+            security: null
+        });
+        Relution.assert(function () { return CipherSqlStore.prototype.isPrototypeOf(cipherSqlStore); });
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=CipherSqlStore.js.map
@@ -3855,13 +3863,7 @@ var Relution;
         var SyncStore = (function (_super) {
             __extends(SyncStore, _super);
             function SyncStore(options) {
-                _super.call(this, _.extend({
-                    localStore: LiveData.WebSqlStore,
-                    useLocalStore: true,
-                    useSocketNotify: true,
-                    useOfflineChanges: true,
-                    socketPath: ''
-                }, options));
+                _super.call(this, options);
                 this.endpoints = {};
                 /**
                  * when set, indicates which entity caused a disconnection.
@@ -3873,10 +3875,19 @@ var Relution;
                  * @type {string}
                  */
                 this.disconnectedEntity = 'all';
+                if (this.credentials) {
+                    this.credentials = _.clone(this.credentials);
+                }
+                if (this.localStoreOptions) {
+                    this.localStoreOptions = _.clone(this.localStoreOptions);
+                }
+                if (this.orderOfflineChanges) {
+                    this.orderOfflineChanges = _.clone(this.orderOfflineChanges);
+                }
                 Relution.LiveData.Debug.trace('SyncStore', options);
-                if (this.options.useSocketNotify && typeof io !== 'object') {
+                if (this.useSocketNotify && typeof io !== 'object') {
                     Relution.LiveData.Debug.warning('Socket.IO not present !!');
-                    this.options.useSocketNotify = false;
+                    this.useSocketNotify = false;
                 }
             }
             SyncStore.prototype.initEndpoint = function (modelOrCollection, modelType) {
@@ -3884,7 +3895,7 @@ var Relution;
                 var entity = modelOrCollection.entity;
                 if (urlRoot && entity) {
                     // get or create endpoint for this url
-                    var credentials = modelOrCollection.credentials || this.options.credentials;
+                    var credentials = modelOrCollection.credentials || this.credentials;
                     var endpoint = this.endpoints[entity];
                     if (!endpoint) {
                         Relution.LiveData.Debug.info('Relution.LiveData.SyncStore.initEndpoint: ' + name);
@@ -3892,12 +3903,12 @@ var Relution;
                             entity: entity,
                             modelType: modelType,
                             urlRoot: urlRoot,
-                            socketPath: this.options.socketPath,
+                            socketPath: this.socketPath,
                             credentials: credentials
                         });
                         this.endpoints[entity] = endpoint;
                         endpoint.localStore = this.createLocalStore(endpoint);
-                        endpoint.priority = this.options.orderOfflineChanges && (_.lastIndexOf(this.options.orderOfflineChanges, endpoint.entity) + 1);
+                        endpoint.priority = this.orderOfflineChanges && (_.lastIndexOf(this.orderOfflineChanges, endpoint.entity) + 1);
                         this.createMsgCollection();
                         endpoint.socket = this.createSocket(endpoint, entity);
                         endpoint.info = this.fetchServerInfo(endpoint);
@@ -3928,17 +3939,17 @@ var Relution;
                 }
             };
             SyncStore.prototype.createLocalStore = function (endpoint) {
-                if (this.options.useLocalStore) {
+                if (this.useLocalStore) {
                     var entities = {};
                     entities[endpoint.entity] = endpoint.channel;
                     var storeOption = {
                         entities: entities
                     };
-                    if (this.options.localStoreOptions && typeof this.options.localStoreOptions === 'object') {
-                        storeOption = _.clone(this.options.localStoreOptions);
+                    if (this.localStoreOptions && typeof this.localStoreOptions === 'object') {
+                        storeOption = _.clone(this.localStoreOptions);
                         storeOption.entities = entities;
                     }
-                    return this.options.localStore.create(storeOption);
+                    return new this.localStore(storeOption);
                 }
             };
             /**
@@ -3946,17 +3957,17 @@ var Relution;
              * @returns {*}
              */
             SyncStore.prototype.createMsgCollection = function () {
-                if (this.options.useOfflineChanges && !this.messages) {
+                if (this.useOfflineChanges && !this.messages) {
                     this.messages = LiveData.Collection.design({
                         model: LiveData.LiveDataMessageModel,
-                        store: this.options.localStore.create(this.options.localStoreOptions)
+                        store: new this.localStore(this.localStoreOptions)
                     });
                 }
                 return this.messages;
             };
             SyncStore.prototype.createSocket = function (endpoint, name) {
                 var _this = this;
-                if (this.options.useSocketNotify && endpoint && endpoint.socketPath) {
+                if (this.useSocketNotify && endpoint && endpoint.socketPath) {
                     Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore.createSocket: ' + name);
                     var url = endpoint.host;
                     var path = endpoint.path;
@@ -3975,8 +3986,8 @@ var Relution;
                     var connectVo = {
                         resource: resource
                     };
-                    if (this.options.socketQuery) {
-                        connectVo.query = this.options.socketQuery;
+                    if (this.socketQuery) {
+                        connectVo.query = this.socketQuery;
                     }
                     endpoint.socket = io.connect(url, connectVo);
                     endpoint.socket.on('connect', function () {
@@ -4105,7 +4116,7 @@ var Relution;
                     // first update the local store by forming a model and invoking sync
                     var options = _.defaults({
                         store: endpoint.localStore
-                    }, this.options);
+                    }, this.localStoreOptions);
                     var model = new endpoint.modelType(msg.data, _.extend({
                         parse: true
                     }, options));
@@ -4166,7 +4177,7 @@ var Relution;
                                 // capture GetQuery options
                                 syncContext = new LiveData.SyncContext(options, // dynamic options passed to fetch() implement UI filters, etc.
                                 model.options, // static options on collection implement screen-specific stuff
-                                this.options // static options of this store realize filtering client/server
+                                this // static options of this store realize filtering client/server
                                 );
                                 options.syncContext = syncContext;
                             }
@@ -4404,7 +4415,7 @@ var Relution;
                     return data;
                 }, function (xhr) {
                     options.xhr = opts.xhr.xhr || opts.xhr;
-                    if (!xhr.responseText && _this.options.useOfflineChanges) {
+                    if (!xhr.responseText && _this.useOfflineChanges) {
                         // this seams to be a connection problem
                         return Q.reject();
                     }
@@ -4601,7 +4612,7 @@ var Relution;
                             if (!endpoint.socketPath && info.get('socketPath')) {
                                 endpoint.socketPath = info.get('socketPath');
                                 var name = info.get('entity') || endpoint.entity;
-                                if (_this.options.useSocketNotify) {
+                                if (_this.useSocketNotify) {
                                     endpoint.socket = _this.createSocket(endpoint, name);
                                 }
                             }
@@ -4639,7 +4650,7 @@ var Relution;
                 var _this = this;
                 if (!error) {
                     // message was processed successfully
-                    if (!this.options.useSocketNotify) {
+                    if (!this.useSocketNotify) {
                         // when not using sockets, fetch changes now
                         var endpoint = this.endpoints[options.entity];
                         if (endpoint) {
@@ -4884,6 +4895,16 @@ var Relution;
             return SyncStore;
         })(LiveData.Store);
         LiveData.SyncStore = SyncStore;
+        // mixins
+        var syncStore = _.extend(SyncStore.prototype, {
+            _type: 'Relution.LiveData.SyncStore',
+            localStore: LiveData.WebSqlStore,
+            useLocalStore: true,
+            useSocketNotify: true,
+            useOfflineChanges: true,
+            socketPath: ''
+        });
+        Relution.assert(function () { return SyncStore.prototype.isPrototypeOf(syncStore); });
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=SyncStore.js.map

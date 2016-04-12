@@ -59,12 +59,7 @@ module Relution.LiveData {
    */
   export class WebSqlStore extends AbstractSqlStore {
     constructor(options?:any) {
-      super(_.extend({
-        name: 'relution-livedata',
-        size: 1024 * 1024, // 1 MB
-        version: '1.0',
-        security: ''
-      }, options));
+      super(options);
 
       var that = this;
       this._openDb({
@@ -86,7 +81,7 @@ module Relution.LiveData {
           if (!global.openDatabase) {
             error = 'Your browser does not support WebSQL databases.';
           } else {
-            this.db = global.openDatabase(this.options.name, '', '', this.options.size);
+            this.db = global.openDatabase(this.name, '', '', this.size);
             if (this.entities) {
               for (var entity in this.entities) {
                 this._createTable({ entity: entity });
@@ -98,7 +93,7 @@ module Relution.LiveData {
         }
       }
       if (this.db) {
-        if (this.options.version && this.db.version !== this.options.version) {
+        if (this.version && this.db.version !== this.version) {
           this._updateDb(options);
         } else {
           this.handleSuccess(options, this.db);
@@ -120,11 +115,11 @@ module Relution.LiveData {
       var that = this;
       try {
         if (!this.db) {
-          this.db = global.openDatabase(this.options.name, '', '', this.options.size);
+          this.db = global.openDatabase(this.name, '', '', this.size);
         }
         try {
-          var arSql = this._sqlUpdateDatabase(this.db.version, this.options.version);
-          this.db.changeVersion(this.db.version, this.options.version, function (tx) {
+          var arSql = this._sqlUpdateDatabase(this.db.version, this.version);
+          this.db.changeVersion(this.db.version, this.version, function (tx) {
             _.each(arSql, function (sql) {
               Relution.LiveData.Debug.info('sql statement: ' + sql);
               lastSql = sql;
@@ -159,4 +154,11 @@ module Relution.LiveData {
       }
     }
   }
+
+  // mixins
+  let webSqlStore = _.extend(WebSqlStore.prototype, {
+    _type: 'Relution.LiveData.WebSqlStore'
+  });
+  Relution.assert(() => WebSqlStore.prototype.isPrototypeOf(webSqlStore));
+
 }

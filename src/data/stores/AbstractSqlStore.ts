@@ -39,6 +39,11 @@ module Relution.LiveData {
    * @module Relution.LiveData.AbstractSqlStore
    */
   export class AbstractSqlStore extends Store {
+
+    // following are store-specific options, defaults stored in prototype at end of this file
+    protected size: number;
+    protected version: string;
+
     protected db: any = null;
     protected options: any;
     protected entities: { [entity: string]: {
@@ -47,18 +52,14 @@ module Relution.LiveData {
     } } = {};
 
     constructor(options?:any) {
-      super(_.extend({
-        name: 'relution-livedata',
-        size: 1024 * 1024, // 1 MB
-        version: '1.0',
-        security: '',
-        entities: {}
-      }, options));
+      super(options);
 
-      for (var entity in this.options.entities) {
-        this.entities[entity] = {
-          table: this.options.entities[entity] || entity
-        };
+      if (options && options.entities) {
+        for (var entity in options.entities) {
+          this.entities[entity] = {
+            table: options.entities[entity] || entity
+          };
+        }
       }
     }
 
@@ -417,5 +418,15 @@ module Relution.LiveData {
       return true;
     }
   }
+
+  // mixins
+  let abstractSqlStore = _.extend(AbstractSqlStore.prototype, {
+    _type: 'Relution.LiveData.AbstractSqlStore',
+
+    size: 1024 * 1024, // 1 MB
+    version: '1.0',
+    security: ''
+  });
+  Relution.assert(() => AbstractSqlStore.prototype.isPrototypeOf(abstractSqlStore));
 
 }

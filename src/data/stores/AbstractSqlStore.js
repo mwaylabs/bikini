@@ -47,19 +47,15 @@ var Relution;
         var AbstractSqlStore = (function (_super) {
             __extends(AbstractSqlStore, _super);
             function AbstractSqlStore(options) {
-                _super.call(this, _.extend({
-                    name: 'relution-livedata',
-                    size: 1024 * 1024,
-                    version: '1.0',
-                    security: '',
-                    entities: {}
-                }, options));
+                _super.call(this, options);
                 this.db = null;
                 this.entities = {};
-                for (var entity in this.options.entities) {
-                    this.entities[entity] = {
-                        table: this.options.entities[entity] || entity
-                    };
+                if (options && options.entities) {
+                    for (var entity in options.entities) {
+                        this.entities[entity] = {
+                            table: options.entities[entity] || entity
+                        };
+                    }
                 }
             }
             AbstractSqlStore.prototype.sync = function (method, model, options) {
@@ -396,6 +392,14 @@ var Relution;
             return AbstractSqlStore;
         })(LiveData.Store);
         LiveData.AbstractSqlStore = AbstractSqlStore;
+        // mixins
+        var abstractSqlStore = _.extend(AbstractSqlStore.prototype, {
+            _type: 'Relution.LiveData.AbstractSqlStore',
+            size: 1024 * 1024,
+            version: '1.0',
+            security: ''
+        });
+        Relution.assert(function () { return AbstractSqlStore.prototype.isPrototypeOf(abstractSqlStore); });
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=AbstractSqlStore.js.map

@@ -39,10 +39,11 @@ var Relution;
          */
         var Store = (function () {
             function Store(options) {
-                this.options = _.extend({
-                    name: ''
-                }, options);
                 Relution.LiveData.Debug.trace('Store', options);
+                if (options) {
+                    // copy options values into the object
+                    _.extend(this, options);
+                }
             }
             Store.prototype.getArray = function (data) {
                 if (_.isArray(data)) {
@@ -163,7 +164,8 @@ var Relution;
         var store = _.extend(Store.prototype, Backbone.Events, LiveData._Object, {
             _type: 'Relution.LiveData.Store',
             isModel: false,
-            isCollection: false
+            isCollection: false,
+            name: 'relution-livedata'
         });
         Relution.assert(function () { return Store.prototype.isPrototypeOf(store); });
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));

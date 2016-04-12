@@ -67,12 +67,7 @@ var Relution;
         var WebSqlStore = (function (_super) {
             __extends(WebSqlStore, _super);
             function WebSqlStore(options) {
-                _super.call(this, _.extend({
-                    name: 'relution-livedata',
-                    size: 1024 * 1024,
-                    version: '1.0',
-                    security: ''
-                }, options));
+                _super.call(this, options);
                 var that = this;
                 this._openDb({
                     error: function (error) {
@@ -93,7 +88,7 @@ var Relution;
                             error = 'Your browser does not support WebSQL databases.';
                         }
                         else {
-                            this.db = global.openDatabase(this.options.name, '', '', this.options.size);
+                            this.db = global.openDatabase(this.name, '', '', this.size);
                             if (this.entities) {
                                 for (var entity in this.entities) {
                                     this._createTable({ entity: entity });
@@ -106,7 +101,7 @@ var Relution;
                     }
                 }
                 if (this.db) {
-                    if (this.options.version && this.db.version !== this.options.version) {
+                    if (this.version && this.db.version !== this.version) {
                         this._updateDb(options);
                     }
                     else {
@@ -130,11 +125,11 @@ var Relution;
                 var that = this;
                 try {
                     if (!this.db) {
-                        this.db = global.openDatabase(this.options.name, '', '', this.options.size);
+                        this.db = global.openDatabase(this.name, '', '', this.size);
                     }
                     try {
-                        var arSql = this._sqlUpdateDatabase(this.db.version, this.options.version);
-                        this.db.changeVersion(this.db.version, this.options.version, function (tx) {
+                        var arSql = this._sqlUpdateDatabase(this.db.version, this.version);
+                        this.db.changeVersion(this.db.version, this.version, function (tx) {
                             _.each(arSql, function (sql) {
                                 Relution.LiveData.Debug.info('sql statement: ' + sql);
                                 lastSql = sql;
@@ -173,6 +168,11 @@ var Relution;
             return WebSqlStore;
         })(LiveData.AbstractSqlStore);
         LiveData.WebSqlStore = WebSqlStore;
+        // mixins
+        var webSqlStore = _.extend(WebSqlStore.prototype, {
+            _type: 'Relution.LiveData.WebSqlStore'
+        });
+        Relution.assert(function () { return WebSqlStore.prototype.isPrototypeOf(webSqlStore); });
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=WebSqlStore.js.map

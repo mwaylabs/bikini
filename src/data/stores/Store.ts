@@ -52,15 +52,18 @@ module Relution.LiveData {
     public isModel: boolean;      // constant false on prototype
     public isCollection: boolean; // constant false on prototype
 
-    protected options: any;
+    // following are store-specific options, defaults stored in prototype at end of this file
+    protected name: string;
+
     protected entities: any;
     public endpoints: any;
 
     constructor(options?: any) {
-      this.options = _.extend({
-        name: ''
-      }, options);
       Relution.LiveData.Debug.trace('Store', options);
+      if (options) {
+        // copy options values into the object
+        _.extend(this, options);
+      }
     }
 
     public static extend = extend;
@@ -190,7 +193,9 @@ module Relution.LiveData {
   let store = _.extend(Store.prototype, Backbone.Events, _Object, {
     _type: 'Relution.LiveData.Store',
     isModel: false,
-    isCollection: false
+    isCollection: false,
+
+    name: 'relution-livedata'
   });
   Relution.assert(() => Store.prototype.isPrototypeOf(store));
 

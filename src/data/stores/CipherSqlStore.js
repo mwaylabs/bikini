@@ -70,11 +70,7 @@ var Relution;
         var CipherSqlStore = (function (_super) {
             __extends(CipherSqlStore, _super);
             function CipherSqlStore(options) {
-                _super.call(this, _.extend({
-                    name: 'relution-livedata',
-                    size: 1024 * 1024,
-                    security: null
-                }, options));
+                _super.call(this, options);
                 if (options && !options.security) {
                     throw new Error('security Key is required on a CipherSqlStore');
                 }
@@ -98,8 +94,8 @@ var Relution;
              */
             CipherSqlStore.prototype._openDb = function (errorCallback) {
                 var error, dbError;
-                if (this.options && !this.options.security) {
-                    return Relution.LiveData.Debug.error('A CipherSqlStore need a Security Token!', this.options);
+                if (!this.security) {
+                    return Relution.LiveData.Debug.error('A CipherSqlStore need a Security Token!', this);
                 }
                 /* openDatabase(db_name, version, description, estimated_size, callback) */
                 if (!this.db) {
@@ -108,7 +104,7 @@ var Relution;
                             error = 'Your browser does not support SQLite plugin.';
                         }
                         else {
-                            this.db = global.sqlitePlugin.openDatabase({ name: this.options.name, key: this.options.security, location: 2 });
+                            this.db = global.sqlitePlugin.openDatabase({ name: this.name, key: this.security, location: 2 });
                             if (this.entities) {
                                 for (var entity in this.entities) {
                                     this._createTable({ entity: entity });
@@ -121,7 +117,7 @@ var Relution;
                     }
                 }
                 if (this.db) {
-                    if (this.options.version && this.db.version !== this.options.version) {
+                    if (this.version && this.db.version !== this.version) {
                         this._updateDb(errorCallback);
                     }
                     else {
@@ -145,10 +141,10 @@ var Relution;
                 var that = this;
                 try {
                     if (!this.db) {
-                        this.db = global.sqlitePlugin.openDatabase({ name: this.options.name, key: this.options.security, location: 2 });
+                        this.db = global.sqlitePlugin.openDatabase({ name: this.name, key: this.security, location: 2 });
                     }
                     try {
-                        var arSql = this._sqlUpdateDatabase(this.db.version, this.options.version);
+                        var arSql = this._sqlUpdateDatabase(this.db.version, this.version);
                         Relution.LiveData.Debug.warning('sqlcipher cant change the version its still not supported check out https://github.com/litehelpers/Cordova-sqlcipher-adapter#other-limitations');
                     }
                     catch (e) {
@@ -174,6 +170,12 @@ var Relution;
             return CipherSqlStore;
         })(LiveData.AbstractSqlStore);
         LiveData.CipherSqlStore = CipherSqlStore;
+        // mixins
+        var cipherSqlStore = _.extend(CipherSqlStore.prototype, {
+            _type: 'Relution.LiveData.CipherSqlStore',
+            security: null
+        });
+        Relution.assert(function () { return CipherSqlStore.prototype.isPrototypeOf(cipherSqlStore); });
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=CipherSqlStore.js.map

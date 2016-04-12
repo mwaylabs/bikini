@@ -67,6 +67,17 @@ module Relution.LiveData {
    */
   export class SyncStore extends Store {
 
+    // following are store-specific options, defaults stored in prototype at end of this file
+    protected localStore: StoreCtor;
+    protected localStoreOptions: any;
+    protected useLocalStore: boolean;
+    protected useSocketNotify: boolean;
+    protected useOfflineChanges: boolean;
+    protected socketPath: string;
+    protected socketQuery: string;
+    protected credentials: any;
+    protected orderOfflineChanges: string[];
+
     public endpoints: {
       // map of entity to SyncEndpoint
       [entity: string]: SyncEndpoint;
@@ -89,17 +100,21 @@ module Relution.LiveData {
     public messagesPromise: Q.Promise<Collection>;
 
     constructor(options?:any) {
-      super(_.extend({
-        localStore: WebSqlStore,
-        useLocalStore: true,
-        useSocketNotify: true,
-        useOfflineChanges: true,
-        socketPath: ''
-      }, options));
+      super(options);
+      if (this.credentials) {
+        this.credentials = _.clone(this.credentials);
+      }
+      if (this.localStoreOptions) {
+        this.localStoreOptions = _.clone(this.localStoreOptions);
+      }
+      if (this.orderOfflineChanges) {
+        this.orderOfflineChanges = _.clone(this.orderOfflineChanges);
+      }
       Relution.LiveData.Debug.trace('SyncStore', options);
-      if (this.options.useSocketNotify && typeof io !== 'object') {
+
+      if (this.useSocketNotify && typeof io !== 'object') {
         Relution.LiveData.Debug.warning('Socket.IO not present !!');
-        this.options.useSocketNotify = false;
+        this.useSocketNotify = false;
       }
     }
 
@@ -108,7 +123,7 @@ module Relution.LiveData {
       var entity = modelOrCollection.entity;
       if (urlRoot && entity) {
         // get or create endpoint for this url
-        let credentials = modelOrCollection.credentials || this.options.credentials;
+        let credentials = modelOrCollection.credentials || this.credentials;
         var endpoint = this.endpoints[entity];
         if (!endpoint) {
           Relution.LiveData.Debug.info('Relution.LiveData.SyncStore.initEndpoint: ' + name);
@@ -116,13 +131,13 @@ module Relution.LiveData {
             entity: entity,
             modelType: modelType,
             urlRoot: urlRoot,
-            socketPath: this.options.socketPath,
+            socketPath: this.socketPath,
             credentials: credentials
           });
           this.endpoints[entity] = endpoint;
 
           endpoint.localStore = this.createLocalStore(endpoint);
-          endpoint.priority = this.options.orderOfflineChanges && (_.lastIndexOf(this.options.orderOfflineChanges, endpoint.entity) + 1);
+          endpoint.priority = this.orderOfflineChanges && (_.lastIndexOf(this.orderOfflineChanges, endpoint.entity) + 1);
           this.createMsgCollection();
           endpoint.socket = this.createSocket(endpoint, entity);
           endpoint.info = this.fetchServerInfo(endpoint);
@@ -156,17 +171,17 @@ module Relution.LiveData {
     }
 
     createLocalStore(endpoint: SyncEndpoint): Store {
-      if (this.options.useLocalStore) {
+      if (this.useLocalStore) {
         var entities = {};
         entities[endpoint.entity] = endpoint.channel;
         var storeOption = {
           entities: entities
         };
-        if (this.options.localStoreOptions && typeof this.options.localStoreOptions === 'object') {
-          storeOption = _.clone(this.options.localStoreOptions);
+        if (this.localStoreOptions && typeof this.localStoreOptions === 'object') {
+          storeOption = _.clone(this.localStoreOptions);
           storeOption.entities = entities;
         }
-        return this.options.localStore.create(storeOption);
+        return new this.localStore(storeOption);
       }
     }
 
@@ -175,17 +190,17 @@ module Relution.LiveData {
      * @returns {*}
      */
     createMsgCollection(): Collection {
-      if (this.options.useOfflineChanges && !this.messages) {
+      if (this.useOfflineChanges && !this.messages) {
         this.messages = Collection.design({
           model: LiveDataMessageModel,
-          store: this.options.localStore.create(this.options.localStoreOptions)
+          store: new this.localStore(this.localStoreOptions)
         });
       }
       return this.messages;
     }
 
     createSocket(endpoint: SyncEndpoint, name: string) {
-      if (this.options.useSocketNotify && endpoint && endpoint.socketPath) {
+      if (this.useSocketNotify && endpoint && endpoint.socketPath) {
         Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore.createSocket: ' + name);
 
         var url = endpoint.host;
@@ -206,8 +221,8 @@ module Relution.LiveData {
           resource: resource
         };
 
-        if (this.options.socketQuery) {
-          connectVo.query = this.options.socketQuery;
+        if (this.socketQuery) {
+          connectVo.query = this.socketQuery;
         }
         endpoint.socket = io.connect(url, connectVo);
         endpoint.socket.on('connect', () => {
@@ -343,7 +358,7 @@ module Relution.LiveData {
         // first update the local store by forming a model and invoking sync
         var options = _.defaults({
           store: endpoint.localStore
-        }, this.options);
+        }, this.localStoreOptions);
         var model = new endpoint.modelType(msg.data, _.extend({
           parse: true
         }, options));
@@ -408,7 +423,7 @@ module Relution.LiveData {
               syncContext = new SyncContext(
                 options,        // dynamic options passed to fetch() implement UI filters, etc.
                 model.options,  // static options on collection implement screen-specific stuff
-                this.options    // static options of this store realize filtering client/server
+                this            // static options of this store realize filtering client/server
               );
               options.syncContext = syncContext;
             }
@@ -655,7 +670,7 @@ module Relution.LiveData {
         return data;
       }, (xhr) => {
         options.xhr = opts.xhr.xhr || opts.xhr;
-        if (!xhr.responseText && this.options.useOfflineChanges) {
+        if (!xhr.responseText && this.useOfflineChanges) {
           // this seams to be a connection problem
           return Q.reject();
         }
@@ -856,7 +871,7 @@ module Relution.LiveData {
             if (!endpoint.socketPath && info.get('socketPath')) {
               endpoint.socketPath = info.get('socketPath');
               var name = info.get('entity') || endpoint.entity;
-              if (this.options.useSocketNotify) {
+              if (this.useSocketNotify) {
                 endpoint.socket = this.createSocket(endpoint, name);
               }
             }
@@ -900,7 +915,7 @@ module Relution.LiveData {
     }): PromiseLike<void | any> {
       if (!error) {
         // message was processed successfully
-        if (!this.options.useSocketNotify) {
+        if (!this.useSocketNotify) {
           // when not using sockets, fetch changes now
           let endpoint = this.endpoints[options.entity];
           if (endpoint) {
@@ -1150,4 +1165,17 @@ module Relution.LiveData {
       }
     }
   }
+
+  // mixins
+  let syncStore = _.extend(SyncStore.prototype, {
+    _type: 'Relution.LiveData.SyncStore',
+
+    localStore: WebSqlStore,
+    useLocalStore: true,
+    useSocketNotify: true,
+    useOfflineChanges: true,
+    socketPath: ''
+  });
+  Relution.assert(() => SyncStore.prototype.isPrototypeOf(syncStore));
+
 }
