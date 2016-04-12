@@ -36,7 +36,7 @@
     "grunt-preprocess": "~3.0.1",
     "grunt-typedoc": "^0.2.3",
     "gulp": "^3.9.1",
-    "gulp-inject": "^4.0.0",
+    "gulp-inject": "^1.5.0",
     "gulp-mocha": "^2.2.0",
     "gulp-nodemon": "^2.0.6",
     "gulp-preprocess": "^2.0.0",
