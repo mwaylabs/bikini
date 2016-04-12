@@ -2,6 +2,7 @@
   "ambientDependencies": {
     "backbone": "github:DefinitelyTyped/DefinitelyTyped/backbone/backbone.d.ts#aa043e12aeafd11832a7d5c8245f4711eb2de528",
     "jquery": "github:DefinitelyTyped/DefinitelyTyped/jquery/jquery.d.ts#661fc869669af796c6048483e999dce5732eed72",
-    "q": "github:DefinitelyTyped/DefinitelyTyped/q/Q.d.ts#904e8f5cd2f478ad951ed71fb8a1bd84ffdacf8c"
+    "q": "github:DefinitelyTyped/DefinitelyTyped/q/Q.d.ts#904e8f5cd2f478ad951ed71fb8a1bd84ffdacf8c",
+    "underscore": "github:DefinitelyTyped/DefinitelyTyped/underscore/underscore.d.ts#194c294eaa059e773bd56e15dcaa70be6843c03a"
   }
 }

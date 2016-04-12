@@ -25,8 +25,6 @@
 /// <reference path="SortOrder.ts" />
 /// <reference path="JsonPath.ts" />
 
-declare var _;
-
 module Relution.LiveData {
 
   /**

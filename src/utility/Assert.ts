@@ -24,9 +24,6 @@
 /* jshint newcap: false */
 /* jshint -W004: '%' is already defined. */
 
-// underscore is a global symbol
-declare var _;
-
 module Relution {
 
   /**

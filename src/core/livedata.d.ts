@@ -29,7 +29,6 @@
 
 declare var global;
 
-declare var _;
 declare var io;
 
 declare module Relution.LiveData {

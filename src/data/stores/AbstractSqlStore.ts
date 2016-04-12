@@ -168,7 +168,7 @@ module Relution.LiveData {
       if (options && options.models && entity) {
         var ids = [];
         var that = this;
-        _.each(options.models, function (model) {
+        _.each(options.models, function (model: Model) {
           if (!model.isNew()) {
             ids.push(that._sqlValue(model.id));
           }
@@ -381,7 +381,7 @@ module Relution.LiveData {
         try {
           /* transaction has 3 parameters: the transaction callback, the error callback and the success callback */
           this.db.transaction(function (t) {
-            _.each(statements, function (stm) {
+            _.each(statements, function (stm: any) {
               var statement = stm.statement || stm;
               var args = stm.arguments;
               lastStatement = statement;

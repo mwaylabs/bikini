@@ -22,9 +22,6 @@
 /* jshint indent: 4 */
 /* jshint quotmark: false */
 
-// underscore is a global symbol
-declare var _;
-
 module Relution {
 
   /**
