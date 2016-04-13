@@ -1,10 +1,3 @@
-/*!
-* Project:   Bikini - Everything a model needs
-* Copyright: (c) 2016 M-Way Solutions GmbH.
-* Version:   0.8.4
-* Date:      Tue Mar 15 2016 14:00:11
-* License:   https://raw.githubusercontent.com/mwaylabs/bikini/master/MIT-LICENSE.txt
-*/
 (function (global, Backbone, _, $, Q, jsonPath) {
 // Copyright (c) 2013 M-Way Solutions GmbH
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
@@ -138,6 +131,98 @@ var Relution;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=Debug.js.map
+/**
+ * Created by Thomas Beckmann
+ * Copyright (c)
+ * 2016
+ * M-Way Solutions GmbH. All rights reserved.
+ * http://www.mwaysolutions.com
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are not permitted.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+/* jshint indent: 4 */
+/* jshint curly: false */
+/* jshint newcap: false */
+/* jshint -W004: '%' is already defined. */
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var Relution;
+(function (Relution) {
+    /**
+     * subtype of Error thrown by assert() in case AssertionCheck fails.
+     */
+    var AssertionError = (function (_super) {
+        __extends(AssertionError, _super);
+        function AssertionError(message) {
+            _super.call(this, message);
+        }
+        return AssertionError;
+    })(Error);
+    Relution.AssertionError = AssertionError;
+    /**
+     * evaluates given check expression as a strong invariant never ever violated.
+     *
+     * <p>
+     * Use assert to ensure an assumption at runtime. When running with assertions enabled, the check expression is
+     * evaluated immediately. A check expression evaluating to false signals a violation of invariant that should never
+     * happen. If it does, a hard error is output unconditionally to the console and an AssertionError is thrown.
+     * </p>
+     * <p>
+     * Do not use assertions as a means of ordinary error checking. Here are some valid examples of assertions:
+     * <pre>
+     *     assert(() => Date.now() > 0, 'current time millis can not be before 1970 start of time!');
+     *     assert(() => total_price >= item_price, 'total is sum of individal prices and thus can not be less than each one!');
+     *     assert(() => num*num >= 0, 'squared num is less than zero!');
+     * </pre>
+     * </p>
+     *
+     * @param check expression validating an assumption of the calling code, typically an arrow-function expression.
+     * @param message optional explanation of disaster.
+       */
+    function assert(check, message) {
+        if (Relution.assertions === undefined ? Relution.isDebugMode() : Relution.assertions) {
+            if (!check()) {
+                var error = new AssertionError(message || (check.toSource()));
+                if (Relution.isDebugMode()) {
+                    Relution.Debug.error('Assertion failed: ' + error.message, error);
+                }
+                else {
+                    console.error('Assertion failed: ' + error.message, error);
+                }
+                throw error;
+            }
+        }
+    }
+    Relution.assert = assert;
+    /**
+     * used in catch-blocks or Promise rejection callbacks to ensure the caught value is an Error.
+     *
+     * @param error to check.
+     * @param message of disaster.
+     * @return {any} value evaluating to true stating error is an instance of Error.
+       */
+    function assertIsError(error, message) {
+        assert(function () { return _.isError(error); }, message);
+        return error;
+    }
+    Relution.assertIsError = assertIsError;
+})(Relution || (Relution = {}));
+//# sourceMappingURL=Assert.js.map
 // Copyright (c) 2013 M-Way Solutions GmbH
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
 
@@ -160,37 +245,6 @@ Relution.LiveData.design = function (obj) {
 };
 
 Relution.LiveData.extend = Backbone.Model.extend;
-
-Relution.LiveData.isCollection = function (collection) {
-  return Backbone.Collection.prototype.isPrototypeOf(collection);
-};
-
-Relution.LiveData.isModel = function (model) {
-  return Backbone.Model.prototype.isPrototypeOf(model);
-};
-
-Relution.LiveData.isEntity = function (entity) {
-  return Relution.LiveData.Entity.prototype.isPrototypeOf(entity);
-};
-
-/***
- * Data type Constants.
- */
-Relution.LiveData.DATA = {
-  TYPE: {
-    INTEGER: 'integer',
-    STRING: 'string',
-    TEXT: 'text',
-    DATE: 'date',
-    BOOLEAN: 'boolean',
-    FLOAT: 'float',
-    OBJECT: 'object',
-    ARRAY: 'array',
-    BINARY: 'binary',
-    OBJECTID: 'objectid',
-    NULL: 'null'
-  }
-};
 
 /**
  * options passed to Collection.fetch() preventing backbone.js from consuming the response.
@@ -1154,29 +1208,6 @@ Relution.LiveData.Cypher = Relution.LiveData._Object.design(/** @scope Relution.
   }
 
 });
-
-// Copyright (c) 2013 M-Way Solutions GmbH
-// http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
-
-/**
- *
- * @module Relution.LiveData.Date
- *
- * @extends Relution.LiveData._Object
- */
-Relution.LiveData.Date = {
-
-  /**
-   * This method is used to create a new instance of Relution.LiveData.Date based on the data
-   * library moment.js.
-   *
-   * @returns {Object}
-   */
-  create: function () {
-    var m = moment.apply(this, arguments);
-    return _.extend(m, this);
-  }
-};
 
 // Copyright (c) 2013 M-Way Solutions GmbH
 // http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
@@ -2275,692 +2306,6 @@ var Relution;
 
 /**
  *
- * @module Relution.LiveData.Field
- *
- */
-
-/**
- * Field describing a data attribute
- *
- * contains functions to comperate, detect and convert data type
- *
- * @param options
- * @constructor
- */
-Relution.LiveData.Field = function (options) {
-  this.merge(options);
-  this.initialize.apply(this, arguments);
-};
-
-Relution.LiveData.Field.extend = Relution.LiveData.extend;
-Relution.LiveData.Field.create = Relution.LiveData.create;
-Relution.LiveData.Field.design = Relution.LiveData.design;
-
-_.extend(Relution.LiveData.Field.prototype, Relution.LiveData._Object, {
-
-  /**
-   * The type of this object.
-   *
-   * @type String
-   */
-  _type: 'Relution.LiveData.Field',
-
-  name: null,
-
-  type: null,
-
-  index: null,
-
-  defaultValue: undefined,
-
-  length: null,
-
-  required: false,
-
-  persistent: true,
-
-  initialize: function () {
-  },
-
-  /**
-   * merge field properties into this instance
-   *
-   * @param obj
-   */
-  merge: function (obj) {
-    obj = _.isString(obj) ? {type: obj} : (obj || {});
-
-    this.name = !_.isUndefined(obj.name) ? obj.name : this.name;
-    this.type = !_.isUndefined(obj.type) ? obj.type : this.type;
-    this.index = !_.isUndefined(obj.index) ? obj.index : this.index;
-    this.defaultValue = !_.isUndefined(obj.defaultValue) ? obj.defaultValue : this.defaultValue;
-    this.length = !_.isUndefined(obj.length) ? obj.length : this.length;
-    this.required = !_.isUndefined(obj.required) ? obj.required : this.required;
-    this.persistent = !_.isUndefined(obj.persistent) ? obj.persistent : this.persistent;
-  },
-
-  /**
-   * converts the give value into the required data type
-   *
-   * @param value
-   * @param type
-   * @returns {*}
-   */
-  transform: function (value, type) {
-    type = type || this.type;
-    try {
-      if (_.isUndefined(value)) {
-        return this.defaultValue;
-      }
-      if (type === Relution.LiveData.DATA.TYPE.STRING || type === Relution.LiveData.DATA.TYPE.TEXT) {
-        if (_.isObject(value)) {
-          return JSON.stringify(value);
-        } else {
-          return _.isNull(value) ? 'null' : value.toString();
-        }
-      } else if (type === Relution.LiveData.DATA.TYPE.INTEGER) {
-        return parseInt(value);
-      } else if (type === Relution.LiveData.DATA.TYPE.BOOLEAN) {
-        return value === true || value === 'true'; // true, 1, "1" or "true"
-      } else if (type === Relution.LiveData.DATA.TYPE.FLOAT) {
-        return parseFloat(value);
-      } else if (type === Relution.LiveData.DATA.TYPE.OBJECT || type === Relution.LiveData.DATA.TYPE.ARRAY) {
-        if (!_.isObject(value)) {
-          return _.isString(value) ? JSON.parse(value) : null;
-        }
-      } else if (type === Relution.LiveData.DATA.TYPE.DATE) {
-        if (!Relution.LiveData.Date.isPrototypeOf(value)) {
-          var date = value ? Relution.LiveData.Date.create(value) : null;
-          return date && date.isValid() ? date : null;
-        }
-      } else if (type === Relution.LiveData.DATA.TYPE.OBJECTID) {
-        if (!Relution.LiveData.ObjectID.prototype.isPrototypeOf(value)) {
-          return _.isString(value) ? new Relution.LiveData.ObjectID(value) : null;
-        }
-      }
-      return value;
-    } catch (e) {
-      Relution.LiveData.Debug.error('Failed converting value! ' + e.message);
-    }
-  },
-
-  /**
-   * check to values to be equal for the type of this field
-   *
-   * @param a
-   * @param b
-   * @returns {*}
-   */
-  equals: function (a, b) {
-    var v1 = this.transform(a);
-    var v2 = this.transform(b);
-    return this._equals(v1, v2, _.isArray(v1));
-  },
-
-  /**
-   * check if this field holds binary data
-   *
-   * @param obj
-   * @returns {boolean|*}
-   */
-  isBinary: function (obj) {
-    return (typeof Uint8Array !== 'undefined' && obj instanceof Uint8Array) || (obj && obj.$Uint8ArrayPolyfill);
-  },
-
-  /**
-   * detect the type of a given value
-   *
-   * @param v
-   * @returns {*}
-   */
-  detectType: function (v) {
-    if (_.isNumber(v)) {
-      return Relution.LiveData.DATA.TYPE.FLOAT;
-    }
-    if (_.isString(v)) {
-      return Relution.LiveData.DATA.TYPE.STRING;
-    }
-    if (_.isBoolean(v)) {
-      return Relution.LiveData.DATA.TYPE.BOOLEAN;
-    }
-    if (_.isArray(v)) {
-      return Relution.LiveData.DATA.TYPE.ARRAY;
-    }
-    if (_.isNull(v)) {
-      return Relution.LiveData.DATA.TYPE.NULL;
-    }
-    if (_.isDate(v) || Relution.LiveData.Date.isPrototypeOf(v)) {
-      return Relution.LiveData.DATA.TYPE.DATE;
-    }
-    if (Relution.LiveData.ObjectID.prototype.isPrototypeOf(v)) {
-      return Relution.LiveData.DATA.TYPE.OBJECTID;
-    }
-    if (this.isBinary(v)) {
-      return Relution.LiveData.DATA.TYPE.BINARY;
-    }
-    return Relution.LiveData.DATA.TYPE.OBJECT;
-  },
-
-  /**
-   * returns the sort order for the given type, used by sorting different type
-   *
-   * @param type
-   * @returns {number}
-   */
-  typeOrder: function (type) {
-    switch (type) {
-      case Relution.LiveData.DATA.TYPE.NULL   :
-        return 0;
-      case Relution.LiveData.DATA.TYPE.FLOAT  :
-        return 1;
-      case Relution.LiveData.DATA.TYPE.STRING :
-        return 2;
-      case Relution.LiveData.DATA.TYPE.OBJECT :
-        return 3;
-      case Relution.LiveData.DATA.TYPE.ARRAY  :
-        return 4;
-      case Relution.LiveData.DATA.TYPE.BINARY :
-        return 5;
-      case Relution.LiveData.DATA.TYPE.DATE   :
-        return 6;
-    }
-    return -1;
-  },
-
-  _equals: function (a, b, keyOrderSensitive) {
-    var that = this;
-    var i;
-    if (a === b) {
-      return true;
-    }
-    if (!a || !b) { // if either one is false, they'd have to be === to be equal
-      return false;
-    }
-    if (!(_.isObject(a) && _.isObject(b))) {
-      return false;
-    }
-    if (a instanceof Date && b instanceof Date) {
-      return a.valueOf() === b.valueOf();
-    }
-    if (this.isBinary(a) && this.isBinary(b)) {
-      if (a.length !== b.length) {
-        return false;
-      }
-      for (i = 0; i < a.length; i++) {
-        if (a[i] !== b[i]) {
-          return false;
-        }
-      }
-      return true;
-    }
-    if (_.isFunction(a.equals)) {
-      return a.equals(b);
-    }
-    if (_.isArray(a)) {
-      if (!_.isArray(b)) {
-        return false;
-      }
-      if (a.length !== b.length) {
-        return false;
-      }
-      for (i = 0; i < a.length; i++) {
-        if (!that.equals(a[i], b[i], keyOrderSensitive)) {
-          return false;
-        }
-      }
-      return true;
-    }
-    // fall back to structural equality of objects
-    var ret;
-    if (keyOrderSensitive) {
-      var bKeys = [];
-      _.each(b, function (val, x) {
-        bKeys.push(x);
-      });
-      i = 0;
-      ret = _.all(a, function (val, x) {
-        if (i >= bKeys.length) {
-          return false;
-        }
-        if (x !== bKeys[i]) {
-          return false;
-        }
-        if (!that.equals(val, b[bKeys[i]], keyOrderSensitive)) {
-          return false;
-        }
-        i++;
-        return true;
-      });
-      return ret && i === bKeys.length;
-    } else {
-      i = 0;
-      ret = _.all(a, function (val, key) {
-        if (!_.has(b, key)) {
-          return false;
-        }
-        if (!that.equals(val, b[key], keyOrderSensitive)) {
-          return false;
-        }
-        i++;
-        return true;
-      });
-      return ret && _.size(b) === i;
-    }
-  },
-
-  /**
-   * compare two values of unknown type according to BSON ordering
-   * semantics. (as an extension, consider 'undefined' to be less than
-   * any other value.) return negative if a is less, positive if b is
-   * less, or 0 if equal
-   *
-   * @param a
-   * @param b
-   * @returns {*}
-   * @private
-   */
-  _cmp: function (a, b) {
-    if (a === undefined) {
-      return b === undefined ? 0 : -1;
-    }
-    if (b === undefined) {
-      return 1;
-    }
-    var i = 0;
-    var ta = this.detectType(a);
-    var tb = this.detectType(b);
-    var oa = this.typeOrder(ta);
-    var ob = this.typeOrder(tb);
-    if (oa !== ob) {
-      return oa < ob ? -1 : 1;
-    }
-    if (ta !== tb) {
-      throw new Error('Missing type coercion logic in _cmp');
-    }
-    if (ta === 7) { // ObjectID
-      // Convert to string.
-      ta = tb = 2;
-      a = a.toHexString();
-      b = b.toHexString();
-    }
-    if (ta === Relution.LiveData.DATA.TYPE.DATE) {
-      // Convert to millis.
-      ta = tb = 1;
-      a = a.getTime();
-      b = b.getTime();
-    }
-    if (ta === Relution.LiveData.DATA.TYPE.FLOAT) {
-      return a - b;
-    }
-    if (tb === Relution.LiveData.DATA.TYPE.STRING) {
-      return a < b ? -1 : (a === b ? 0 : 1);
-    }
-    if (ta === Relution.LiveData.DATA.TYPE.OBJECT) {
-      // this could be much more efficient in the expected case ...
-      var toArray = function (obj) {
-        var ret = [];
-        for (var key in obj) {
-          ret.push(key);
-          ret.push(obj[key]);
-        }
-        return ret;
-      };
-      return this._cmp(toArray(a), toArray(b));
-    }
-    if (ta === Relution.LiveData.DATA.TYPE.ARRAY) { // Array
-      for (i = 0; ; i++) {
-        if (i === a.length) {
-          return (i === b.length) ? 0 : -1;
-        }
-        if (i === b.length) {
-          return 1;
-        }
-        var s = this._cmp(a[i], b[i]);
-        if (s !== 0) {
-          return s;
-        }
-      }
-    }
-    if (ta === Relution.LiveData.DATA.TYPE.BINARY) {
-      if (a.length !== b.length) {
-        return a.length - b.length;
-      }
-      for (i = 0; i < a.length; i++) {
-        if (a[i] < b[i]) {
-          return -1;
-        }
-        if (a[i] > b[i]) {
-          return 1;
-        }
-      }
-      return 0;
-    }
-    if (ta === Relution.LiveData.DATA.TYPE.BOOLEAN) {
-      if (a) {
-        return b ? 0 : 1;
-      }
-      return b ? -1 : 0;
-    }
-    if (ta === Relution.LiveData.DATA.TYPE.NULL) {
-      return 0;
-    }
-//        if( ta === Relution.LiveData.DATA.TYPE.REGEXP ) {
-//            throw Error("Sorting not supported on regular expression");
-//        } // XXX
-//        if( ta === 13 ) // javascript code
-//        {
-//            throw Error("Sorting not supported on Javascript code");
-//        } // XXX
-    throw new Error('Unknown type to sort');
-  }
-});
-
-// Copyright (c) 2013 M-Way Solutions GmbH
-// http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
-
-/**
- *
- * @module Relution.LiveData.Entity
- *
- */
-
-/**
- * Holds description about fields and other entity properties.
- * Also helper functions for field and transform operations
- * @module Relution.LiveData.Entity
- *
- * @param options
- * @constructor
- */
-Relution.LiveData.Entity = function (options) {
-  var fields = this.fields;
-  this.fields = {};
-  this._mergeFields(fields);
-  options = options || {};
-  if (options.fields) {
-    this._mergeFields(options.fields);
-  }
-  this.typeMapping = options.typeMapping || this.typeMapping;
-  var collection = options.collection;
-  var model = options.model || (collection ? collection.prototype.model : null);
-  this.idAttribute = options.idAttribute || this.idAttribute || (model ? model.prototype.idAttribute : '');
-  this._updateFields(this.typeMapping);
-  this.initialize.apply(this, arguments);
-};
-
-/**
- * create a new entity from an other entity or given properties
- *
- * @param entity
- * @param options
- * @returns {*}
- */
-Relution.LiveData.Entity.from = function (entity, options) {
-  // is not an instance of Relution.LiveData.Entity
-  if (!Relution.LiveData.Entity.prototype.isPrototypeOf(entity)) {
-    // if this is a prototype of an entity, create an instance
-    if (_.isFunction(entity) &&
-      Relution.LiveData.Entity.prototype.isPrototypeOf(entity.prototype)) {
-      var Entity = entity;
-      entity = new Entity(options);
-    } else {
-      if (typeof entity === 'string') {
-        entity = {
-          name: entity
-        };
-      }
-      // if this is just a config create a new Entity
-      var E = Relution.LiveData.Entity.extend(entity);
-      entity = new E(options);
-    }
-  } else if (options && options.typeMapping) {
-    entity._updateFields(options.typeMapping);
-  }
-  return entity;
-};
-
-Relution.LiveData.Entity.extend = Relution.LiveData.extend;
-Relution.LiveData.Entity.create = Relution.LiveData.create;
-Relution.LiveData.Entity.design = Relution.LiveData.design;
-
-_.extend(Relution.LiveData.Entity.prototype, Relution.LiveData._Object, {
-
-  /**
-   * The type of this object.
-   *
-   * @type String
-   */
-  _type: 'Relution.LiveData.Entity',
-
-  /**
-   * Entity name, used for tables or collections
-   *
-   * @type String
-   */
-  name: '',
-
-  /**
-   * idAttribute, should be the same as in the corresponding model
-   *
-   * @type String
-   */
-  idAttribute: '',
-
-  /**
-   *
-   *
-   * @type Object
-   */
-  fields: {},
-
-  /**
-   * initialize function will be called after creating an entity
-   */
-  initialize: function () {
-  },
-
-  /**
-   * get the field list of this entity
-   *
-   * @returns {Object}
-   */
-  getFields: function () {
-    return this.fields;
-  },
-
-  /**
-   * get a specified field from this entity
-   *
-   * @param fieldKey
-   * @returns Relution.LiveData.Field instance
-   */
-  getField: function (fieldKey) {
-    return this.fields[fieldKey];
-  },
-
-  /**
-   * get the translated name of a field
-   *
-   * @param fieldKey
-   * @returns String
-   */
-  getFieldName: function (fieldKey) {
-    var field = this.getField(fieldKey);
-    return field && field.name ? field.name : fieldKey;
-  },
-
-  /**
-   * get the primary key of this entity
-   *
-   * @returns String
-   */
-  getKey: function () {
-    return this.idAttribute || Relution.LiveData.Model.idAttribute;
-  },
-
-  /**
-   * get a list of keys for this entity
-   *
-   * @returns {Array}
-   */
-  getKeys: function () {
-    return this.splitKey(this.getKey());
-  },
-
-  /**
-   * Splits a comma separated list of keys to a key array
-   *
-   * @returns {Array} array of keys
-   */
-  splitKey: function (key) {
-    var keys = [];
-    if (_.isString(key)) {
-      _.each(key.split(','), function (key) {
-        var k = key.trim();
-        if (k) {
-          keys.push(k);
-        }
-      });
-    }
-    return keys;
-  },
-
-  /**
-   * merge a new list of fields into the exiting fields
-   *
-   * @param newFields
-   * @private
-   */
-  _mergeFields: function (newFields) {
-    if (!_.isObject(this.fields)) {
-      this.fields = {};
-    }
-    var that = this;
-    if (_.isObject(newFields)) {
-      _.each(newFields, function (value, key) {
-        if (!that.fields[key]) {
-          that.fields[key] = new Relution.LiveData.Field(value);
-        } else {
-          that.fields[key].merge(value);
-        }
-      });
-    }
-  },
-
-  /**
-   * check and update missing properties of fields
-   *
-   * @param typeMapping
-   * @private
-   */
-  _updateFields: function (typeMapping) {
-    var that = this;
-    _.each(this.fields, function (value, key) {
-      if (!value.persistent) {
-        // remove unused properties
-        delete that.fields[key];
-      } else {
-        // add missing names
-        if (!value.name) {
-          value.name = key;
-        }
-        // apply default type conversions
-        if (typeMapping && typeMapping[value.type]) {
-          value.type = typeMapping[value.type];
-        }
-      }
-    });
-  },
-
-  /**
-   * transform the given data to attributes
-   * considering the field specifications
-   *
-   * @param data
-   * @param id
-   * @param fields
-   * @returns {*}
-   */
-  toAttributes: function (data, id, fields) {
-    fields = fields || this.fields;
-    if (data && !_.isEmpty(fields)) {
-      // map field names
-      var value, attributes = {};
-      _.each(fields, function (field, key) {
-        value = _.isFunction(data.get) ? data.get(field.name) : data[field.name];
-        attributes[key] = value;
-      });
-      return attributes;
-    }
-    return data;
-  },
-
-  /**
-   * transform the given attributes to the destination data format
-   * considering the field specifications
-   *
-   * @param attrs
-   * @param fields
-   * @returns {*}
-   */
-  fromAttributes: function (attrs, fields) {
-    fields = fields || this.fields;
-    if (attrs && !_.isEmpty(fields)) {
-      var data = {};
-      _.each(fields, function (field, key) {
-        var value = _.isFunction(attrs.get) ? attrs.get(key) : attrs[key];
-        value = field.transform(value);
-        if (!_.isUndefined(value)) {
-          data[field.name] = value;
-        }
-      });
-      return data;
-    }
-    return attrs;
-  },
-
-  /**
-   * set the id of the given model or attributes
-   *
-   * @param attrs
-   * @param id
-   * @returns {*}
-   */
-  setId: function (attrs, id) {
-    if (attrs && id) {
-      var key = this.getKey() || attrs.idAttribute;
-      if (key) {
-        if (_.isFunction(attrs.set)) {
-          attrs.set(key, id);
-        } else {
-          attrs[key] = id;
-        }
-      }
-    }
-    return attrs;
-  },
-
-  /**
-   * get the id of the given model or attributes
-   *
-   * @param attrs
-   * @returns {*|Object|key|*}
-   */
-  getId: function (attrs) {
-    if (attrs) {
-      var key = this.getKey() || attrs.idAttribute;
-      if (key) {
-        return _.isFunction(attrs.get) ? attrs.get(key) : attrs[key];
-      }
-    }
-  }
-});
-
-// Copyright (c) 2013 M-Way Solutions GmbH
-// http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
-
-/**
- *
  * @module Relution.LiveData.Security
  *
  * @type {{logon: Function, logonBasicAuth: Function, logonMcapAuth: Function, getHost: Function}}
@@ -3007,17 +2352,34 @@ var Relution;
     var LiveData;
     (function (LiveData) {
         /**
+         * tests whether a given object is a Model.
+         *
+         * @param {object} object to check.
+         * @return {boolean} whether object is a Model.
+         */
+        function isModel(object) {
+            if (typeof object !== 'object') {
+                return false;
+            }
+            else if ('isModel' in object) {
+                Relution.assert(function () { return object.isModel === Model.prototype.isPrototypeOf(object); });
+                return object.isModel;
+            }
+            else {
+                return Model.prototype.isPrototypeOf(object);
+            }
+        }
+        LiveData.isModel = isModel;
+        /**
          * @module Relution.LiveData.Model
          *
          * @type {*}
          * @extends Backbone.Model
          */
-        var Model = (function (_super) {
-            __extends(Model, _super);
-            function Model(attributes, options) {
+        var Model /*<AttributesType extends Object>*/ = (function (_super) {
+            __extends(Model /*<AttributesType extends Object>*/, _super);
+            function Model /*<AttributesType extends Object>*/(attributes, options) {
                 _super.call(this, attributes, options);
-                this._type = 'Relution.LiveData.Model';
-                this.isModel = true;
                 this.defaults = {};
                 this.changedSinceSync = {};
                 if (this.urlRoot && typeof this.urlRoot === 'string') {
@@ -3027,7 +2389,7 @@ var Relution;
                 }
                 this.init(attributes, options);
             }
-            Model.prototype.init = function (attributes, options) {
+            Model /*<AttributesType extends Object>*/.prototype.init = function (attributes, options) {
                 options = options || {};
                 this.collection = options.collection || this.collection;
                 this.idAttribute = options.idAttribute || this.idAttribute;
@@ -3036,24 +2398,17 @@ var Relution;
                     this.store.initModel(this, options);
                 }
                 this.entity = this.entity || (this.collection ? this.collection.entity : null) || options.entity;
-                if (this.entity) {
-                    this.entity = Relution.LiveData.Entity.from(this.entity, {
-                        model: this.constructor,
-                        typeMapping: options.typeMapping
-                    });
-                    this.idAttribute = this.entity.idAttribute || this.idAttribute;
-                }
                 this.credentials = this.credentials || (this.collection ? this.collection.credentials : null) || options.credentials;
                 this.on('change', this.onChange, this);
                 this.on('sync', this.onSync, this);
             };
-            Model.prototype.ajax = function (options) {
+            Model /*<AttributesType extends Object>*/.prototype.ajax = function (options) {
                 return Relution.LiveData.ajax.apply(this, arguments);
             };
-            Model.prototype.sync = function (method, model, options) {
+            Model /*<AttributesType extends Object>*/.prototype.sync = function (method, model, options) {
                 return Relution.LiveData.sync.apply(this, arguments);
             };
-            Model.prototype.onChange = function (model, options) {
+            Model /*<AttributesType extends Object>*/.prototype.onChange = function (model, options) {
                 // For each `set` attribute, update or delete the current value.
                 var attrs = model.changedAttributes();
                 if (_.isObject(attrs)) {
@@ -3062,10 +2417,10 @@ var Relution;
                     }
                 }
             };
-            Model.prototype.onSync = function (model, options) {
+            Model /*<AttributesType extends Object>*/.prototype.onSync = function (model, options) {
                 this.changedSinceSync = {};
             };
-            Model.prototype.getUrlRoot = function () {
+            Model /*<AttributesType extends Object>*/.prototype.getUrlRoot = function () {
                 if (this.urlRoot) {
                     return _.isFunction(this.urlRoot) ? this.urlRoot() : this.urlRoot;
                 }
@@ -3080,16 +2435,19 @@ var Relution;
                     return url;
                 }
             };
-            Model.extend = Backbone.Model.extend;
-            Model.create = Relution.LiveData.create;
-            Model.design = Relution.LiveData.design;
-            return Model;
+            Model /*<AttributesType extends Object>*/.extend = Backbone.Model.extend;
+            Model /*<AttributesType extends Object>*/.create = Relution.LiveData.create;
+            Model /*<AttributesType extends Object>*/.design = Relution.LiveData.design;
+            return Model /*<AttributesType extends Object>*/;
         })(Backbone.Model);
-        LiveData.Model = Model;
-        _.extend(Model.prototype, LiveData._Object, {
+        LiveData.Model /*<AttributesType extends Object>*/ = Model /*<AttributesType extends Object>*/;
+        // mixins
+        var model = _.extend(Model.prototype, LiveData._Object, {
             _type: 'Relution.LiveData.Model',
-            isModel: true
+            isModel: true,
+            isCollection: false
         });
+        Relution.assert(function () { return isModel(model); });
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=Model.js.map
@@ -3104,6 +2462,7 @@ var Relution;
 /// <reference path="stores/Store.ts" />
 /// <reference path="Model.ts" />
 /// <reference path="stores/SyncContext.ts" />
+/// <reference path="stores/SyncEndpoint.ts" />
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -3114,12 +2473,31 @@ var Relution;
     var LiveData;
     (function (LiveData) {
         /**
+         * tests whether a given object is a Collection.
+         *
+         * @param {object} object to check.
+         * @return {boolean} whether object is a Collection.
+         */
+        function isCollection(object) {
+            if (typeof object !== 'object') {
+                return false;
+            }
+            else if ('isCollection' in object) {
+                Relution.assert(function () { return object.isCollection === Collection.prototype.isPrototypeOf(object); });
+                return object.isCollection;
+            }
+            else {
+                return Collection.prototype.isPrototypeOf(object);
+            }
+        }
+        LiveData.isCollection = isCollection;
+        /**
          * The Relution.LiveData.Collection can be used like a Backbone Collection,
          *
          * but there are some enhancements to fetch, save and delete the
          * contained models from or to other "data stores".
          *
-         * see LocalStorageStore, WebSqlStore or SyncStore for examples
+         * see WebSqlStore or SyncStore for examples
          *
          * @module Relution.LiveData.Collection
          *
@@ -3141,10 +2519,7 @@ var Relution;
                 this.store = options.store || this.store || (this.model ? this.model.prototype.store : null);
                 this.entity = options.entity || this.entity || (this.model ? this.model.prototype.entity : null);
                 this.options = options.options || this.options;
-                var entity = this.entity || this.entityFromUrl(this.url);
-                if (entity) {
-                    this.entity = Relution.LiveData.Entity.from(entity, { model: this.model, typeMapping: options.typeMapping });
-                }
+                this.entity = this.entity || this.entityFromUrl(this.url);
                 this._updateUrl();
                 if (this.store && _.isFunction(this.store.initCollection)) {
                     this.store.initCollection(this, options);
@@ -3173,25 +2548,6 @@ var Relution;
                     }
                 }
             };
-            Collection.prototype.sort = function (options) {
-                if (_.isObject(options && options.sort)) {
-                    this.comparator = Relution.LiveData.DataSelector.compileSort(options.sort);
-                }
-                return _super.prototype.sort.apply(this, arguments);
-            };
-            Collection.prototype.select = function (options) {
-                var selector = options && options.query ? Relution.LiveData.DataSelector.create(options.query) : null;
-                var collection = Collection.create(null, { model: this.model });
-                if (options && options.sort) {
-                    collection.comparator = Relution.LiveData.DataSelector.compileSort(options.sort);
-                }
-                this.each(function (model) {
-                    if (!selector || selector.matches(model.attributes)) {
-                        collection.add(model);
-                    }
-                });
-                return collection;
-            };
             Collection.prototype.destroy = function (options) {
                 options = options || {};
                 var success = options.success;
@@ -3210,18 +2566,6 @@ var Relution;
                 else if (success) {
                     success();
                 }
-            };
-            Collection.prototype.destroyLocal = function () {
-                var store = this.endpoint.localStore;
-                var that = this;
-                // DROP TABLE
-                if (this.entity.name) {
-                    store.drop(this.entity.name);
-                }
-                // RESET localStorage-entry
-                localStorage.setItem('__' + this.channel + 'last_msg_time', '');
-                this.store.endpoints = {};
-                return this.reset();
             };
             /**
              * save all containing models
@@ -3343,916 +2687,18 @@ var Relution;
             return Collection;
         })(Backbone.Collection);
         LiveData.Collection = Collection;
-        _.extend(Collection.prototype, LiveData._Object, {
+        // mixins
+        var collection = _.extend(Collection.prototype, LiveData._Object, {
             _type: 'Relution.LiveData.Collection',
+            isModel: false,
             isCollection: true,
+            // default model type unless overwritten
             model: LiveData.Model
         });
+        Relution.assert(function () { return isCollection(collection); });
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=Collection.js.map
-// Copyright (c) 2013 M-Way Solutions GmbH
-// http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
-
-// Relution.LiveData.DataSelector uses code from meteor.js
-// https://github.com/meteor/meteor/tree/master/packages/minimongo
-//
-// Thanks for sharing!
-
-/**
- *
- * @module Relution.LiveData.DataSelector
- *
- * @type {*}
- * @extends Relution.LiveData._Object
- */
-Relution.LiveData.DataSelector = Relution.LiveData._Object.design({
-
-  _type: 'Relution.LiveData.DataSelector',
-
-  _selector: null,
-
-  create: function (docSelector) {
-    var selector = this.design({
-      _selector: null
-    });
-    selector.init(docSelector);
-    return selector;
-  },
-
-  init: function (docSelector) {
-    this._selector = this.compileSelector(docSelector);
-  },
-
-  matches: function (value) {
-    if (_.isFunction(this._selector)) {
-      return this._selector(value);
-    }
-    return false;
-  },
-
-  hasOperators: function (valueSelector) {
-    var theseAreOperators;
-    for (var selKey in valueSelector) {
-      var thisIsOperator = selKey.substr(0, 1) === '$';
-      if (theseAreOperators === undefined) {
-        theseAreOperators = thisIsOperator;
-      } else if (theseAreOperators !== thisIsOperator) {
-        throw new Error('Inconsistent selector: ' + valueSelector);
-      }
-    }
-    return !!theseAreOperators;  // {} has no operators
-  },
-
-  // Given a selector, return a function that takes one argument, a
-  // document, and returns true if the document matches the selector,
-  // else false.
-  compileSelector: function (selector) {
-    // you can pass a literal function instead of a selector
-    if (_.isFunction(selector)) {
-      return function (doc) {
-        return selector.call(doc);
-      };
-    }
-
-    // shorthand -- scalars match _id
-    if (this._selectorIsId(selector)) {
-      return function (record) {
-        var id = _.isFunction(record.getId) ? record.getId() : (record._id || record.id);
-        return Relution.LiveData.Field.prototype.equals(id, selector);
-      };
-    }
-
-    // protect against dangerous selectors.  falsey and {_id: falsey} are both
-    // likely programmer error, and not what you want, particularly for
-    // destructive operations.
-    if (!selector || (('_id' in selector) && !selector._id)) {
-      return function (doc) {
-        return false;
-      };
-    }
-
-    // Top level can't be an array or true or binary.
-    if (_.isBoolean(selector) || _.isArray(selector) || Relution.LiveData.Field.prototype.isBinary(selector)) {
-      throw new Error('Invalid selector: ' + selector);
-    }
-
-    return this.compileDocSelector(selector);
-  },
-
-  // The main compilation function for a given selector.
-  compileDocSelector: function (docSelector) {
-    var that = Relution.LiveData.DataSelector;
-    var perKeySelectors = [];
-    _.each(docSelector, function (subSelector, key) {
-      if (key.substr(0, 1) === '$') {
-        // Outer operators are either logical operators (they recurse back into
-        // this function), or $where.
-        if (!_.has(that.LOGICAL_OPERATORS, key)) {
-          throw new Error('Unrecognized logical operator: ' + key);
-        }
-        perKeySelectors.push(that.LOGICAL_OPERATORS[key](subSelector));
-      } else {
-        var lookUpByIndex = that._makeLookupFunction(key);
-        var valueSelectorFunc = that.compileValueSelector(subSelector);
-        perKeySelectors.push(function (doc) {
-          var branchValues = lookUpByIndex(doc);
-          // We apply the selector to each 'branched' value and return true if any
-          // match. This isn't 100% consistent with MongoDB; eg, see:
-          // https://jira.mongodb.org/browse/SERVER-8585
-          return _.any(branchValues, valueSelectorFunc);
-        });
-      }
-    });
-
-    return function (record) {
-      var doc = _.isFunction(record.getData) ? record.getData() : record;
-      return _.all(perKeySelectors, function (f) {
-        return f(doc);
-      });
-    };
-  },
-
-  compileValueSelector: function (valueSelector) {
-    var that = Relution.LiveData.DataSelector;
-    if (valueSelector === null) {  // undefined or null
-      return function (value) {
-        return that._anyIfArray(value, function (x) {
-          return x === null;  // undefined or null
-        });
-      };
-    }
-
-    // Selector is a non-null primitive (and not an array or RegExp either).
-    if (!_.isObject(valueSelector)) {
-      return function (value) {
-        return that._anyIfArray(value, function (x) {
-          return x === valueSelector;
-        });
-      };
-    }
-
-    if (_.isRegExp(valueSelector)) {
-      return function (value) {
-        if (_.isUndefined(value)) {
-          return false;
-        }
-        return that._anyIfArray(value, function (x) {
-          return valueSelector.test(x);
-        });
-      };
-    }
-
-    // Arrays match either identical arrays or arrays that contain it as a value.
-    if (_.isArray(valueSelector)) {
-      return function (value) {
-        if (!_.isArray(value)) {
-          return false;
-        }
-        return that._anyIfArrayPlus(value, function (x) {
-          return that._equal(valueSelector, x);
-        });
-      };
-    }
-
-    // It's an object, but not an array or regexp.
-    if (this.hasOperators(valueSelector)) {
-      var operatorFunctions = [];
-      _.each(valueSelector, function (operand, operator) {
-        if (!_.has(that.VALUE_OPERATORS, operator)) {
-          throw new Error('Unrecognized operator: ' + operator);
-        }
-        operatorFunctions.push(that.VALUE_OPERATORS[operator](operand, valueSelector.$options));
-      });
-      return function (value) {
-        return _.all(operatorFunctions, function (f) {
-          return f(value);
-        });
-      };
-    }
-
-    // It's a literal; compare value (or element of value array) directly to the
-    // selector.
-    return function (value) {
-      return that._anyIfArray(value, function (x) {
-        return that._equal(valueSelector, x);
-      });
-    };
-  },
-
-  // _makeLookupFunction(key) returns a lookup function.
-  //
-  // A lookup function takes in a document and returns an array of matching
-  // values.  This array has more than one element if any segment of the key other
-  // than the last one is an array.  ie, any arrays found when doing non-final
-  // lookups result in this function 'branching'; each element in the returned
-  // array represents the value found at this branch. If any branch doesn't have a
-  // final value for the full key, its element in the returned list will be
-  // undefined. It always returns a non-empty array.
-  //
-  // _makeLookupFunction('a.x')({a: {x: 1}}) returns [1]
-  // _makeLookupFunction('a.x')({a: {x: [1]}}) returns [[1]]
-  // _makeLookupFunction('a.x')({a: 5})  returns [undefined]
-  // _makeLookupFunction('a.x')({a: [{x: 1},
-  //                                 {x: [2]},
-  //                                 {y: 3}]})
-  //   returns [1, [2], undefined]
-  _makeLookupFunction: function (key) {
-    var dotLocation = key.indexOf('.');
-    var first, lookupRest, nextIsNumeric;
-    if (dotLocation === -1) {
-      first = key;
-    } else {
-      first = key.substr(0, dotLocation);
-      var rest = key.substr(dotLocation + 1);
-      lookupRest = this._makeLookupFunction(rest);
-      // Is the next (perhaps final) piece numeric (ie, an array lookup?)
-      nextIsNumeric = /^\d+(\.|$)/.test(rest);
-    }
-
-    return function (doc) {
-      if (doc === null) { // null or undefined
-        return [undefined];
-      }
-      var firstLevel = doc[first];
-
-      // We don't 'branch' at the final level.
-      if (!lookupRest) {
-        return [firstLevel];
-      }
-
-      // It's an empty array, and we're not done: we won't find anything.
-      if (_.isArray(firstLevel) && firstLevel.length === 0) {
-        return [undefined];
-      }
-
-      // For each result at this level, finish the lookup on the rest of the key,
-      // and return everything we find. Also, if the next result is a number,
-      // don't branch here.
-      //
-      // Technically, in MongoDB, we should be able to handle the case where
-      // objects have numeric keys, but Mongo doesn't actually handle this
-      // consistently yet itself, see eg
-      // https://jira.mongodb.org/browse/SERVER-2898
-      // https://github.com/mongodb/mongo/blob/master/jstests/array_match2.js
-      if (!_.isArray(firstLevel) || nextIsNumeric) {
-        firstLevel = [firstLevel];
-      }
-      return Array.prototype.concat.apply([], _.map(firstLevel, lookupRest));
-    };
-  },
-
-  _anyIfArray: function (x, f) {
-    if (_.isArray(x)) {
-      return _.any(x, f);
-    }
-    return f(x);
-  },
-
-  _anyIfArrayPlus: function (x, f) {
-    if (f(x)) {
-      return true;
-    }
-    return _.isArray(x) && _.any(x, f);
-  },
-
-  // Is this selector just shorthand for lookup by _id?
-  _selectorIsId: function (selector) {
-    return _.isString(selector) || _.isNumber(selector);
-  },
-
-  // deep equality test: use for literal document and array matches
-  _equal: function (a, b) {
-    return Relution.LiveData.Field.prototype._equals(a, b, true);
-  },
-
-  _cmp: function (a, b) {
-    return Relution.LiveData.Field.prototype._cmp(a, b);
-  },
-
-  LOGICAL_OPERATORS: {
-    '$and': function (subSelector) {
-      if (!_.isArray(subSelector) || _.isEmpty(subSelector)) {
-        throw new Error('$and/$or/$nor must be nonempty array');
-      }
-      var subSelectorFunctions = _.map(subSelector, Relution.LiveData.DataSelector.compileDocSelector);
-      return function (doc) {
-        return _.all(subSelectorFunctions, function (f) {
-          return f(doc);
-        });
-      };
-    },
-
-    '$or': function (subSelector) {
-      if (!_.isArray(subSelector) || _.isEmpty(subSelector)) {
-        throw new Error('$and/$or/$nor must be nonempty array');
-      }
-      var subSelectorFunctions = _.map(subSelector, Relution.LiveData.DataSelector.compileDocSelector);
-      return function (doc) {
-        return _.any(subSelectorFunctions, function (f) {
-          return f(doc);
-        });
-      };
-    },
-
-    '$nor': function (subSelector) {
-      if (!_.isArray(subSelector) || _.isEmpty(subSelector)) {
-        throw new Error('$and/$or/$nor must be nonempty array');
-      }
-      var subSelectorFunctions = _.map(subSelector, Relution.LiveData.DataSelector.compileDocSelector);
-      return function (doc) {
-        return _.all(subSelectorFunctions, function (f) {
-          return !f(doc);
-        });
-      };
-    },
-
-    '$where': function (selectorValue) {
-      if (!_.isFunction(selectorValue)) {
-        var value = selectorValue;
-        selectorValue = function () {
-          return value;
-        };
-      }
-      return function (doc) {
-        return selectorValue.call(doc);
-      };
-    }
-  },
-
-  VALUE_OPERATORS: {
-    '$in': function (operand) {
-      if (!_.isArray(operand)) {
-        throw new Error('Argument to $in must be array');
-      }
-      return function (value) {
-        return Relution.LiveData.DataSelector._anyIfArrayPlus(value, function (x) {
-          return _.any(operand, function (operandElt) {
-            return Relution.LiveData.DataSelector._equal(operandElt, x);
-          });
-        });
-      };
-    },
-
-    '$all': function (operand) {
-      if (!_.isArray(operand)) {
-        throw new Error('Argument to $all must be array');
-      }
-      return function (value) {
-        if (!_.isArray(value)) {
-          return false;
-        }
-        return _.all(operand, function (operandElt) {
-          return _.any(value, function (valueElt) {
-            return Relution.LiveData.DataSelector._equal(operandElt, valueElt);
-          });
-        });
-      };
-    },
-
-    '$lt': function (operand) {
-      return function (value) {
-        return Relution.LiveData.DataSelector._anyIfArray(value, function (x) {
-          return Relution.LiveData.DataSelector._cmp(x, operand) < 0;
-        });
-      };
-    },
-
-    '$lte': function (operand) {
-      return function (value) {
-        return Relution.LiveData.DataSelector._anyIfArray(value, function (x) {
-          return Relution.LiveData.DataSelector._cmp(x, operand) <= 0;
-        });
-      };
-    },
-
-    '$gt': function (operand) {
-      return function (value) {
-        return Relution.LiveData.DataSelector._anyIfArray(value, function (x) {
-          return Relution.LiveData.DataSelector._cmp(x, operand) > 0;
-        });
-      };
-    },
-
-    '$gte': function (operand) {
-      return function (value) {
-        return Relution.LiveData.DataSelector._anyIfArray(value, function (x) {
-          return Relution.LiveData.DataSelector._cmp(x, operand) >= 0;
-        });
-      };
-    },
-
-    '$ne': function (operand) {
-      return function (value) {
-        return !Relution.LiveData.DataSelector._anyIfArrayPlus(value, function (x) {
-          return Relution.LiveData.DataSelector._equal(x, operand);
-        });
-      };
-    },
-
-    '$nin': function (operand) {
-      if (!_.isArray(operand)) {
-        throw new Error('Argument to $nin must be array');
-      }
-      var inFunction = this.VALUE_OPERATORS.$in(operand);
-      return function (value) {
-        // Field doesn't exist, so it's not-in operand
-        if (value === undefined) {
-          return true;
-        }
-        return !inFunction(value);
-      };
-    },
-
-    '$exists': function (operand) {
-      return function (value) {
-        return operand === (value !== undefined);
-      };
-    },
-    '$mod': function (operand) {
-      var divisor = operand[0], remainder = operand[1];
-      return function (value) {
-        return Relution.LiveData.DataSelector._anyIfArray(value, function (x) {
-          return x % divisor === remainder;
-        });
-      };
-    },
-
-    '$size': function (operand) {
-      return function (value) {
-        return _.isArray(value) && operand === value.length;
-      };
-    },
-
-    '$type': function (operand) {
-      return function (value) {
-        // A nonexistent field is of no type.
-        if (_.isUndefined(value)) {
-          return false;
-        }
-        return Relution.LiveData.DataSelector._anyIfArray(value, function (x) {
-          return Relution.LiveData.Field.prototype.detectType(x) === operand;
-        });
-      };
-    },
-
-    '$regex': function (operand, options) {
-
-      if (_.isUndefined(options)) {
-        // Options passed in $options (even the empty string) always overrides
-        // options in the RegExp object itself.
-
-        // Be clear that we only support the JS-supported options, not extended
-        // ones (eg, Mongo supports x and s). Ideally we would implement x and s
-        // by transforming the regexp, but not today...
-        if (/[^gim]/.test(options)) {
-          throw new Error('Only the i, m, and g regexp options are supported');
-        }
-
-        var regexSource = _.isRegExp(operand) ? operand.source : operand;
-        operand = new RegExp(regexSource, options);
-      } else if (!_.isRegExp(operand)) {
-        operand = new RegExp(operand);
-      }
-
-      return function (value) {
-        if (_.isUndefined(value)) {
-          return false;
-        }
-        return Relution.LiveData.DataSelector._anyIfArray(value, function (x) {
-          return operand.test(x);
-        });
-      };
-    },
-
-    '$options': function (operand) {
-      // evaluation happens at the $regex function above
-      return function (value) {
-        return true;
-      };
-    },
-
-    '$elemMatch': function (operand) {
-      var matcher = Relution.LiveData.DataSelector.compileDocSelector(operand);
-      return function (value) {
-        if (!_.isArray(value)) {
-          return false;
-        }
-        return _.any(value, function (x) {
-          return matcher(x);
-        });
-      };
-    },
-
-    '$not': function (operand) {
-      var matcher = Relution.LiveData.DataSelector.compileDocSelector(operand);
-      return function (value) {
-        return !matcher(value);
-      };
-    }
-  },
-
-  // Give a sort spec, which can be in any of these forms:
-  //   {'key1': 1, 'key2': -1}
-  //   [['key1', 'asc'], ['key2', 'desc']]
-  //   ['key1', ['key2', 'desc']]
-  //
-  // (.. with the first form being dependent on the key enumeration
-  // behavior of your javascript VM, which usually does what you mean in
-  // this case if the key names don't look like integers ..)
-  //
-  // return a function that takes two objects, and returns -1 if the
-  // first object comes first in order, 1 if the second object comes
-  // first, or 0 if neither object comes before the other.
-
-  compileSort: function (spec) {
-    var sortSpecParts = [];
-
-    if (_.isArray(spec)) {
-      for (var i = 0; i < spec.length; i++) {
-        if (typeof spec[i] === 'string') {
-          sortSpecParts.push({
-            lookup: this._makeLookupFunction(spec[i]),
-            ascending: true
-          });
-        } else {
-          sortSpecParts.push({
-            lookup: this._makeLookupFunction(spec[i][0]),
-            ascending: spec[i][1] !== 'desc'
-          });
-        }
-      }
-    } else if (typeof spec === 'object') {
-      for (var key in spec) {
-        sortSpecParts.push({
-          lookup: this._makeLookupFunction(key),
-          ascending: spec[key] >= 0
-        });
-      }
-    } else {
-      throw new Error('Bad sort specification: ', JSON.stringify(spec));
-    }
-
-    if (sortSpecParts.length === 0) {
-      return function () {
-        return 0;
-      };
-    }
-
-    // reduceValue takes in all the possible values for the sort key along various
-    // branches, and returns the min or max value (according to the bool
-    // findMin). Each value can itself be an array, and we look at its values
-    // too. (ie, we do a single level of flattening on branchValues, then find the
-    // min/max.)
-    var reduceValue = function (branchValues, findMin) {
-      var reduced;
-      var first = true;
-      // Iterate over all the values found in all the branches, and if a value is
-      // an array itself, iterate over the values in the array separately.
-      _.each(branchValues, function (branchValue) {
-        // Value not an array? Pretend it is.
-        if (!_.isArray(branchValue)) {
-          branchValue = [branchValue];
-        }
-        // Value is an empty array? Pretend it was missing, since that's where it
-        // should be sorted.
-        if (_.isArray(branchValue) && branchValue.length === 0) {
-          branchValue = [undefined];
-        }
-        _.each(branchValue, function (value) {
-          // We should get here at least once: lookup functions return non-empty
-          // arrays, so the outer loop runs at least once, and we prevented
-          // branchValue from being an empty array.
-          if (first) {
-            reduced = value;
-            first = false;
-          } else {
-            // Compare the value we found to the value we found so far, saving it
-            // if it's less (for an ascending sort) or more (for a descending
-            // sort).
-            var cmp = Relution.LiveData.DataSelector._cmp(reduced, value);
-            if ((findMin && cmp > 0) || (!findMin && cmp < 0)) {
-              reduced = value;
-            }
-          }
-        });
-      });
-      return reduced;
-    };
-
-    return function (a, b) {
-      a = a.attributes ? a.attributes : a;
-      b = b.attributes ? b.attributes : b;
-      for (var i = 0; i < sortSpecParts.length; ++i) {
-        var specPart = sortSpecParts[i];
-        var aValue = reduceValue(specPart.lookup(a), specPart.ascending);
-        var bValue = reduceValue(specPart.lookup(b), specPart.ascending);
-        var compare = Relution.LiveData.DataSelector._cmp(aValue, bValue);
-        if (compare !== 0) {
-          return specPart.ascending ? compare : -compare;
-        }
-      }
-      return 0;
-    };
-  }
-
-});
-
-// Copyright (c) 2013 M-Way Solutions GmbH
-// http://github.com/mwaylabs/The-M-Project/blob/absinthe/MIT-LICENSE.txt
-
-/**
- *
- * @module Relution.LiveData.SqlSelector
- *
- * @type {*}
- * @extends Relution.LiveData.DataSelector
- */
-Relution.LiveData.SqlSelector = Relution.LiveData.DataSelector.design({
-
-  _type: 'Relution.LiveData.SqlSelector',
-
-  _selector: null,
-  _query: null,
-  _entity: null,
-
-  create: function (docSelector, entity) {
-    var selector = this.extend({
-      _entity: entity,
-      _selector: null,
-      _query: null
-    });
-    selector.init(docSelector);
-
-    return selector;
-  },
-
-  init: function (docSelector) {
-    this._selector = this.compileSelector(docSelector);
-    this._query = this.buildSqlQuery(docSelector);
-  },
-
-  buildStatement: function (obj) {
-    return this._query;
-  },
-
-  buildSqlQuery: function (selector, connector) {
-    // you can pass a literal function instead of a selector
-    if (selector instanceof Function) {
-      return '';
-    }
-
-    // shorthand -- sql
-    if (_.isString(selector)) {
-      return selector;
-    }
-
-    // protect against dangerous selectors.  falsey and {_id: falsey} are both
-    // likely programmer error, and not what you want, particularly for
-    // destructive operations.
-    if (!selector || (('_id' in selector) && !selector._id)) {
-      return '1=2';
-    }
-
-    // Top level can't be an array or true or binary.
-    if (_.isBoolean(selector) || _.isArray(selector) || Relution.LiveData.DataField.isBinary(selector)) {
-      throw new Error('Invalid selector: ' + selector);
-    }
-
-    return this.buildSqlWhere(selector)();
-  },
-
-  // The main compilation function for a given selector.
-  buildSqlWhere: function (docSelector) {
-    var where = '';
-    var that = this;
-    var perKeySelectors = [];
-    _.each(docSelector, function (subSelector, key) {
-      if (key.substr(0, 1) === '$') {
-        // Outer operators are either logical operators (they recurse back into
-        // this function), or $where.
-        perKeySelectors.push(that.buildLogicalOperator(key, subSelector));
-      } else {
-        var valueLookup = that.buildLookup(key);
-        var valueSelector = that.buildValueSelector(subSelector);
-        if (_.isFunction(valueSelector)) {
-          perKeySelectors.push(function () {
-            return valueSelector(valueLookup);
-          });
-        }
-      }
-    });
-
-    return function () {
-      var sql = '';
-      _.each(perKeySelectors, function (f) {
-        if (_.isFunction(f)) {
-          sql += f.call(that);
-        }
-      });
-      return sql;
-    };
-  },
-
-  buildValueSelector: function (valueSelector) {
-    var that = this;
-    if (valueSelector === null) {  // undefined or null
-      return function (key) {
-        return key + ' IS NULL';
-      };
-    }
-
-    // Selector is a non-null primitive (and not an array or RegExp either).
-    if (!_.isObject(valueSelector)) {
-      return function (key) {
-        return key + ' = ' + that.buildValue(valueSelector);
-      };
-    }
-
-    if (_.isRegExp(valueSelector)) {
-      var regEx = valueSelector.toString();
-      var match = regEx.match(/\/[\^]?([^^.*$'+()]*)[\$]?\//);
-      if (match && match.length > 1) {
-        var prefix = regEx.indexOf('/^') < 0 ? '%' : '';
-        var suffix = regEx.indexOf('$/') < 0 ? '%' : '';
-        return function (key) {
-          return key + ' LIKE "' + prefix + match[1] + suffix + '"';
-        };
-      }
-      return null;
-    }
-
-    // Arrays match either identical arrays or arrays that contain it as a value.
-    if (_.isArray(valueSelector)) {
-      return null;
-    }
-
-    // It's an object, but not an array or regexp.
-    if (this.hasOperators(valueSelector)) {
-      var operatorFunctions = [];
-      _.each(valueSelector, function (operand, operator) {
-        if (!_.has(that.VALUE_OPERATORS, operator)) {
-          throw new Error('Unrecognized operator: ' + operator);
-        }
-        operatorFunctions.push(that.VALUE_OPERATORS[operator](operand, that));
-      });
-      return function (key) {
-        return that.LOGICAL_OPERATORS.$and(operatorFunctions, key);
-      };
-    }
-
-    // It's a literal; compare value (or element of value array) directly to the
-    // selector.
-    return function (key) {
-      return key + ' = ' + that.buildValue(valueSelector);
-    };
-  },
-
-  buildLookup: function (key) {
-    var field = this._entity ? this._entity.getField(key) : null;
-    key = field && field.name ? field.name : key;
-    return '"' + key + '"';
-  },
-
-  buildValue: function (value) {
-    if (_.isString(value)) {
-      return '"' + value.replace(/"/g, '""') + '"';
-    }
-    return value;
-  },
-
-  buildLogicalOperator: function (operator, subSelector) {
-    if (!_.has(this.LOGICAL_OPERATORS, operator)) {
-      throw new Error('Unrecognized logical operator: ' + operator);
-    } else {
-      if (!_.isArray(subSelector) || _.isEmpty(subSelector)) {
-        throw new Error('$and/$or/$nor must be nonempty array');
-      }
-      var subSelectorFunction = _.map(subSelector, this.buildSqlWhere, this);
-      var that = this;
-      return function (key) {
-        return that.LOGICAL_OPERATORS[operator](subSelectorFunction, key);
-      };
-    }
-  },
-
-  LOGICAL_OPERATORS: {
-    '$and': function (subSelectorFunction, key) {
-      var sql = '';
-      var count = 0;
-      _.each(subSelectorFunction, function (f) {
-        var s = f !== null ? f(key) : '';
-        if (s) {
-          count++;
-          sql += sql ? ' AND ' + s : s;
-        }
-      });
-      return count > 1 ? '( ' + sql + ' )' : sql;
-    },
-    '$or': function (subSelectorFunction, key) {
-      var sql = '';
-      var miss = false;
-      _.each(subSelectorFunction, function (f) {
-        var s = f !== null ? f(key) : '';
-        miss |= !s;
-        sql += sql && s ? ' OR ' + s : s;
-      });
-      return miss ? '' : '( ' + sql + ' )';
-    },
-    '$nor': function (subSelectorFunction, key) {
-      var sql = '';
-      var miss = false;
-      _.each(subSelectorFunction, function (f) {
-        var s = f !== null ? f(key) : '';
-        miss |= !s;
-        sql += sql && s ? ' OR ' + s : s;
-      });
-      return miss ? '' : 'NOT ( ' + sql + ' )';
-    }
-  },
-
-  VALUE_OPERATORS: {
-
-    '$in': function (operand) {
-      return null;
-    },
-
-    '$all': function (operand) {
-      return null;
-    },
-
-    '$lt': function (operand, that) {
-      return function (key) {
-        return key + ' < ' + that.buildValue(operand);
-      };
-    },
-
-    '$lte': function (operand, that) {
-      return function (key) {
-        return key + ' <= ' + that.buildValue(operand);
-      };
-    },
-
-    '$gt': function (operand, that) {
-      return function (key) {
-        return key + ' > ' + that.buildValue(operand);
-      };
-    },
-
-    '$gte': function (operand, that) {
-      return function (key) {
-        return key + '' > '' + that.buildValue(operand);
-      };
-    },
-
-    '$ne': function (operand, that) {
-      return function (key) {
-        return key + ' <> ' + that.buildValue(operand);
-      };
-    },
-
-    '$nin': function (operand) {
-      return null;
-    },
-
-    '$exists': function (operand, that) {
-      return function (key) {
-        return key + ' IS NOT NULL';
-      };
-    },
-
-    '$mod': function (operand) {
-      return null;
-    },
-
-    '$size': function (operand) {
-      return null;
-    },
-
-    '$type': function (operand) {
-      return null;
-    },
-
-    '$regex': function (operand, options) {
-      return null;
-    },
-    '$options': function (operand) {
-      return null;
-    },
-
-    '$elemMatch': function (operand) {
-      return null;
-    },
-
-    '$not': function (operand, that) {
-      var matcher = that.buildSqlWhere(operand);
-      return function (key) {
-        return 'NOT (' + matcher(key) + ')';
-      };
-    }
-  }
-});
-
 /**
  * Store.ts
  *
@@ -4288,77 +2734,18 @@ var Relution;
         /**
          * Base class to build a custom data store.
          *
-         * See: Relution.LiveData.LocalStorageStore, Relution.LiveData.WebSqlStore and Relution.LiveData.SyncStore
+         * See: Relution.LiveData.WebSqlStore and Relution.LiveData.SyncStore
          *
          * @module Relution.LiveData.Store
          */
         var Store = (function () {
             function Store(options) {
-                this.options = _.extend({
-                    name: '',
-                    entities: {},
-                    typeMapping: (function () {
-                        var map = {};
-                        map[LiveData.DATA.TYPE.OBJECTID] = LiveData.DATA.TYPE.STRING;
-                        map[LiveData.DATA.TYPE.DATE] = LiveData.DATA.TYPE.STRING;
-                        map[LiveData.DATA.TYPE.BINARY] = LiveData.DATA.TYPE.TEXT;
-                        return map;
-                    })()
-                }, options);
                 Relution.LiveData.Debug.trace('Store', options);
-                this.setEntities(this.options.entities);
+                if (options) {
+                    // copy options values into the object
+                    _.extend(this, options);
+                }
             }
-            Store.prototype.setEntities = function (entities) {
-                this.entities = {};
-                for (var name in entities) {
-                    var entity = LiveData.Entity.from(entities[name], {
-                        store: this,
-                        typeMapping: this.options.typeMapping
-                    });
-                    entity.name = entity.name || name;
-                    // connect collection and model to this store
-                    var collection = entity.collection || LiveData.Collection.extend({ model: LiveData.Model.extend({}) });
-                    var model = collection.prototype.model;
-                    // set new entity and name
-                    collection.prototype.entity = model.prototype.entity = name;
-                    collection.prototype.store = model.prototype.store = this;
-                    entity.idAttribute = entity.idAttribute || model.prototype.idAttribute;
-                    this.entities[name] = entity;
-                }
-            };
-            Store.prototype.getEntity = function (obj) {
-                if (obj) {
-                    var entity = obj.entity || obj;
-                    var name = _.isString(entity) ? entity : entity.name;
-                    if (name) {
-                        return this.entities[name] || (entity && entity.name ? entity : { name: name });
-                    }
-                }
-            };
-            Store.prototype.getCollection = function (entity) {
-                if (_.isString(entity)) {
-                    entity = this.entities[entity];
-                }
-                if (entity && entity.collection) {
-                    if (LiveData.Collection.prototype.isPrototypeOf(entity.collection)) {
-                        return entity.collection;
-                    }
-                    else {
-                        return new entity.collection();
-                    }
-                }
-            };
-            Store.prototype.createModel = function (entity, attrs) {
-                if (_.isString(entity)) {
-                    entity = this.entities[entity];
-                }
-                if (entity && entity.collection) {
-                    var Model = entity.collection.model || entity.collection.prototype.model;
-                    if (Model) {
-                        return new Model(attrs);
-                    }
-                }
-            };
             Store.prototype.getArray = function (data) {
                 if (_.isArray(data)) {
                     return data;
@@ -4398,9 +2785,6 @@ var Relution;
             Store.prototype.initCollection = function (collection, options) {
                 // may be overwritten
             };
-            Store.prototype.initEntity = function (entity) {
-                // may be overwritten
-            };
             Store.prototype.sync = function (method, model, options) {
                 // must be overwritten
                 return Q.reject(new Error('not implemented!')); // purely abstract
@@ -4411,57 +2795,22 @@ var Relution;
              * @param options
              */
             Store.prototype.fetch = function (collection, options) {
-                if (collection && !collection.models && !collection.attributes && !options) {
-                    options = collection;
-                }
-                if ((!collection || (!collection.models && !collection.attributes)) && options && options.entity) {
-                    collection = this.getCollection(options.entity);
-                }
-                if (collection && collection.fetch) {
-                    var opts = _.extend({}, options || {}, { store: this });
-                    return collection.fetch(opts);
-                }
+                var opts = _.extend({}, options || {}, { store: this });
+                return collection.fetch(opts);
             };
             Store.prototype.create = function (collection, model, options) {
-                if (collection && !collection.models && !options) {
-                    model = collection;
-                    options = model;
-                }
-                if ((!collection || !collection.models) && options && options.entity) {
-                    collection = this.getCollection(options.entity);
-                }
-                if (collection && collection.create) {
-                    var opts = _.extend({}, options || {}, { store: this });
-                    collection.create(model, opts);
-                }
+                var opts = _.extend({}, options || {}, { store: this });
+                return collection.create(model, opts);
             };
             Store.prototype.save = function (model, attr, options) {
-                if (model && !model.attributes && !options) {
-                    attr = model;
-                    options = attr;
-                }
-                if ((!model || !model.attributes) && options && options.entity) {
-                    model = this.createModel(options.entity);
-                }
-                if (model && model.save) {
-                    var opts = _.extend({}, options || {}, { store: this });
-                    model.save(attr, opts);
-                }
+                var opts = _.extend({}, options || {}, { store: this });
+                return model.save(attr, opts);
             };
             Store.prototype.destroy = function (model, options) {
                 if (model && model.destroy) {
                     var opts = _.extend({}, options || {}, { store: this });
                     model.destroy(opts);
                 }
-            };
-            Store.prototype._checkEntity = function (obj, entity) {
-                if (!LiveData.isEntity(entity)) {
-                    var error = Store.CONST.ERROR_NO_ENTITY;
-                    Relution.LiveData.Debug.error(error);
-                    this.handleError(obj, error);
-                    return false;
-                }
-                return true;
             };
             Store.prototype._checkData = function (obj, data) {
                 if ((!_.isArray(data) || data.length === 0) && !_.isObject(data)) {
@@ -4497,12 +2846,12 @@ var Relution;
                 }
             };
             Store.prototype.close = function () {
+                // nothing to do
             };
             Store.extend = LiveData.extend;
             Store.create = LiveData.create;
             Store.design = LiveData.design;
             Store.CONST = {
-                ERROR_NO_ENTITY: 'No valid entity specified. ',
                 ERROR_NO_DATA: 'No data passed. ',
                 ERROR_LOAD_DATA: 'Error while loading data from store. ',
                 ERROR_SAVE_DATA: 'Error while saving data to the store. ',
@@ -4512,236 +2861,17 @@ var Relution;
             return Store;
         })();
         LiveData.Store = Store;
-        _.extend(Store.prototype, Backbone.Events, LiveData._Object);
+        // mixins
+        var store = _.extend(Store.prototype, Backbone.Events, LiveData._Object, {
+            _type: 'Relution.LiveData.Store',
+            isModel: false,
+            isCollection: false,
+            name: 'relution-livedata'
+        });
+        Relution.assert(function () { return Store.prototype.isPrototypeOf(store); });
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=Store.js.map
-/**
- * LocalStorageStore.ts
- *
- * Created by Thomas Beckmann on 24.06.2015
- * Copyright (c)
- * 2015
- * M-Way Solutions GmbH. All rights reserved.
- * http://www.mwaysolutions.com
- * Redistribution and use in source and binary forms, with or without
- * modification, are not permitted.
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES INCLUDING,
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */
-/* jshint indent: 4 */
-/* jshint curly: false */
-/* jshint newcap: false */
-/* jshint -W004: '%' is already defined. */
-/// <reference path="../../core/livedata.d.ts" />
-/// <reference path="Store.ts" />
-/// <reference path="../../utility/Debug.ts" />
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
-var Relution;
-(function (Relution) {
-    var LiveData;
-    (function (LiveData) {
-        /**
-         * The Relution.LiveData.LocalStorageStore can be used to store model collection into
-         * the localStorage
-         *
-         * @module Relution.LiveData.LocalStorageStore
-         *
-         * @type {*}
-         * @extends Relution.LiveData.Store
-         *
-         * @example
-         *
-         * // The LocalStorageStore will save each model data as a json under his id,
-         * // and keeps all id's under an extra key for faster access
-         *
-         * var MyCollection = Relution.LiveData.Collection.extend({
-         *      store: Relution.LiveData.LocalStorageStore.create(),
-         *      entity: 'myEntityName'
-         * });
-         *
-         */
-        var LocalStorageStore = (function (_super) {
-            __extends(LocalStorageStore, _super);
-            function LocalStorageStore() {
-                _super.apply(this, arguments);
-                this.ids = {};
-            }
-            LocalStorageStore.prototype.sync = function (method, model, options) {
-                options = _.defaults({ entity: model.entity }, options);
-                var that = this;
-                var entity = that.getEntity(options);
-                var attrs;
-                if (entity && model) {
-                    var id = model.id || (method === 'create' ? new LiveData.ObjectID().toHexString() : null);
-                    attrs = entity.fromAttributes(options.attrs || model.attributes);
-                    switch (method) {
-                        case 'patch':
-                        case 'update':
-                        case 'create':
-                            if (method !== 'create') {
-                                attrs = _.extend(that._getItem(entity, id) || {}, attrs);
-                            }
-                            if (model.id !== id && model.idAttribute) {
-                                attrs[model.idAttribute] = id;
-                            }
-                            that._setItem(entity, id, attrs);
-                            break;
-                        case 'delete':
-                            that._removeItem(entity, id);
-                            break;
-                        case 'read':
-                            if (id) {
-                                attrs = that._getItem(entity, id);
-                            }
-                            else {
-                                attrs = [];
-                                var ids = that._getItemIds(entity);
-                                for (id in ids) {
-                                    var itemData = that._getItem(entity, id);
-                                    if (itemData) {
-                                        attrs.push(itemData);
-                                    }
-                                }
-                                if (options.syncContext) {
-                                    attrs = options.syncContext.processAttributes(attrs, options);
-                                }
-                            }
-                            break;
-                        default:
-                            return;
-                    }
-                }
-                return Q.resolve(entity.toAttributes(attrs)).then(function (attrs) {
-                    if (attrs) {
-                        return that.handleSuccess(options, attrs) || attrs;
-                    }
-                    else {
-                        return that.handleError(options, LiveData.Store.CONST.ERROR_NO_ENTITY) || Q.reject(LiveData.Store.CONST.ERROR_NO_ENTITY);
-                    }
-                });
-            };
-            LocalStorageStore.prototype.drop = function (options) {
-                var entity = this.getEntity(options);
-                if (entity && entity.name) {
-                    var keys = this._findAllKeys(entity);
-                    for (var i = 0; i < keys.length; i++) {
-                        localStorage.removeItem(keys[i]);
-                    }
-                    localStorage.removeItem('__ids__' + entity.name);
-                    this.handleSuccess(options);
-                }
-                else {
-                    this.handleError(options, LiveData.Store.CONST.ERROR_NO_ENTITY);
-                }
-            };
-            LocalStorageStore.prototype._getKey = function (entity, id) {
-                return '_' + entity.name + '_' + id;
-            };
-            LocalStorageStore.prototype._getItem = function (entity, id) {
-                var attrs;
-                if (entity && id) {
-                    try {
-                        attrs = JSON.parse(localStorage.getItem(this._getKey(entity, id)));
-                        if (attrs) {
-                            entity.setId(attrs, id); // fix id
-                        }
-                        else {
-                            this._delItemId(entity, id);
-                        }
-                    }
-                    catch (e) {
-                        Relution.LiveData.Debug.error(LiveData.Store.CONST.ERROR_LOAD_DATA + e.message);
-                    }
-                }
-                return attrs;
-            };
-            LocalStorageStore.prototype._setItem = function (entity, id, attrs) {
-                if (entity && id && attrs) {
-                    try {
-                        localStorage.setItem(this._getKey(entity, id), JSON.stringify(attrs));
-                        this._addItemId(entity, id);
-                    }
-                    catch (e) {
-                        Relution.LiveData.Debug.error(LiveData.Store.CONST.ERROR_SAVE_DATA + e.message);
-                    }
-                }
-            };
-            LocalStorageStore.prototype._removeItem = function (entity, id) {
-                if (entity && id) {
-                    localStorage.removeItem(this._getKey(entity, id));
-                    this._delItemId(entity, id);
-                }
-            };
-            LocalStorageStore.prototype._addItemId = function (entity, id) {
-                var ids = this._getItemIds(entity);
-                if (!(id in ids)) {
-                    ids[id] = '';
-                    this._saveItemIds(entity, ids);
-                }
-            };
-            LocalStorageStore.prototype._delItemId = function (entity, id) {
-                var ids = this._getItemIds(entity);
-                if (id in ids) {
-                    delete ids[id];
-                    this._saveItemIds(entity, ids);
-                }
-            };
-            LocalStorageStore.prototype._findAllKeys = function (entity) {
-                var keys = [];
-                var prefixItem = this._getKey(entity, '');
-                if (prefixItem) {
-                    var key, len = localStorage.length;
-                    for (var i = 0; i < len; i++) {
-                        key = localStorage.key(i);
-                        if (key && key === prefixItem) {
-                            keys.push(key);
-                        }
-                    }
-                }
-                return keys;
-            };
-            LocalStorageStore.prototype._getItemIds = function (entity) {
-                try {
-                    var key = '__ids__' + entity.name;
-                    if (!this.ids[entity.name]) {
-                        this.ids[entity.name] = JSON.parse(localStorage.getItem(key)) || {};
-                    }
-                    return this.ids[entity.name];
-                }
-                catch (e) {
-                    Relution.LiveData.Debug.error(LiveData.Store.CONST.ERROR_LOAD_IDS + e.message);
-                }
-            };
-            LocalStorageStore.prototype._saveItemIds = function (entity, ids) {
-                try {
-                    var key = '__ids__' + entity.name;
-                    localStorage.setItem(key, JSON.stringify(ids));
-                }
-                catch (e) {
-                    Relution.LiveData.Debug.error(LiveData.Store.CONST.ERROR_SAVE_IDS + e.message);
-                }
-            };
-            return LocalStorageStore;
-        })(LiveData.Store);
-        LiveData.LocalStorageStore = LocalStorageStore;
-    })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
-})(Relution || (Relution = {}));
-//# sourceMappingURL=LocalStorageStore.js.map
 /**
  * AbstractSqlStore.ts
  *
@@ -4768,6 +2898,7 @@ var Relution;
 /* jshint indent: 4 */
 /* jshint curly: false */
 /* jshint newcap: false */
+/* jshint -W109: Strings must use singlequote. */
 /* jshint -W004: '%' is already defined. */
 /// <reference path="../../core/livedata.d.ts" />
 /// <reference path="Store.ts" />
@@ -4786,51 +2917,20 @@ var Relution;
          * the webSql database
          *
          * @module Relution.LiveData.AbstractSqlStore
-         *
-         *
          */
         var AbstractSqlStore = (function (_super) {
             __extends(AbstractSqlStore, _super);
             function AbstractSqlStore(options) {
-                _super.call(this, _.extend({
-                    name: 'relution-livedata',
-                    size: 1024 * 1024,
-                    version: '1.0',
-                    security: '',
-                    typeMapping: (function () {
-                        var map = {};
-                        map[LiveData.DATA.TYPE.OBJECTID] = LiveData.DATA.TYPE.STRING;
-                        map[LiveData.DATA.TYPE.DATE] = LiveData.DATA.TYPE.STRING;
-                        map[LiveData.DATA.TYPE.OBJECT] = LiveData.DATA.TYPE.TEXT;
-                        map[LiveData.DATA.TYPE.ARRAY] = LiveData.DATA.TYPE.TEXT;
-                        map[LiveData.DATA.TYPE.BINARY] = LiveData.DATA.TYPE.TEXT;
-                        return map;
-                    })(),
-                    sqlTypeMapping: (function () {
-                        var map = {};
-                        map[LiveData.DATA.TYPE.STRING] = 'varchar(255)';
-                        map[LiveData.DATA.TYPE.TEXT] = 'text';
-                        map[LiveData.DATA.TYPE.OBJECT] = 'text';
-                        map[LiveData.DATA.TYPE.ARRAY] = 'text';
-                        map[LiveData.DATA.TYPE.FLOAT] = 'float';
-                        map[LiveData.DATA.TYPE.INTEGER] = 'integer';
-                        map[LiveData.DATA.TYPE.DATE] = 'varchar(255)';
-                        map[LiveData.DATA.TYPE.BOOLEAN] = 'boolean';
-                        return map;
-                    })()
-                }, options));
+                _super.call(this, options);
                 this.db = null;
-                this.dataField = {
-                    name: 'data',
-                    type: 'text',
-                    required: true
-                };
-                this.idField = {
-                    name: 'id',
-                    type: 'string',
-                    required: true
-                };
-                var that = this;
+                this.entities = {};
+                if (options && options.entities) {
+                    for (var entity in options.entities) {
+                        this.entities[entity] = {
+                            table: options.entities[entity] || entity
+                        };
+                    }
+                }
             }
             AbstractSqlStore.prototype.sync = function (method, model, options) {
                 options = options || {};
@@ -4897,104 +2997,41 @@ var Relution;
             AbstractSqlStore.prototype._sqlUpdateDatabase = function (oldVersion, newVersion) {
                 // create sql array, simply drop and create the database
                 var sql = [];
-                if (this.entities) {
-                    for (var name in this.entities) {
-                        var entity = this.entities[name];
-                        sql.push(this._sqlDropTable(entity.name));
-                        sql.push(this._sqlCreateTable(entity));
-                    }
+                for (var entity in this.entities) {
+                    sql.push(this._sqlDropTable(entity));
+                    sql.push(this._sqlCreateTable(entity));
                 }
                 return sql;
             };
-            AbstractSqlStore.prototype._sqlDropTable = function (name) {
-                return 'DROP TABLE IF EXISTS \'' + name + '\'';
-            };
-            AbstractSqlStore.prototype._isAutoincrementKey = function (entity, key) {
-                if (entity && key) {
-                    var column = this.getField(entity, key);
-                    return column && column.type === LiveData.DATA.TYPE.INTEGER;
-                }
-            };
-            AbstractSqlStore.prototype._sqlPrimaryKey = function (entity, keys) {
-                if (keys && keys.length === 1) {
-                    var field = this.getField(entity, keys[0]);
-                    if (this._isAutoincrementKey(entity, keys[0])) {
-                        return field.name + ' INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE';
-                    }
-                    else {
-                        return this._dbAttribute(field) + ' PRIMARY KEY ASC UNIQUE';
-                    }
-                }
-                return '';
-            };
-            AbstractSqlStore.prototype._sqlConstraint = function (entity, keys) {
-                if (keys && keys.length > 1) {
-                    return 'PRIMARY KEY (' + keys.join(',') + ') ON CONFLICT REPLACE';
-                }
-                return '';
+            AbstractSqlStore.prototype._sqlDropTable = function (entity) {
+                return "DROP TABLE IF EXISTS '" + this.entities[entity].table + "';";
             };
             AbstractSqlStore.prototype._sqlCreateTable = function (entity) {
-                var that = this;
-                var keys = entity.getKeys();
-                var primaryKey = keys.length === 1 ? this._sqlPrimaryKey(entity, keys) : '';
-                var constraint = keys.length > 1 ? this._sqlConstraint(entity, keys) : (entity.constraint || '');
-                var columns = '';
-                var fields = this.getFields(entity);
-                _.each(fields, function (field) {
-                    // skip primary key as it is defined manually above
-                    if (!primaryKey || field !== fields[keys[0]]) {
-                        // only add valid types
-                        var attr = that._dbAttribute(field);
-                        if (attr) {
-                            columns += (columns ? ', ' : '') + attr;
-                        }
-                    }
-                });
-                if (!columns) {
-                    columns = this._dbAttribute(this.dataField);
-                }
-                var sql = 'CREATE TABLE IF NOT EXISTS \'' + entity.name + '\' (';
-                sql += primaryKey ? primaryKey + ', ' : '';
-                sql += columns;
-                sql += constraint ? ', ' + constraint : '';
-                sql += ');';
-                return sql;
+                return "CREATE TABLE IF NOT EXISTS '" + this.entities[entity].table + "' (id VARCHAR(255) NOT NULL PRIMARY KEY ASC UNIQUE, data TEXT NOT NULL);";
             };
             AbstractSqlStore.prototype._sqlDelete = function (options, entity) {
-                var sql = 'DELETE FROM \'' + entity.name + '\'';
-                var where = this._sqlWhere(options, entity) || this._sqlWhereFromData(options, entity);
+                var sql = 'DELETE FROM \'' + this.entities[entity].table + '\'';
+                var where = this._sqlWhereFromData(options, entity);
                 if (where) {
                     sql += ' WHERE ' + where;
+                }
+                else {
+                    Relution.assert(function () { return false; }, 'attempt of deletion without where clause');
                 }
                 sql += options.and ? ' AND ' + options.and : '';
                 return sql;
             };
-            AbstractSqlStore.prototype._sqlWhere = function (options, entity) {
-                this._selector = null;
-                var sql = '';
-                if (_.isString(options.where)) {
-                    sql = options.where;
-                }
-                else if (_.isObject(options.where)) {
-                    this._selector = LiveData.SqlSelector.create(options.where, entity);
-                    sql = this._selector.buildStatement();
-                }
-                return sql;
-            };
             AbstractSqlStore.prototype._sqlWhereFromData = function (options, entity) {
-                var that = this;
-                var ids = [];
-                if (options && options.models && entity && entity.idAttribute) {
-                    var id, key = entity.idAttribute;
-                    var field = this.getField(entity, key);
+                if (options && options.models && entity) {
+                    var ids = [];
+                    var that = this;
                     _.each(options.models, function (model) {
-                        id = model.id;
-                        if (!_.isUndefined(id)) {
-                            ids.push(that._sqlValue(id, field));
+                        if (!model.isNew()) {
+                            ids.push(that._sqlValue(model.id));
                         }
                     });
                     if (ids.length > 0) {
-                        return key + ' IN (' + ids.join(',') + ')';
+                        return 'id IN (' + ids.join(',') + ')';
                     }
                 }
                 return '';
@@ -5004,29 +3041,13 @@ var Relution;
                     // new code
                     var sql = 'SELECT ';
                     sql += '*';
-                    sql += ' FROM \'' + entity.name + '\'';
+                    sql += ' FROM \'' + this.entities[entity].table + '\'';
                     return sql;
                 }
                 var sql = 'SELECT ';
-                if (options.fields) {
-                    if (options.fields.length > 1) {
-                        sql += options.fields.join(', ');
-                    }
-                    else if (options.fields.length === 1) {
-                        sql += options.fields[0];
-                    }
-                }
-                else {
-                    sql += '*';
-                }
-                sql += ' FROM \'' + entity.name + '\'';
-                if (options.join) {
-                    sql += ' JOIN ' + options.join;
-                }
-                if (options.leftJoin) {
-                    sql += ' LEFT JOIN ' + options.leftJoin;
-                }
-                var where = this._sqlWhere(options, entity) || this._sqlWhereFromData(options, entity);
+                sql += '*';
+                sql += ' FROM \'' + this.entities[entity].table + '\'';
+                var where = this._sqlWhereFromData(options, entity);
                 if (where) {
                     sql += ' WHERE ' + where;
                 }
@@ -5041,105 +3062,89 @@ var Relution;
                 }
                 return sql;
             };
-            AbstractSqlStore.prototype.blubber = function () {
-            };
-            AbstractSqlStore.prototype._sqlValue = function (value, field) {
-                var type = field && field.type ? field.type : LiveData.Field.prototype.detectType(value);
-                if (type === LiveData.DATA.TYPE.INTEGER || type === LiveData.DATA.TYPE.FLOAT) {
-                    return value;
-                }
-                else if (type === LiveData.DATA.TYPE.BOOLEAN) {
-                    return value ? '1' : '0';
-                }
-                else if (type === LiveData.DATA.TYPE.NULL) {
-                    return 'NULL';
-                }
-                value = LiveData.Field.prototype.transform(value, LiveData.DATA.TYPE.STRING);
+            AbstractSqlStore.prototype._sqlValue = function (value) {
+                value = _.isNull(value) ? 'null' : _.isObject(value) ? JSON.stringify(value) : value.toString();
                 value = value.replace(/"/g, '""');
                 return '"' + value + '"';
             };
-            AbstractSqlStore.prototype._dbAttribute = function (field) {
-                if (field && field.name) {
-                    var type = this.options.sqlTypeMapping[field.type];
-                    var isReqStr = field.required ? ' NOT NULL' : '';
-                    if (type) {
-                        return field.name + ' ' + type.toUpperCase() + isReqStr;
+            AbstractSqlStore.prototype._dropTable = function (options) {
+                var entity = options.entity;
+                if (entity in this.entities && this.entities[entity].created !== false) {
+                    if (this._checkDb(options)) {
+                        var sql = this._sqlDropTable(entity);
+                        // reset flag
+                        this._executeTransaction(options, [sql]);
                     }
                 }
-            };
-            AbstractSqlStore.prototype._dropTable = function (options) {
-                var entity = this.getEntity(options);
-                entity.db = null;
-                if (this._checkDb(options) && entity) {
-                    var sql = this._sqlDropTable(entity.name);
-                    // reset flag
-                    this._executeTransaction(options, [sql]);
+                else {
+                    // no need dropping as table was not created
+                    this.handleSuccess(options);
                 }
             };
             AbstractSqlStore.prototype._createTable = function (options) {
-                var entity = this.getEntity(options);
-                entity.db = this.db;
-                if (this._checkDb(options) && this._checkEntity(options, entity)) {
+                var entity = options.entity;
+                if (!(entity in this.entities)) {
+                    this.entities[entity] = {
+                        table: entity
+                    };
+                }
+                if (this._checkDb(options)) {
                     var sql = this._sqlCreateTable(entity);
                     // reset flag
                     this._executeTransaction(options, [sql]);
                 }
             };
             AbstractSqlStore.prototype._checkTable = function (options, callback) {
-                var entity = this.getEntity(options);
                 var that = this;
-                if (entity && !entity.db) {
+                var entity = options.entity;
+                if (entity && (!this.entities[entity] || this.entities[entity].created === false)) {
                     this._createTable({
                         success: function () {
+                            that.entities[entity].created = true;
                             callback();
                         },
                         error: function (error) {
-                            this.handleError(options, error);
+                            that.handleError(options, error);
                         },
                         entity: entity
                     });
                 }
                 else {
+                    // we know it's created already
                     callback();
                 }
             };
             AbstractSqlStore.prototype._insertOrReplace = function (model, options) {
-                var entity = this.getEntity(options);
+                var entity = options.entity;
                 var models = LiveData.isCollection(model) ? model.models : [model];
-                if (this._checkDb(options) && this._checkEntity(options, entity) && this._checkData(options, models)) {
-                    var isAutoInc = this._isAutoincrementKey(entity, entity.getKey());
+                if (this._checkDb(options) && this._checkData(options, models)) {
                     var statements = [];
-                    var sqlTemplate = 'INSERT OR REPLACE INTO \'' + entity.name + '\' (';
+                    var sqlTemplate = 'INSERT OR REPLACE INTO \'' + this.entities[entity].table + '\' (';
                     for (var i = 0; i < models.length; i++) {
                         var amodel = models[i];
                         var statement = ''; // the actual sql insert string with values
-                        if (!isAutoInc && !amodel.id && amodel.idAttribute) {
+                        if (!amodel.id) {
                             amodel.set(amodel.idAttribute, new LiveData.ObjectID().toHexString());
                         }
                         var value = options.attrs || amodel.attributes;
-                        var args, keys;
-                        if (!_.isEmpty(entity.fields)) {
-                            value = entity.fromAttributes(value);
-                            args = _.values(value);
-                            keys = _.keys(value);
-                        }
-                        else {
-                            args = [amodel.id, JSON.stringify(value)];
-                            keys = [this.idField.name, this.dataField.name];
-                        }
+                        var keys = ['id', 'data'];
+                        var args = [amodel.id, JSON.stringify(value)];
                         if (args.length > 0) {
                             var values = new Array(args.length).join('?,') + '?';
                             var columns = '\'' + keys.join('\',\'') + '\'';
                             statement += sqlTemplate + columns + ') VALUES (' + values + ');';
-                            statements.push({ statement: statement, arguments: args });
+                            statements.push({
+                                statement: statement,
+                                arguments: args
+                            });
                         }
                     }
                     this._executeTransaction(options, statements, model.toJSON());
                 }
             };
             AbstractSqlStore.prototype._select = function (model, options) {
-                var entity = this.getEntity(options);
-                if (this._checkDb(options) && this._checkEntity(options, entity)) {
+                var entity = options.entity;
+                if (this._checkDb(options)) {
                     var lastStatement;
                     var isCollection = !LiveData.isModel(model);
                     var result;
@@ -5164,26 +3169,19 @@ var Relution;
                             for (var i = 0; i < len; i++) {
                                 var item = res.rows.item(i);
                                 var attrs;
-                                if (!_.isEmpty(entity.fields) || !that._hasDefaultFields(item)) {
-                                    attrs = entity.toAttributes(item);
+                                try {
+                                    attrs = JSON.parse(item.data);
+                                }
+                                catch (e) {
+                                    that.trigger('error', e);
+                                    continue;
+                                }
+                                if (isCollection) {
+                                    result.push(attrs);
                                 }
                                 else {
-                                    try {
-                                        attrs = JSON.parse(item.data);
-                                    }
-                                    catch (e) {
-                                        that.trigger('error', e);
-                                        continue;
-                                    }
-                                }
-                                if (!that._selector || that._selector.matches(attrs)) {
-                                    if (isCollection) {
-                                        result.push(attrs);
-                                    }
-                                    else {
-                                        result = attrs;
-                                        break;
-                                    }
+                                    result = attrs;
+                                    break;
                                 }
                             }
                         }, function (t, e) {
@@ -5207,9 +3205,9 @@ var Relution;
                 }
             };
             AbstractSqlStore.prototype._delete = function (model, options) {
-                var entity = this.getEntity(options);
+                var entity = options.entity;
                 var models = LiveData.isCollection(model) ? model.models : [model];
-                if (this._checkDb(options) && this._checkEntity(options, entity)) {
+                if (this._checkDb(options)) {
                     options.models = models;
                     var sql = this._sqlDelete(options, entity);
                     // reset flag
@@ -5255,11 +3253,6 @@ var Relution;
                     this.handleError(options, error, lastStatement);
                 }
             };
-            AbstractSqlStore.prototype._hasDefaultFields = function (item) {
-                return _.every(_.keys(item), function (key) {
-                    return key === this.idField.name || key === this.dataField.name;
-                }, this);
-            };
             AbstractSqlStore.prototype._checkDb = function (options) {
                 // has to be initialized first
                 if (!this.db) {
@@ -5270,24 +3263,16 @@ var Relution;
                 }
                 return true;
             };
-            AbstractSqlStore.prototype.getFields = function (entity) {
-                if (!_.isEmpty(entity.fields)) {
-                    return entity.fields;
-                }
-                else {
-                    var fields = {};
-                    var idAttribute = entity.idAttribute || 'id';
-                    fields[idAttribute] = this.idField;
-                    fields.data = this.dataField;
-                    return fields;
-                }
-            };
-            AbstractSqlStore.prototype.getField = function (entity, key) {
-                return this.getFields(entity)[key];
-            };
             return AbstractSqlStore;
         })(LiveData.Store);
         LiveData.AbstractSqlStore = AbstractSqlStore;
+        // mixins
+        var abstractSqlStore = _.extend(AbstractSqlStore.prototype, {
+            _type: 'Relution.LiveData.AbstractSqlStore',
+            size: 1024 * 1024,
+            version: '1.0'
+        });
+        Relution.assert(function () { return AbstractSqlStore.prototype.isPrototypeOf(abstractSqlStore); });
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=AbstractSqlStore.js.map
@@ -5354,26 +3339,13 @@ var Relution;
          * // in the entity of your model like this:
          *
          * var MyModel = Relution.LiveData.Model.extend({
-         *      idAttribute: 'id',
-         *      fields: {
-         *          id:          { type: Relution.LiveData.DATA.TYPE.STRING,  required: true, index: true },
-         *          sureName:    { name: 'USERNAME', type: Relution.LiveData.DATA.TYPE.STRING },
-         *          firstName:   { type: Relution.LiveData.DATA.TYPE.STRING,  length: 200 },
-         *          age:         { type: Relution.LiveData.DATA.TYPE.INTEGER }
-         *      }
+         *      idAttribute: 'id'
          * });
-         *
-         *
          */
         var WebSqlStore = (function (_super) {
             __extends(WebSqlStore, _super);
             function WebSqlStore(options) {
-                _super.call(this, _.extend({
-                    name: 'relution-livedata',
-                    size: 1024 * 1024,
-                    version: '1.0',
-                    security: ''
-                }, options));
+                _super.call(this, options);
                 var that = this;
                 this._openDb({
                     error: function (error) {
@@ -5394,10 +3366,10 @@ var Relution;
                             error = 'Your browser does not support WebSQL databases.';
                         }
                         else {
-                            this.db = global.openDatabase(this.options.name, '', '', this.options.size);
+                            this.db = global.openDatabase(this.name, '', '', this.size);
                             if (this.entities) {
-                                for (var key in this.entities) {
-                                    this._createTable({ entity: this.entities[key] });
+                                for (var entity in this.entities) {
+                                    this._createTable({ entity: entity });
                                 }
                             }
                         }
@@ -5407,7 +3379,7 @@ var Relution;
                     }
                 }
                 if (this.db) {
-                    if (this.options.version && this.db.version !== this.options.version) {
+                    if (this.version && this.db.version !== this.version) {
                         this._updateDb(options);
                     }
                     else {
@@ -5431,11 +3403,11 @@ var Relution;
                 var that = this;
                 try {
                     if (!this.db) {
-                        this.db = global.openDatabase(this.options.name, '', '', this.options.size);
+                        this.db = global.openDatabase(this.name, '', '', this.size);
                     }
                     try {
-                        var arSql = this._sqlUpdateDatabase(this.db.version, this.options.version);
-                        this.db.changeVersion(this.db.version, this.options.version, function (tx) {
+                        var arSql = this._sqlUpdateDatabase(this.db.version, this.version);
+                        this.db.changeVersion(this.db.version, this.version, function (tx) {
                             _.each(arSql, function (sql) {
                                 Relution.LiveData.Debug.info('sql statement: ' + sql);
                                 lastSql = sql;
@@ -5474,6 +3446,11 @@ var Relution;
             return WebSqlStore;
         })(LiveData.AbstractSqlStore);
         LiveData.WebSqlStore = WebSqlStore;
+        // mixins
+        var webSqlStore = _.extend(WebSqlStore.prototype, {
+            _type: 'Relution.LiveData.WebSqlStore'
+        });
+        Relution.assert(function () { return WebSqlStore.prototype.isPrototypeOf(webSqlStore); });
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=WebSqlStore.js.map
@@ -5540,27 +3517,16 @@ var Relution;
          * // in the entity of your model like this:
          *
          * var MyModel = Relution.LiveData.Model.extend({
-         *      idAttribute: 'id',
-         *      fields: {
-         *          id:          { type: Relution.LiveData.DATA.TYPE.STRING,  required: true, index: true },
-         *          sureName:    { name: 'USERNAME', type: Relution.LiveData.DATA.TYPE.STRING },
-         *          firstName:   { type: Relution.LiveData.DATA.TYPE.STRING,  length: 200 },
-         *          age:         { type: Relution.LiveData.DATA.TYPE.INTEGER }
-         *      }
+         *      idAttribute: 'id'
          * });
          * 0 (default): Documents - visible to iTunes and backed up by iCloud
          * 1: Library - backed up by iCloud, NOT visible to iTunes
          * 2: Library/LocalDatabase - NOT visible to iTunes and NOT backed up by iCloud
-         *
          */
         var CipherSqlStore = (function (_super) {
             __extends(CipherSqlStore, _super);
             function CipherSqlStore(options) {
-                _super.call(this, _.extend({
-                    name: 'relution-livedata',
-                    size: 1024 * 1024,
-                    security: null
-                }, options));
+                _super.call(this, options);
                 if (options && !options.security) {
                     throw new Error('security Key is required on a CipherSqlStore');
                 }
@@ -5584,8 +3550,8 @@ var Relution;
              */
             CipherSqlStore.prototype._openDb = function (errorCallback) {
                 var error, dbError;
-                if (this.options && !this.options.security) {
-                    return Relution.LiveData.Debug.error('A CipherSqlStore need a Security Token!', this.options);
+                if (!this.security) {
+                    return Relution.LiveData.Debug.error('A CipherSqlStore need a Security Token!', this);
                 }
                 /* openDatabase(db_name, version, description, estimated_size, callback) */
                 if (!this.db) {
@@ -5594,10 +3560,10 @@ var Relution;
                             error = 'Your browser does not support SQLite plugin.';
                         }
                         else {
-                            this.db = global.sqlitePlugin.openDatabase({ name: this.options.name, key: this.options.security, location: 2 });
+                            this.db = global.sqlitePlugin.openDatabase({ name: this.name, key: this.security, location: 2 });
                             if (this.entities) {
-                                for (var key in this.entities) {
-                                    this._createTable({ entity: this.entities[key] });
+                                for (var entity in this.entities) {
+                                    this._createTable({ entity: entity });
                                 }
                             }
                         }
@@ -5607,7 +3573,7 @@ var Relution;
                     }
                 }
                 if (this.db) {
-                    if (this.options.version && this.db.version !== this.options.version) {
+                    if (this.version && this.db.version !== this.version) {
                         this._updateDb(errorCallback);
                     }
                     else {
@@ -5631,10 +3597,10 @@ var Relution;
                 var that = this;
                 try {
                     if (!this.db) {
-                        this.db = global.sqlitePlugin.openDatabase({ name: this.options.name, key: this.options.security, location: 2 });
+                        this.db = global.sqlitePlugin.openDatabase({ name: this.name, key: this.security, location: 2 });
                     }
                     try {
-                        var arSql = this._sqlUpdateDatabase(this.db.version, this.options.version);
+                        var arSql = this._sqlUpdateDatabase(this.db.version, this.version);
                         Relution.LiveData.Debug.warning('sqlcipher cant change the version its still not supported check out https://github.com/litehelpers/Cordova-sqlcipher-adapter#other-limitations');
                     }
                     catch (e) {
@@ -5660,6 +3626,12 @@ var Relution;
             return CipherSqlStore;
         })(LiveData.AbstractSqlStore);
         LiveData.CipherSqlStore = CipherSqlStore;
+        // mixins
+        var cipherSqlStore = _.extend(CipherSqlStore.prototype, {
+            _type: 'Relution.LiveData.CipherSqlStore',
+            security: null
+        });
+        Relution.assert(function () { return CipherSqlStore.prototype.isPrototypeOf(cipherSqlStore); });
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=CipherSqlStore.js.map
@@ -5694,6 +3666,39 @@ var Relution;
 /// <reference path="Store.ts" />
 /// <reference path="SyncContext.ts" />
 /// <reference path="../../utility/Debug.ts" />
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var Relution;
+(function (Relution) {
+    var LiveData;
+    (function (LiveData) {
+        /**
+         * message packed into a Model.
+         *
+         * @module Relution.LiveData.LiveDataMessage
+         *
+         * @type {*}
+         */
+        var LiveDataMessageModel = (function (_super) {
+            __extends(LiveDataMessageModel, _super);
+            function LiveDataMessageModel() {
+                _super.apply(this, arguments);
+            }
+            return LiveDataMessageModel;
+        })(LiveData.Model);
+        LiveData.LiveDataMessageModel = LiveDataMessageModel;
+        // mixins
+        var msgmodel = _.extend(LiveDataMessageModel.prototype, {
+            _type: 'Relution.LiveData.LiveDataMessageModel',
+            entity: '__msg__',
+            idAttribute: '_id'
+        });
+        Relution.assert(function () { return new msgmodel({ _id: 'check' }).id === 'check'; });
+    })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
+})(Relution || (Relution = {}));
 //# sourceMappingURL=LiveDataMessage.js.map
 /**
  * SyncEndpoint.ts
@@ -5725,6 +3730,8 @@ var Relution;
 /// <reference path="../../core/livedata.d.ts" />
 /// <reference path="Store.ts" />
 /// <reference path="SyncContext.ts" />
+/// <reference path="../Model.ts" />
+/// <reference path="../Collection.ts" />
 /// <reference path="../../utility/Debug.ts" />
 var Relution;
 (function (Relution) {
@@ -5739,7 +3746,7 @@ var Relution;
          */
         var SyncEndpoint = (function () {
             function SyncEndpoint(options) {
-                this.isConnected = false;
+                this.isConnected = null;
                 this.entity = options.entity;
                 this.modelType = options.modelType;
                 this.urlRoot = options.urlRoot;
@@ -5748,7 +3755,7 @@ var Relution;
                 var href = LiveData.URLUtil.getLocation(options.urlRoot);
                 this.host = href.protocol + '//' + href.host;
                 this.path = href.pathname;
-                var name = options.entity.name;
+                var name = options.entity;
                 var user = options.credentials && options.credentials.username ? options.credentials.username : '';
                 var hash = LiveData.URLUtil.hashLocation(options.urlRoot);
                 this.channel = name + user + hash;
@@ -5758,12 +3765,9 @@ var Relution;
              */
             SyncEndpoint.prototype.close = function () {
                 if (this.socket) {
+                    // consider calling this.socket.close() instead
                     this.socket.socket.close();
                     this.socket = null;
-                }
-                if (this.messages.store) {
-                    this.messages.store.close();
-                    this.messages = null;
                 }
                 if (this.localStore) {
                     this.localStore.close();
@@ -5852,50 +3856,60 @@ var Relution;
         var SyncStore = (function (_super) {
             __extends(SyncStore, _super);
             function SyncStore(options) {
-                _super.call(this, _.extend({
-                    localStore: LiveData.WebSqlStore,
-                    useLocalStore: true,
-                    useSocketNotify: true,
-                    useOfflineChanges: true,
-                    socketPath: '',
-                    typeMapping: (function () {
-                        var map = {};
-                        map[LiveData.DATA.BINARY] = 'text';
-                        map[LiveData.DATA.TEXT] = 'string';
-                        return map;
-                    })()
-                }, options));
+                _super.call(this, options);
                 this.endpoints = {};
+                /**
+                 * when set, indicates which entity caused a disconnection.
+                 *
+                 * <p>
+                 * This is set to an entity name to limit which entity may cause a change to online state again.
+                 * </p>
+                 *
+                 * @type {string}
+                 */
+                this.disconnectedEntity = 'all';
+                if (this.credentials) {
+                    this.credentials = _.clone(this.credentials);
+                }
+                if (this.localStoreOptions) {
+                    this.localStoreOptions = _.clone(this.localStoreOptions);
+                }
+                if (this.orderOfflineChanges) {
+                    this.orderOfflineChanges = _.clone(this.orderOfflineChanges);
+                }
                 Relution.LiveData.Debug.trace('SyncStore', options);
-                if (this.options.useSocketNotify && typeof io !== 'object') {
+                if (this.useSocketNotify && typeof io !== 'object') {
                     Relution.LiveData.Debug.warning('Socket.IO not present !!');
-                    this.options.useSocketNotify = false;
+                    this.useSocketNotify = false;
                 }
             }
             SyncStore.prototype.initEndpoint = function (modelOrCollection, modelType) {
                 var urlRoot = modelOrCollection.getUrlRoot();
-                var entity = this.getEntity(modelOrCollection.entity);
+                var entity = modelOrCollection.entity;
                 if (urlRoot && entity) {
-                    var name = entity.name;
-                    var credentials = entity.credentials || modelOrCollection.credentials || this.options.credentials;
-                    var hash = LiveData.URLUtil.hashLocation(urlRoot);
                     // get or create endpoint for this url
-                    var endpoint = this.endpoints[hash];
+                    var credentials = modelOrCollection.credentials || this.credentials;
+                    var endpoint = this.endpoints[entity];
                     if (!endpoint) {
                         Relution.LiveData.Debug.info('Relution.LiveData.SyncStore.initEndpoint: ' + name);
-                        var href = LiveData.URLUtil.getLocation(urlRoot);
                         endpoint = new LiveData.SyncEndpoint({
                             entity: entity,
                             modelType: modelType,
                             urlRoot: urlRoot,
-                            socketPath: this.options.socketPath,
+                            socketPath: this.socketPath,
                             credentials: credentials
                         });
-                        this.endpoints[hash] = endpoint;
+                        this.endpoints[entity] = endpoint;
                         endpoint.localStore = this.createLocalStore(endpoint);
-                        endpoint.messages = this.createMsgCollection(endpoint);
-                        endpoint.socket = this.createSocket(endpoint, name);
+                        endpoint.priority = this.orderOfflineChanges && (_.lastIndexOf(this.orderOfflineChanges, endpoint.entity) + 1);
+                        this.createMsgCollection();
+                        endpoint.socket = this.createSocket(endpoint, entity);
                         endpoint.info = this.fetchServerInfo(endpoint);
+                    }
+                    else {
+                        // configuration can not change, must recreate store instead...
+                        Relution.assert(function () { return endpoint.urlRoot === urlRoot; }, 'can not change urlRoot, must recreate store instead!');
+                        Relution.assert(function () { return JSON.stringify(endpoint.credentials) === JSON.stringify(credentials); }, 'can not change credentials, must recreate store instead!');
                     }
                     return endpoint;
                 }
@@ -5906,64 +3920,48 @@ var Relution;
             SyncStore.prototype.initCollection = function (collection) {
                 collection.endpoint = this.initEndpoint(collection, collection.model);
             };
-            SyncStore.prototype.getEndpoint = function (url) {
-                if (url) {
-                    var hash = LiveData.URLUtil.hashLocation(url);
-                    return this.endpoints[hash];
+            SyncStore.prototype.getEndpoint = function (modelOrCollection) {
+                var endpoint = this.endpoints[modelOrCollection.entity];
+                if (endpoint) {
+                    Relution.assert(function () {
+                        // checks that modelOrCollection uses a model inheriting from the one of the endpoint
+                        var modelType = LiveData.isCollection(modelOrCollection) ? modelOrCollection.model : modelOrCollection.constructor;
+                        return modelType === endpoint.modelType || modelType.prototype instanceof endpoint.modelType;
+                    }, 'wrong type of model!');
+                    return endpoint;
                 }
             };
             SyncStore.prototype.createLocalStore = function (endpoint) {
-                if (this.options.useLocalStore) {
+                if (this.useLocalStore) {
                     var entities = {};
-                    entities[endpoint.entity.name] = _.extend(new LiveData.Entity(endpoint.entity), {
-                        name: endpoint.channel,
-                        idAttribute: endpoint.modelType.prototype.idAttribute // see Collection.modelId() of backbone.js
-                    });
+                    entities[endpoint.entity] = endpoint.channel;
                     var storeOption = {
                         entities: entities
                     };
-                    if (this.options.localStoreOptions && typeof this.options.localStoreOptions === 'object') {
-                        storeOption = _.clone(this.options.localStoreOptions);
+                    if (this.localStoreOptions && typeof this.localStoreOptions === 'object') {
+                        storeOption = _.clone(this.localStoreOptions);
                         storeOption.entities = entities;
                     }
-                    return this.options.localStore.create(storeOption);
+                    return new this.localStore(storeOption);
                 }
             };
             /**
              * @description Here we save the changes in a Message local websql
-             * @param endpoint {string}
              * @returns {*}
              */
-            SyncStore.prototype.createMsgCollection = function (endpoint) {
-                if (this.options.useOfflineChanges && !endpoint.messages) {
-                    var entity = 'msg-' + endpoint.channel;
-                    var entities = {};
-                    entities[entity] = new LiveData.Entity({
-                        name: entity,
-                        idAttribute: 'id'
+            SyncStore.prototype.createMsgCollection = function () {
+                if (this.useOfflineChanges && !this.messages) {
+                    this.messages = LiveData.Collection.design({
+                        model: LiveData.LiveDataMessageModel,
+                        store: new this.localStore(this.localStoreOptions)
                     });
-                    var storeOption = {
-                        entities: entities
-                    };
-                    if (this.options.localStoreOptions && typeof this.options.localStoreOptions === 'object') {
-                        storeOption = _.clone(this.options.localStoreOptions);
-                        storeOption.entities = entities;
-                    }
-                    endpoint.messagesPriority = this.options.orderOfflineChanges && (_.lastIndexOf(this.options.orderOfflineChanges, endpoint.entity.name) + 1);
-                    endpoint.messages = LiveData.Collection.design({
-                        entity: entity,
-                        store: this.options.localStore.create(storeOption)
-                    });
-                    if (endpoint.isConnected) {
-                        this._sendMessages(endpoint);
-                    }
                 }
-                return endpoint.messages;
+                return this.messages;
             };
             SyncStore.prototype.createSocket = function (endpoint, name) {
-                if (this.options.useSocketNotify && endpoint && endpoint.socketPath) {
+                var _this = this;
+                if (this.useSocketNotify && endpoint && endpoint.socketPath) {
                     Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore.createSocket: ' + name);
-                    var that = this;
                     var url = endpoint.host;
                     var path = endpoint.path;
                     var href = LiveData.URLUtil.getLocation(url);
@@ -5981,32 +3979,31 @@ var Relution;
                     var connectVo = {
                         resource: resource
                     };
-                    if (this.options.socketQuery) {
-                        connectVo.query = this.options.socketQuery;
+                    if (this.socketQuery) {
+                        connectVo.query = this.socketQuery;
                     }
                     endpoint.socket = io.connect(url, connectVo);
                     endpoint.socket.on('connect', function () {
-                        that._bindChannel(endpoint, name);
-                        return that.onConnect(endpoint).done();
+                        _this._bindChannel(endpoint, name);
+                        return _this.onConnect(endpoint).done();
                     });
                     endpoint.socket.on('disconnect', function () {
                         Relution.LiveData.Debug.info('socket.io: disconnect');
-                        return that.onDisconnect(endpoint).done();
+                        return _this.onDisconnect(endpoint).done();
                     });
                     endpoint.socket.on(endpoint.channel, function (msg) {
-                        return that.onMessage(endpoint, that._fixMessage(endpoint, msg));
+                        return _this.onMessage(endpoint, _this._fixMessage(endpoint, msg));
                     });
                     return endpoint.socket;
                 }
             };
             SyncStore.prototype._bindChannel = function (endpoint, name) {
-                var that = this;
                 if (endpoint && endpoint.socket) {
                     Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore._bindChannel: ' + name);
                     var channel = endpoint.channel;
                     var socket = endpoint.socket;
                     var time = this.getLastMessageTime(channel);
-                    name = name || endpoint.entity.name;
+                    name = name || endpoint.entity;
                     socket.emit('bind', {
                         entity: name,
                         channel: channel,
@@ -6033,68 +4030,96 @@ var Relution;
                 }
             };
             SyncStore.prototype.onConnect = function (endpoint) {
-                if (endpoint.isConnected) {
-                    return Q.resolve();
-                }
-                endpoint.isConnected = true;
-                var that = this;
-                return this.fetchChanges(endpoint).then(function () {
-                    return that._sendMessages(endpoint);
-                }).finally(function () {
-                    if (endpoint.isConnected) {
-                        that.trigger('connect:' + endpoint.channel);
+                var _this = this;
+                if (!endpoint.isConnected) {
+                    // when offline transmission is pending, need to wait for it to complete
+                    var q = Q.resolve(undefined);
+                    if (this.messagesPromise && this.messagesPromise.isPending()) {
+                        q = this.messagesPromise.catch(function (error) { return Q.resolve(undefined); });
                     }
-                });
+                    // sync server/client changes
+                    endpoint.isConnected = q.then(function () {
+                        // next we'll fetch server-side changes
+                        return _this.fetchChanges(endpoint).then(function () {
+                            // then send client-side changes
+                            if (_this.disconnectedEntity === 'all' || _this.disconnectedEntity === endpoint.entity) {
+                                // restart replaying of offline messages
+                                _this.messagesPromise = null;
+                                _this.disconnectedEntity = null;
+                            }
+                            return _this._sendMessages();
+                        }).catch(function (error) {
+                            // catch without error indicates disconnection while going online
+                            if (!error) {
+                                // disconnected while sending offline changes
+                                return _this.onDisconnect(endpoint);
+                            }
+                            return Q.reject(error);
+                        });
+                    }).finally(function () {
+                        // in the end, when connected still, fire an event informing client code
+                        if (endpoint.isConnected) {
+                            _this.trigger('connect:' + endpoint.channel);
+                        }
+                    });
+                }
+                return endpoint.isConnected;
             };
             SyncStore.prototype.onDisconnect = function (endpoint) {
+                var _this = this;
                 if (!endpoint.isConnected) {
-                    return Q.resolve();
+                    return Q.resolve(undefined);
                 }
-                endpoint.isConnected = false;
-                var that = this;
+                endpoint.isConnected = null;
+                if (!this.disconnectedEntity) {
+                    this.disconnectedEntity = 'all';
+                }
                 return Q.fcall(function () {
                     if (endpoint.socket && endpoint.socket.socket) {
+                        // consider calling endpoint.socket.disconnect() instead
                         endpoint.socket.socket.onDisconnect();
                     }
+                    return undefined;
                 }).finally(function () {
                     if (!endpoint.isConnected) {
-                        that.trigger('disconnect:' + endpoint.channel);
+                        _this.trigger('disconnect:' + endpoint.channel);
                     }
                 });
             };
             SyncStore.prototype._fixMessage = function (endpoint, msg) {
-                if (msg.data && !msg.data[endpoint.entity.idAttribute] && msg.data._id) {
-                    msg.data[endpoint.entity.idAttribute] = msg.data._id; // server bug!
+                var idAttribute = endpoint.modelType.prototype.idAttribute;
+                Relution.assert(function () { return !!idAttribute; }, 'no idAttribute!');
+                if (msg.data && !msg.data[idAttribute] && msg.data._id) {
+                    msg.data[idAttribute] = msg.data._id; // server bug!
                 }
-                else if (!msg.data && msg.method === 'delete' && msg[endpoint.entity.idAttribute]) {
+                else if (!msg.data && msg.method === 'delete' && msg[idAttribute]) {
                     msg.data = {};
-                    msg.data[endpoint.entity.idAttribute] = msg[endpoint.entity.idAttribute]; // server bug!
+                    msg.data[idAttribute] = msg[idAttribute]; // server bug!
                 }
                 return msg;
             };
             SyncStore.prototype.onMessage = function (endpoint, msg) {
+                var _this = this;
                 // this is called by the store itself for a particular endpoint!
-                var that = this;
                 if (!msg || !msg.method) {
-                    return Q.reject('no message or method given');
+                    return Q.reject(new Error('no message or method given'));
                 }
                 var q;
                 var channel = endpoint.channel;
                 if (endpoint.localStore) {
                     // first update the local store by forming a model and invoking sync
                     var options = _.defaults({
-                        store: endpoint.localStore,
-                        entity: endpoint.entity
-                    }, that.options);
+                        store: endpoint.localStore
+                    }, this.localStoreOptions);
                     var model = new endpoint.modelType(msg.data, _.extend({
                         parse: true
                     }, options));
                     if (!model.id) {
                         // code below will persist with auto-assigned id but this nevertheless is a broken record
-                        Relution.LiveData.Debug.error('onMessage: ' + endpoint.entity.name + ' received data with no valid id performing ' + msg.method + '!');
+                        Relution.LiveData.Debug.error('onMessage: ' + endpoint.entity + ' received data with no valid id performing ' + msg.method + '!');
                     }
                     else {
-                        Relution.LiveData.Debug.debug('onMessage: ' + endpoint.entity.name + ' ' + model.id + ' performing ' + msg.method);
+                        Relution.LiveData.Debug.debug('onMessage: ' + endpoint.entity + ' ' + model.id + ' performing ' + msg.method);
                     }
                     q = endpoint.localStore.sync(msg.method, model, _.extend(options, {
                         merge: msg.method === 'patch'
@@ -6106,7 +4131,7 @@ var Relution;
                         var oldData = {};
                         oldData[model.idAttribute] = msg.id;
                         var oldModel = new endpoint.modelType(oldData, options);
-                        Relution.LiveData.Debug.debug('onMessage: ' + endpoint.entity.name + ' ' + model.id + ' reassigned from old record ' + oldModel.id);
+                        Relution.LiveData.Debug.debug('onMessage: ' + endpoint.entity + ' ' + model.id + ' reassigned from old record ' + oldModel.id);
                         return endpoint.localStore.sync('delete', oldModel, options);
                     });
                 }
@@ -6117,23 +4142,24 @@ var Relution;
                 // finally set the message time
                 return q.then(function () {
                     if (msg.time) {
-                        that.setLastMessageTime(channel, msg.time);
+                        _this.setLastMessageTime(channel, msg.time);
                     }
                     // update all collections listening
-                    that.trigger('sync:' + channel, msg); // SyncContext.onMessage
+                    _this.trigger('sync:' + channel, msg); // SyncContext.onMessage
                     return msg;
                 }, function (error) {
                     // not setting message time in error case
                     // report error as event on store
-                    that.trigger('error:' + channel, error, model);
+                    _this.trigger('error:' + channel, error, model);
                     return msg;
                 });
             };
             SyncStore.prototype.sync = function (method, model, options) {
+                var _this = this;
                 Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore.sync');
                 options = options || {};
                 try {
-                    var endpoint = model.endpoint || this.getEndpoint(model.getUrlRoot() /*throws urlError*/);
+                    var endpoint = model.endpoint || this.getEndpoint(model);
                     if (!endpoint) {
                         throw new Error('no endpoint');
                     }
@@ -6145,7 +4171,7 @@ var Relution;
                                 // capture GetQuery options
                                 syncContext = new LiveData.SyncContext(options, // dynamic options passed to fetch() implement UI filters, etc.
                                 model.options, // static options on collection implement screen-specific stuff
-                                this.options // static options of this store realize filtering client/server
+                                this // static options of this store realize filtering client/server
                                 );
                                 options.syncContext = syncContext;
                             }
@@ -6186,17 +4212,16 @@ var Relution;
                         opts.entity = endpoint.entity;
                         delete opts.success;
                         delete opts.error;
-                        var that = this;
                         return endpoint.localStore.sync(method, model, opts).then(function (resp) {
                             // backbone success callback alters the collection now
-                            resp = that.handleSuccess(options, resp) || resp;
+                            resp = _this.handleSuccess(options, resp) || resp;
                             if (endpoint.socket || options.fetchMode === 'local') {
                                 // no need to fetch changes as we got a websocket, that is either connected or attempts reconnection
                                 return resp;
                             }
                             // when we are disconnected, try to connect now
                             if (!endpoint.isConnected) {
-                                var qInfo = that.fetchServerInfo(endpoint);
+                                var qInfo = _this.fetchServerInfo(endpoint);
                                 if (!qInfo) {
                                     return resp;
                                 }
@@ -6204,31 +4229,31 @@ var Relution;
                                     // trigger reconnection when disconnected
                                     var result;
                                     if (!endpoint.isConnected) {
-                                        result = that.onConnect(endpoint);
+                                        result = _this.onConnect(endpoint);
                                     }
                                     return result || info;
                                 }, function (xhr) {
                                     // trigger disconnection when disconnected
                                     var result;
                                     if (!xhr.responseText && endpoint.isConnected) {
-                                        result = that.onDisconnect(endpoint);
+                                        result = _this.onDisconnect(endpoint);
                                     }
                                     return result || resp;
                                 }).thenResolve(resp);
                             }
                             // load changes only (will happen AFTER success callback is invoked,
                             // but returned promise will resolve only after changes were processed.
-                            return that.fetchChanges(endpoint).catch(function (xhr) {
+                            return _this.fetchChanges(endpoint).catch(function (xhr) {
                                 if (!xhr.responseText && endpoint.isConnected) {
-                                    return that.onDisconnect(endpoint) || resp;
+                                    return _this.onDisconnect(endpoint) || resp;
                                 }
                                 // can not do much about it...
-                                that.trigger('error:' + channel, xhr.responseJSON || xhr.responseText, model);
+                                _this.trigger('error:' + channel, xhr.responseJSON || xhr.responseText, model);
                                 return resp;
                             }).thenResolve(resp); // caller expects original XHR response as changes body data is NOT compatible
                         }, function () {
                             // fall-back to loading full data set
-                            return that._addMessage(method, model, options, endpoint);
+                            return _this._addMessage(method, model, options, endpoint);
                         });
                     }
                     // do backbone rest
@@ -6239,7 +4264,7 @@ var Relution;
                 }
             };
             SyncStore.prototype._addMessage = function (method, model, options, endpoint) {
-                var that = this;
+                var _this = this;
                 if (method && model) {
                     var changes = model.changedSinceSync;
                     var data = null;
@@ -6258,15 +4283,21 @@ var Relution;
                         case 'delete':
                             break;
                         default:
+                            Relution.assert(function () { return method === 'read'; }, 'unknown method: ' + method);
                             storeMsg = false;
                             break;
                     }
+                    var entity = model.entity || endpoint.entity;
+                    Relution.assert(function () { return model.entity === endpoint.entity; });
+                    Relution.assert(function () { return entity.indexOf('~') < 0; }, 'entity name must not contain a ~ character!');
                     var msg = {
-                        _id: model.id,
+                        _id: entity + '~' + model.id,
                         id: model.id,
                         method: method,
                         data: data,
-                        channel: endpoint.channel
+                        //channel: endpoint.channel, // channel is hacked in by storeMessage(), we don't want to use this anymore
+                        priority: endpoint.priority,
+                        time: Date.now()
                     };
                     var q = Q.resolve(msg);
                     var qMessage;
@@ -6280,12 +4311,12 @@ var Relution;
                     }
                     return q.then(function (msg) {
                         // pass in qMessage so that deletion of stored message can be scheduled
-                        return that._emitMessage(endpoint, msg, options, model, qMessage);
+                        return _this._emitMessage(endpoint, msg, options, model, qMessage);
                     });
                 }
             };
             SyncStore.prototype._emitMessage = function (endpoint, msg, options, model, qMessage) {
-                var that = this;
+                var _this = this;
                 var channel = endpoint.channel;
                 var qAjax = this._ajaxMessage(endpoint, msg, options, model);
                 var q = qAjax;
@@ -6293,22 +4324,22 @@ var Relution;
                     // following takes care of offline change store
                     q = q.then(function (data) {
                         // success, remove message stored, if any
-                        return that.removeMessage(endpoint, msg, qMessage).then(data, function (error) {
-                            that.trigger('error:' + channel, error, model); // can not do much about it...
+                        return _this.removeMessage(endpoint, msg, qMessage).then(data, function (error) {
+                            _this.trigger('error:' + channel, error, model); // can not do much about it...
                             return data;
                         }).thenResolve(data); // resolve again yielding data
                     }, function (xhr) {
                         // failure eventually caught by offline changes
-                        if (!xhr.responseText && that.options.useOfflineChanges) {
+                        if (!xhr) {
                             // this seams to be only a connection problem, so we keep the message and call success
                             return Q.resolve(msg.data);
                         }
                         else {
                             // remove message stored and keep rejection as is
-                            return that.removeMessage(endpoint, msg, qMessage).then(xhr, function (error) {
-                                that.trigger('error:' + channel, error, model); // can not do much about it...
+                            return _this.removeMessage(endpoint, msg, qMessage).then(xhr, function (error) {
+                                _this.trigger('error:' + channel, error, model); // can not do much about it...
                                 return xhr;
-                            }).thenResolve(Q.reject.apply(Q, arguments));
+                            }).thenReject(xhr);
                         }
                     });
                 }
@@ -6318,17 +4349,18 @@ var Relution;
                     return qAjax.then(function () {
                         // trigger reconnection when disconnected
                         if (!endpoint.isConnected) {
-                            return that.onConnect(endpoint);
+                            return _this.onConnect(endpoint);
                         }
                     }, function (xhr) {
                         // trigger disconnection when disconnected
-                        if (!xhr.responseText && endpoint.isConnected) {
-                            return that.onDisconnect(endpoint);
+                        if (!xhr && endpoint.isConnected) {
+                            return _this.onDisconnect(endpoint);
                         }
                     });
                 });
             };
             SyncStore.prototype._ajaxMessage = function (endpoint, msg, options, model) {
+                var _this = this;
                 options = options || {};
                 var url = options.url;
                 if (!url) {
@@ -6375,11 +4407,18 @@ var Relution;
                 return model.sync(msg.method, model, opts).then(function (data) {
                     options.xhr = opts.xhr.xhr || opts.xhr;
                     return data;
+                }, function (xhr) {
+                    options.xhr = opts.xhr.xhr || opts.xhr;
+                    if (!xhr.responseText && _this.useOfflineChanges) {
+                        // this seams to be a connection problem
+                        return Q.reject();
+                    }
+                    return Q.isPromise(xhr) ? xhr : Q.reject(xhr);
                 });
             };
             SyncStore.prototype._applyResponse = function (qXHR, endpoint, msg, options, model) {
+                var _this = this;
                 var channel = endpoint.channel;
-                var that = this;
                 var clientTime = new Date().getTime();
                 return qXHR.then(function (data) {
                     // delete on server does not respond a body
@@ -6389,15 +4428,15 @@ var Relution;
                     // update local store state
                     if (data) {
                         // no data if server asks not to alter state
-                        // that.setLastMessageTime(channel, msg.time);
+                        // this.setLastMessageTime(channel, msg.time);
                         var promises = [];
                         var dataIds;
                         if (msg.method !== 'read') {
-                            promises.push(that.onMessage(endpoint, that._fixMessage(endpoint, data === msg.data ? msg : _.defaults({
+                            promises.push(_this.onMessage(endpoint, _this._fixMessage(endpoint, data === msg.data ? msg : _.defaults({
                                 data: data // just accepts new data
                             }, msg))));
                         }
-                        else if (LiveData.isCollection(model) && _.isArray(data)) {
+                        else if (LiveData.isCollection(model) && Array.isArray(data)) {
                             // synchronize the collection contents with the data read
                             var syncIds = {};
                             model.models.forEach(function (m) {
@@ -6406,7 +4445,7 @@ var Relution;
                             dataIds = {};
                             data.forEach(function (d) {
                                 if (d) {
-                                    var id = d[endpoint.entity.idAttribute] || d._id;
+                                    var id = d[endpoint.modelType.prototype.idAttribute] || d._id;
                                     dataIds[id] = d;
                                     var m = syncIds[id];
                                     if (m) {
@@ -6414,7 +4453,7 @@ var Relution;
                                         delete syncIds[id]; // so that it is deleted below
                                         if (!_.isEqual(_.pick.call(m, m.attributes, Object.keys(d)), d)) {
                                             // above checked that all attributes in d are in m with equal values and found some mismatch
-                                            promises.push(that.onMessage(endpoint, that._fixMessage(endpoint, {
+                                            promises.push(_this.onMessage(endpoint, _this._fixMessage(endpoint, {
                                                 id: id,
                                                 method: 'update',
                                                 time: msg.time,
@@ -6424,7 +4463,7 @@ var Relution;
                                     }
                                     else {
                                         // create the item
-                                        promises.push(that.onMessage(endpoint, that._fixMessage(endpoint, {
+                                        promises.push(_this.onMessage(endpoint, _this._fixMessage(endpoint, {
                                             id: id,
                                             method: 'create',
                                             time: msg.time,
@@ -6436,7 +4475,7 @@ var Relution;
                             Object.keys(syncIds).forEach(function (id) {
                                 // delete the item
                                 var m = syncIds[id];
-                                promises.push(that.onMessage(endpoint, that._fixMessage(endpoint, {
+                                promises.push(_this.onMessage(endpoint, _this._fixMessage(endpoint, {
                                     id: id,
                                     method: 'delete',
                                     time: msg.time,
@@ -6446,12 +4485,12 @@ var Relution;
                         }
                         else {
                             // trigger an update to load the data read
-                            var array = _.isArray(data) ? data : [data];
+                            var array = Array.isArray(data) ? data : [data];
                             for (var i = 0; i < array.length; i++) {
                                 data = array[i];
                                 if (data) {
-                                    promises.push(that.onMessage(endpoint, that._fixMessage(endpoint, {
-                                        id: data[endpoint.entity.idAttribute] || data._id,
+                                    promises.push(_this.onMessage(endpoint, _this._fixMessage(endpoint, {
+                                        id: data[endpoint.modelType.prototype.idAttribute] || data._id,
                                         method: 'update',
                                         time: msg.time,
                                         data: data
@@ -6464,11 +4503,13 @@ var Relution;
                             if (!dataIds) {
                                 return data;
                             }
+                            Relution.assert(function () { return LiveData.isCollection(model); });
                             // when collection was updated only pass data of models that were synced on to the success callback,
                             // as the callback will set the models again causing our sorting and filtering to be without effect.
                             var response = [];
-                            for (var i = model.models.length; i-- > 0;) {
-                                var m = model.models[i];
+                            var models = LiveData.isCollection(model) ? model.models : [model];
+                            for (var i = models.length; i-- > 0;) {
+                                var m = models[i];
                                 if (dataIds[m.id]) {
                                     response.push(m.attributes);
                                     delete dataIds[m.id];
@@ -6483,62 +4524,62 @@ var Relution;
                 }).then(function (response) {
                     if (msg.method === 'read' && LiveData.isCollection(model)) {
                         // TODO: extract Date header from options.xhr instead of using clientTime
-                        that.setLastMessageTime(endpoint.channel, clientTime);
+                        _this.setLastMessageTime(endpoint.channel, clientTime);
                     }
                     // invoke success callback, if any
-                    return that.handleSuccess(options, response) || response;
+                    return _this.handleSuccess(options, response) || response;
                 }, function (error) {
                     // invoke error callback, if any
-                    return that.handleError(options, error) || Q.reject(error);
+                    return _this.handleError(options, error) || Q.reject(error);
                 });
             };
-            SyncStore.prototype.fetchChanges = function (endpoint) {
-                var that = this;
+            SyncStore.prototype.fetchChanges = function (endpoint, force) {
+                var _this = this;
                 var channel = endpoint.channel;
                 if (!endpoint.urlRoot || !channel) {
-                    return Q.resolve();
+                    return Q.resolve(undefined);
                 }
                 var now = Date.now();
                 var promise = endpoint.promiseFetchingChanges;
-                if (promise) {
+                if (promise && !force) {
                     if (promise.isPending() || now - endpoint.timestampFetchingChanges < 1000) {
                         // reuse existing eventually completed request for changes
                         Relution.LiveData.Debug.warning(channel + ' skipping changes request...');
                         return promise;
                     }
                 }
-                var time = that.getLastMessageTime(channel);
+                var time = this.getLastMessageTime(channel);
                 if (!time) {
                     Relution.LiveData.Debug.error(channel + ' can not fetch changes at this time!');
-                    return promise || Q.resolve();
+                    return promise || Q.resolve(undefined);
                 }
                 // initiate a new request for changes
                 Relution.LiveData.Debug.info(channel + ' initiating changes request...');
-                var changes = new endpoint.messages.constructor();
-                promise = changes.fetch({
+                var changes = new this.messages.constructor();
+                promise = Q(changes.fetch({
                     url: endpoint.urlRoot + 'changes/' + time,
                     credentials: endpoint.credentials,
                     store: {},
-                    success: function fetchChangesSuccess(model, response, options) {
+                    success: function (model, response, options) {
                         if (changes.models.length > 0) {
                             changes.each(function (change) {
                                 var msg = change.attributes;
-                                that.onMessage(endpoint, that._fixMessage(endpoint, msg));
+                                _this.onMessage(endpoint, _this._fixMessage(endpoint, msg));
                             });
                         }
                         else {
                             // following should use server time!
-                            that.setLastMessageTime(channel, now);
+                            _this.setLastMessageTime(channel, now);
                         }
                         return response || options.xhr;
                     }
-                });
+                })).thenResolve(changes);
                 endpoint.promiseFetchingChanges = promise;
                 endpoint.timestampFetchingChanges = now;
                 return promise;
             };
             SyncStore.prototype.fetchServerInfo = function (endpoint) {
-                var that = this;
+                var _this = this;
                 if (endpoint && endpoint.urlRoot) {
                     var now = Date.now();
                     var promise = endpoint.promiseFetchingServerInfo;
@@ -6550,146 +4591,236 @@ var Relution;
                         }
                     }
                     var info = new LiveData.Model();
-                    var time = that.getLastMessageTime(endpoint.channel);
+                    var time = this.getLastMessageTime(endpoint.channel);
                     var url = endpoint.urlRoot;
                     if (url.charAt((url.length - 1)) !== '/') {
                         url += '/';
                     }
-                    promise = info.fetch(({
+                    promise = Q(info.fetch(({
                         url: url + 'info',
                         success: function (model, response, options) {
                             //@todo why we set a server time here ?
                             if (!time && info.get('time')) {
-                                that.setLastMessageTime(endpoint.channel, info.get('time'));
+                                _this.setLastMessageTime(endpoint.channel, info.get('time'));
                             }
                             if (!endpoint.socketPath && info.get('socketPath')) {
                                 endpoint.socketPath = info.get('socketPath');
-                                var name = info.get('entity') || endpoint.entity.name;
-                                if (that.options.useSocketNotify) {
-                                    endpoint.socket = that.createSocket(endpoint, name);
+                                var name = info.get('entity') || endpoint.entity;
+                                if (_this.useSocketNotify) {
+                                    endpoint.socket = _this.createSocket(endpoint, name);
                                 }
                             }
                             return response || options.xhr;
                         },
                         credentials: endpoint.credentials
-                    }));
+                    }))).thenResolve(info);
                     endpoint.promiseFetchingServerInfo = promise;
                     endpoint.timestampFetchingServerInfo = now;
                     return promise;
                 }
             };
-            SyncStore.prototype._sendMessages = function (endpoint) {
-                // not ready yet
-                if (!endpoint || !endpoint.messages) {
-                    return Q.resolve();
-                }
-                // stacked endpoints relevant by priority of messages playback
-                var endpoints;
-                if (endpoint.messagesPriority) {
-                    // process dependent endpoints as well
-                    endpoints = _.values(this.endpoints).filter(function (otherEndpoint) {
-                        return otherEndpoint.messages && otherEndpoint.messagesPriority && otherEndpoint.messagesPriority <= endpoint.messagesPriority;
-                    }).sort(function (a, b) {
-                        return b.messagesPriority - a.messagesPriority;
-                    });
-                    if (endpoints.length !== endpoint.messagesPriority || endpoints[0] !== endpoint) {
-                        return Q.resolve(); // some endpoints are not yet initialized
+            /**
+             * called when an offline change was sent to the remote server.
+             *
+             * <p>
+             * May be overwritten to alter change message error handling behavior. The default implementation will attempt
+             * reloading the server data for restoring the client state such that it reflects the server state. When this
+             * succeeded, the offline change is effectively reverted and the change message is dropped.
+             * </p>
+             * <p>
+             * An overwritten implementation may decided whether to revert failed changes based on the error reported.
+             * </p>
+             * <p>
+             * Notice, the method is not called when the offline change failed due to a connectivity issue.
+             * </p>
+             *
+             * @param error reported by remote server.
+             * @param message change reported, attributes of type LiveDataMessage.
+             * @param options context information required to access the data locally as well as remotely.
+             * @return {any} Promise indicating success to drop the change message and proceed with the next change, or
+             *    rejection indicating the change message is kept and retried later on.
+             */
+            SyncStore.prototype.processOfflineMessageResult = function (error, message, options) {
+                var _this = this;
+                if (!error) {
+                    // message was processed successfully
+                    if (!this.useSocketNotify) {
+                        // when not using sockets, fetch changes now
+                        var endpoint = this.endpoints[options.entity];
+                        if (endpoint) {
+                            // will pull the change caused by the offline message and update the message time,
+                            // so that we avoid the situation where the change caused by replaying the offline
+                            // change results in a conflict later on...
+                            return this.fetchChanges(endpoint, true);
+                        }
                     }
+                    return Q.resolve(message);
+                }
+                // failed, eventually undo the modifications stored
+                if (!options.localStore) {
+                    return Q.reject(error);
+                }
+                // revert modification by reloading data
+                var modelType = options.modelType || LiveData.Model;
+                var model = new modelType(message.get('data'), {
+                    entity: options.entity
+                });
+                model.id = message.get('method') !== 'create' && message.get('id');
+                var triggerError = function () {
+                    // inform client application of the offline changes error
+                    var channel = message.get('channel');
+                    Relution.LiveData.Debug.error('Relution.LiveData.SyncStore.processOfflineMessageResult: triggering error for channel ' + channel + ' on store', error);
+                    if (!options.silent) {
+                        _this.trigger('error:' + channel, error, model);
+                    }
+                };
+                var localOptions = {
+                    // just affect local store
+                    store: options.localStore
+                };
+                var remoteOptions = {
+                    urlRoot: options.urlRoot,
+                    store: {} // really go to remote server
+                };
+                if (model.id) {
+                    remoteOptions.url = remoteOptions.urlRoot + (remoteOptions.urlRoot.charAt(remoteOptions.urlRoot.length - 1) === '/' ? '' : '/') + model.id;
+                    Relution.assert(function () { return model.url() === remoteOptions.url; });
                 }
                 else {
-                    endpoints = [
-                        endpoint
-                    ];
+                    // creation failed, just delete locally
+                    Relution.assert(function () { return message.get('method') === 'create'; });
+                    return model.destroy(localOptions).finally(triggerError);
                 }
-                // walk stack of endpoints
-                var that = this;
-                return (function nextEndpoint() {
-                    var endpoint = endpoints.pop();
+                return model.fetch(remoteOptions).then(function (data) {
+                    // original request failed and the code above reloaded the data to revert the local modifications, which succeeded...
+                    return model.save(data, localOptions).finally(triggerError);
+                }, function (fetchResp) {
+                    // original request failed and the code above tried to revert the local modifications by reloading the data, which failed as well...
+                    var status = fetchResp && fetchResp.status;
+                    switch (status) {
+                        case 404: // NOT FOUND
+                        case 401: // UNAUTHORIZED
+                        case 410:
+                            // ...because the item is gone by now, maybe someone else changed it to be deleted
+                            return model.destroy(localOptions); // silent regarding triggerError
+                        default:
+                            return Q.reject(fetchResp).finally(triggerError);
+                    }
+                });
+            };
+            /**
+             * feeds pending offline #messages to the remote server.
+             *
+             * <p>
+             * Due to client code setting up models one at a time, this method is called multiple times during initial setup of
+             * #endpoints. The first call fetches pending offline #messages, ordered by priority and time. Then the #messages
+             * are send to the remote server until depleted, an error occurs, or some missing endpoint is encounted.
+             * </p>
+             * <p>
+             * The method is triggered each time an endpoint is registered, or state changes to online for any endpoint. When
+             * state changes from offline to online (disregarding endpoint) message submission is restarted by resetting the
+             * #messagesPromise. Otherwise, subsequent calls chain to the end of #messagesPromise.
+             * </p>
+             *
+             * @return {Promise} of #messages Collection, or last recent offline rejection
+             * @private
+             */
+            SyncStore.prototype._sendMessages = function () {
+                var _this = this;
+                // not ready yet
+                if (!this.messages) {
+                    return Q.resolve(undefined);
+                }
+                // processes messages until none left, hitting a message of a not yet registered endpoint, or entering
+                // a non-recoverable error. The promise returned resolves to this.messages when done.
+                var nextMessage = function () {
+                    if (!_this.messages.length) {
+                        return _this.messages;
+                    }
+                    var message = _this.messages.models[0];
+                    var entity = message.id.substr(0, message.id.indexOf('~'));
+                    if (!entity) {
+                        Relution.LiveData.Debug.error('sendMessage ' + message.id + ' with no entity!');
+                        return message.destroy().then(nextMessage);
+                    }
+                    var endpoint = _this.endpoints[entity];
                     if (!endpoint) {
-                        return Q.resolve();
+                        return _this.messages;
                     }
-                    // serialized for each endpoint, one at a time
-                    var deferred = Q.defer();
-                    function qEndpoint() {
-                        Relution.LiveData.Debug.info('Relution.LiveData.SyncStore._sendMessages: ' + endpoint.entity.name);
-                        var q = endpoint.messages.fetch().then(function nextMessage(result) {
-                            if (endpoint.messages.models.length <= 0) {
-                                return result;
-                            }
-                            var message = endpoint.messages.models[0];
-                            var msg = message.attributes;
-                            var channel = message.get('channel');
-                            if (!msg || !channel) {
-                                return message.destroy();
-                            }
-                            that._fixMessage(endpoint, msg);
-                            var remoteOptions = {
-                                urlRoot: endpoint.urlRoot,
-                                store: {} // really go to remote server
-                            };
-                            var localOptions = {
-                                // just affect local store
-                                store: endpoint.localStore
-                            };
-                            var model = new LiveData.Model(msg.data, {
-                                idAttribute: endpoint.entity.idAttribute,
-                                entity: endpoint.entity,
+                    Relution.assert(function () { return endpoint.channel === message.get('channel'); }, 'channel of endpoint ' + endpoint.channel + ' does not match channel of message ' + message.get('channel'));
+                    var msg = _this._fixMessage(endpoint, message.attributes);
+                    var modelType = endpoint.modelType || LiveData.Model;
+                    var model = new modelType(msg.data, {
+                        entity: endpoint.entity
+                    });
+                    model.id = message.get('method') !== 'create' && message.get('id');
+                    var remoteOptions = {
+                        urlRoot: endpoint.urlRoot,
+                        store: {} // really go to remote server
+                    };
+                    if (model.id) {
+                        remoteOptions.url = remoteOptions.urlRoot + (remoteOptions.urlRoot.charAt(remoteOptions.urlRoot.length - 1) === '/' ? '' : '/') + model.id;
+                        Relution.assert(function () { return model.url() === remoteOptions.url; });
+                    }
+                    Relution.LiveData.Debug.info('sendMessage ' + model.id);
+                    var offlineOptions = {
+                        entity: endpoint.entity,
+                        modelType: endpoint.modelType,
+                        urlRoot: endpoint.urlRoot,
+                        localStore: endpoint.localStore
+                    };
+                    return _this._applyResponse(_this._ajaxMessage(endpoint, msg, remoteOptions, model), endpoint, msg, remoteOptions, model).then(function () {
+                        // succeeded
+                        return _this.processOfflineMessageResult(null, message, offlineOptions);
+                    }, function (error) {
+                        if (error) {
+                            // remote failed
+                            return Q(_this.processOfflineMessageResult(error, message, offlineOptions)).catch(function (error) {
+                                // explicitly disconnect due to error in endpoint
+                                _this.disconnectedEntity = endpoint.entity;
+                                return _this.onDisconnect(endpoint).thenReject(error);
                             });
-                            Relution.LiveData.Debug.info('sendMessage ' + model.id);
-                            return that._applyResponse(that._ajaxMessage(endpoint, msg, remoteOptions, model), endpoint, msg, remoteOptions, model).catch(function (error) {
-                                // failed, eventually undo the modifications stored
-                                if (!endpoint.localStore) {
-                                    return Q.reject(error);
-                                }
-                                // revert modification by reloading data
-                                if (msg.id) {
-                                    remoteOptions.url = remoteOptions.urlRoot + (remoteOptions.urlRoot.charAt(remoteOptions.urlRoot.length - 1) === '/' ? '' : '/') + msg.id;
-                                }
-                                return model.fetch(remoteOptions).then(function (data) {
-                                    // original request failed and the code above reloaded the data to revert the local modifications, which succeeded...
-                                    return model.save(data, localOptions).tap(function () {
-                                        that.trigger('error:' + channel, error, model);
-                                    });
-                                }, function (fetchResp) {
-                                    // original request failed and the code above tried to revert the local modifications by reloading the data, which failed as well...
-                                    var status = fetchResp && fetchResp.status;
-                                    switch (status) {
-                                        case 404: // NOT FOUND
-                                        case 401: // UNAUTHORIZED
-                                        case 410:
-                                            // ...because the item is gone by now, maybe someone else changed it to be deleted
-                                            return model.destroy(localOptions);
-                                        default:
-                                            return Q.reject(fetchResp);
-                                    }
-                                });
-                            }).then(function () {
-                                // succeeded or reverted
-                                return message.destroy();
-                            }).then(function (result) {
-                                return nextMessage(result);
-                            });
-                        }).then(nextEndpoint);
-                        deferred.resolve(q);
-                        return q;
-                    }
-                    // link to promise of endpoint to force seqential processing
-                    if (endpoint.messagesPromise) {
-                        endpoint.messagesPromise.finally(qEndpoint);
-                    }
-                    else {
-                        qEndpoint();
-                    }
-                    endpoint.messagesPromise = deferred.promise;
-                    return endpoint.messagesPromise;
-                })();
+                        }
+                        else {
+                            // connectivity issue, keep rejection
+                            return Q.reject();
+                        }
+                    }).then(function () {
+                        // applying change succeeded or successfully recovered change
+                        return message.destroy();
+                    }).then(nextMessage);
+                };
+                Relution.LiveData.Debug.info('Relution.LiveData.SyncStore._sendMessages');
+                var q = this.messagesPromise;
+                if (!q) {
+                    // initially fetch all messages
+                    q = Q(this.messages.fetch({
+                        sortOrder: [
+                            '+priority',
+                            '+time',
+                            '+id'
+                        ]
+                    }));
+                }
+                else if (this.messagesPromise.isRejected()) {
+                    // early rejection
+                    return this.messagesPromise;
+                }
+                else if (!this.messages.length) {
+                    // no more messages
+                    return this.messagesPromise;
+                }
+                // kick to process pending messages
+                this.messagesPromise = q.then(nextMessage);
+                return this.messagesPromise;
             };
             SyncStore.prototype.storeMessage = function (endpoint, qMsg) {
+                var _this = this;
                 return qMsg.then(function (msg) {
                     var options;
-                    var id = endpoint.messages.modelId(msg);
+                    var id = _this.messages.modelId(msg);
                     Relution.LiveData.Debug.info('storeMessage ' + id);
-                    var message = id && endpoint.messages.get(id);
+                    var message = id && _this.messages.get(id);
                     if (message) {
                         // use existing instance, should not be the case usually
                         options = {
@@ -6698,29 +4829,31 @@ var Relution;
                     }
                     else {
                         // instantiate new model, intentionally not added to collection
-                        message = new endpoint.messages.model(msg, {
-                            collection: endpoint.messages,
-                            store: endpoint.messages.store
+                        message = new _this.messages.model(msg, {
+                            collection: _this.messages,
+                            store: _this.messages.store
                         });
+                        message.set('channel', endpoint.channel);
                     }
-                    return message.save(msg, options).thenResolve(message);
+                    return Q(message.save(msg, options)).thenResolve(message);
                 });
             };
             SyncStore.prototype.removeMessage = function (endpoint, msg, qMessage) {
+                var _this = this;
                 return qMessage.then(function (message) {
                     if (!message) {
-                        var id = endpoint.messages.modelId(msg);
+                        var id = _this.messages.modelId(msg);
                         if (!id) {
                             // msg is not persistent
-                            return Q.resolve();
+                            return Q.resolve(undefined);
                         }
-                        message = endpoint.messages.get(id);
+                        message = _this.messages.get(id);
                         if (!message) {
-                            message = new endpoint.messages.model({
-                                id: msg.id
+                            message = new _this.messages.model({
+                                _id: msg._id
                             }, {
-                                collection: endpoint.messages,
-                                store: endpoint.messages.store
+                                collection: _this.messages,
+                                store: _this.messages.store
                             });
                         }
                     }
@@ -6730,10 +4863,10 @@ var Relution;
             };
             SyncStore.prototype.clear = function (collection) {
                 if (collection) {
-                    var endpoint = this.getEndpoint(collection.getUrlRoot());
+                    var endpoint = this.getEndpoint(collection);
                     if (endpoint) {
-                        if (endpoint.messages) {
-                            endpoint.messages.destroy();
+                        if (this.messages) {
+                            this.messages.destroy();
                         }
                         collection.reset();
                         this.setLastMessageTime(endpoint.channel, '');
@@ -6744,6 +4877,10 @@ var Relution;
              * close the socket explicit
              */
             SyncStore.prototype.close = function () {
+                if (this.messages.store) {
+                    this.messages.store.close();
+                    this.messages = null;
+                }
                 var keys = Object.keys(this.endpoints);
                 for (var i = 0, l = keys.length; i < l; i++) {
                     this.endpoints[keys[i]].close();
@@ -6752,6 +4889,16 @@ var Relution;
             return SyncStore;
         })(LiveData.Store);
         LiveData.SyncStore = SyncStore;
+        // mixins
+        var syncStore = _.extend(SyncStore.prototype, {
+            _type: 'Relution.LiveData.SyncStore',
+            localStore: LiveData.WebSqlStore,
+            useLocalStore: true,
+            useSocketNotify: true,
+            useOfflineChanges: true,
+            socketPath: ''
+        });
+        Relution.assert(function () { return SyncStore.prototype.isPrototypeOf(syncStore); });
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=SyncStore.js.map

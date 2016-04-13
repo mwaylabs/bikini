@@ -29,33 +29,16 @@
 
 declare var global;
 
-declare var _;
-declare var Q;
-declare var io;
-
 declare module Relution.LiveData {
-  var Debug: Relution.DebugConsole;
-
   var _Object;
-  var Entity;
-  var DataSelector;
-
-  var Field;
-  var SqlSelector;
-  var DATA;
 
   function extend(...arguments:any[]);
   function create(...arguments:any[]);
   function design(...arguments:any[]);
-
-  function isEntity(object);
-  function isModel(object): object is Model;
-  function isCollection(object): object is Collection;
 
   function ajax(options: any);
   function sync(method: string, model: Backbone.ModelBase, options?: any);
 
   var URLUtil;
   var ObjectID;
-
 }

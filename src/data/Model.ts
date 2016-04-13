@@ -12,16 +12,45 @@
 module Relution.LiveData {
 
   /**
+   * constructor function of Model.
+   */
+  export interface ModelCtor {
+    /**
+     * @see Model#constructor
+     */
+    new(attributes?: any, options?: any): Model;
+  }
+
+  /**
+   * tests whether a given object is a Model.
+   *
+   * @param {object} object to check.
+   * @return {boolean} whether object is a Model.
+   */
+  export function isModel(object): object is Model {
+    if (typeof object !== 'object') {
+      return false;
+    } else if ('isModel' in object) {
+      Relution.assert(() => object.isModel === Model.prototype.isPrototypeOf(object));
+      return object.isModel;
+    } else {
+      return Model.prototype.isPrototypeOf(object);
+    }
+  }
+
+  /**
    * @module Relution.LiveData.Model
    *
    * @type {*}
    * @extends Backbone.Model
    */
-  export class Model extends Backbone.Model {
+  export class Model/*<AttributesType extends Object>*/ extends Backbone.Model {
 
-    public _type = 'Relution.LiveData.Model';
-    public isModel = true;
-    public entity;
+    public _type: string;         // constant 'Relution.LiveData.Model' on prototype
+    public isModel: boolean;      // constant true on prototype
+    public isCollection: boolean; // constant false on prototype
+
+    public entity: string;
     public defaults = {};
     public changedSinceSync = {};
 
@@ -29,7 +58,7 @@ module Relution.LiveData {
     public store: Store;
     public credentials: any;
 
-    public endpoint: any;
+    public endpoint: SyncEndpoint;
 
     public static extend = Backbone.Model.extend;
     public static create = Relution.LiveData.create;
@@ -57,13 +86,6 @@ module Relution.LiveData {
         this.store.initModel(this, options);
       }
       this.entity = this.entity || (this.collection ? this.collection.entity : null) || options.entity;
-      if (this.entity) {
-        this.entity = Relution.LiveData.Entity.from(this.entity, {
-          model: this.constructor,
-          typeMapping: options.typeMapping
-        });
-        this.idAttribute = this.entity.idAttribute || this.idAttribute;
-      }
       this.credentials = this.credentials || (this.collection ? this.collection.credentials : null) || options.credentials;
       this.on('change', this.onChange, this);
       this.on('sync', this.onSync, this);
@@ -106,9 +128,12 @@ module Relution.LiveData {
 
   }
 
-  _.extend(Model.prototype, _Object, {
+  // mixins
+  let model = _.extend(Model.prototype, _Object, {
     _type: 'Relution.LiveData.Model',
-    isModel: true
+    isModel: true,
+    isCollection: false
   });
+  Relution.assert(() => isModel(model));
 
 }

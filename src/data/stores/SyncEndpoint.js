@@ -28,6 +28,8 @@
 /// <reference path="../../core/livedata.d.ts" />
 /// <reference path="Store.ts" />
 /// <reference path="SyncContext.ts" />
+/// <reference path="../Model.ts" />
+/// <reference path="../Collection.ts" />
 /// <reference path="../../utility/Debug.ts" />
 var Relution;
 (function (Relution) {
@@ -42,7 +44,7 @@ var Relution;
          */
         var SyncEndpoint = (function () {
             function SyncEndpoint(options) {
-                this.isConnected = false;
+                this.isConnected = null;
                 this.entity = options.entity;
                 this.modelType = options.modelType;
                 this.urlRoot = options.urlRoot;
@@ -51,7 +53,7 @@ var Relution;
                 var href = LiveData.URLUtil.getLocation(options.urlRoot);
                 this.host = href.protocol + '//' + href.host;
                 this.path = href.pathname;
-                var name = options.entity.name;
+                var name = options.entity;
                 var user = options.credentials && options.credentials.username ? options.credentials.username : '';
                 var hash = LiveData.URLUtil.hashLocation(options.urlRoot);
                 this.channel = name + user + hash;
@@ -61,12 +63,9 @@ var Relution;
              */
             SyncEndpoint.prototype.close = function () {
                 if (this.socket) {
+                    // consider calling this.socket.close() instead
                     this.socket.socket.close();
                     this.socket = null;
-                }
-                if (this.messages.store) {
-                    this.messages.store.close();
-                    this.messages = null;
                 }
                 if (this.localStore) {
                     this.localStore.close();

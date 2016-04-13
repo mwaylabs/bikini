@@ -9,11 +9,35 @@
 /// <reference path="stores/Store.ts" />
 /// <reference path="Model.ts" />
 /// <reference path="stores/SyncContext.ts" />
+/// <reference path="stores/SyncEndpoint.ts" />
 
 module Relution.LiveData {
 
-  interface CollectionSortOptions extends Backbone.Silenceable {
-    sort?: any
+  /**
+   * constructor function of Collection.
+   */
+  export interface CollectionCtor {
+    /**
+     * @see Collection#constructor
+     */
+    new(models?: any, options?: any): Collection;
+  }
+
+  /**
+   * tests whether a given object is a Collection.
+   *
+   * @param {object} object to check.
+   * @return {boolean} whether object is a Collection.
+   */
+  export function isCollection(object): object is Collection {
+    if (typeof object !== 'object') {
+      return false;
+    } else if ('isCollection' in object) {
+      Relution.assert(() => object.isCollection === Collection.prototype.isPrototypeOf(object));
+      return object.isCollection;
+    } else {
+      return Collection.prototype.isPrototypeOf(object);
+    }
   }
 
   /**
@@ -22,7 +46,7 @@ module Relution.LiveData {
    * but there are some enhancements to fetch, save and delete the
    * contained models from or to other "data stores".
    *
-   * see LocalStorageStore, WebSqlStore or SyncStore for examples
+   * see WebSqlStore or SyncStore for examples
    *
    * @module Relution.LiveData.Collection
    *
@@ -32,17 +56,19 @@ module Relution.LiveData {
    */
   export class Collection extends Backbone.Collection {
 
-    public _type;
-    public isCollection;
-    public model;
-    public entity;
+    public _type: string;         // constant 'Relution.LiveData.Collection' on prototype
+    public isModel: boolean;      // constant false on prototype
+    public isCollection: boolean; // constant true on prototype
+
+    public model: ModelCtor;
+    public entity: string;
     public options;
 
     public store: Store;
     public syncContext: SyncContext;
     public credentials: any;
 
-    public endpoint: any;
+    public endpoint: SyncEndpoint;
     public channel: string;
 
     public static extend = Backbone.Collection.extend;
@@ -65,16 +91,16 @@ module Relution.LiveData {
       this.entity = options.entity || this.entity || (this.model ? this.model.prototype.entity : null);
       this.options = options.options || this.options;
 
-      var entity = this.entity || this.entityFromUrl(this.url);
-      if (entity) {
-        this.entity = Relution.LiveData.Entity.from(entity, {model: this.model, typeMapping: options.typeMapping});
-      }
+      this.entity = this.entity || this.entityFromUrl(this.url);
       this._updateUrl();
 
       if (this.store && _.isFunction(this.store.initCollection)) {
         this.store.initCollection(this, options);
       }
     }
+
+    // following fixes DefinitelyTyped definitions of backbone.js not declaring modelId() method
+    public modelId: (attrs: any) => any;
 
     public ajax(options: any) {
       return Relution.LiveData.ajax.apply(this, arguments);
@@ -102,30 +128,7 @@ module Relution.LiveData {
       }
     }
 
-    public sort(options?: CollectionSortOptions) {
-      if (_.isObject(options && options.sort)) {
-        this.comparator = Relution.LiveData.DataSelector.compileSort(options.sort);
-      }
-      return super.sort.apply(this, arguments);
-    }
-
-    public select(options) {
-      var selector = options && options.query ? Relution.LiveData.DataSelector.create(options.query) : null;
-      var collection = Collection.create(null, {model: this.model});
-
-      if (options && options.sort) {
-        collection.comparator = Relution.LiveData.DataSelector.compileSort(options.sort);
-      }
-
-      this.each(function (model) {
-        if (!selector || selector.matches(model.attributes)) {
-          collection.add(model);
-        }
-      });
-      return collection;
-    }
-
-    public destroy(options) {
+    public destroy(options?) {
       options = options || {};
       var success = options.success;
       if (this.length > 0) {
@@ -142,19 +145,6 @@ module Relution.LiveData {
       } else if (success) {
         success();
       }
-    }
-
-    public destroyLocal() {
-      var store = this.endpoint.localStore;
-      var that = this;
-      // DROP TABLE
-      if (this.entity.name) {
-        store.drop(this.entity.name);
-      }
-      // RESET localStorage-entry
-      localStorage.setItem('__' + this.channel + 'last_msg_time', '');
-      this.store.endpoints = {};
-      return this.reset();
     }
 
     /**
@@ -233,7 +223,7 @@ module Relution.LiveData {
      *
      * @see SyncContext#fetchMore()
      */
-    public fetchMore(options) {
+    public fetchMore(options): PromiseLike<any> {
       if (!this.syncContext) {
         return Q.reject(new Error('no context'));
       }
@@ -255,7 +245,7 @@ module Relution.LiveData {
      *
      * @see SyncContext#fetchNext()
      */
-    public fetchNext(options) {
+    public fetchNext(options): PromiseLike<any> {
       if (!this.syncContext) {
         return Q.reject(new Error('no context'));
       }
@@ -277,7 +267,7 @@ module Relution.LiveData {
      *
      * @see SyncContext#fetchPrev()
      */
-    public fetchPrev(options) {
+    public fetchPrev(options): PromiseLike<any> {
       if (!this.syncContext) {
         return Q.reject(new Error('no context'));
       }
@@ -287,10 +277,15 @@ module Relution.LiveData {
 
   }
 
-  _.extend(Collection.prototype, _Object, {
+  // mixins
+  let collection = _.extend(Collection.prototype, _Object, {
     _type: 'Relution.LiveData.Collection',
+    isModel: false,
     isCollection: true,
+
+    // default model type unless overwritten
     model: Model
   });
+  Relution.assert(() => isCollection(collection));
 
 }

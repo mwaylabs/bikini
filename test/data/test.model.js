@@ -27,19 +27,7 @@ describe('Relution.LiveData.Model', function () {
     var Person = Relution.LiveData.Model.extend({
       idAttribute: 'id',
       defaults: {bmi: 0.0},
-      entity: {
-        name: 'person',
-        fields: {
-          id: {type: Relution.LiveData.DATA.TYPE.INTEGER, required: true},
-          firstName: {type: Relution.LiveData.DATA.TYPE.STRING, length: 200},
-          sureName: {type: Relution.LiveData.DATA.TYPE.STRING, required: true, index: true},
-          birthDate: {type: Relution.LiveData.DATA.TYPE.DATE},
-          bmi: {type: Relution.LiveData.DATA.TYPE.FLOAT},
-          notes: {type: Relution.LiveData.DATA.TYPE.TEXT},
-          address: {type: Relution.LiveData.DATA.TYPE.OBJECT},
-          displayName: {type: Relution.LiveData.DATA.TYPE.STRING, persistent: false}
-        }
-      }
+      entity: 'person'
     });
 
     assert.typeOf(Person, 'function', 'person model could be extended.');
@@ -51,7 +39,6 @@ describe('Relution.LiveData.Model', function () {
     var p = Person.create({
       firstName: 'Max',
       sureName: 'Mustermann',
-      birthDate: Relution.LiveData.Date.create('01.02.2003'),
       notes: 'Notes to this person',
       address: {street: 'Leitzstraße', house_nr: 45, zip: '70469', city: 'Stuttgart'}
     });

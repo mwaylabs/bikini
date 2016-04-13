@@ -30,8 +30,6 @@
 /// <reference path="FilterVisitor.ts" />
 /// <reference path="JsonPath.ts" />
 
-declare var _;
-
 module Relution.LiveData {
 
   /**

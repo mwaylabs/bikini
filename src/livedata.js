@@ -1,7 +1,7 @@
-// @echo BANNER
 (function (global, Backbone, _, $, Q, jsonPath) {
 // @include ./core/livedata.require.js
-// @include ./utility/debug.js
+// @include ./utility/Debug.js
+// @include ./utility/Assert.js
 // @include ./core/livedata.js
 
 // @include ./utility/objectid.js
@@ -9,7 +9,6 @@
 // @include ./utility/base64.js
 // @include ./utility/sha256.js
 // @include ./utility/cypher.js
-// @include ./utility/date.js
 // @include ./utility/url.js
 
 // @include ./query/JsonPath.js
@@ -20,15 +19,10 @@
 // @include ./query/SortOrderComparator.js
 // @include ./query/GetQuery.js
 
-// @include ./data/field.js
-// @include ./data/entity.js
 // @include ./data/security.js
 // @include ./data/model.js
 // @include ./data/collection.js
-// @include ./data/data_selector.js
-// @include ./data/sql_selector.js
 // @include ./data/stores/Store.js
-// @include ./data/stores/LocalStorageStore.js
 // @include ./data/stores/AbstractSqlStore.js
 // @include ./data/stores/WebSqlStore.js
 // @include ./data/stores/CipherSqlStore.js

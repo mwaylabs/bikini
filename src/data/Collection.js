@@ -9,6 +9,7 @@
 /// <reference path="stores/Store.ts" />
 /// <reference path="Model.ts" />
 /// <reference path="stores/SyncContext.ts" />
+/// <reference path="stores/SyncEndpoint.ts" />
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -19,12 +20,31 @@ var Relution;
     var LiveData;
     (function (LiveData) {
         /**
+         * tests whether a given object is a Collection.
+         *
+         * @param {object} object to check.
+         * @return {boolean} whether object is a Collection.
+         */
+        function isCollection(object) {
+            if (typeof object !== 'object') {
+                return false;
+            }
+            else if ('isCollection' in object) {
+                Relution.assert(function () { return object.isCollection === Collection.prototype.isPrototypeOf(object); });
+                return object.isCollection;
+            }
+            else {
+                return Collection.prototype.isPrototypeOf(object);
+            }
+        }
+        LiveData.isCollection = isCollection;
+        /**
          * The Relution.LiveData.Collection can be used like a Backbone Collection,
          *
          * but there are some enhancements to fetch, save and delete the
          * contained models from or to other "data stores".
          *
-         * see LocalStorageStore, WebSqlStore or SyncStore for examples
+         * see WebSqlStore or SyncStore for examples
          *
          * @module Relution.LiveData.Collection
          *
@@ -46,10 +66,7 @@ var Relution;
                 this.store = options.store || this.store || (this.model ? this.model.prototype.store : null);
                 this.entity = options.entity || this.entity || (this.model ? this.model.prototype.entity : null);
                 this.options = options.options || this.options;
-                var entity = this.entity || this.entityFromUrl(this.url);
-                if (entity) {
-                    this.entity = Relution.LiveData.Entity.from(entity, { model: this.model, typeMapping: options.typeMapping });
-                }
+                this.entity = this.entity || this.entityFromUrl(this.url);
                 this._updateUrl();
                 if (this.store && _.isFunction(this.store.initCollection)) {
                     this.store.initCollection(this, options);
@@ -78,25 +95,6 @@ var Relution;
                     }
                 }
             };
-            Collection.prototype.sort = function (options) {
-                if (_.isObject(options && options.sort)) {
-                    this.comparator = Relution.LiveData.DataSelector.compileSort(options.sort);
-                }
-                return _super.prototype.sort.apply(this, arguments);
-            };
-            Collection.prototype.select = function (options) {
-                var selector = options && options.query ? Relution.LiveData.DataSelector.create(options.query) : null;
-                var collection = Collection.create(null, { model: this.model });
-                if (options && options.sort) {
-                    collection.comparator = Relution.LiveData.DataSelector.compileSort(options.sort);
-                }
-                this.each(function (model) {
-                    if (!selector || selector.matches(model.attributes)) {
-                        collection.add(model);
-                    }
-                });
-                return collection;
-            };
             Collection.prototype.destroy = function (options) {
                 options = options || {};
                 var success = options.success;
@@ -115,18 +113,6 @@ var Relution;
                 else if (success) {
                     success();
                 }
-            };
-            Collection.prototype.destroyLocal = function () {
-                var store = this.endpoint.localStore;
-                var that = this;
-                // DROP TABLE
-                if (this.entity.name) {
-                    store.drop(this.entity.name);
-                }
-                // RESET localStorage-entry
-                localStorage.setItem('__' + this.channel + 'last_msg_time', '');
-                this.store.endpoints = {};
-                return this.reset();
             };
             /**
              * save all containing models
@@ -248,11 +234,15 @@ var Relution;
             return Collection;
         })(Backbone.Collection);
         LiveData.Collection = Collection;
-        _.extend(Collection.prototype, LiveData._Object, {
+        // mixins
+        var collection = _.extend(Collection.prototype, LiveData._Object, {
             _type: 'Relution.LiveData.Collection',
+            isModel: false,
             isCollection: true,
+            // default model type unless overwritten
             model: LiveData.Model
         });
+        Relution.assert(function () { return isCollection(collection); });
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=Collection.js.map

@@ -56,15 +56,7 @@ describe('Relution.LiveData.Collection', function () {
 
     TEST.Developer = Relution.LiveData.Model.extend({
       idAttribute: '_id',
-      entity: {
-        name: 'Developer',
-        fields: {
-          _id: {type: Relution.LiveData.DATA.TYPE.STRING},
-          sureName: {name: 'lastName', type: Relution.LiveData.DATA.TYPE.STRING, required: true, index: true},
-          firstName: {type: Relution.LiveData.DATA.TYPE.STRING, length: 200},
-          age: {type: Relution.LiveData.DATA.TYPE.INTEGER}
-        }
-      }
+      entity: 'Developer'
     });
 
     assert.ok(typeof TEST.Developer === 'function', 'Developer model successfully extended.');
@@ -96,11 +88,6 @@ describe('Relution.LiveData.Collection', function () {
 
   it('sorting data', function () {
 
-    TEST.Developers.sort({'sort': {'sureName': -1}});
-
-    var p1 = TEST.Developers.at(0);
-    assert.ok(p1.get('sureName') === 'Werler', 'Records correctly sorted descending by "sureName".');
-
     TEST.Developers.comparator = function (m1, m2) {
       return m2.get('age') - m1.get('age');
     };
@@ -125,61 +112,6 @@ describe('Relution.LiveData.Collection', function () {
     });
 
     assert.ok(a2.length === 4, 'Records successfully filtered. One dev is younger than 27.');
-
-  });
-
-  it('finding data', function () {
-
-    TEST.Developers.reset();
-    TEST.Developers.add(TEST.data);
-
-    var result = TEST.Developers.select({
-      query: {sureName: 'Stierle'}
-    });
-
-    assert.ok(typeof result === 'object', 'Find for value has a response object.');
-
-    assert.ok(Relution.LiveData.isCollection(result), 'The response is a Relution.LiveData.Collection.');
-
-    assert.ok(result.length === 1, 'The response holds one record.');
-
-    // get first person record
-    var p = result.at(0);
-
-    assert.ok(p.get('sureName') === 'Stierle', 'Field "sureName" has correct value.');
-
-    // SELECT *  FROM Developer WHERE firstName like 'S%'
-    result = TEST.Developers.select({
-      query: {firstName: /^S/}
-    });
-
-    assert.ok(typeof result === 'object', 'Find with RegEx has a response object.');
-
-    assert.ok(result.length === 2, 'The response holds 2 records.');
-
-    // SELECT *  FROM Developer WHERE sureName like '%er%' OR (age > 25 AND age <= 26)
-    result = TEST.Developers.select({
-      query: {
-        $or: [
-          {sureName: /.?er/}, // should match 'Stierle' and 'Werler'
-          {age: {$gt: 25, $lte: 26}}
-        ] // should match Stefan Buck '26'
-      },
-      sort: ['age']
-    });
-
-    assert.typeOf(result, 'object', 'Find with $or, $gt, $lte and sort by "age" has a response object.');
-
-    assert.equal(result.length, 3, 'The response holds 3 records.');
-
-    var d1 = result.at(0); // has to be Stefan Buck
-    assert.equal(d1.get('sureName'), 'Buck', 'The first developer field "sureName" has correct value.');
-
-    var d2 = result.at(1); // has to be Sebastian Werler
-    assert.equal(d2.get('sureName'), 'Werler', 'The second developer field "sureName" has correct value.');
-
-    var d3 = result.at(2); // has to be Frank Stierle
-    assert.equal(d3.get('sureName'), 'Stierle', 'The third developer field "sureName" has correct value.');
 
   });
 

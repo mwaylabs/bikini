@@ -24,6 +24,7 @@
 /* jshint indent: 4 */
 /* jshint curly: false */
 /* jshint newcap: false */
+/* jshint -W109: Strings must use singlequote. */
 /* jshint -W004: '%' is already defined. */
 /// <reference path="../../core/livedata.d.ts" />
 /// <reference path="Store.ts" />
@@ -42,51 +43,20 @@ var Relution;
          * the webSql database
          *
          * @module Relution.LiveData.AbstractSqlStore
-         *
-         *
          */
         var AbstractSqlStore = (function (_super) {
             __extends(AbstractSqlStore, _super);
             function AbstractSqlStore(options) {
-                _super.call(this, _.extend({
-                    name: 'relution-livedata',
-                    size: 1024 * 1024,
-                    version: '1.0',
-                    security: '',
-                    typeMapping: (function () {
-                        var map = {};
-                        map[LiveData.DATA.TYPE.OBJECTID] = LiveData.DATA.TYPE.STRING;
-                        map[LiveData.DATA.TYPE.DATE] = LiveData.DATA.TYPE.STRING;
-                        map[LiveData.DATA.TYPE.OBJECT] = LiveData.DATA.TYPE.TEXT;
-                        map[LiveData.DATA.TYPE.ARRAY] = LiveData.DATA.TYPE.TEXT;
-                        map[LiveData.DATA.TYPE.BINARY] = LiveData.DATA.TYPE.TEXT;
-                        return map;
-                    })(),
-                    sqlTypeMapping: (function () {
-                        var map = {};
-                        map[LiveData.DATA.TYPE.STRING] = 'varchar(255)';
-                        map[LiveData.DATA.TYPE.TEXT] = 'text';
-                        map[LiveData.DATA.TYPE.OBJECT] = 'text';
-                        map[LiveData.DATA.TYPE.ARRAY] = 'text';
-                        map[LiveData.DATA.TYPE.FLOAT] = 'float';
-                        map[LiveData.DATA.TYPE.INTEGER] = 'integer';
-                        map[LiveData.DATA.TYPE.DATE] = 'varchar(255)';
-                        map[LiveData.DATA.TYPE.BOOLEAN] = 'boolean';
-                        return map;
-                    })()
-                }, options));
+                _super.call(this, options);
                 this.db = null;
-                this.dataField = {
-                    name: 'data',
-                    type: 'text',
-                    required: true
-                };
-                this.idField = {
-                    name: 'id',
-                    type: 'string',
-                    required: true
-                };
-                var that = this;
+                this.entities = {};
+                if (options && options.entities) {
+                    for (var entity in options.entities) {
+                        this.entities[entity] = {
+                            table: options.entities[entity] || entity
+                        };
+                    }
+                }
             }
             AbstractSqlStore.prototype.sync = function (method, model, options) {
                 options = options || {};
@@ -153,104 +123,41 @@ var Relution;
             AbstractSqlStore.prototype._sqlUpdateDatabase = function (oldVersion, newVersion) {
                 // create sql array, simply drop and create the database
                 var sql = [];
-                if (this.entities) {
-                    for (var name in this.entities) {
-                        var entity = this.entities[name];
-                        sql.push(this._sqlDropTable(entity.name));
-                        sql.push(this._sqlCreateTable(entity));
-                    }
+                for (var entity in this.entities) {
+                    sql.push(this._sqlDropTable(entity));
+                    sql.push(this._sqlCreateTable(entity));
                 }
                 return sql;
             };
-            AbstractSqlStore.prototype._sqlDropTable = function (name) {
-                return 'DROP TABLE IF EXISTS \'' + name + '\'';
-            };
-            AbstractSqlStore.prototype._isAutoincrementKey = function (entity, key) {
-                if (entity && key) {
-                    var column = this.getField(entity, key);
-                    return column && column.type === LiveData.DATA.TYPE.INTEGER;
-                }
-            };
-            AbstractSqlStore.prototype._sqlPrimaryKey = function (entity, keys) {
-                if (keys && keys.length === 1) {
-                    var field = this.getField(entity, keys[0]);
-                    if (this._isAutoincrementKey(entity, keys[0])) {
-                        return field.name + ' INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE';
-                    }
-                    else {
-                        return this._dbAttribute(field) + ' PRIMARY KEY ASC UNIQUE';
-                    }
-                }
-                return '';
-            };
-            AbstractSqlStore.prototype._sqlConstraint = function (entity, keys) {
-                if (keys && keys.length > 1) {
-                    return 'PRIMARY KEY (' + keys.join(',') + ') ON CONFLICT REPLACE';
-                }
-                return '';
+            AbstractSqlStore.prototype._sqlDropTable = function (entity) {
+                return "DROP TABLE IF EXISTS '" + this.entities[entity].table + "';";
             };
             AbstractSqlStore.prototype._sqlCreateTable = function (entity) {
-                var that = this;
-                var keys = entity.getKeys();
-                var primaryKey = keys.length === 1 ? this._sqlPrimaryKey(entity, keys) : '';
-                var constraint = keys.length > 1 ? this._sqlConstraint(entity, keys) : (entity.constraint || '');
-                var columns = '';
-                var fields = this.getFields(entity);
-                _.each(fields, function (field) {
-                    // skip primary key as it is defined manually above
-                    if (!primaryKey || field !== fields[keys[0]]) {
-                        // only add valid types
-                        var attr = that._dbAttribute(field);
-                        if (attr) {
-                            columns += (columns ? ', ' : '') + attr;
-                        }
-                    }
-                });
-                if (!columns) {
-                    columns = this._dbAttribute(this.dataField);
-                }
-                var sql = 'CREATE TABLE IF NOT EXISTS \'' + entity.name + '\' (';
-                sql += primaryKey ? primaryKey + ', ' : '';
-                sql += columns;
-                sql += constraint ? ', ' + constraint : '';
-                sql += ');';
-                return sql;
+                return "CREATE TABLE IF NOT EXISTS '" + this.entities[entity].table + "' (id VARCHAR(255) NOT NULL PRIMARY KEY ASC UNIQUE, data TEXT NOT NULL);";
             };
             AbstractSqlStore.prototype._sqlDelete = function (options, entity) {
-                var sql = 'DELETE FROM \'' + entity.name + '\'';
-                var where = this._sqlWhere(options, entity) || this._sqlWhereFromData(options, entity);
+                var sql = 'DELETE FROM \'' + this.entities[entity].table + '\'';
+                var where = this._sqlWhereFromData(options, entity);
                 if (where) {
                     sql += ' WHERE ' + where;
+                }
+                else {
+                    Relution.assert(function () { return false; }, 'attempt of deletion without where clause');
                 }
                 sql += options.and ? ' AND ' + options.and : '';
                 return sql;
             };
-            AbstractSqlStore.prototype._sqlWhere = function (options, entity) {
-                this._selector = null;
-                var sql = '';
-                if (_.isString(options.where)) {
-                    sql = options.where;
-                }
-                else if (_.isObject(options.where)) {
-                    this._selector = LiveData.SqlSelector.create(options.where, entity);
-                    sql = this._selector.buildStatement();
-                }
-                return sql;
-            };
             AbstractSqlStore.prototype._sqlWhereFromData = function (options, entity) {
-                var that = this;
-                var ids = [];
-                if (options && options.models && entity && entity.idAttribute) {
-                    var id, key = entity.idAttribute;
-                    var field = this.getField(entity, key);
+                if (options && options.models && entity) {
+                    var ids = [];
+                    var that = this;
                     _.each(options.models, function (model) {
-                        id = model.id;
-                        if (!_.isUndefined(id)) {
-                            ids.push(that._sqlValue(id, field));
+                        if (!model.isNew()) {
+                            ids.push(that._sqlValue(model.id));
                         }
                     });
                     if (ids.length > 0) {
-                        return key + ' IN (' + ids.join(',') + ')';
+                        return 'id IN (' + ids.join(',') + ')';
                     }
                 }
                 return '';
@@ -260,29 +167,13 @@ var Relution;
                     // new code
                     var sql = 'SELECT ';
                     sql += '*';
-                    sql += ' FROM \'' + entity.name + '\'';
+                    sql += ' FROM \'' + this.entities[entity].table + '\'';
                     return sql;
                 }
                 var sql = 'SELECT ';
-                if (options.fields) {
-                    if (options.fields.length > 1) {
-                        sql += options.fields.join(', ');
-                    }
-                    else if (options.fields.length === 1) {
-                        sql += options.fields[0];
-                    }
-                }
-                else {
-                    sql += '*';
-                }
-                sql += ' FROM \'' + entity.name + '\'';
-                if (options.join) {
-                    sql += ' JOIN ' + options.join;
-                }
-                if (options.leftJoin) {
-                    sql += ' LEFT JOIN ' + options.leftJoin;
-                }
-                var where = this._sqlWhere(options, entity) || this._sqlWhereFromData(options, entity);
+                sql += '*';
+                sql += ' FROM \'' + this.entities[entity].table + '\'';
+                var where = this._sqlWhereFromData(options, entity);
                 if (where) {
                     sql += ' WHERE ' + where;
                 }
@@ -297,105 +188,89 @@ var Relution;
                 }
                 return sql;
             };
-            AbstractSqlStore.prototype.blubber = function () {
-            };
-            AbstractSqlStore.prototype._sqlValue = function (value, field) {
-                var type = field && field.type ? field.type : LiveData.Field.prototype.detectType(value);
-                if (type === LiveData.DATA.TYPE.INTEGER || type === LiveData.DATA.TYPE.FLOAT) {
-                    return value;
-                }
-                else if (type === LiveData.DATA.TYPE.BOOLEAN) {
-                    return value ? '1' : '0';
-                }
-                else if (type === LiveData.DATA.TYPE.NULL) {
-                    return 'NULL';
-                }
-                value = LiveData.Field.prototype.transform(value, LiveData.DATA.TYPE.STRING);
+            AbstractSqlStore.prototype._sqlValue = function (value) {
+                value = _.isNull(value) ? 'null' : _.isObject(value) ? JSON.stringify(value) : value.toString();
                 value = value.replace(/"/g, '""');
                 return '"' + value + '"';
             };
-            AbstractSqlStore.prototype._dbAttribute = function (field) {
-                if (field && field.name) {
-                    var type = this.options.sqlTypeMapping[field.type];
-                    var isReqStr = field.required ? ' NOT NULL' : '';
-                    if (type) {
-                        return field.name + ' ' + type.toUpperCase() + isReqStr;
+            AbstractSqlStore.prototype._dropTable = function (options) {
+                var entity = options.entity;
+                if (entity in this.entities && this.entities[entity].created !== false) {
+                    if (this._checkDb(options)) {
+                        var sql = this._sqlDropTable(entity);
+                        // reset flag
+                        this._executeTransaction(options, [sql]);
                     }
                 }
-            };
-            AbstractSqlStore.prototype._dropTable = function (options) {
-                var entity = this.getEntity(options);
-                entity.db = null;
-                if (this._checkDb(options) && entity) {
-                    var sql = this._sqlDropTable(entity.name);
-                    // reset flag
-                    this._executeTransaction(options, [sql]);
+                else {
+                    // no need dropping as table was not created
+                    this.handleSuccess(options);
                 }
             };
             AbstractSqlStore.prototype._createTable = function (options) {
-                var entity = this.getEntity(options);
-                entity.db = this.db;
-                if (this._checkDb(options) && this._checkEntity(options, entity)) {
+                var entity = options.entity;
+                if (!(entity in this.entities)) {
+                    this.entities[entity] = {
+                        table: entity
+                    };
+                }
+                if (this._checkDb(options)) {
                     var sql = this._sqlCreateTable(entity);
                     // reset flag
                     this._executeTransaction(options, [sql]);
                 }
             };
             AbstractSqlStore.prototype._checkTable = function (options, callback) {
-                var entity = this.getEntity(options);
                 var that = this;
-                if (entity && !entity.db) {
+                var entity = options.entity;
+                if (entity && (!this.entities[entity] || this.entities[entity].created === false)) {
                     this._createTable({
                         success: function () {
+                            that.entities[entity].created = true;
                             callback();
                         },
                         error: function (error) {
-                            this.handleError(options, error);
+                            that.handleError(options, error);
                         },
                         entity: entity
                     });
                 }
                 else {
+                    // we know it's created already
                     callback();
                 }
             };
             AbstractSqlStore.prototype._insertOrReplace = function (model, options) {
-                var entity = this.getEntity(options);
+                var entity = options.entity;
                 var models = LiveData.isCollection(model) ? model.models : [model];
-                if (this._checkDb(options) && this._checkEntity(options, entity) && this._checkData(options, models)) {
-                    var isAutoInc = this._isAutoincrementKey(entity, entity.getKey());
+                if (this._checkDb(options) && this._checkData(options, models)) {
                     var statements = [];
-                    var sqlTemplate = 'INSERT OR REPLACE INTO \'' + entity.name + '\' (';
+                    var sqlTemplate = 'INSERT OR REPLACE INTO \'' + this.entities[entity].table + '\' (';
                     for (var i = 0; i < models.length; i++) {
                         var amodel = models[i];
                         var statement = ''; // the actual sql insert string with values
-                        if (!isAutoInc && !amodel.id && amodel.idAttribute) {
+                        if (!amodel.id) {
                             amodel.set(amodel.idAttribute, new LiveData.ObjectID().toHexString());
                         }
                         var value = options.attrs || amodel.attributes;
-                        var args, keys;
-                        if (!_.isEmpty(entity.fields)) {
-                            value = entity.fromAttributes(value);
-                            args = _.values(value);
-                            keys = _.keys(value);
-                        }
-                        else {
-                            args = [amodel.id, JSON.stringify(value)];
-                            keys = [this.idField.name, this.dataField.name];
-                        }
+                        var keys = ['id', 'data'];
+                        var args = [amodel.id, JSON.stringify(value)];
                         if (args.length > 0) {
                             var values = new Array(args.length).join('?,') + '?';
                             var columns = '\'' + keys.join('\',\'') + '\'';
                             statement += sqlTemplate + columns + ') VALUES (' + values + ');';
-                            statements.push({ statement: statement, arguments: args });
+                            statements.push({
+                                statement: statement,
+                                arguments: args
+                            });
                         }
                     }
                     this._executeTransaction(options, statements, model.toJSON());
                 }
             };
             AbstractSqlStore.prototype._select = function (model, options) {
-                var entity = this.getEntity(options);
-                if (this._checkDb(options) && this._checkEntity(options, entity)) {
+                var entity = options.entity;
+                if (this._checkDb(options)) {
                     var lastStatement;
                     var isCollection = !LiveData.isModel(model);
                     var result;
@@ -420,26 +295,19 @@ var Relution;
                             for (var i = 0; i < len; i++) {
                                 var item = res.rows.item(i);
                                 var attrs;
-                                if (!_.isEmpty(entity.fields) || !that._hasDefaultFields(item)) {
-                                    attrs = entity.toAttributes(item);
+                                try {
+                                    attrs = JSON.parse(item.data);
+                                }
+                                catch (e) {
+                                    that.trigger('error', e);
+                                    continue;
+                                }
+                                if (isCollection) {
+                                    result.push(attrs);
                                 }
                                 else {
-                                    try {
-                                        attrs = JSON.parse(item.data);
-                                    }
-                                    catch (e) {
-                                        that.trigger('error', e);
-                                        continue;
-                                    }
-                                }
-                                if (!that._selector || that._selector.matches(attrs)) {
-                                    if (isCollection) {
-                                        result.push(attrs);
-                                    }
-                                    else {
-                                        result = attrs;
-                                        break;
-                                    }
+                                    result = attrs;
+                                    break;
                                 }
                             }
                         }, function (t, e) {
@@ -463,9 +331,9 @@ var Relution;
                 }
             };
             AbstractSqlStore.prototype._delete = function (model, options) {
-                var entity = this.getEntity(options);
+                var entity = options.entity;
                 var models = LiveData.isCollection(model) ? model.models : [model];
-                if (this._checkDb(options) && this._checkEntity(options, entity)) {
+                if (this._checkDb(options)) {
                     options.models = models;
                     var sql = this._sqlDelete(options, entity);
                     // reset flag
@@ -511,11 +379,6 @@ var Relution;
                     this.handleError(options, error, lastStatement);
                 }
             };
-            AbstractSqlStore.prototype._hasDefaultFields = function (item) {
-                return _.every(_.keys(item), function (key) {
-                    return key === this.idField.name || key === this.dataField.name;
-                }, this);
-            };
             AbstractSqlStore.prototype._checkDb = function (options) {
                 // has to be initialized first
                 if (!this.db) {
@@ -526,24 +389,16 @@ var Relution;
                 }
                 return true;
             };
-            AbstractSqlStore.prototype.getFields = function (entity) {
-                if (!_.isEmpty(entity.fields)) {
-                    return entity.fields;
-                }
-                else {
-                    var fields = {};
-                    var idAttribute = entity.idAttribute || 'id';
-                    fields[idAttribute] = this.idField;
-                    fields.data = this.dataField;
-                    return fields;
-                }
-            };
-            AbstractSqlStore.prototype.getField = function (entity, key) {
-                return this.getFields(entity)[key];
-            };
             return AbstractSqlStore;
         })(LiveData.Store);
         LiveData.AbstractSqlStore = AbstractSqlStore;
+        // mixins
+        var abstractSqlStore = _.extend(AbstractSqlStore.prototype, {
+            _type: 'Relution.LiveData.AbstractSqlStore',
+            size: 1024 * 1024,
+            version: '1.0'
+        });
+        Relution.assert(function () { return AbstractSqlStore.prototype.isPrototypeOf(abstractSqlStore); });
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=AbstractSqlStore.js.map

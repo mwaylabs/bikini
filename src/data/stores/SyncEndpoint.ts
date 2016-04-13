@@ -28,6 +28,8 @@
 /// <reference path="../../core/livedata.d.ts" />
 /// <reference path="Store.ts" />
 /// <reference path="SyncContext.ts" />
+/// <reference path="../Model.ts" />
+/// <reference path="../Collection.ts" />
 /// <reference path="../../utility/Debug.ts" />
 
 module Relution.LiveData {
@@ -41,8 +43,8 @@ module Relution.LiveData {
    */
   export class SyncEndpoint {
 
-    public entity: any;
-    public modelType: any;
+    public entity: string;
+    public modelType: ModelCtor;
     public urlRoot: string;
     public socketPath: string;
     public credentials: any;
@@ -50,28 +52,26 @@ module Relution.LiveData {
     public host: string;
     public path: string;
     public channel: string;
-    public isConnected: boolean = false;
+    public isConnected: Q.Promise<void> = null;
 
     public localStore: Store;
-    public info: any;
-    public messages: any;
-    public messagesPromise: any;
-    public messagesPriority: number;
-    public socket: any;
+    public info: Q.Promise<Model>;
+    public priority: number;
+    public socket: SocketIOClient.Socket;
 
     // promise of last SyncStore.fetchChanges
-    public promiseFetchingChanges: any;
+    public promiseFetchingChanges: Q.Promise<Collection>;
     // timestamp of last SyncStore.fetchChanges, 0 while request is outstanding
     public timestampFetchingChanges: number;
 
     // promise of last SyncStore.fetchServerInfo
-    public promiseFetchingServerInfo: any;
+    public promiseFetchingServerInfo: Q.Promise<Model>;
     // timestamp of last SyncStore.fetchServerInfo, 0 while request is outstanding
     public timestampFetchingServerInfo: number;
 
     constructor(options:{
-      entity: any,
-      modelType: string,
+      entity: string,
+      modelType: ModelCtor,
       urlRoot: string,
       socketPath: string,
       credentials: any
@@ -86,7 +86,7 @@ module Relution.LiveData {
       this.host = href.protocol + '//' + href.host;
       this.path = href.pathname;
 
-      var name = options.entity.name;
+      var name = options.entity;
       var user = options.credentials && options.credentials.username ? options.credentials.username : '';
       var hash = URLUtil.hashLocation(options.urlRoot);
       this.channel = name + user + hash;
@@ -97,12 +97,9 @@ module Relution.LiveData {
      */
     public close() {
       if (this.socket) {
-        this.socket.socket.close();
+        // consider calling this.socket.close() instead
+        (<any>this.socket).socket.close();
         this.socket = null;
-      }
-      if (this.messages.store) {
-        this.messages.store.close();
-        this.messages = null;
       }
       if (this.localStore) {
         this.localStore.close();

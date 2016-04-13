@@ -1,4 +1,4 @@
-describe('Relution.LiveData.SyncStore', function () {
+describe('Relution.LiveData.SyncStore', function() {
   this.timeout(5000 * 1000);
 
   var TEST = {
@@ -8,8 +8,7 @@ describe('Relution.LiveData.SyncStore', function () {
       age: 33
     }
   };
-
-  it('creating store', function () {
+  it('creating store', function() {
 
     assert.isString(serverUrl, 'Server url is defined.');
 
@@ -23,21 +22,13 @@ describe('Relution.LiveData.SyncStore', function () {
     assert.isObject(TEST.store, 'store successfully created.');
   });
 
-  it('creating collection', function () {
+  it('creating collection', function() {
 
     assert.isFunction(Relution.LiveData.Collection, 'Relution.LiveData.Collection is defined');
 
     TEST.TestModel = Relution.LiveData.Model.extend({
       idAttribute: '_id',
-      entity: {
-        name: 'test',
-        fields: {
-          _id: {type: Relution.LiveData.DATA.TYPE.STRING, required: true, index: true},
-          sureName: {name: 'USERNAME', type: Relution.LiveData.DATA.TYPE.STRING, required: true, index: true},
-          firstName: {type: Relution.LiveData.DATA.TYPE.STRING, length: 200},
-          age: {type: Relution.LiveData.DATA.TYPE.INTEGER}
-        }
-      }
+      entity: 'test'
     });
 
     assert.isFunction(TEST.TestModel, 'TestModel model successfully extended.');
@@ -49,9 +40,9 @@ describe('Relution.LiveData.SyncStore', function () {
       url: TEST.url,
       store: TEST.store,
       options: {
-        sort: {sureName: 1},
-        fields: {USERNAME: 1, sureName: 1, firstName: 1, age: 1},
-        query: {age: {$gte: 25}}
+        sort: { sureName: 1 },
+        fields: { USERNAME: 1, sureName: 1, firstName: 1, age: 1 },
+        query: { age: { $gte: 25 } }
       }
     });
 
@@ -80,10 +71,10 @@ describe('Relution.LiveData.SyncStore', function () {
 
   });
 
-  it('create record', function (done) {
+  it('create record', function(done) {
     TEST.Tests.create(TEST.data,
       {
-        success: function (model) {
+        success: function(model) {
           assert.isObject(model, 'new record created successfully.');
 
           TEST.id = model.id;
@@ -96,7 +87,7 @@ describe('Relution.LiveData.SyncStore', function () {
     );
   });
 
-  it('get record', function () {
+  it('get record', function() {
     var model = TEST.Tests.get(TEST.id);
 
     assert.ok(model, "record found");
@@ -107,18 +98,16 @@ describe('Relution.LiveData.SyncStore', function () {
 
   });
 
-  it('fetching data with new model', function (done) {
+  it('fetching data with new model', function(done) {
 
     TEST.TestModel2 = Relution.LiveData.Model.extend({
       url: TEST.url,
       idAttribute: '_id',
       store: TEST.store,
-      entity: {
-        name: 'test'
-      }
+      entity: 'test'
     });
 
-    var data = {_id: TEST.id};
+    var data = { _id: TEST.id };
     var model = TEST.TestModel2.create(data);
 
     assert.isObject(model, "new model created");
@@ -126,7 +115,7 @@ describe('Relution.LiveData.SyncStore', function () {
     assert.ok(_.isEqual(model.attributes, data), "new model holds correct data attributes");
 
     model.fetch({
-      success: function () {
+      success: function() {
         assert.ok(true, 'model has been fetched.');
         assert.equal(model.get('firstName'), TEST.data.firstName, "found record has the correct 'firstname' value");
         // following is different to other tests as TEST.store does not recreate localStore and thus does not see entity change
@@ -138,60 +127,56 @@ describe('Relution.LiveData.SyncStore', function () {
     });
   });
 
-  it('fetching model with no id using callbacks', function (done) {
+  it('fetching model with no id using callbacks', function(done) {
     TEST.TestModel2 = Relution.LiveData.Model.extend({
       url: TEST.url,
       idAttribute: '_id',
       store: TEST.store,
-      entity: {
-        name: 'test'
-      }
+      entity: 'test'
     });
 
     var model = TEST.TestModel2.create({});
     model.fetch({
-      success: function (model) {
+      success: function(model) {
         backbone_error(done)(model, new Error('this should have failed!'));
       },
-      error: function () {
+      error: function() {
         done();
       }
     });
   });
 
-  it('fetching model with empty-string id using promises', function (done) {
+  it('fetching model with empty-string id using promises', function(done) {
     TEST.TestModel2 = Relution.LiveData.Model.extend({
       url: TEST.url,
       idAttribute: '_id',
       store: TEST.store,
-      entity: {
-        name: 'test'
-      }
+      entity: 'test'
     });
 
     var model = TEST.TestModel2.create({
       _id: ''
     });
-    model.fetch().then(function () {
+    model.fetch().then(function() {
       throw new Error('this should have failed!');
     },
-    function () {
-      return model;
-    }).then(function (model) {
-      done();
-      return model;
-    }, function (error) {
-      backbone_error(done)(model, error);
-      return model;
-    }).done();
+      function() {
+        return model;
+      }).then(function(model) {
+        done();
+        return model;
+      }, function(error) {
+        backbone_error(done)(model, error);
+        return model;
+      }).done();
   });
 
-  it('fetching collection', function (done) {
+  it('fetching collection', function(done) {
     TEST.Tests.reset();
     assert.equal(TEST.Tests.length, 0, 'reset has cleared the collection.');
 
     TEST.Tests.fetch({
-      success: function (collection) {
+      success: function(collection) {
         assert.isObject(TEST.Tests.get(TEST.id), 'The model is still there');
         done();
       },
@@ -199,7 +184,7 @@ describe('Relution.LiveData.SyncStore', function () {
     });
   });
 
-  it('get record', function () {
+  it('get record', function() {
     var model = TEST.Tests.get(TEST.id);
 
     assert.ok(model, "record found");
@@ -223,7 +208,7 @@ describe('Relution.LiveData.SyncStore', function () {
   // to delete records. Since we modified the IDs by tweaking the HTTP response data in the ajax call,
   // the actual server does not know about the ID changes. Thus, deletions in subsequent tests would
   // fail, if we did not change the ID back again!
-  it('change record id', function (done) {
+  it('change record id', function(done) {
     var model = TEST.Tests.get(TEST.id);
     assert.ok(model, 'record found');
     var oldId = model.id;
@@ -233,15 +218,14 @@ describe('Relution.LiveData.SyncStore', function () {
       url: TEST.url,
       idAttribute: '_id',
       store: TEST.store,
-      entity: {
-        name: 'test'
-      },
-      ajax: function (options) {
+      entity: 'test',
+
+      ajax: function(options) {
         // following simulates server reassigning ID value
-        return Relution.LiveData.Model.prototype.ajax.apply(this, arguments).then(function (response) {
+        return Relution.LiveData.Model.prototype.ajax.apply(this, arguments).then(function(response) {
           if (response._id === oldId) {
             response._id = newId;
-          } else if(response._id === newId) {
+          } else if (response._id === newId) {
             response._id = oldId;
           }
           return response;
@@ -250,18 +234,18 @@ describe('Relution.LiveData.SyncStore', function () {
     });
     var testModel = new TestModel(model.attributes);
 
-    var options ={
+    var options = {
       wait: true
     };
     var promise = testModel.save(undefined, options);
-    return promise.then(function () {
-        assert.ok(testModel.id, 'record has an id.');
-        assert.equal(testModel.id, newId, 'record has new id.');
-        assert.equal(TEST.Tests.get(testModel.id), model, 'model is found in collection by new id.');
-        assert.isUndefined(TEST.Tests.get(oldId), 'model is missing in collection by old id.');
-    }).then(function () {
+    return promise.then(function() {
+      assert.ok(testModel.id, 'record has an id.');
+      assert.equal(testModel.id, newId, 'record has new id.');
+      assert.equal(TEST.Tests.get(testModel.id), model, 'model is found in collection by new id.');
+      assert.isUndefined(TEST.Tests.get(oldId), 'model is missing in collection by old id.');
+    }).then(function() {
       // reverts local changes
-      return testModel.save(undefined, options).then(function () {
+      return testModel.save(undefined, options).then(function() {
         assert.ok(testModel.id, 'record has an id.');
         assert.equal(testModel.id, oldId, 'record has new id.');
         assert.equal(TEST.Tests.get(testModel.id), model, 'model is found in collection by old id.');
@@ -270,7 +254,7 @@ describe('Relution.LiveData.SyncStore', function () {
     }).then(done, backbone_error(done));
   });
 
-  it('delete record', function (done) {
+  it('delete record', function(done) {
     var model = TEST.Tests.get(TEST.id);
 
     assert.isObject(model, 'model found in collection');
@@ -279,7 +263,7 @@ describe('Relution.LiveData.SyncStore', function () {
 
     model.destroy(
       {
-        success: function (model) {
+        success: function(model) {
           assert.ok(true, 'record has been deleted.');
           done();
         },
@@ -287,23 +271,23 @@ describe('Relution.LiveData.SyncStore', function () {
       });
   });
 
-  it('cleanup records', function (done) {
+  it('cleanup records', function(done) {
 
     if (TEST.Tests.length === 0) {
       done();
     } else {
       var model, hasError = false, isDone = false;
-      TEST.Tests.models.forEach(function (model) {
+      TEST.Tests.models.forEach(function(model) {
         if (!hasError) {
           model.destroy({
-            success: function () {
+            success: function() {
               if (TEST.Tests.length == 0 && !isDone) {
                 isDone = true;
                 assert.equal(TEST.Tests.length, 0, 'collection is empty');
                 done();
               }
             },
-            error: function (model, error) {
+            error: function(model, error) {
               hasError = isDone = true;
               backbone_error(done).apply(this, arguments);
             }
@@ -312,5 +296,5 @@ describe('Relution.LiveData.SyncStore', function () {
       });
     }
   });
-
 });
+

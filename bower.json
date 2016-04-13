@@ -2,8 +2,7 @@
   "name": "bikini",
   "version": "0.8.4",
   "main": [
-    "./dist/bikini.js",
-    "./dist/bikangular.js"
+    "./dist/livedata.js"
   ],
   "ignore": [
     "**/.*",
@@ -11,7 +10,6 @@
     "bower_components",
     "src",
     "test",
-    "bikangular",
     "doc",
     "scripts",
     "resources",
@@ -33,12 +31,11 @@
     "q": "~1.4.1",
     "jquery": "~2.1.0",
     "socket.io-client": "~0.9.16",
-    "moment": "~2.8.0",
     "JSONPath": "*"
   },
   "devDependencies": {
-    "mocha": "~1.13.0",
-    "chai": "~1.8.1",
-    "qunit": "1.12.0"
+    "mocha": "~2.4.5",
+    "chai": "~3.5.0",
+    "qunit": "~1.23.0"
   }
 }

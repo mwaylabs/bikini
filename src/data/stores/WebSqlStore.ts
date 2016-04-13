@@ -54,27 +54,12 @@ module Relution.LiveData {
    * // in the entity of your model like this:
    *
    * var MyModel = Relution.LiveData.Model.extend({
-   *      idAttribute: 'id',
-   *      fields: {
-   *          id:          { type: Relution.LiveData.DATA.TYPE.STRING,  required: true, index: true },
-   *          sureName:    { name: 'USERNAME', type: Relution.LiveData.DATA.TYPE.STRING },
-   *          firstName:   { type: Relution.LiveData.DATA.TYPE.STRING,  length: 200 },
-   *          age:         { type: Relution.LiveData.DATA.TYPE.INTEGER }
-   *      }
+   *      idAttribute: 'id'
    * });
-   *
-   *
    */
-
   export class WebSqlStore extends AbstractSqlStore {
-    protected options:any;
     constructor(options?:any) {
-      super(_.extend({
-        name: 'relution-livedata',
-        size: 1024 * 1024, // 1 MB
-        version: '1.0',
-        security: ''
-      }, options));
+      super(options);
 
       var that = this;
       this._openDb({
@@ -96,10 +81,10 @@ module Relution.LiveData {
           if (!global.openDatabase) {
             error = 'Your browser does not support WebSQL databases.';
           } else {
-            this.db = global.openDatabase(this.options.name, '', '', this.options.size);
+            this.db = global.openDatabase(this.name, '', '', this.size);
             if (this.entities) {
-              for (var key in this.entities) {
-                this._createTable({entity: this.entities[key]});
+              for (var entity in this.entities) {
+                this._createTable({ entity: entity });
               }
             }
           }
@@ -108,7 +93,7 @@ module Relution.LiveData {
         }
       }
       if (this.db) {
-        if (this.options.version && this.db.version !== this.options.version) {
+        if (this.version && this.db.version !== this.version) {
           this._updateDb(options);
         } else {
           this.handleSuccess(options, this.db);
@@ -130,11 +115,11 @@ module Relution.LiveData {
       var that = this;
       try {
         if (!this.db) {
-          this.db = global.openDatabase(this.options.name, '', '', this.options.size);
+          this.db = global.openDatabase(this.name, '', '', this.size);
         }
         try {
-          var arSql = this._sqlUpdateDatabase(this.db.version, this.options.version);
-          this.db.changeVersion(this.db.version, this.options.version, function (tx) {
+          var arSql = this._sqlUpdateDatabase(this.db.version, this.version);
+          this.db.changeVersion(this.db.version, this.version, function (tx) {
             _.each(arSql, function (sql) {
               Relution.LiveData.Debug.info('sql statement: ' + sql);
               lastSql = sql;
@@ -161,6 +146,7 @@ module Relution.LiveData {
         this.handleError(options, error);
       }
     }
+
     public close() {
       Relution.LiveData.Debug.info('WebSQL Store close');
       if (this.db) {
@@ -168,4 +154,11 @@ module Relution.LiveData {
       }
     }
   }
+
+  // mixins
+  let webSqlStore = _.extend(WebSqlStore.prototype, {
+    _type: 'Relution.LiveData.WebSqlStore'
+  });
+  Relution.assert(() => WebSqlStore.prototype.isPrototypeOf(webSqlStore));
+
 }

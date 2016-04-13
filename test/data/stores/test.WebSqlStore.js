@@ -79,15 +79,7 @@ describe('Relution.LiveData.WebSqlStore', function () {
 
     TEST.TestModel = Relution.LiveData.Model.extend({
       idAttribute: 'key',
-      entity: {
-        name: 'test',
-        fields: {
-          key: {type: Relution.LiveData.DATA.TYPE.STRING, required: true, index: true},
-          sureName: {name: 'USERNAME', type: Relution.LiveData.DATA.TYPE.STRING, required: true, index: true},
-          firstName: {type: Relution.LiveData.DATA.TYPE.STRING, length: 200},
-          age: {type: Relution.LiveData.DATA.TYPE.INTEGER}
-        }
-      }
+      entity: 'test'
     });
 
     assert.typeOf(TEST.TestModel, 'function', 'TestModel model successfully extended.');
@@ -159,9 +151,7 @@ describe('Relution.LiveData.WebSqlStore', function () {
     TEST.TestModel2 = Relution.LiveData.Model.extend({
       idAttribute: 'key',
       store: TEST.store,
-      entity: {
-        name: 'test'
-      }
+      entity: 'test'
     });
 
     var model = TEST.TestModel2.create({key: TEST.key});
@@ -173,7 +163,7 @@ describe('Relution.LiveData.WebSqlStore', function () {
         assert.ok(true, 'model has been fetched.');
         assert.equal(model.id, TEST.key, "found record has the correct id");
         assert.equal(model.get('firstName'), TEST.data.firstName, "found record has the correct 'firstname' value");
-        assert.equal(model.get('USERNAME'), TEST.data.sureName, "found record has the correct 'USERNAME' value");
+        assert.equal(model.get('sureName'), TEST.data.sureName, "found record has the correct 'sureName' value");
         assert.equal(model.get('age'), TEST.data.age, "found record has the correct 'age' value");
         done();
       },
@@ -231,9 +221,7 @@ describe('Relution.LiveData.WebSqlStore', function () {
     TEST.TestModel2 = Relution.LiveData.Model.extend({
       idAttribute: 'key',
       store: TEST.store,
-      entity: {
-        name: 'test'
-      }
+      entity: 'test'
     });
 
     TEST.Tests2 = Relution.LiveData.Collection.design({

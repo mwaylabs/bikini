@@ -1,28 +1,28 @@
-# Bikini
+# Relution LiveData
 
 **Everything a model needs.**
 
 [![Build Status](https://travis-ci.org/mwaylabs/bikini.svg?branch=v0.5.2)](https://travis-ci.org/mwaylabs/bikini)
 
-## What is Bikini
+## What is Relution LiveData
 
-**Bikini** lets you treat  being **offline** as a status. Not as an error.
+**Relution LiveData** lets you treat  being **offline** as a status. Not as an error.
 
 You're developing a webapp for mobile browsers? You're damn right here!
 
-With Bikini the user won't even notice that he is offline.
+With Relution LiveData the user won't even notice that he is offline.
 It also improves the user experience by decreasing response latency.
 
-Another cool feature of Bikini is that it keeps your app in sync. This allows you to build high collaborative apps by using [socket.io](http://socket.io/).
+Another cool feature of Relution LiveData is that it keeps your app in sync. This allows you to build high collaborative apps by using [socket.io](http://socket.io/).
 
-Bikini is build on top of [Backbone.js](http://backbonejs.org/) which gives your web application structure.
+Relution LiveData is build on top of [Backbone.js](http://backbonejs.org/) which gives your web application structure.
 
 ![mcap mobility platform](http://blog.mwaysolutions.com/wp-content/uploads/2013/12/mway_bikini_blog04.jpg)
 
 You should also have a lot at the [introducing blog-post about Bikini](http://blog.mwaysolutions.com/2013/12/20/offlineonline-synchronization-with-bikini-all-a-model-needs/).
 
 ## How to use
-Using Bikini is like taking candy from a baby.
+Using Relution LiveData is set up using bower.
 
 ```
 cd into your project
@@ -77,9 +77,8 @@ myCollection.on('sync', function() {
 ### Event reference
 See [backbonejs-events](http://backbonejs.org/#Events) for detailed information.
 
-## Using Bikini with AngularJS
-You are building your application with [AngularJS](https://angularjs.org/)? No problem. We provide a thin wrapper between Bikini and AngularJS.
-All you need to do is to insert "[bikangular.js](mwaylabs/bikini/blob/master/bikangular/bikangular.js)".
+## Using Relution LiveData with AngularJS
+You are building your application with [AngularJS](https://angularjs.org/)? No problem.
 
 ```html
 <script src="bower_components/jquery/dist/jquery.js"></script>
@@ -87,13 +86,10 @@ All you need to do is to insert "[bikangular.js](mwaylabs/bikini/blob/master/bik
 <script src="bower_components/underscore/underscore.js"></script>
 <script src="bower_components/socket.io-client/socket.io.js"></script>
 <script src="bower_components/backbone/backbone.js"></script>
-<script src="bower_components/bikini/dist/bikini.js"></script>
-<script src="bower_components/bikini/dist/bikangular.js"></script>
+<script src="bower_components/bikini/dist/livedata.js"></script>
 ```
 
-The reason for this wrapper is that if you are using AngularJS you are usally familiar with [Kris Kowal's Q-Promises](https://github.com/kriskowal/q). But since Bikini relies on Backbone, and Backbone uses jQuery to make requests, we get [jQuery-Promises](http://api.jquery.com/category/deferred-object/) if we make any requests. Also, AngularJS will not notice if any changes happend (2-way-binding).
-
-We were able to fix that by using Angulars `$http` to perform requests.
+Just assign `Relution.LiveData.http = $http`. This causes the library to using Angulars `$http` to perform requests.
 
 ## Contributing
 
