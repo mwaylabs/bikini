@@ -84,13 +84,13 @@ module Relution.LiveData {
     data: any;
 
     /**
-     * offline messages are replayed in sort order of decreasing priority followed by increasing time.
+     * offline messages are replayed in sort order of increasing priority followed by increasing time.
      *
      * <p>
      * The priority assigned is based on the SyncEndpoint (aka. entity). By default, all entites are of equal priority
      * so that messages are replayed in causal order. The priority may be changed to account for foreign key id
-     * references among the entities. When this is done, higher priority entities are propagated to the server before
-     * messages of lower order, independent of their timely order.
+     * references among the entities. When this is done, entities with lower priority values are propagated to the
+     * server before messages of higher order, independent of their timely order.
      * </p>
      * <p>
      * An example are customer accounts which must be created before creation of shopping card orders.

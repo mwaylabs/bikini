@@ -1072,7 +1072,7 @@ module Relution.LiveData {
         // initially fetch all messages
         q = Q(this.messages.fetch(<Backbone.CollectionFetchOptions>{
           sortOrder: [
-            '-priority',
+            '+priority',
             '+time',
             '+id'
           ]

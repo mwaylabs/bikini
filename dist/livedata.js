@@ -3765,6 +3765,7 @@ var Relution;
              */
             SyncEndpoint.prototype.close = function () {
                 if (this.socket) {
+                    // consider calling this.socket.close() instead
                     this.socket.socket.close();
                     this.socket = null;
                 }
@@ -4075,6 +4076,7 @@ var Relution;
                 }
                 return Q.fcall(function () {
                     if (endpoint.socket && endpoint.socket.socket) {
+                        // consider calling endpoint.socket.disconnect() instead
                         endpoint.socket.socket.onDisconnect();
                     }
                     return undefined;
@@ -4794,7 +4796,7 @@ var Relution;
                     // initially fetch all messages
                     q = Q(this.messages.fetch({
                         sortOrder: [
-                            '-priority',
+                            '+priority',
                             '+time',
                             '+id'
                         ]

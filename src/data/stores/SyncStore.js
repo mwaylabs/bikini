@@ -1014,7 +1014,7 @@ var Relution;
                     // initially fetch all messages
                     q = Q(this.messages.fetch({
                         sortOrder: [
-                            '-priority',
+                            '+priority',
                             '+time',
                             '+id'
                         ]
