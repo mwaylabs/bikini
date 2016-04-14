@@ -136,7 +136,7 @@ var Relution;
                                 tx.executeSql(sql);
                             });
                         }, function (err) {
-                            if (!lastSql && that.db.version === that.options.version) {
+                            if (!lastSql && that.db.version === that.version) {
                                 // not a real error, concurrent migration attempt completed already
                                 that.handleSuccess(options, that.db);
                             }

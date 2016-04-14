@@ -45,7 +45,6 @@ module Relution.LiveData {
     protected version: string;
 
     protected db: any = null;
-    protected options: any;
     protected entities: { [entity: string]: {
       table: string,    // by default, entity itself but is given explicitly by SyncStore!
       created?: boolean // tri-state as initial state is not known and thus undefined
