@@ -372,38 +372,41 @@ module Relution.LiveData {
       }
     }
 
+    private transactionPromise = Q.resolve(null);
+
     protected _executeTransaction(options, statements, result?) {
-      var error;
-      var lastStatement;
-      if (this._checkDb(options)) {
-        var that = this;
-        try {
+      if (!this._checkDb(options)) {
+        return; // database not open, error was issued by _checkDb() above
+      }
+
+      // following sequentially processes transactions avoiding running too many concurrently
+      this.transactionPromise = this.transactionPromise.finally(() => {
+        var lastStatement;
+        return Q.Promise((resolve, reject) => {
           /* transaction has 3 parameters: the transaction callback, the error callback and the success callback */
-          this.db.transaction(function (t) {
-            _.each(statements, function (stm: any) {
+          return this.db.transaction((t) => {
+            return _.each(statements, (stm: any) => {
               var statement = stm.statement || stm;
               var args = stm.arguments;
               lastStatement = statement;
-              Relution.LiveData.Debug.info('sql statement: ' + statement);
-              if (args) {
-                Relution.LiveData.Debug.trace('    arguments: ' + JSON.stringify(args));
+
+              if (Relution.LiveData.Debug.enabled) {
+                Relution.LiveData.Debug.info('sql statement: ' + statement);
+                if (args) {
+                  Relution.LiveData.Debug.trace('    arguments: ' + JSON.stringify(args));
+                }
               }
+
               t.executeSql(statement, args);
             });
-          }, function (sqlError) { // errorCallback
-            Relution.LiveData.Debug.error(sqlError.message);
-            that.handleError(options, sqlError.message, lastStatement);
-          }, function () {
-            that.handleSuccess(options, result);
-          });
-        } catch (e) {
-          Relution.LiveData.Debug.error(e.message);
-          error = e;
-        }
-      }
-      if (error) {
-        this.handleError(options, error, lastStatement);
-      }
+          }, reject, resolve);
+        }).then(() => {
+          return this.handleSuccess(options, result) || null;
+        }, (error) => {
+          Relution.LiveData.Debug.error(error.message);
+          return this.handleError(options, error, lastStatement) || null;
+        });
+      });
     }
 
     protected _checkDb(options) {

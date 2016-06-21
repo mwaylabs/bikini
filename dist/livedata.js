@@ -2924,6 +2924,7 @@ var Relution;
                 _super.call(this, options);
                 this.db = null;
                 this.entities = {};
+                this.transactionPromise = Q.resolve(null);
                 if (options && options.entities) {
                     for (var entity in options.entities) {
                         this.entities[entity] = {
@@ -3220,38 +3221,36 @@ var Relution;
                 }
             };
             AbstractSqlStore.prototype._executeTransaction = function (options, statements, result) {
-                var error;
-                var lastStatement;
-                if (this._checkDb(options)) {
-                    var that = this;
-                    try {
+                var _this = this;
+                if (!this._checkDb(options)) {
+                    return; // database not open, error was issued by _checkDb() above
+                }
+                // following sequentially processes transactions avoiding running too many concurrently
+                this.transactionPromise = this.transactionPromise.finally(function () {
+                    var lastStatement;
+                    return Q.Promise(function (resolve, reject) {
                         /* transaction has 3 parameters: the transaction callback, the error callback and the success callback */
-                        this.db.transaction(function (t) {
-                            _.each(statements, function (stm) {
+                        return _this.db.transaction(function (t) {
+                            return _.each(statements, function (stm) {
                                 var statement = stm.statement || stm;
                                 var args = stm.arguments;
                                 lastStatement = statement;
-                                Relution.LiveData.Debug.info('sql statement: ' + statement);
-                                if (args) {
-                                    Relution.LiveData.Debug.trace('    arguments: ' + JSON.stringify(args));
+                                if (Relution.LiveData.Debug.enabled) {
+                                    Relution.LiveData.Debug.info('sql statement: ' + statement);
+                                    if (args) {
+                                        Relution.LiveData.Debug.trace('    arguments: ' + JSON.stringify(args));
+                                    }
                                 }
                                 t.executeSql(statement, args);
                             });
-                        }, function (sqlError) {
-                            Relution.LiveData.Debug.error(sqlError.message);
-                            that.handleError(options, sqlError.message, lastStatement);
-                        }, function () {
-                            that.handleSuccess(options, result);
-                        });
-                    }
-                    catch (e) {
-                        Relution.LiveData.Debug.error(e.message);
-                        error = e;
-                    }
-                }
-                if (error) {
-                    this.handleError(options, error, lastStatement);
-                }
+                        }, reject, resolve);
+                    }).then(function () {
+                        return _this.handleSuccess(options, result) || null;
+                    }, function (error) {
+                        Relution.LiveData.Debug.error(error.message);
+                        return _this.handleError(options, error, lastStatement) || null;
+                    });
+                });
             };
             AbstractSqlStore.prototype._checkDb = function (options) {
                 // has to be initialized first
