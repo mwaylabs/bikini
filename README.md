@@ -2,13 +2,15 @@
 
 Under the codename 'Bikini' we developed a new generation of enterprise-grade sychronisation service for hybrid mobile apps.
 
-These efforts are now centralized in a SDK (Software development kit) what is aligned with our core Product Relution [https://relution.io].
+These efforts are now centralized in a SDK (software development kit) what is aligned with our core Product Relution [https://relution.io].
 
-The SDK is called Relution SDK with an new official name for "Bikini"... it is Relution Livedata!
+The SDK is called Relution SDK with an new official name for 'Bikini', it is: Relution Livedata
 
 You will find everything you need to get in touch with this exciting technology here [https://github.com/relution-io/relution-sdk]
 
-Stay tuned in the next few weeks we will officialy release the whole tool-chain with a bunch of documentation and samples. 
+Stay tuned, in the next few weeks we will officialy release the whole toolchain with a bunch of documentation and samples. 
+
+
 
 **Everything a model needs.**
 
