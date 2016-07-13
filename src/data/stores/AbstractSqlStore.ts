@@ -33,6 +33,11 @@
 module Relution.LiveData {
 
   /**
+   * matches char codes subject to https://issues.apache.org/jira/browse/CB-9435 Cordova iOS bug.
+   */
+  const BAD_UNICODES = /[\u2028\u2029]/;
+
+  /**
    * The Relution.LiveData.AbstractSqlStore can be used to store model collection into
    * the webSql database
    *
@@ -281,7 +286,12 @@ module Relution.LiveData {
           }
           var value = options.attrs || amodel.attributes;
           var keys = [ 'id', 'data' ];
-          var args = [ amodel.id, JSON.stringify(value) ];
+          var json = JSON.stringify(value);
+          while (BAD_UNICODES.test(json)) {
+            // workaround https://issues.apache.org/jira/browse/CB-9435 on iOS
+            json = json.replace('\u2028', '\\u2028').replace('\u2029', '\\u2029');
+          }
+          var args = [amodel.id, json];
           if (args.length > 0) {
             var values = new Array(args.length).join('?,') + '?';
             var columns = '\'' + keys.join('\',\'') + '\'';
@@ -394,6 +404,9 @@ module Relution.LiveData {
                 Relution.LiveData.Debug.info('sql statement: ' + statement);
                 if (args) {
                   Relution.LiveData.Debug.trace('    arguments: ' + JSON.stringify(args));
+                  Relution.assert(() => {
+                    return !args.some((arg) => typeof arg === 'string' && BAD_UNICODES.test(arg));
+                  }, 'https://issues.apache.org/jira/browse/CB-9435 iOS unicode issue!');
                 }
               }
 
