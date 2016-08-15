@@ -62,9 +62,9 @@ var Relution;
              * close the endpoint explicit.
              */
             SyncEndpoint.prototype.close = function () {
-                if (this.socket) {
+                if (this.socket && this.socket.$emit) {
                     // consider calling this.socket.close() instead
-                    this.socket.socket.close();
+                    this.socket.$emit('close');
                     this.socket = null;
                 }
                 if (this.localStore) {
@@ -73,7 +73,7 @@ var Relution;
                 }
             };
             return SyncEndpoint;
-        })();
+        }());
         LiveData.SyncEndpoint = SyncEndpoint;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));

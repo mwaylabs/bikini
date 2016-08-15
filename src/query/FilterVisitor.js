@@ -37,7 +37,7 @@ var Relution;
                 return this[filter.operation.toLowerCase() + 'Op'].apply(this, arguments);
             };
             return FilterVisitorBase;
-        })();
+        }());
         LiveData.FilterVisitorBase = FilterVisitorBase;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));

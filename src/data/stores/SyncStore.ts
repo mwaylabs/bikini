@@ -1155,14 +1155,16 @@ module Relution.LiveData {
      * close the socket explicit
      */
     public close() {
-      if (this.messages.store) {
+      if (this.messages && this.messages.store) {
         this.messages.store.close();
         this.messages = null;
       }
 
-      var keys = Object.keys(this.endpoints);
-      for (var i = 0, l = keys.length; i < l; i++) {
-        this.endpoints[keys[i]].close();
+      if (this.endpoints) {
+        var keys = Object.keys(this.endpoints);
+        for (var i = 0, l = keys.length; i < l; i++) {
+          this.endpoints[keys[i]].close();
+        }
       }
     }
   }

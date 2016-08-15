@@ -69,7 +69,7 @@ var Relution;
                 // intentionally we do not return a value here...
             };
             return JsonPath;
-        })();
+        }());
         LiveData.JsonPath = JsonPath;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));

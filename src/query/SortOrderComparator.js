@@ -144,7 +144,7 @@ var Relution;
                 return 0;
             };
             return SortOrderComparator;
-        })();
+        }());
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=SortOrderComparator.js.map

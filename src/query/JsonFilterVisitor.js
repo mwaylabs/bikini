@@ -409,7 +409,7 @@ var Relution;
                 };
             };
             return JsonFilterVisitor;
-        })(LiveData.FilterVisitorBase);
+        }(LiveData.FilterVisitorBase));
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=JsonFilterVisitor.js.map

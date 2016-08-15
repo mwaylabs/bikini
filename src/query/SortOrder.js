@@ -91,7 +91,7 @@ var Relution;
                 });
             };
             return SortOrder;
-        })();
+        }());
         LiveData.SortOrder = SortOrder;
         var SortField = (function () {
             /**
@@ -134,7 +134,7 @@ var Relution;
                 return this.ascending ? '+' + this.name : '-' + this.name;
             };
             return SortField;
-        })();
+        }());
         LiveData.SortField = SortField;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));

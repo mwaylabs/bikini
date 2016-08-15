@@ -174,7 +174,7 @@ var Relution;
                 return params && params.substr(1);
             };
             return GetQuery;
-        })();
+        }());
         LiveData.GetQuery = GetQuery;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));

@@ -113,7 +113,7 @@ var Relution;
         });
         DebugConsole.DebugConsole = DebugConsole;
         return DebugConsole;
-    })();
+    }());
     Relution.DebugConsole = DebugConsole;
     Relution.Debug = new DebugConsole();
     function isDebugMode() {
@@ -172,7 +172,7 @@ var Relution;
             _super.call(this, message);
         }
         return AssertionError;
-    })(Error);
+    }(Error));
     Relution.AssertionError = AssertionError;
     /**
      * evaluates given check expression as a strong invariant never ever violated.
@@ -1339,7 +1339,7 @@ var Relution;
                 // intentionally we do not return a value here...
             };
             return JsonPath;
-        })();
+        }());
         LiveData.JsonPath = JsonPath;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
@@ -1408,7 +1408,7 @@ var Relution;
                 return this[filter.operation.toLowerCase() + 'Op'].apply(this, arguments);
             };
             return FilterVisitorBase;
-        })();
+        }());
         LiveData.FilterVisitorBase = FilterVisitorBase;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
@@ -1824,7 +1824,7 @@ var Relution;
                 };
             };
             return JsonFilterVisitor;
-        })(LiveData.FilterVisitorBase);
+        }(LiveData.FilterVisitorBase));
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=JsonFilterVisitor.js.map
@@ -1921,7 +1921,7 @@ var Relution;
                 });
             };
             return SortOrder;
-        })();
+        }());
         LiveData.SortOrder = SortOrder;
         var SortField = (function () {
             /**
@@ -1964,7 +1964,7 @@ var Relution;
                 return this.ascending ? '+' + this.name : '-' + this.name;
             };
             return SortField;
-        })();
+        }());
         LiveData.SortField = SortField;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
@@ -2115,7 +2115,7 @@ var Relution;
                 return 0;
             };
             return SortOrderComparator;
-        })();
+        }());
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
 //# sourceMappingURL=SortOrderComparator.js.map
@@ -2295,7 +2295,7 @@ var Relution;
                 return params && params.substr(1);
             };
             return GetQuery;
-        })();
+        }());
         LiveData.GetQuery = GetQuery;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
@@ -2439,7 +2439,7 @@ var Relution;
             Model /*<AttributesType extends Object>*/.create = Relution.LiveData.create;
             Model /*<AttributesType extends Object>*/.design = Relution.LiveData.design;
             return Model /*<AttributesType extends Object>*/;
-        })(Backbone.Model);
+        }(Backbone.Model));
         LiveData.Model /*<AttributesType extends Object>*/ = Model /*<AttributesType extends Object>*/;
         // mixins
         var model = _.extend(Model.prototype, LiveData._Object, {
@@ -2685,7 +2685,7 @@ var Relution;
             Collection.create = Relution.LiveData.create;
             Collection.design = Relution.LiveData.design;
             return Collection;
-        })(Backbone.Collection);
+        }(Backbone.Collection));
         LiveData.Collection = Collection;
         // mixins
         var collection = _.extend(Collection.prototype, LiveData._Object, {
@@ -2859,7 +2859,7 @@ var Relution;
                 ERROR_SAVE_IDS: 'Error while saving ids to the store. '
             };
             return Store;
-        })();
+        }());
         LiveData.Store = Store;
         // mixins
         var store = _.extend(Store.prototype, Backbone.Events, LiveData._Object, {
@@ -3275,7 +3275,7 @@ var Relution;
                 return true;
             };
             return AbstractSqlStore;
-        })(LiveData.Store);
+        }(LiveData.Store));
         LiveData.AbstractSqlStore = AbstractSqlStore;
         // mixins
         var abstractSqlStore = _.extend(AbstractSqlStore.prototype, {
@@ -3455,7 +3455,7 @@ var Relution;
                 }
             };
             return WebSqlStore;
-        })(LiveData.AbstractSqlStore);
+        }(LiveData.AbstractSqlStore));
         LiveData.WebSqlStore = WebSqlStore;
         // mixins
         var webSqlStore = _.extend(WebSqlStore.prototype, {
@@ -3635,7 +3635,7 @@ var Relution;
                 }
             };
             return CipherSqlStore;
-        })(LiveData.AbstractSqlStore);
+        }(LiveData.AbstractSqlStore));
         LiveData.CipherSqlStore = CipherSqlStore;
         // mixins
         var cipherSqlStore = _.extend(CipherSqlStore.prototype, {
@@ -3699,7 +3699,7 @@ var Relution;
                 _super.apply(this, arguments);
             }
             return LiveDataMessageModel;
-        })(LiveData.Model);
+        }(LiveData.Model));
         LiveData.LiveDataMessageModel = LiveDataMessageModel;
         // mixins
         var msgmodel = _.extend(LiveDataMessageModel.prototype, {
@@ -3775,9 +3775,9 @@ var Relution;
              * close the endpoint explicit.
              */
             SyncEndpoint.prototype.close = function () {
-                if (this.socket) {
+                if (this.socket && this.socket.$emit) {
                     // consider calling this.socket.close() instead
-                    this.socket.socket.close();
+                    this.socket.$emit('close');
                     this.socket = null;
                 }
                 if (this.localStore) {
@@ -3786,7 +3786,7 @@ var Relution;
                 }
             };
             return SyncEndpoint;
-        })();
+        }());
         LiveData.SyncEndpoint = SyncEndpoint;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));
@@ -3899,7 +3899,7 @@ var Relution;
                 var entity = modelOrCollection.entity;
                 if (urlRoot && entity) {
                     // get or create endpoint for this url
-                    var credentials = modelOrCollection.credentials || this.credentials;
+                    var credentials_1 = modelOrCollection.credentials || this.credentials;
                     var endpoint = this.endpoints[entity];
                     if (!endpoint) {
                         Relution.LiveData.Debug.info('Relution.LiveData.SyncStore.initEndpoint: ' + name);
@@ -3908,7 +3908,7 @@ var Relution;
                             modelType: modelType,
                             urlRoot: urlRoot,
                             socketPath: this.socketPath,
-                            credentials: credentials
+                            credentials: credentials_1
                         });
                         this.endpoints[entity] = endpoint;
                         endpoint.localStore = this.createLocalStore(endpoint);
@@ -3920,7 +3920,7 @@ var Relution;
                     else {
                         // configuration can not change, must recreate store instead...
                         Relution.assert(function () { return endpoint.urlRoot === urlRoot; }, 'can not change urlRoot, must recreate store instead!');
-                        Relution.assert(function () { return JSON.stringify(endpoint.credentials) === JSON.stringify(credentials); }, 'can not change credentials, must recreate store instead!');
+                        Relution.assert(function () { return JSON.stringify(endpoint.credentials) === JSON.stringify(credentials_1); }, 'can not change credentials, must recreate store instead!');
                     }
                     return endpoint;
                 }
@@ -4298,11 +4298,11 @@ var Relution;
                             storeMsg = false;
                             break;
                     }
-                    var entity = model.entity || endpoint.entity;
+                    var entity_1 = model.entity || endpoint.entity;
                     Relution.assert(function () { return model.entity === endpoint.entity; });
-                    Relution.assert(function () { return entity.indexOf('~') < 0; }, 'entity name must not contain a ~ character!');
+                    Relution.assert(function () { return entity_1.indexOf('~') < 0; }, 'entity name must not contain a ~ character!');
                     var msg = {
-                        _id: entity + '~' + model.id,
+                        _id: entity_1 + '~' + model.id,
                         id: model.id,
                         method: method,
                         data: data,
@@ -4888,17 +4888,19 @@ var Relution;
              * close the socket explicit
              */
             SyncStore.prototype.close = function () {
-                if (this.messages.store) {
+                if (this.messages && this.messages.store) {
                     this.messages.store.close();
                     this.messages = null;
                 }
-                var keys = Object.keys(this.endpoints);
-                for (var i = 0, l = keys.length; i < l; i++) {
-                    this.endpoints[keys[i]].close();
+                if (this.endpoints) {
+                    var keys = Object.keys(this.endpoints);
+                    for (var i = 0, l = keys.length; i < l; i++) {
+                        this.endpoints[keys[i]].close();
+                    }
                 }
             };
             return SyncStore;
-        })(LiveData.Store);
+        }(LiveData.Store));
         LiveData.SyncStore = SyncStore;
         // mixins
         var syncStore = _.extend(SyncStore.prototype, {
@@ -5387,7 +5389,7 @@ var Relution;
                 }
             };
             return SyncContext;
-        })();
+        }());
         LiveData.SyncContext = SyncContext;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));

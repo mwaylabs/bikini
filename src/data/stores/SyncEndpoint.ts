@@ -96,9 +96,9 @@ module Relution.LiveData {
      * close the endpoint explicit.
      */
     public close() {
-      if (this.socket) {
+      if (this.socket && this.socket.$emit) {
         // consider calling this.socket.close() instead
-        (<any>this.socket).socket.close();
+        (<any>this.socket).$emit('close');
         this.socket = null;
       }
       if (this.localStore) {
@@ -106,6 +106,5 @@ module Relution.LiveData {
         this.localStore = null;
       }
     }
-
   }
 }

@@ -472,7 +472,7 @@ var Relution;
                 }
             };
             return SyncContext;
-        })();
+        }());
         LiveData.SyncContext = SyncContext;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));

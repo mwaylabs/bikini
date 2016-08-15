@@ -105,7 +105,7 @@ var Relution;
             Model /*<AttributesType extends Object>*/.create = Relution.LiveData.create;
             Model /*<AttributesType extends Object>*/.design = Relution.LiveData.design;
             return Model /*<AttributesType extends Object>*/;
-        })(Backbone.Model);
+        }(Backbone.Model));
         LiveData.Model /*<AttributesType extends Object>*/ = Model /*<AttributesType extends Object>*/;
         // mixins
         var model = _.extend(Model.prototype, LiveData._Object, {

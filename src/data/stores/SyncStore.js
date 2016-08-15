@@ -106,7 +106,7 @@ var Relution;
                 var entity = modelOrCollection.entity;
                 if (urlRoot && entity) {
                     // get or create endpoint for this url
-                    var credentials = modelOrCollection.credentials || this.credentials;
+                    var credentials_1 = modelOrCollection.credentials || this.credentials;
                     var endpoint = this.endpoints[entity];
                     if (!endpoint) {
                         Relution.LiveData.Debug.info('Relution.LiveData.SyncStore.initEndpoint: ' + name);
@@ -115,7 +115,7 @@ var Relution;
                             modelType: modelType,
                             urlRoot: urlRoot,
                             socketPath: this.socketPath,
-                            credentials: credentials
+                            credentials: credentials_1
                         });
                         this.endpoints[entity] = endpoint;
                         endpoint.localStore = this.createLocalStore(endpoint);
@@ -127,7 +127,7 @@ var Relution;
                     else {
                         // configuration can not change, must recreate store instead...
                         Relution.assert(function () { return endpoint.urlRoot === urlRoot; }, 'can not change urlRoot, must recreate store instead!');
-                        Relution.assert(function () { return JSON.stringify(endpoint.credentials) === JSON.stringify(credentials); }, 'can not change credentials, must recreate store instead!');
+                        Relution.assert(function () { return JSON.stringify(endpoint.credentials) === JSON.stringify(credentials_1); }, 'can not change credentials, must recreate store instead!');
                     }
                     return endpoint;
                 }
@@ -505,11 +505,11 @@ var Relution;
                             storeMsg = false;
                             break;
                     }
-                    var entity = model.entity || endpoint.entity;
+                    var entity_1 = model.entity || endpoint.entity;
                     Relution.assert(function () { return model.entity === endpoint.entity; });
-                    Relution.assert(function () { return entity.indexOf('~') < 0; }, 'entity name must not contain a ~ character!');
+                    Relution.assert(function () { return entity_1.indexOf('~') < 0; }, 'entity name must not contain a ~ character!');
                     var msg = {
-                        _id: entity + '~' + model.id,
+                        _id: entity_1 + '~' + model.id,
                         id: model.id,
                         method: method,
                         data: data,
@@ -1095,17 +1095,19 @@ var Relution;
              * close the socket explicit
              */
             SyncStore.prototype.close = function () {
-                if (this.messages.store) {
+                if (this.messages && this.messages.store) {
                     this.messages.store.close();
                     this.messages = null;
                 }
-                var keys = Object.keys(this.endpoints);
-                for (var i = 0, l = keys.length; i < l; i++) {
-                    this.endpoints[keys[i]].close();
+                if (this.endpoints) {
+                    var keys = Object.keys(this.endpoints);
+                    for (var i = 0, l = keys.length; i < l; i++) {
+                        this.endpoints[keys[i]].close();
+                    }
                 }
             };
             return SyncStore;
-        })(LiveData.Store);
+        }(LiveData.Store));
         LiveData.SyncStore = SyncStore;
         // mixins
         var syncStore = _.extend(SyncStore.prototype, {

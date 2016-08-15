@@ -166,7 +166,7 @@ var Relution;
                 }
             };
             return WebSqlStore;
-        })(LiveData.AbstractSqlStore);
+        }(LiveData.AbstractSqlStore));
         LiveData.WebSqlStore = WebSqlStore;
         // mixins
         var webSqlStore = _.extend(WebSqlStore.prototype, {
