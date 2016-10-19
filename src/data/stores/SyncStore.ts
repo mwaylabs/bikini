@@ -218,7 +218,8 @@ module Relution.LiveData {
         // remove leading /
         var resource = (path && path.indexOf('/') === 0) ? path.substr(1) : path;
         var connectVo:any = {
-          resource: resource
+          resource: resource,
+          'force new connection': true
         };
 
         if (this.socketQuery) {

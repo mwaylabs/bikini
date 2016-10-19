@@ -401,7 +401,7 @@ var Relution;
                 return true;
             };
             return AbstractSqlStore;
-        }(LiveData.Store));
+        })(LiveData.Store);
         LiveData.AbstractSqlStore = AbstractSqlStore;
         // mixins
         var abstractSqlStore = _.extend(AbstractSqlStore.prototype, {

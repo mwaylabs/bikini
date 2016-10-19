@@ -88,7 +88,7 @@ var Relution;
         });
         DebugConsole.DebugConsole = DebugConsole;
         return DebugConsole;
-    }());
+    })();
     Relution.DebugConsole = DebugConsole;
     Relution.Debug = new DebugConsole();
     function isDebugMode() {

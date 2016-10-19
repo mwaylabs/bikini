@@ -232,7 +232,7 @@ var Relution;
             Collection.create = Relution.LiveData.create;
             Collection.design = Relution.LiveData.design;
             return Collection;
-        }(Backbone.Collection));
+        })(Backbone.Collection);
         LiveData.Collection = Collection;
         // mixins
         var collection = _.extend(Collection.prototype, LiveData._Object, {

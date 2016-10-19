@@ -168,7 +168,7 @@ var Relution;
                 }
             };
             return CipherSqlStore;
-        }(LiveData.AbstractSqlStore));
+        })(LiveData.AbstractSqlStore);
         LiveData.CipherSqlStore = CipherSqlStore;
         // mixins
         var cipherSqlStore = _.extend(CipherSqlStore.prototype, {

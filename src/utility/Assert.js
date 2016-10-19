@@ -39,7 +39,7 @@ var Relution;
             _super.call(this, message);
         }
         return AssertionError;
-    }(Error));
+    })(Error);
     Relution.AssertionError = AssertionError;
     /**
      * evaluates given check expression as a strong invariant never ever violated.

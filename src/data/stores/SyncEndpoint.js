@@ -73,7 +73,7 @@ var Relution;
                 }
             };
             return SyncEndpoint;
-        }());
+        })();
         LiveData.SyncEndpoint = SyncEndpoint;
     })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
 })(Relution || (Relution = {}));

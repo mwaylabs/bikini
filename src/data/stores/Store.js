@@ -158,7 +158,7 @@ var Relution;
                 ERROR_SAVE_IDS: 'Error while saving ids to the store. '
             };
             return Store;
-        }());
+        })();
         LiveData.Store = Store;
         // mixins
         var store = _.extend(Store.prototype, Backbone.Events, LiveData._Object, {

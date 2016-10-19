@@ -51,7 +51,7 @@ var Relution;
                 _super.apply(this, arguments);
             }
             return LiveDataMessageModel;
-        }(LiveData.Model));
+        })(LiveData.Model);
         LiveData.LiveDataMessageModel = LiveDataMessageModel;
         // mixins
         var msgmodel = _.extend(LiveDataMessageModel.prototype, {

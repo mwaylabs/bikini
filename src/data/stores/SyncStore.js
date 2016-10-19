@@ -106,7 +106,7 @@ var Relution;
                 var entity = modelOrCollection.entity;
                 if (urlRoot && entity) {
                     // get or create endpoint for this url
-                    var credentials_1 = modelOrCollection.credentials || this.credentials;
+                    var credentials = modelOrCollection.credentials || this.credentials;
                     var endpoint = this.endpoints[entity];
                     if (!endpoint) {
                         Relution.LiveData.Debug.info('Relution.LiveData.SyncStore.initEndpoint: ' + name);
@@ -115,7 +115,7 @@ var Relution;
                             modelType: modelType,
                             urlRoot: urlRoot,
                             socketPath: this.socketPath,
-                            credentials: credentials_1
+                            credentials: credentials
                         });
                         this.endpoints[entity] = endpoint;
                         endpoint.localStore = this.createLocalStore(endpoint);
@@ -127,7 +127,7 @@ var Relution;
                     else {
                         // configuration can not change, must recreate store instead...
                         Relution.assert(function () { return endpoint.urlRoot === urlRoot; }, 'can not change urlRoot, must recreate store instead!');
-                        Relution.assert(function () { return JSON.stringify(endpoint.credentials) === JSON.stringify(credentials_1); }, 'can not change credentials, must recreate store instead!');
+                        Relution.assert(function () { return JSON.stringify(endpoint.credentials) === JSON.stringify(credentials); }, 'can not change credentials, must recreate store instead!');
                     }
                     return endpoint;
                 }
@@ -195,7 +195,8 @@ var Relution;
                     // remove leading /
                     var resource = (path && path.indexOf('/') === 0) ? path.substr(1) : path;
                     var connectVo = {
-                        resource: resource
+                        resource: resource,
+                        'force new connection': true
                     };
                     if (this.socketQuery) {
                         connectVo.query = this.socketQuery;
@@ -505,11 +506,11 @@ var Relution;
                             storeMsg = false;
                             break;
                     }
-                    var entity_1 = model.entity || endpoint.entity;
+                    var entity = model.entity || endpoint.entity;
                     Relution.assert(function () { return model.entity === endpoint.entity; });
-                    Relution.assert(function () { return entity_1.indexOf('~') < 0; }, 'entity name must not contain a ~ character!');
+                    Relution.assert(function () { return entity.indexOf('~') < 0; }, 'entity name must not contain a ~ character!');
                     var msg = {
-                        _id: entity_1 + '~' + model.id,
+                        _id: entity + '~' + model.id,
                         id: model.id,
                         method: method,
                         data: data,
@@ -1107,7 +1108,7 @@ var Relution;
                 }
             };
             return SyncStore;
-        }(LiveData.Store));
+        })(LiveData.Store);
         LiveData.SyncStore = SyncStore;
         // mixins
         var syncStore = _.extend(SyncStore.prototype, {
