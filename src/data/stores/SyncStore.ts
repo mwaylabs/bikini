@@ -32,6 +32,7 @@
 /// <reference path="SyncContext.ts" />
 /// <reference path="SyncEndpoint.ts" />
 /// <reference path="LiveDataMessage.ts" />
+/// <reference path="LiveDataTimestamp.ts" />
 /// <reference path="../../utility/Debug.ts" />
 /// <reference path="../Model.ts" />
 /// <reference path="../Collection.ts" />
@@ -83,7 +84,9 @@ module Relution.LiveData {
       [entity: string]: SyncEndpoint;
     } = {};
 
-    private lastMesgTime: any;
+    private lastMesgTime: any; // deprecated: kept for migration and as a failsafe
+    private timestamps: Collection;
+    private timestampsPromise: Q.Promise<Collection>;
 
     /**
      * when set, indicates which entity caused a disconnection.
@@ -139,6 +142,7 @@ module Relution.LiveData {
           endpoint.localStore = this.createLocalStore(endpoint);
           endpoint.priority = this.orderOfflineChanges && (_.lastIndexOf(this.orderOfflineChanges, endpoint.entity) + 1);
           this.createMsgCollection();
+          this.createTimestampCollection();
           endpoint.socket = this.createSocket(endpoint, entity);
           endpoint.info = this.fetchServerInfo(endpoint);
         } else {
@@ -199,6 +203,16 @@ module Relution.LiveData {
       return this.messages;
     }
 
+    createTimestampCollection(): Collection {
+      if (this.useLocalStore && !this.timestamps) {
+        this.timestamps = Collection.design({
+          model: LiveDataTimestampModel,
+          store: new this.localStore(this.localStoreOptions)
+        });
+      }
+      return this.timestamps;
+    }
+
     createSocket(endpoint: SyncEndpoint, name: string) {
       if (this.useSocketNotify && endpoint && endpoint.socketPath) {
         Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore.createSocket: ' + name);
@@ -249,7 +263,7 @@ module Relution.LiveData {
         var channel = endpoint.channel;
         var socket = endpoint.socket;
         name = name || endpoint.entity;
-        return this.getLastMessageTime(channel).then((time) => {
+        return this.getTimestamp(channel).then((time) => {
           socket.emit('bind', {
             entity: name,
             channel: channel,
@@ -260,28 +274,88 @@ module Relution.LiveData {
       }
     }
 
-    getLastMessageTime(channel: string): Q.Promise<any> {
+    private keyLastMessage(channel: string): string {
+      return '__' + channel + 'lastMesgTime';
+    }
+
+    // deprecated: use getTimestamp instead!
+    private getLastMessageTime(channel: string): any {
       if (!this.lastMesgTime) {
         this.lastMesgTime = {};
       } else if (this.lastMesgTime[channel] !== undefined) {
-        return Q.resolve(this.lastMesgTime[channel]);
+        return this.lastMesgTime[channel];
       }
       // the | 0 below turns strings into numbers
-      var time = localStorage.getItem('__' + channel + 'lastMesgTime') || 0;
+      var time = localStorage.getItem(this.keyLastMessage(channel)) || 0;
       this.lastMesgTime[channel] = time;
-      return Q.resolve(time);
+      return time;
     }
 
-    setLastMessageTime(channel: string, time: any): Q.Promise<any> {
-      return Q.resolve(!time || this.getLastMessageTime(channel).then((lastMesgTime) => {
-        return time > lastMesgTime;
-      })).then((update) => {
-        if (update) {
-          localStorage.setItem('__' + channel + 'lastMesgTime', time);
-          this.lastMesgTime[channel] = time;
-        }
+    // deprecated: use setTimestamp instead!
+    private setLastMessageTime(channel: string, time: any): any {
+      if (!time) {
+        localStorage.removeItem(this.keyLastMessage(channel));
+      } else if(time > this.getLastMessageTime(channel)) {
+        localStorage.setItem(this.keyLastMessage(channel), time);
+      } else {
         return this.lastMesgTime[channel];
+      }
+      this.lastMesgTime[channel] = time;
+      return time;
+    }
+
+    private getTimestampModel(channel: string): Q.Promise<LiveDataTimestampModel> {
+      if (this.timestamps) {
+        if (!this.timestampsPromise) {
+          // initially fetch all messages
+          this.timestampsPromise = Q(this.timestamps.fetch());
+        }
+        return this.timestampsPromise.then(() => {
+          return this.timestamps.get(channel) || this.timestamps.add(new this.timestamps.model({
+              channel: channel,
+              timestamp: this.getLastMessageTime(channel)
+            }, {
+              store: this.timestamps.store
+            }));
+        });
+      }
+    }
+
+    getTimestamp(channel: string): Q.Promise<any> {
+      let q = this.getTimestampModel(channel);
+      if (!q) {
+        return Q.resolve(this.getLastMessageTime(channel));
+      }
+
+      this.timestampsPromise = q.then((model) => {
+        return model.attributes.timestamp;
+      }).catch((err) => {
+        Relution.LiveData.Debug.error('Relution.LiveData.SyncStore.getTimestamp: ' + channel, err);
+        return this.getLastMessageTime(channel);
       });
+      return this.timestampsPromise;
+    }
+
+    setTimestamp(channel: string, time: any): Q.Promise<any> {
+      let q = this.getTimestampModel(channel);
+      if (!q) {
+        return this.setLastMessageTime(channel, time);
+      }
+
+      this.timestampsPromise = q.then((model) => {
+        if (!time || time > model.attributes.timestamp) {
+          return model.save({
+            timestamp: time
+          }).thenResolve(time);
+        }
+        return model.attributes.timestamp;
+      }).catch((err) => {
+        Relution.LiveData.Debug.error('Relution.LiveData.SyncStore.setTimestamp: ' + channel, err);
+        return time;
+      }).finally(() => {
+        return this.setLastMessageTime(channel, time);
+      });
+      return this.timestampsPromise;
     }
 
     onConnect(endpoint: SyncEndpoint): Q.Promise<void> {
@@ -399,7 +473,7 @@ module Relution.LiveData {
 
       // finally set the message time
       return q.then(() => {
-        return Q.resolve(msg.time && this.setLastMessageTime(channel, msg.time)).then(() => {
+        return Q.resolve(msg.time && this.setTimestamp(channel, msg.time)).then(() => {
           // update all collections listening
           this.trigger('sync:' + channel, msg); // SyncContext.onMessage
           return msg;
@@ -459,7 +533,7 @@ module Relution.LiveData {
         }
 
         var channel = endpoint.channel;
-        return this.getLastMessageTime(channel).then((time) => {
+        return this.getTimestamp(channel).then((time) => {
           try {
             // only send read messages if no other store can do this or for initial load
             if (method === 'read' && endpoint.localStore && time && !options.reset) {
@@ -701,7 +775,7 @@ module Relution.LiveData {
         // update local store state
         if (data) {
           // no data if server asks not to alter state
-          // this.setLastMessageTime(channel, msg.time);
+          // this.setTimestamp(channel, msg.time);
           var promises = [];
           var dataIds;
           if (msg.method !== 'read') {
@@ -796,7 +870,7 @@ module Relution.LiveData {
         let qTime;
         if (msg.method === 'read' && isCollection(model)) {
           // TODO: extract Date header from options.xhr instead of using clientTime
-          qTime = this.setLastMessageTime(endpoint.channel, clientTime);
+          qTime = this.setTimestamp(endpoint.channel, clientTime);
         } else {
           qTime = Q.resolve(undefined);
         }
@@ -826,7 +900,7 @@ module Relution.LiveData {
         }
       }
 
-      return this.getLastMessageTime(channel).then((time) => {
+      return this.getTimestamp(channel).then((time) => {
         if (!time) {
           Relution.LiveData.Debug.error(channel + ' can not fetch changes at this time!');
           return promise || Q.resolve<Collection>(undefined);
@@ -851,7 +925,7 @@ module Relution.LiveData {
             }));
           } else {
             // following should use server time!
-            return this.setLastMessageTime(channel, now);
+            return this.setTimestamp(channel, now);
           }
         }).thenResolve(changes);
 
@@ -886,9 +960,9 @@ module Relution.LiveData {
           credentials: endpoint.credentials
         }))).then(() => {
           //@todo why we set a server time here ?
-          return this.getLastMessageTime(endpoint.channel).then((time) => {
+          return this.getTimestamp(endpoint.channel).then((time) => {
             if (!time && info.get('time')) {
-              return this.setLastMessageTime(endpoint.channel, info.get('time'));
+              return this.setTimestamp(endpoint.channel, info.get('time'));
             }
             return time;
           });
@@ -1168,7 +1242,7 @@ module Relution.LiveData {
             this.messages.destroy();
           }
           collection.reset();
-          return this.setLastMessageTime(endpoint.channel, '');
+          return this.setTimestamp(endpoint.channel, '');
         }
       }
     }
