@@ -203,8 +203,9 @@ var Relution;
                     }
                     endpoint.socket = io.connect(url, connectVo);
                     endpoint.socket.on('connect', function () {
-                        _this._bindChannel(endpoint, name);
-                        return _this.onConnect(endpoint).done();
+                        (_this._bindChannel(endpoint, name) || Q.resolve(endpoint)).then(function (endpoint) {
+                            return _this.onConnect(endpoint);
+                        }).done();
                     });
                     endpoint.socket.on('disconnect', function () {
                         Relution.LiveData.Debug.info('socket.io: disconnect');
@@ -221,12 +222,14 @@ var Relution;
                     Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore._bindChannel: ' + name);
                     var channel = endpoint.channel;
                     var socket = endpoint.socket;
-                    var time = this.getLastMessageTime(channel);
                     name = name || endpoint.entity;
-                    socket.emit('bind', {
-                        entity: name,
-                        channel: channel,
-                        time: time
+                    return this.getLastMessageTime(channel).then(function (time) {
+                        socket.emit('bind', {
+                            entity: name,
+                            channel: channel,
+                            time: time
+                        });
+                        return Q.resolve(endpoint);
                     });
                 }
             };
@@ -235,18 +238,24 @@ var Relution;
                     this.lastMesgTime = {};
                 }
                 else if (this.lastMesgTime[channel] !== undefined) {
-                    return this.lastMesgTime[channel];
+                    return Q.resolve(this.lastMesgTime[channel]);
                 }
                 // the | 0 below turns strings into numbers
                 var time = localStorage.getItem('__' + channel + 'lastMesgTime') || 0;
                 this.lastMesgTime[channel] = time;
-                return time;
+                return Q.resolve(time);
             };
             SyncStore.prototype.setLastMessageTime = function (channel, time) {
-                if (!time || time > this.getLastMessageTime(channel)) {
-                    localStorage.setItem('__' + channel + 'lastMesgTime', time);
-                    this.lastMesgTime[channel] = time;
-                }
+                var _this = this;
+                return Q.resolve(!time || this.getLastMessageTime(channel).then(function (lastMesgTime) {
+                    return time > lastMesgTime;
+                })).then(function (update) {
+                    if (update) {
+                        localStorage.setItem('__' + channel + 'lastMesgTime', time);
+                        _this.lastMesgTime[channel] = time;
+                    }
+                    return _this.lastMesgTime[channel];
+                });
             };
             SyncStore.prototype.onConnect = function (endpoint) {
                 var _this = this;
@@ -360,12 +369,11 @@ var Relution;
                 }
                 // finally set the message time
                 return q.then(function () {
-                    if (msg.time) {
-                        _this.setLastMessageTime(channel, msg.time);
-                    }
-                    // update all collections listening
-                    _this.trigger('sync:' + channel, msg); // SyncContext.onMessage
-                    return msg;
+                    return Q.resolve(msg.time && _this.setLastMessageTime(channel, msg.time)).then(function () {
+                        // update all collections listening
+                        _this.trigger('sync:' + channel, msg); // SyncContext.onMessage
+                        return msg;
+                    });
                 }, function (error) {
                     // not setting message time in error case
                     // report error as event on store
@@ -411,72 +419,76 @@ var Relution;
                                 model.set(model.idAttribute, new LiveData.ObjectID().toHexString());
                             }
                             else {
-                                var error = new Error('no (valid) id: ' + model.id);
-                                return Q.reject(this.handleError(options, error) || error);
+                                throw new Error('no (valid) id: ' + model.id);
                             }
                         }
                     }
                     else {
                         // something is really at odds here...
-                        var error = new Error('target of sync is neither a model nor a collection!?!');
-                        return Q.reject(this.handleError(options, error) || error);
+                        throw new Error('target of sync is neither a model nor a collection!?!');
                     }
                     var channel = endpoint.channel;
-                    var time = this.getLastMessageTime(channel);
-                    // only send read messages if no other store can do this or for initial load
-                    if (method === 'read' && endpoint.localStore && time && !options.reset) {
-                        // read data from localStore and fetch changes remote
-                        var opts = _.clone(options);
-                        opts.store = endpoint.localStore;
-                        opts.entity = endpoint.entity;
-                        delete opts.success;
-                        delete opts.error;
-                        return endpoint.localStore.sync(method, model, opts).then(function (resp) {
-                            // backbone success callback alters the collection now
-                            resp = _this.handleSuccess(options, resp) || resp;
-                            if (endpoint.socket || options.fetchMode === 'local') {
-                                // no need to fetch changes as we got a websocket, that is either connected or attempts reconnection
-                                return resp;
-                            }
-                            // when we are disconnected, try to connect now
-                            if (!endpoint.isConnected) {
-                                var qInfo = _this.fetchServerInfo(endpoint);
-                                if (!qInfo) {
-                                    return resp;
-                                }
-                                return qInfo.then(function (info) {
-                                    // trigger reconnection when disconnected
-                                    var result;
+                    return this.getLastMessageTime(channel).then(function (time) {
+                        try {
+                            // only send read messages if no other store can do this or for initial load
+                            if (method === 'read' && endpoint.localStore && time && !options.reset) {
+                                // read data from localStore and fetch changes remote
+                                var opts = _.clone(options);
+                                opts.store = endpoint.localStore;
+                                opts.entity = endpoint.entity;
+                                delete opts.success;
+                                delete opts.error;
+                                return endpoint.localStore.sync(method, model, opts).then(function (resp) {
+                                    // backbone success callback alters the collection now
+                                    resp = _this.handleSuccess(options, resp) || resp;
+                                    if (endpoint.socket || options.fetchMode === 'local') {
+                                        // no need to fetch changes as we got a websocket, that is either connected or attempts reconnection
+                                        return resp;
+                                    }
+                                    // when we are disconnected, try to connect now
                                     if (!endpoint.isConnected) {
-                                        result = _this.onConnect(endpoint);
+                                        var qInfo = _this.fetchServerInfo(endpoint);
+                                        if (!qInfo) {
+                                            return resp;
+                                        }
+                                        return qInfo.then(function (info) {
+                                            // trigger reconnection when disconnected
+                                            var result;
+                                            if (!endpoint.isConnected) {
+                                                result = _this.onConnect(endpoint);
+                                            }
+                                            return result || info;
+                                        }, function (xhr) {
+                                            // trigger disconnection when disconnected
+                                            var result;
+                                            if (!xhr.responseText && endpoint.isConnected) {
+                                                result = _this.onDisconnect(endpoint);
+                                            }
+                                            return result || resp;
+                                        }).thenResolve(resp);
                                     }
-                                    return result || info;
-                                }, function (xhr) {
-                                    // trigger disconnection when disconnected
-                                    var result;
-                                    if (!xhr.responseText && endpoint.isConnected) {
-                                        result = _this.onDisconnect(endpoint);
-                                    }
-                                    return result || resp;
-                                }).thenResolve(resp);
+                                    // load changes only (will happen AFTER success callback is invoked,
+                                    // but returned promise will resolve only after changes were processed.
+                                    return _this.fetchChanges(endpoint).catch(function (xhr) {
+                                        if (!xhr.responseText && endpoint.isConnected) {
+                                            return _this.onDisconnect(endpoint) || resp;
+                                        }
+                                        // can not do much about it...
+                                        _this.trigger('error:' + channel, xhr.responseJSON || xhr.responseText, model);
+                                        return resp;
+                                    }).thenResolve(resp); // caller expects original XHR response as changes body data is NOT compatible
+                                }, function () {
+                                    // fall-back to loading full data set
+                                    return _this._addMessage(method, model, options, endpoint);
+                                });
                             }
-                            // load changes only (will happen AFTER success callback is invoked,
-                            // but returned promise will resolve only after changes were processed.
-                            return _this.fetchChanges(endpoint).catch(function (xhr) {
-                                if (!xhr.responseText && endpoint.isConnected) {
-                                    return _this.onDisconnect(endpoint) || resp;
-                                }
-                                // can not do much about it...
-                                _this.trigger('error:' + channel, xhr.responseJSON || xhr.responseText, model);
-                                return resp;
-                            }).thenResolve(resp); // caller expects original XHR response as changes body data is NOT compatible
-                        }, function () {
-                            // fall-back to loading full data set
+                            // do backbone rest
                             return _this._addMessage(method, model, options, endpoint);
-                        });
-                    }
-                    // do backbone rest
-                    return this._addMessage(method, model, options, endpoint);
+                        }
+                        catch (error) {
+                            return Q.reject(_this.handleError(options, error) || error);
+                        }
+                    });
                 }
                 catch (error) {
                     return Q.reject(this.handleError(options, error) || error);
@@ -741,12 +753,18 @@ var Relution;
                         });
                     }
                 }).then(function (response) {
+                    var qTime;
                     if (msg.method === 'read' && LiveData.isCollection(model)) {
                         // TODO: extract Date header from options.xhr instead of using clientTime
-                        _this.setLastMessageTime(endpoint.channel, clientTime);
+                        qTime = _this.setLastMessageTime(endpoint.channel, clientTime);
                     }
-                    // invoke success callback, if any
-                    return _this.handleSuccess(options, response) || response;
+                    else {
+                        qTime = Q.resolve(undefined);
+                    }
+                    return qTime.then(function () {
+                        // invoke success callback, if any
+                        return _this.handleSuccess(options, response) || response;
+                    });
                 }, function (error) {
                     // invoke error callback, if any
                     return _this.handleError(options, error) || Q.reject(error);
@@ -767,35 +785,37 @@ var Relution;
                         return promise;
                     }
                 }
-                var time = this.getLastMessageTime(channel);
-                if (!time) {
-                    Relution.LiveData.Debug.error(channel + ' can not fetch changes at this time!');
-                    return promise || Q.resolve(undefined);
-                }
-                // initiate a new request for changes
-                Relution.LiveData.Debug.info(channel + ' initiating changes request...');
-                var changes = new this.messages.constructor();
-                promise = Q(changes.fetch({
-                    url: endpoint.urlRoot + 'changes/' + time,
-                    credentials: endpoint.credentials,
-                    store: {},
-                    success: function (model, response, options) {
+                return this.getLastMessageTime(channel).then(function (time) {
+                    if (!time) {
+                        Relution.LiveData.Debug.error(channel + ' can not fetch changes at this time!');
+                        return promise || Q.resolve(undefined);
+                    }
+                    // initiate a new request for changes
+                    Relution.LiveData.Debug.info(channel + ' initiating changes request...');
+                    var changes = new _this.messages.constructor();
+                    promise = Q(changes.fetch({
+                        url: endpoint.urlRoot + 'changes/' + time,
+                        credentials: endpoint.credentials,
+                        store: {},
+                        success: function (model, response, options) {
+                            return response || options.xhr;
+                        }
+                    })).then(function () {
                         if (changes.models.length > 0) {
-                            changes.each(function (change) {
+                            return Q.all(changes.map(function (change) {
                                 var msg = change.attributes;
-                                _this.onMessage(endpoint, _this._fixMessage(endpoint, msg));
-                            });
+                                return _this.onMessage(endpoint, _this._fixMessage(endpoint, msg));
+                            }));
                         }
                         else {
                             // following should use server time!
-                            _this.setLastMessageTime(channel, now);
+                            return _this.setLastMessageTime(channel, now);
                         }
-                        return response || options.xhr;
-                    }
-                })).thenResolve(changes);
-                endpoint.promiseFetchingChanges = promise;
-                endpoint.timestampFetchingChanges = now;
-                return promise;
+                    }).thenResolve(changes);
+                    endpoint.promiseFetchingChanges = promise;
+                    endpoint.timestampFetchingChanges = now;
+                    return promise;
+                });
             };
             SyncStore.prototype.fetchServerInfo = function (endpoint) {
                 var _this = this;
@@ -810,7 +830,6 @@ var Relution;
                         }
                     }
                     var info = new LiveData.Model();
-                    var time = this.getLastMessageTime(endpoint.channel);
                     var url = endpoint.urlRoot;
                     if (url.charAt((url.length - 1)) !== '/') {
                         url += '/';
@@ -818,21 +837,27 @@ var Relution;
                     promise = Q(info.fetch(({
                         url: url + 'info',
                         success: function (model, response, options) {
-                            //@todo why we set a server time here ?
-                            if (!time && info.get('time')) {
-                                _this.setLastMessageTime(endpoint.channel, info.get('time'));
-                            }
-                            if (!endpoint.socketPath && info.get('socketPath')) {
-                                endpoint.socketPath = info.get('socketPath');
-                                var name = info.get('entity') || endpoint.entity;
-                                if (_this.useSocketNotify) {
-                                    endpoint.socket = _this.createSocket(endpoint, name);
-                                }
-                            }
                             return response || options.xhr;
                         },
                         credentials: endpoint.credentials
-                    }))).thenResolve(info);
+                    }))).then(function () {
+                        //@todo why we set a server time here ?
+                        return _this.getLastMessageTime(endpoint.channel).then(function (time) {
+                            if (!time && info.get('time')) {
+                                return _this.setLastMessageTime(endpoint.channel, info.get('time'));
+                            }
+                            return time;
+                        });
+                    }).then(function () {
+                        if (!endpoint.socketPath && info.get('socketPath')) {
+                            endpoint.socketPath = info.get('socketPath');
+                            var name = info.get('entity') || endpoint.entity;
+                            if (_this.useSocketNotify) {
+                                endpoint.socket = _this.createSocket(endpoint, name);
+                            }
+                        }
+                        return info;
+                    });
                     endpoint.promiseFetchingServerInfo = promise;
                     endpoint.timestampFetchingServerInfo = now;
                     return promise;
@@ -1088,7 +1113,7 @@ var Relution;
                             this.messages.destroy();
                         }
                         collection.reset();
-                        this.setLastMessageTime(endpoint.channel, '');
+                        return this.setLastMessageTime(endpoint.channel, '');
                     }
                 }
             };
