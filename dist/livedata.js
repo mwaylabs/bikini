@@ -3712,6 +3712,71 @@ var Relution;
 })(Relution || (Relution = {}));
 //# sourceMappingURL=LiveDataMessage.js.map
 /**
+ * LiveDataTimestamp.ts
+ *
+ * Created by Thomas Beckmann on 24.02.2017
+ * Copyright (c)
+ * 2017
+ * M-Way Solutions GmbH. All rights reserved.
+ * http://www.mwaysolutions.com
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are not permitted.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+/* jshint indent: 4 */
+/* jshint curly: false */
+/* jshint newcap: false */
+/* jshint -W004: '%' is already defined. */
+/// <reference path="../../core/livedata.d.ts" />
+/// <reference path="Store.ts" />
+/// <reference path="SyncContext.ts" />
+/// <reference path="../../utility/Debug.ts" />
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var Relution;
+(function (Relution) {
+    var LiveData;
+    (function (LiveData) {
+        /**
+         * timestamp packed into a Model.
+         *
+         * @module Relution.LiveData.LiveDataTimestamp
+         *
+         * @type {*}
+         */
+        var LiveDataTimestampModel = (function (_super) {
+            __extends(LiveDataTimestampModel, _super);
+            function LiveDataTimestampModel() {
+                _super.apply(this, arguments);
+            }
+            return LiveDataTimestampModel;
+        })(LiveData.Model);
+        LiveData.LiveDataTimestampModel = LiveDataTimestampModel;
+        // mixins
+        var timestampmodel = _.extend(LiveDataTimestampModel.prototype, {
+            _type: 'Relution.LiveData.LiveDataTimestampModel',
+            entity: '__timestamp__',
+            idAttribute: 'channel'
+        });
+        Relution.assert(function () { return new timestampmodel({ channel: 'check' }).id === 'check'; });
+    })(LiveData = Relution.LiveData || (Relution.LiveData = {}));
+})(Relution || (Relution = {}));
+//# sourceMappingURL=LiveDataTimestamp.js.map
+/**
  * SyncEndpoint.ts
  *
  * Created by Thomas Beckmann on 07.12.2015
@@ -3825,6 +3890,7 @@ var Relution;
 /// <reference path="SyncContext.ts" />
 /// <reference path="SyncEndpoint.ts" />
 /// <reference path="LiveDataMessage.ts" />
+/// <reference path="LiveDataTimestamp.ts" />
 /// <reference path="../../utility/Debug.ts" />
 /// <reference path="../Model.ts" />
 /// <reference path="../Collection.ts" />
@@ -3914,6 +3980,7 @@ var Relution;
                         endpoint.localStore = this.createLocalStore(endpoint);
                         endpoint.priority = this.orderOfflineChanges && (_.lastIndexOf(this.orderOfflineChanges, endpoint.entity) + 1);
                         this.createMsgCollection();
+                        this.createTimestampCollection();
                         endpoint.socket = this.createSocket(endpoint, entity);
                         endpoint.info = this.fetchServerInfo(endpoint);
                     }
@@ -3969,6 +4036,15 @@ var Relution;
                 }
                 return this.messages;
             };
+            SyncStore.prototype.createTimestampCollection = function () {
+                if (this.useLocalStore && !this.timestamps) {
+                    this.timestamps = LiveData.Collection.design({
+                        model: LiveData.LiveDataTimestampModel,
+                        store: new this.localStore(this.localStoreOptions)
+                    });
+                }
+                return this.timestamps;
+            };
             SyncStore.prototype.createSocket = function (endpoint, name) {
                 var _this = this;
                 if (this.useSocketNotify && endpoint && endpoint.socketPath) {
@@ -3996,8 +4072,9 @@ var Relution;
                     }
                     endpoint.socket = io.connect(url, connectVo);
                     endpoint.socket.on('connect', function () {
-                        _this._bindChannel(endpoint, name);
-                        return _this.onConnect(endpoint).done();
+                        (_this._bindChannel(endpoint, name) || Q.resolve(endpoint)).then(function (endpoint) {
+                            return _this.onConnect(endpoint);
+                        }).done();
                     });
                     endpoint.socket.on('disconnect', function () {
                         Relution.LiveData.Debug.info('socket.io: disconnect');
@@ -4014,15 +4091,21 @@ var Relution;
                     Relution.LiveData.Debug.trace('Relution.LiveData.SyncStore._bindChannel: ' + name);
                     var channel = endpoint.channel;
                     var socket = endpoint.socket;
-                    var time = this.getLastMessageTime(channel);
                     name = name || endpoint.entity;
-                    socket.emit('bind', {
-                        entity: name,
-                        channel: channel,
-                        time: time
+                    return this.getTimestamp(channel).then(function (time) {
+                        socket.emit('bind', {
+                            entity: name,
+                            channel: channel,
+                            time: time
+                        });
+                        return Q.resolve(endpoint);
                     });
                 }
             };
+            SyncStore.prototype.keyLastMessage = function (channel) {
+                return '__' + channel + 'lastMesgTime';
+            };
+            // deprecated: use getTimestamp instead!
             SyncStore.prototype.getLastMessageTime = function (channel) {
                 if (!this.lastMesgTime) {
                     this.lastMesgTime = {};
@@ -4031,15 +4114,75 @@ var Relution;
                     return this.lastMesgTime[channel];
                 }
                 // the | 0 below turns strings into numbers
-                var time = localStorage.getItem('__' + channel + 'lastMesgTime') || 0;
+                var time = localStorage.getItem(this.keyLastMessage(channel)) || 0;
                 this.lastMesgTime[channel] = time;
                 return time;
             };
+            // deprecated: use setTimestamp instead!
             SyncStore.prototype.setLastMessageTime = function (channel, time) {
-                if (!time || time > this.getLastMessageTime(channel)) {
-                    localStorage.setItem('__' + channel + 'lastMesgTime', time);
-                    this.lastMesgTime[channel] = time;
+                if (!time) {
+                    localStorage.removeItem(this.keyLastMessage(channel));
                 }
+                else if (time > this.getLastMessageTime(channel)) {
+                    localStorage.setItem(this.keyLastMessage(channel), time);
+                }
+                else {
+                    return this.lastMesgTime[channel];
+                }
+                this.lastMesgTime[channel] = time;
+                return time;
+            };
+            SyncStore.prototype.getTimestampModel = function (channel) {
+                var _this = this;
+                if (this.timestamps) {
+                    if (!this.timestampsPromise) {
+                        // initially fetch all messages
+                        this.timestampsPromise = Q(this.timestamps.fetch());
+                    }
+                    return this.timestampsPromise.then(function () {
+                        return _this.timestamps.get(channel) || _this.timestamps.add(new _this.timestamps.model({
+                            channel: channel,
+                            timestamp: _this.getLastMessageTime(channel)
+                        }, {
+                            store: _this.timestamps.store
+                        }));
+                    });
+                }
+            };
+            SyncStore.prototype.getTimestamp = function (channel) {
+                var _this = this;
+                var q = this.getTimestampModel(channel);
+                if (!q) {
+                    return Q.resolve(this.getLastMessageTime(channel));
+                }
+                this.timestampsPromise = q.then(function (model) {
+                    return model.attributes.timestamp;
+                }).catch(function (err) {
+                    Relution.LiveData.Debug.error('Relution.LiveData.SyncStore.getTimestamp: ' + channel, err);
+                    return _this.getLastMessageTime(channel);
+                });
+                return this.timestampsPromise;
+            };
+            SyncStore.prototype.setTimestamp = function (channel, time) {
+                var _this = this;
+                var q = this.getTimestampModel(channel);
+                if (!q) {
+                    return this.setLastMessageTime(channel, time);
+                }
+                this.timestampsPromise = q.then(function (model) {
+                    if (!time || time > model.attributes.timestamp) {
+                        return model.save({
+                            timestamp: time
+                        }).thenResolve(time);
+                    }
+                    return model.attributes.timestamp;
+                }).catch(function (err) {
+                    Relution.LiveData.Debug.error('Relution.LiveData.SyncStore.setTimestamp: ' + channel, err);
+                    return time;
+                }).finally(function () {
+                    return _this.setLastMessageTime(channel, time);
+                });
+                return this.timestampsPromise;
             };
             SyncStore.prototype.onConnect = function (endpoint) {
                 var _this = this;
@@ -4153,12 +4296,11 @@ var Relution;
                 }
                 // finally set the message time
                 return q.then(function () {
-                    if (msg.time) {
-                        _this.setLastMessageTime(channel, msg.time);
-                    }
-                    // update all collections listening
-                    _this.trigger('sync:' + channel, msg); // SyncContext.onMessage
-                    return msg;
+                    return Q.resolve(msg.time && _this.setTimestamp(channel, msg.time)).then(function () {
+                        // update all collections listening
+                        _this.trigger('sync:' + channel, msg); // SyncContext.onMessage
+                        return msg;
+                    });
                 }, function (error) {
                     // not setting message time in error case
                     // report error as event on store
@@ -4204,72 +4346,76 @@ var Relution;
                                 model.set(model.idAttribute, new LiveData.ObjectID().toHexString());
                             }
                             else {
-                                var error = new Error('no (valid) id: ' + model.id);
-                                return Q.reject(this.handleError(options, error) || error);
+                                throw new Error('no (valid) id: ' + model.id);
                             }
                         }
                     }
                     else {
                         // something is really at odds here...
-                        var error = new Error('target of sync is neither a model nor a collection!?!');
-                        return Q.reject(this.handleError(options, error) || error);
+                        throw new Error('target of sync is neither a model nor a collection!?!');
                     }
                     var channel = endpoint.channel;
-                    var time = this.getLastMessageTime(channel);
-                    // only send read messages if no other store can do this or for initial load
-                    if (method === 'read' && endpoint.localStore && time && !options.reset) {
-                        // read data from localStore and fetch changes remote
-                        var opts = _.clone(options);
-                        opts.store = endpoint.localStore;
-                        opts.entity = endpoint.entity;
-                        delete opts.success;
-                        delete opts.error;
-                        return endpoint.localStore.sync(method, model, opts).then(function (resp) {
-                            // backbone success callback alters the collection now
-                            resp = _this.handleSuccess(options, resp) || resp;
-                            if (endpoint.socket || options.fetchMode === 'local') {
-                                // no need to fetch changes as we got a websocket, that is either connected or attempts reconnection
-                                return resp;
-                            }
-                            // when we are disconnected, try to connect now
-                            if (!endpoint.isConnected) {
-                                var qInfo = _this.fetchServerInfo(endpoint);
-                                if (!qInfo) {
-                                    return resp;
-                                }
-                                return qInfo.then(function (info) {
-                                    // trigger reconnection when disconnected
-                                    var result;
+                    return this.getTimestamp(channel).then(function (time) {
+                        try {
+                            // only send read messages if no other store can do this or for initial load
+                            if (method === 'read' && endpoint.localStore && time && !options.reset) {
+                                // read data from localStore and fetch changes remote
+                                var opts = _.clone(options);
+                                opts.store = endpoint.localStore;
+                                opts.entity = endpoint.entity;
+                                delete opts.success;
+                                delete opts.error;
+                                return endpoint.localStore.sync(method, model, opts).then(function (resp) {
+                                    // backbone success callback alters the collection now
+                                    resp = _this.handleSuccess(options, resp) || resp;
+                                    if (endpoint.socket || options.fetchMode === 'local') {
+                                        // no need to fetch changes as we got a websocket, that is either connected or attempts reconnection
+                                        return resp;
+                                    }
+                                    // when we are disconnected, try to connect now
                                     if (!endpoint.isConnected) {
-                                        result = _this.onConnect(endpoint);
+                                        var qInfo = _this.fetchServerInfo(endpoint);
+                                        if (!qInfo) {
+                                            return resp;
+                                        }
+                                        return qInfo.then(function (info) {
+                                            // trigger reconnection when disconnected
+                                            var result;
+                                            if (!endpoint.isConnected) {
+                                                result = _this.onConnect(endpoint);
+                                            }
+                                            return result || info;
+                                        }, function (xhr) {
+                                            // trigger disconnection when disconnected
+                                            var result;
+                                            if (!xhr.responseText && endpoint.isConnected) {
+                                                result = _this.onDisconnect(endpoint);
+                                            }
+                                            return result || resp;
+                                        }).thenResolve(resp);
                                     }
-                                    return result || info;
-                                }, function (xhr) {
-                                    // trigger disconnection when disconnected
-                                    var result;
-                                    if (!xhr.responseText && endpoint.isConnected) {
-                                        result = _this.onDisconnect(endpoint);
-                                    }
-                                    return result || resp;
-                                }).thenResolve(resp);
+                                    // load changes only (will happen AFTER success callback is invoked,
+                                    // but returned promise will resolve only after changes were processed.
+                                    return _this.fetchChanges(endpoint).catch(function (xhr) {
+                                        if (!xhr.responseText && endpoint.isConnected) {
+                                            return _this.onDisconnect(endpoint) || resp;
+                                        }
+                                        // can not do much about it...
+                                        _this.trigger('error:' + channel, xhr.responseJSON || xhr.responseText, model);
+                                        return resp;
+                                    }).thenResolve(resp); // caller expects original XHR response as changes body data is NOT compatible
+                                }, function () {
+                                    // fall-back to loading full data set
+                                    return _this._addMessage(method, model, options, endpoint);
+                                });
                             }
-                            // load changes only (will happen AFTER success callback is invoked,
-                            // but returned promise will resolve only after changes were processed.
-                            return _this.fetchChanges(endpoint).catch(function (xhr) {
-                                if (!xhr.responseText && endpoint.isConnected) {
-                                    return _this.onDisconnect(endpoint) || resp;
-                                }
-                                // can not do much about it...
-                                _this.trigger('error:' + channel, xhr.responseJSON || xhr.responseText, model);
-                                return resp;
-                            }).thenResolve(resp); // caller expects original XHR response as changes body data is NOT compatible
-                        }, function () {
-                            // fall-back to loading full data set
+                            // do backbone rest
                             return _this._addMessage(method, model, options, endpoint);
-                        });
-                    }
-                    // do backbone rest
-                    return this._addMessage(method, model, options, endpoint);
+                        }
+                        catch (error) {
+                            return Q.reject(_this.handleError(options, error) || error);
+                        }
+                    });
                 }
                 catch (error) {
                     return Q.reject(this.handleError(options, error) || error);
@@ -4440,7 +4586,7 @@ var Relution;
                     // update local store state
                     if (data) {
                         // no data if server asks not to alter state
-                        // this.setLastMessageTime(channel, msg.time);
+                        // this.setTimestamp(channel, msg.time);
                         var promises = [];
                         var dataIds;
                         if (msg.method !== 'read') {
@@ -4534,12 +4680,18 @@ var Relution;
                         });
                     }
                 }).then(function (response) {
+                    var qTime;
                     if (msg.method === 'read' && LiveData.isCollection(model)) {
                         // TODO: extract Date header from options.xhr instead of using clientTime
-                        _this.setLastMessageTime(endpoint.channel, clientTime);
+                        qTime = _this.setTimestamp(endpoint.channel, clientTime);
                     }
-                    // invoke success callback, if any
-                    return _this.handleSuccess(options, response) || response;
+                    else {
+                        qTime = Q.resolve(undefined);
+                    }
+                    return qTime.then(function () {
+                        // invoke success callback, if any
+                        return _this.handleSuccess(options, response) || response;
+                    });
                 }, function (error) {
                     // invoke error callback, if any
                     return _this.handleError(options, error) || Q.reject(error);
@@ -4560,35 +4712,37 @@ var Relution;
                         return promise;
                     }
                 }
-                var time = this.getLastMessageTime(channel);
-                if (!time) {
-                    Relution.LiveData.Debug.error(channel + ' can not fetch changes at this time!');
-                    return promise || Q.resolve(undefined);
-                }
-                // initiate a new request for changes
-                Relution.LiveData.Debug.info(channel + ' initiating changes request...');
-                var changes = new this.messages.constructor();
-                promise = Q(changes.fetch({
-                    url: endpoint.urlRoot + 'changes/' + time,
-                    credentials: endpoint.credentials,
-                    store: {},
-                    success: function (model, response, options) {
+                return this.getTimestamp(channel).then(function (time) {
+                    if (!time) {
+                        Relution.LiveData.Debug.error(channel + ' can not fetch changes at this time!');
+                        return promise || Q.resolve(undefined);
+                    }
+                    // initiate a new request for changes
+                    Relution.LiveData.Debug.info(channel + ' initiating changes request...');
+                    var changes = new _this.messages.constructor();
+                    promise = Q(changes.fetch({
+                        url: endpoint.urlRoot + 'changes/' + time,
+                        credentials: endpoint.credentials,
+                        store: {},
+                        success: function (model, response, options) {
+                            return response || options.xhr;
+                        }
+                    })).then(function () {
                         if (changes.models.length > 0) {
-                            changes.each(function (change) {
+                            return Q.all(changes.map(function (change) {
                                 var msg = change.attributes;
-                                _this.onMessage(endpoint, _this._fixMessage(endpoint, msg));
-                            });
+                                return _this.onMessage(endpoint, _this._fixMessage(endpoint, msg));
+                            }));
                         }
                         else {
                             // following should use server time!
-                            _this.setLastMessageTime(channel, now);
+                            return _this.setTimestamp(channel, now);
                         }
-                        return response || options.xhr;
-                    }
-                })).thenResolve(changes);
-                endpoint.promiseFetchingChanges = promise;
-                endpoint.timestampFetchingChanges = now;
-                return promise;
+                    }).thenResolve(changes);
+                    endpoint.promiseFetchingChanges = promise;
+                    endpoint.timestampFetchingChanges = now;
+                    return promise;
+                });
             };
             SyncStore.prototype.fetchServerInfo = function (endpoint) {
                 var _this = this;
@@ -4603,7 +4757,6 @@ var Relution;
                         }
                     }
                     var info = new LiveData.Model();
-                    var time = this.getLastMessageTime(endpoint.channel);
                     var url = endpoint.urlRoot;
                     if (url.charAt((url.length - 1)) !== '/') {
                         url += '/';
@@ -4611,21 +4764,27 @@ var Relution;
                     promise = Q(info.fetch(({
                         url: url + 'info',
                         success: function (model, response, options) {
-                            //@todo why we set a server time here ?
-                            if (!time && info.get('time')) {
-                                _this.setLastMessageTime(endpoint.channel, info.get('time'));
-                            }
-                            if (!endpoint.socketPath && info.get('socketPath')) {
-                                endpoint.socketPath = info.get('socketPath');
-                                var name = info.get('entity') || endpoint.entity;
-                                if (_this.useSocketNotify) {
-                                    endpoint.socket = _this.createSocket(endpoint, name);
-                                }
-                            }
                             return response || options.xhr;
                         },
                         credentials: endpoint.credentials
-                    }))).thenResolve(info);
+                    }))).then(function () {
+                        //@todo why we set a server time here ?
+                        return _this.getTimestamp(endpoint.channel).then(function (time) {
+                            if (!time && info.get('time')) {
+                                return _this.setTimestamp(endpoint.channel, info.get('time'));
+                            }
+                            return time;
+                        });
+                    }).then(function () {
+                        if (!endpoint.socketPath && info.get('socketPath')) {
+                            endpoint.socketPath = info.get('socketPath');
+                            var name = info.get('entity') || endpoint.entity;
+                            if (_this.useSocketNotify) {
+                                endpoint.socket = _this.createSocket(endpoint, name);
+                            }
+                        }
+                        return info;
+                    });
                     endpoint.promiseFetchingServerInfo = promise;
                     endpoint.timestampFetchingServerInfo = now;
                     return promise;
@@ -4881,7 +5040,7 @@ var Relution;
                             this.messages.destroy();
                         }
                         collection.reset();
-                        this.setLastMessageTime(endpoint.channel, '');
+                        return this.setTimestamp(endpoint.channel, '');
                     }
                 }
             };
@@ -4892,6 +5051,10 @@ var Relution;
                 if (this.messages && this.messages.store) {
                     this.messages.store.close();
                     this.messages = null;
+                }
+                if (this.timestamps && this.timestamps.store) {
+                    this.timestamps.store.close();
+                    this.timestamps = null;
                 }
                 if (this.endpoints) {
                     var keys = Object.keys(this.endpoints);

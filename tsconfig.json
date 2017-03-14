@@ -15,6 +15,7 @@
         "src/data/stores/AbstractSqlStore.ts",
         "src/data/stores/CipherSqlStore.ts",
         "src/data/stores/LiveDataMessage.ts",
+        "src/data/stores/LiveDataTimestamp.ts",
         "src/data/stores/Store.ts",
         "src/data/stores/SyncContext.ts",
         "src/data/stores/SyncEndpoint.ts",
